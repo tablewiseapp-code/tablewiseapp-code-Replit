@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 
 interface Recipe {
   id: string;
@@ -101,6 +102,7 @@ function getMonogram(title: string): string {
 }
 
 export default function WeeklyMeals() {
+  const [, setLocation] = useLocation();
   const [state, setState] = useState<WeeklyMealsState>(loadState);
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
@@ -642,7 +644,7 @@ export default function WeeklyMeals() {
                       {/* Bottom Buttons */}
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
+                          onClick={() => setLocation("/")}
                           className="px-4 py-2 text-xs rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
                           data-testid={`button-open-${recipe.id}`}
                         >
