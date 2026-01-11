@@ -596,7 +596,7 @@ export default function RecipeView() {
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add your notes here..."
+                placeholder="1."
                 data-testid="textarea-notes"
               />
             </section>
