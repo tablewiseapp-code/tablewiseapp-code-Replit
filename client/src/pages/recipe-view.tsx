@@ -480,13 +480,6 @@ export default function RecipeView() {
                 Protein 42g • Fat 18g • Carbs 22g
               </p>
             )}
-            <button
-              onClick={handleAddResult}
-              className="mt-3 px-4 py-1.5 text-xs text-muted-foreground border border-border rounded-full hover:text-foreground hover:border-foreground/30 transition-colors"
-              data-testid="button-add-result"
-            >
-              Add result
-            </button>
           </header>
           
           {/* Sticky Ingredients */}
@@ -525,6 +518,17 @@ export default function RecipeView() {
               />
             </section>
           )}
+          
+          {/* Add Result Button */}
+          <div className="px-10 py-3">
+            <button
+              onClick={handleAddResult}
+              className="px-4 py-1.5 text-xs text-muted-foreground border border-border rounded-full hover:text-foreground hover:border-foreground/30 transition-colors"
+              data-testid="button-add-result"
+            >
+              Add result
+            </button>
+          </div>
           
           {/* Steps */}
           <section className={`px-10 flex-1 ${isFocusLayout ? "py-8" : "py-5"}`}>
