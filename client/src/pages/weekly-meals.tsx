@@ -579,7 +579,7 @@ export default function WeeklyMeals() {
             </div>
 
             {/* Recipe List */}
-            <div className="border-t hairline">
+            <div className="space-y-4">
               {filteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">No recipes match your filters.</p>
               ) : (
@@ -587,50 +587,85 @@ export default function WeeklyMeals() {
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
                   const monogram = getMonogram(recipe.title);
-                  const tags = recipe.tags.map(t => {
-                    if (t === "vegetarian") return "vegetarian";
-                    if (t === "kidFriendly") return "kid friendly";
-                    if (t === "glutenFree") return "gluten-free";
+                  const displayTags = recipe.tags.map(t => {
+                    if (t === "vegetarian") return "Vegetarian";
+                    if (t === "kidFriendly") return "Kid friendly";
+                    if (t === "glutenFree") return "Gluten-free";
                     return t;
-                  }).join(" • ");
-                  const metadata = `${recipe.minutes} min • ${recipe.mealType.toLowerCase()}${tags ? " • " + tags : ""} • Tools: ${recipe.tools.join(", ").toLowerCase()}`;
+                  });
+                  const extraTagCount = Math.max(0, recipe.ingredients.length - 3);
 
                   return (
-                    <div key={recipe.id} className={`border-b hairline ${isSelected ? "border-l-2 border-l-foreground/30" : ""}`}>
-                      <div 
-                        className="flex items-center gap-4 py-4 px-2 cursor-pointer hover:bg-muted/30"
-                        onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
-                        data-testid={`recipe-row-${recipe.id}`}
-                      >
-                        {/* Monogram */}
+                    <div 
+                      key={recipe.id} 
+                      className="bg-[#FAFAF8] rounded-2xl p-5 shadow-sm"
+                      data-testid={`recipe-card-${recipe.id}`}
+                    >
+                      {/* Top Row: Monogram, Title, Add */}
+                      <div className="flex items-start gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs text-muted-foreground">{monogram}</span>
+                          <span className="text-xs font-medium text-muted-foreground">{monogram}</span>
                         </div>
-
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-foreground truncate">{recipe.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{metadata}</p>
+                          <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
                         </div>
-
-                        {/* Add Button */}
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSelection(recipe.id);
-                          }}
-                          className={`px-4 py-1.5 text-xs rounded-full border hairline flex-shrink-0 ${isSelected ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          onClick={() => toggleSelection(recipe.id)}
+                          className={`px-3 py-1 text-xs rounded-full border flex-shrink-0 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
                           data-testid={`button-add-${recipe.id}`}
                         >
                           {isSelected ? "Added" : "Add"}
                         </button>
                       </div>
 
+                      {/* Tags Row */}
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.minutes} Min</span>
+                        <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.mealType}</span>
+                        {displayTags.map(tag => (
+                          <span key={tag} className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{tag}</span>
+                        ))}
+                        {extraTagCount > 0 && (
+                          <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">+{extraTagCount}</span>
+                        )}
+                      </div>
+
+                      {/* Metadata Lines */}
+                      <div className="space-y-1 mb-4">
+                        <p className="text-xs text-muted-foreground">Source: {recipe.sourceType}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 text-[10px] bg-foreground/5 rounded text-muted-foreground">{recipe.proteinType.toLowerCase()}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Tools: {recipe.tools.join(", ").toLowerCase()}</p>
+                      </div>
+
+                      {/* Bottom Buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
+                          className="px-4 py-2 text-xs rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+                          data-testid={`button-open-${recipe.id}`}
+                        >
+                          Open recipe
+                        </button>
+                        <button
+                          onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
+                          className="px-4 py-2 text-xs rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
+                          data-testid={`button-ingredients-${recipe.id}`}
+                        >
+                          Ingredients
+                        </button>
+                      </div>
+
                       {/* Expanded Details */}
                       {isExpanded && (
-                        <div className="px-16 pb-4" data-testid={`recipe-details-${recipe.id}`}>
-                          <p className="text-xs text-muted-foreground mb-2">Ingredients:</p>
-                          <p className="text-xs text-muted-foreground">{recipe.ingredients.join(", ")}</p>
+                        <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
+                          <p className="text-xs font-medium text-foreground mb-2">Recipe preview</p>
+                          <ul className="space-y-1">
+                            {recipe.ingredients.slice(0, 5).map((ing, i) => (
+                              <li key={i} className="text-xs text-muted-foreground">• {ing}</li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </div>

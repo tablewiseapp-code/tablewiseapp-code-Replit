@@ -1,0 +1,39 @@
+Create a single reusable “Recipe List Item” component (desktop web) that matches the attached style: a compact calm card with a monogram, title, tags, source/tools metadata, and two secondary buttons at the bottom.
+
+Deliver as a small runnable demo in 3 files: index.html, styles.css, app.js (vanilla only, no frameworks, no Tailwind/Bootstrap).
+
+VISUAL TARGET (match the screenshot)
+- Card: soft off-white background, rounded corners (16–20px), subtle shadow, generous padding.
+- Layout: 
+  - Top row: left monogram circle “PP”, center title “Pesto Pasta with Tomatoes” (wrap to two lines), right small pill button “Add”.
+  - Middle: a horizontal wrap row of small tags (chips): “20 Min”, “Lunch”, “Vegetarian”, and a small “+2” chip.
+  - Below tags: three quiet metadata lines:
+    - “Source: Garden Pantry”
+    - “classical” (as a subtle chip/badge)
+    - “Tools: stove”
+  - Bottom row: two buttons:
+    - Left primary-ish button: “Open recipe” (soft green fill like in screenshot, rounded pill)
+    - Right secondary button: “Ingredients” (outlined pill)
+
+TYPOGRAPHY & COLORS
+- Calm, modern system font.
+- Text: dark gray/near-black.
+- Tags: light gray pills with subtle border.
+- “Add” button: small outlined pill, minimal.
+- “Open recipe” button: muted green fill (not bright), white text.
+- No other bright colors.
+
+INTERACTION (simple)
+- Clicking “Add” toggles to “Added” state (same pill style but slightly darker border or filled very lightly). Toggle back on click.
+- Clicking “Open recipe” shows a minimal inline area under the card (expand/collapse) with:
+  - “Recipe preview” title and 3–5 ingredient lines (plain text).
+- Clicking “Ingredients” opens the same inline area but scrolls/focuses to ingredients list.
+- No modals, no popups.
+
+COMPONENT REQUIREMENTS
+- Build it as a function in app.js that renders from data:
+  { initials:"PP", title:"Pesto Pasta with Tomatoes", minutes:20, meal:"Lunch", tags:["Vegetarian"], extraTag:"+2", source:"Garden Pantry", sourceTag:"classical", tools:"stove", ingredients:[...] }
+- Render at least 3 example cards in a vertical list with consistent spacing.
+
+OUTPUT
+Return complete code for index.html, styles.css, app.js that produces a high-fidelity result matching the screenshot’s layout and calm styling.
