@@ -512,23 +512,6 @@ export default function WeeklyMeals() {
                     </label>
                   </div>
 
-                  {/* Servings Filter */}
-                  <div className="border-b hairline pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Servings</span>
-                    <div className="flex flex-wrap gap-2">
-                      {["1-2", "3-4", "5+"].map(srv => (
-                        <button
-                          key={srv}
-                          onClick={() => updateFilters({ servings: state.filters.servings === srv ? null : srv })}
-                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.servings === srv ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                          data-testid={`filter-servings-${srv.replace("+", "plus")}`}
-                        >
-                          {srv}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Must Include */}
                   <div className="border-b hairline pb-3 mb-3">
                     <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Must include</span>
