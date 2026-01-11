@@ -1,0 +1,120 @@
+Update the existing 3-file Recipe View app (index.html, styles.css, app.js) to implement best-in-class calm product behavior. Keep the UI minimal, low-contrast, and timeless. No new clutter, no cards, no animations.
+
+------------------------------------------------------------
+METADATA CLEANUP
+------------------------------------------------------------
+Remove the “Last cooked: 2 weeks ago” line entirely.
+The metadata line under the title must only be:
+“Source: Personal • Modified by you”
+
+------------------------------------------------------------
+PRIMARY BUTTON CHANGE
+------------------------------------------------------------
+Replace the “Next” button label with:
+“Completed”
+Clicking “Completed” advances to the next step.
+
+------------------------------------------------------------
+1) ORIENTATION: “Step X of Y”
+------------------------------------------------------------
+Add a quiet line above the steps area:
+“Step {activeStep} of {totalSteps}”
+Muted, small text. No progress bars, no icons.
+
+------------------------------------------------------------
+2) INGREDIENT COMPLETION FEEDBACK
+------------------------------------------------------------
+Track ingredient checkbox states.
+Persist them in localStorage by ingredient id.
+
+When ALL ingredients are checked, show one subtle line under the ingredients list:
+“Ingredients ready”
+Muted gray. No icon. No animation.
+
+Hide it again if any ingredient becomes unchecked.
+
+------------------------------------------------------------
+3) STEP ACKNOWLEDGEMENT (NOT GAMIFICATION)
+------------------------------------------------------------
+When the user clicks “Completed”:
+- Mark that step as completed.
+- Persist completed steps in localStorage.
+
+In the steps list, the previously active step should display:
+“✓ Completed”
+in quiet gray (not green, not bold, not celebratory).
+
+Maintain hierarchy:
+- previous steps faded
+- active step emphasized
+- next step subtle
+
+------------------------------------------------------------
+4) REAL FOCUS MODE
+------------------------------------------------------------
+Focus mode must reduce UI, not just resize it.
+
+When Focus is ON:
+- Hide Notes section
+- Hide “Add result” button
+- Hide Macros line
+- Hide ingredient checkboxes (show ingredients as plain text)
+- Keep ingredients sticky and visible
+- Show ONLY:
+  - Title + metadata
+  - Ingredients list (plain)
+  - “Step X of Y”
+  - Active step
+  - Step help icon only if Guidance is enabled
+  - “Completed” / “Finish” button
+
+When Focus is OFF:
+- Restore everything.
+
+Label the toggle in the left rail:
+“Focus”
+
+------------------------------------------------------------
+5) SUBTLE EXIT ANCHOR
+------------------------------------------------------------
+At the bottom of the center canvas add:
+“Back to recipe”
+
+It should look like muted text, not a button.
+Clicking it scrolls smoothly to the top of the recipe.
+
+------------------------------------------------------------
+6) END STATE
+------------------------------------------------------------
+When the last step is reached:
+- Change the button label to “Finish”
+- Clicking “Finish” does nothing further
+- Disable the button
+- Persist finished state so reload stays finished
+
+------------------------------------------------------------
+STATE + STORAGE
+------------------------------------------------------------
+Use one source-of-truth state object and one render().
+
+Persist in localStorage:
+- all app state (units, cup size, servings, focus/layout, toggles, activeStep, finished)
+- notes text (recipeNotes)
+- result image (recipeResultImage)
+- ingredient checkbox states
+- completed steps
+On load: restore and render correctly.
+
+------------------------------------------------------------
+OUTPUT
+------------------------------------------------------------
+Return complete updated code for:
+index.html
+styles.css
+app.js
+
+All changes must work immediately.
+No console errors.
+No new UI beyond what’s described.
+No animations, no popups.
+Keep everything calm and professional.

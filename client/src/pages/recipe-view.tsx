@@ -25,6 +25,7 @@ interface RecipeState {
   notesEnabled: boolean;
   activeStep: number;
   showStepHint: boolean;
+  finished: boolean;
 }
 
 const baseIngredients: Ingredient[] = [
@@ -45,12 +46,13 @@ const defaultState: RecipeState = {
   units: "g",
   cupMl: 240,
   servings: 2,
-  layout: "focus",
+  layout: "standard",
   showMacros: false,
   helpEnabled: false,
   notesEnabled: false,
   activeStep: 1,
   showStepHint: false,
+  finished: false,
 };
 
 function loadState(): RecipeState {
@@ -109,6 +111,46 @@ function saveResultImage(image: string | null) {
   }
 }
 
+function loadCheckedIngredients(): Set<string> {
+  try {
+    const saved = localStorage.getItem("recipeCheckedIngredients");
+    if (saved) {
+      return new Set(JSON.parse(saved));
+    }
+  } catch (e) {
+    console.error("Failed to load checked ingredients:", e);
+  }
+  return new Set();
+}
+
+function saveCheckedIngredients(checked: Set<string>) {
+  try {
+    localStorage.setItem("recipeCheckedIngredients", JSON.stringify(Array.from(checked)));
+  } catch (e) {
+    console.error("Failed to save checked ingredients:", e);
+  }
+}
+
+function loadCompletedSteps(): Set<number> {
+  try {
+    const saved = localStorage.getItem("recipeCompletedSteps");
+    if (saved) {
+      return new Set(JSON.parse(saved));
+    }
+  } catch (e) {
+    console.error("Failed to load completed steps:", e);
+  }
+  return new Set();
+}
+
+function saveCompletedSteps(completed: Set<number>) {
+  try {
+    localStorage.setItem("recipeCompletedSteps", JSON.stringify(Array.from(completed)));
+  } catch (e) {
+    console.error("Failed to save completed steps:", e);
+  }
+}
+
 function formatAmount(value: number): string {
   if (value < 1) {
     const rounded = Math.round(value * 100) / 100;
@@ -161,7 +203,8 @@ function convertAmount(amount: number, fromUnit: string, targetUnits: "g" | "ml"
 export default function RecipeView() {
   const [state, setState] = useState<RecipeState>(loadState);
   const [notes, setNotes] = useState(loadNotes);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(loadCheckedIngredients);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(loadCompletedSteps);
   const [showCupSelector, setShowCupSelector] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -169,6 +212,7 @@ export default function RecipeView() {
   const [resultImage, setResultImage] = useState<string | null>(loadResultImage);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const topRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (timerRunning && timerSeconds !== null && timerSeconds > 0) {
@@ -228,6 +272,14 @@ export default function RecipeView() {
     saveNotes(notes);
   }, [notes]);
 
+  useEffect(() => {
+    saveCheckedIngredients(checkedIngredients);
+  }, [checkedIngredients]);
+
+  useEffect(() => {
+    saveCompletedSteps(completedSteps);
+  }, [completedSteps]);
+
   const updateState = useCallback((updates: Partial<RecipeState>) => {
     setState(prev => ({ ...prev, ...updates }));
   }, []);
@@ -242,9 +294,17 @@ export default function RecipeView() {
     setCheckedIngredients(newChecked);
   };
 
-  const nextStep = () => {
+  const completeStep = () => {
+    if (state.finished) return;
+    
+    const newCompleted = new Set(completedSteps);
+    newCompleted.add(state.activeStep);
+    setCompletedSteps(newCompleted);
+    
     if (state.activeStep < steps.length) {
       updateState({ activeStep: state.activeStep + 1, showStepHint: false });
+    } else {
+      updateState({ finished: true });
     }
   };
 
@@ -252,6 +312,10 @@ export default function RecipeView() {
     if (state.helpEnabled) {
       updateState({ showStepHint: !state.showStepHint });
     }
+  };
+
+  const scrollToTop = () => {
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const getScaledIngredients = () => {
@@ -268,10 +332,11 @@ export default function RecipeView() {
 
   const scaledIngredients = getScaledIngredients();
   const isLastStep = state.activeStep === steps.length;
-  const isFocusLayout = state.layout === "focus";
+  const isFocusMode = state.layout === "focus";
+  const allIngredientsChecked = baseIngredients.every(ing => checkedIngredients.has(ing.id));
 
   return (
-    <div className={`min-h-screen bg-background flex items-center justify-center p-6 ${isFocusLayout ? "layout-focus" : "layout-standard"}`}>
+    <div className={`min-h-screen bg-background flex items-center justify-center p-6 ${isFocusMode ? "layout-focus" : "layout-standard"}`}>
       <div className="recipe-surface w-full max-w-[1200px] min-h-[700px] rounded-xl flex overflow-hidden">
         
         {/* Left Control Rail */}
@@ -393,7 +458,7 @@ export default function RecipeView() {
           
           <div className="border-t hairline my-3 mx-3" />
           
-          {/* Help Toggle */}
+          {/* Guidance Toggle */}
           <div className="px-2">
             <div 
               className={`control-knob ${state.helpEnabled ? "active" : ""}`}
@@ -405,6 +470,21 @@ export default function RecipeView() {
               aria-label="Toggle step help"
             >
               <span className="text-[10px] text-muted-foreground">Guidance</span>
+            </div>
+          </div>
+          
+          <div className="border-t hairline my-3 mx-3" />
+          
+          {/* Focus Mode */}
+          <div className="px-2">
+            <div 
+              className={`control-knob ${isFocusMode ? "active" : ""}`}
+              onClick={() => updateState({ layout: isFocusMode ? "standard" : "focus" })}
+              data-testid="button-focus-mode"
+              role="button"
+              aria-label="Toggle focus mode"
+            >
+              <span className="text-[10px] text-muted-foreground text-center leading-tight">Focus</span>
             </div>
           </div>
           
@@ -445,21 +525,6 @@ export default function RecipeView() {
               <span className="text-[10px] text-muted-foreground">Result</span>
             </div>
           </div>
-          
-          <div className="border-t hairline my-3 mx-3" />
-          
-          {/* Focus Mode */}
-          <div className="px-2">
-            <div 
-              className={`control-knob ${state.layout === "focus" ? "active" : ""}`}
-              onClick={() => updateState({ layout: state.layout === "focus" ? "standard" : "focus" })}
-              data-testid="button-focus-mode"
-              role="button"
-              aria-label="Toggle focus mode"
-            >
-              <span className="text-[10px] text-muted-foreground text-center leading-tight">Focus mode</span>
-            </div>
-          </div>
         </aside>
         
         {/* Center Recipe Canvas */}
@@ -476,14 +541,14 @@ export default function RecipeView() {
           />
           
           {/* Header */}
-          <header className={`px-10 pt-10 ${isFocusLayout ? "pb-6" : "pb-4"}`}>
-            <h1 className={`font-medium text-foreground tracking-tight ${isFocusLayout ? "text-3xl" : "text-2xl"}`} data-testid="text-recipe-title">
+          <header ref={topRef} className={`px-10 pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
+            <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
               Plov
             </h1>
             <p className="text-sm text-muted-foreground mt-2" data-testid="text-recipe-meta">
-              Source: Personal • Last cooked: 2 weeks ago • Modified by you
+              Source: Personal • Modified by you
             </p>
-            {state.showMacros && (
+            {!isFocusMode && state.showMacros && (
               <p className="text-sm text-muted-foreground mt-2" data-testid="text-nutrition-info">
                 Protein 42g • Fat 18g • Carbs 22g
               </p>
@@ -492,28 +557,35 @@ export default function RecipeView() {
           
           {/* Sticky Ingredients */}
           <section className="sticky top-0 bg-background z-10 px-10 py-4 border-b hairline">
-            <ul className={`${isFocusLayout ? "space-y-2" : "space-y-1"}`}>
+            <ul className={`${isFocusMode ? "space-y-1" : "space-y-2"}`}>
               {scaledIngredients.map((ing) => (
                 <li key={ing.id} className="flex items-center gap-3">
-                  <input 
-                    type="checkbox" 
-                    checked={checkedIngredients.has(ing.id)}
-                    onChange={() => toggleIngredient(ing.id)}
-                    className="w-4 h-4 rounded border-gray-300 text-foreground focus-ring-quiet cursor-pointer accent-current"
-                    data-testid={`checkbox-ingredient-${ing.id}`}
-                    aria-label={`${ing.displayAmount} ${ing.displayUnit} ${ing.name}`}
-                  />
-                  <span className={`text-sm ${checkedIngredients.has(ing.id) ? "line-through text-muted-foreground" : ""}`}>
+                  {!isFocusMode && (
+                    <input 
+                      type="checkbox" 
+                      checked={checkedIngredients.has(ing.id)}
+                      onChange={() => toggleIngredient(ing.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-foreground focus-ring-quiet cursor-pointer accent-current"
+                      data-testid={`checkbox-ingredient-${ing.id}`}
+                      aria-label={`${ing.displayAmount} ${ing.displayUnit} ${ing.name}`}
+                    />
+                  )}
+                  <span className={`text-sm ${!isFocusMode && checkedIngredients.has(ing.id) ? "line-through text-muted-foreground" : ""}`}>
                     <span className="font-medium">{ing.displayAmount} {ing.displayUnit}</span>{" "}
                     <span className="text-foreground">{ing.name}</span>
                   </span>
                 </li>
               ))}
             </ul>
+            {!isFocusMode && allIngredientsChecked && (
+              <p className="text-sm text-muted-foreground mt-3" data-testid="text-ingredients-ready">
+                Ingredients ready
+              </p>
+            )}
           </section>
           
           {/* Notes Section */}
-          {state.notesEnabled && (
+          {!isFocusMode && state.notesEnabled && (
             <section className="px-10 py-4 border-b hairline">
               <label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">My notes</label>
               <textarea
@@ -528,13 +600,25 @@ export default function RecipeView() {
           )}
           
           {/* Steps */}
-          <section className={`px-10 flex-1 ${isFocusLayout ? "py-8" : "py-5"}`}>
-            <div className={isFocusLayout ? "space-y-10" : "space-y-6"}>
+          <section className={`px-10 flex-1 ${isFocusMode ? "py-5" : "py-8"}`}>
+            {/* Step indicator */}
+            <p className="text-sm text-muted-foreground mb-6" data-testid="text-step-indicator">
+              Step {state.activeStep} of {steps.length}
+            </p>
+            
+            <div className={isFocusMode ? "space-y-6" : "space-y-10"}>
               {steps.map((step, index) => {
                 const stepNum = index + 1;
+                const isCompleted = completedSteps.has(stepNum);
+                const isPrevious = stepNum < state.activeStep;
+                const isActive = stepNum === state.activeStep;
+                
                 let stepClass = "step-subtle";
-                if (stepNum < state.activeStep) stepClass = "step-faded";
-                if (stepNum === state.activeStep) stepClass = "step-active";
+                if (isPrevious) stepClass = "step-faded";
+                if (isActive) stepClass = "step-active";
+                
+                // In focus mode, only show active step
+                if (isFocusMode && !isActive) return null;
                 
                 return (
                   <div 
@@ -544,12 +628,15 @@ export default function RecipeView() {
                   >
                     <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                       Step {step.id}
+                      {isCompleted && isPrevious && (
+                        <span className="ml-2">✓ Completed</span>
+                      )}
                     </div>
                     <div className="flex items-start gap-2">
-                      <p className={`${isFocusLayout ? "text-lg" : "text-base"} ${stepNum === state.activeStep ? "text-foreground" : "text-muted-foreground"}`}>
+                      <p className={`${isFocusMode ? "text-base" : "text-lg"} ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                         {step.instruction}
                       </p>
-                      {stepNum === state.activeStep && state.helpEnabled && (
+                      {isActive && state.helpEnabled && (
                         <button 
                           onClick={toggleHint}
                           className={`flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded-full text-xs ${state.showStepHint ? "bg-muted" : ""}`}
@@ -562,7 +649,7 @@ export default function RecipeView() {
                     </div>
                     
                     {/* Hint */}
-                    {stepNum === state.activeStep && state.showStepHint && state.helpEnabled && (
+                    {isActive && state.showStepHint && state.helpEnabled && (
                       <div className="mt-3 pl-3 border-l-2 hairline" data-testid="text-step-hint">
                         <p className="text-sm text-muted-foreground">
                           {step.hint}
@@ -571,7 +658,7 @@ export default function RecipeView() {
                     )}
                     
                     {/* Timer */}
-                    {stepNum === state.activeStep && step.timeMinutes && (
+                    {!isFocusMode && isActive && step.timeMinutes && (
                       <div className="mt-4 flex items-center gap-3">
                         {timerStepId === step.id && timerSeconds !== null ? (
                           <>
@@ -598,20 +685,31 @@ export default function RecipeView() {
                       </div>
                     )}
                     
-                    {/* Next/Finish Button */}
-                    {stepNum === state.activeStep && (
+                    {/* Completed/Finish Button */}
+                    {isActive && (
                       <button 
-                        onClick={nextStep}
-                        disabled={isLastStep}
-                        className={`next-btn mt-6 px-5 py-2 rounded-full text-sm ${isLastStep ? "opacity-50 cursor-not-allowed" : ""}`}
+                        onClick={completeStep}
+                        disabled={state.finished}
+                        className={`next-btn mt-6 px-5 py-2 rounded-full text-sm ${state.finished ? "opacity-50 cursor-not-allowed" : ""}`}
                         data-testid="button-next-step"
                       >
-                        {isLastStep ? "Finish" : "Next"}
+                        {isLastStep ? "Finish" : "Completed"}
                       </button>
                     )}
                   </div>
                 );
               })}
+            </div>
+            
+            {/* Back to recipe link */}
+            <div className="mt-12">
+              <button
+                onClick={scrollToTop}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="link-back-to-recipe"
+              >
+                Back to recipe
+              </button>
             </div>
           </section>
         </main>
