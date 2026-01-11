@@ -1,0 +1,122 @@
+Build a single desktop “Recipe View” screen as a calm, professional cooking workspace.
+
+DELIVERABLE (3 files)
+- index.html
+- styles.css
+- app.js
+No frameworks. No Tailwind/Bootstrap. No UI libraries. Vanilla HTML/CSS/JS only.
+
+DESIGN PHILOSOPHY
+- Inspired by Steve Jobs: simplicity, focus, clarity, restraint.
+- Interface should “disappear while cooking”: low contrast, no clutter, no cards, no gamification, no social elements.
+- Timeless, quiet, native-feeling.
+
+GLOBAL STYLE
+- Background: off-white / warm gray (#F7F6F3-ish).
+- Text: dark gray (#2E2E2E), muted text (#7A7A7A).
+- Dividers: 1px hairlines, very light gray.
+- Shadows: extremely soft and only where necessary.
+- Typography: system font stack:
+  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+- Generous whitespace. No bright colors. No emojis. No images except the right-side dish photo area.
+- No animations, no timers.
+
+PAGE LAYOUT (Desktop, no phone frame)
+- Full viewport, centered “surface” container with subtle border/shadow.
+- Inside surface: 3-column layout:
+  1) Left Control Rail (narrow, subtle)
+  2) Center Recipe Canvas (dominant)
+  3) Right Image Column (calm photo area)
+
+COLUMN 1: LEFT CONTROL RAIL (very subtle)
+- Width ~84px.
+- Background slightly cooler/lighter than canvas (#F1F1EF-ish).
+- Contains ONLY stacked “knob-like” controls (icon + label), no menus, no nav.
+- Controls (top to bottom):
+  1) Units toggle: g / ml / cups (default: g/ml active)
+  2) Cup size: “240 ml” (static or tiny selector; keep quiet)
+  3) Servings stepper: “– 2 +” (default 2)
+  4) Layout toggle (icon + label)
+  5) Nutrition toggle labeled “БЖУ”
+  6) Step help toggle labeled “?”
+- Each control: minimal hit-area, small label, subtle icon (use simple inline SVGs or plain text icons).
+- No big buttons, no cards, no extra copy.
+
+COLUMN 2: RECIPE CANVAS (center, dominant)
+TOP AREA
+- Title: “Chicken Curry” large, clean, medium weight, centered or left-aligned (choose one, but be consistent).
+- Metadata line below (small + muted):
+  “Source: Personal • Last cooked: 2 weeks ago • Modified by you”
+- Nutrition line is HIDDEN by default. When enabled (БЖУ toggle ON), show ONE line only:
+  “Protein 42g • Fat 18g • Carbs 22g”
+No charts, no colors, no percentages.
+
+INGREDIENTS (STICKY SECTION)
+- Ingredients block is always visible at the top of the canvas while scrolling steps.
+- Implement as a sticky section with the same background as canvas and a subtle bottom divider.
+- Simple vertical list, one line per ingredient.
+- Small checkbox at start of each line.
+- Quantity slightly bolder than ingredient name.
+- No grouping, no cards, no colored tags.
+Example list:
+☐ 300g chicken thighs
+☐ 1 tbsp olive oil
+☐ 1/2 cup yogurt
+☐ 1 onion, chopped
+☐ 2 cloves garlic
+
+STEPS (FOCUS MODE)
+- Steps shown as a vertical flow below ingredients with lots of whitespace.
+- One step is active and emphasized.
+- Previous step is visible but faded/muted and smaller.
+- Next step visible but subtle.
+- Active step format:
+  STEP 2
+  “Sauté onions on low heat for 10 minutes.”  (with a small “?” icon next to it)
+- Under active step: a quiet “Next” button (minimal outline, rounded corners, soft shadow only if needed).
+- No long explanations.
+
+STEP HELP (CONTEXTUAL, MINIMAL)
+- Rail “?” toggle controls whether step help is available.
+- When help is enabled AND the user clicks the step’s “?” icon:
+  - Show a minimal inline hint line under the active step (NOT chat bubbles, no typing UI).
+  - Example hint: “Low heat means the onions soften without browning; stir occasionally.”
+  - Style: small muted text; optional hairline left border.
+- If help is disabled, hide or disable the step “?” icon.
+
+COLUMN 3: RIGHT IMAGE COLUMN
+- Add a calm photo area on the far right.
+- Use either:
+  - a public placeholder image URL, OR
+  - a local placeholder via CSS (gradient box) if you want zero external assets.
+- Width ~320px.
+- Aligned near the top of the canvas content.
+- Subtle rounding (8–12px).
+- Keep it quiet: no captions, no overlays.
+
+INTERACTIONS (app.js)
+- Units toggle: switches active state styling only.
+- Servings stepper: updates number only (no ingredient scaling required).
+- Nutrition toggle (БЖУ): show/hide the single nutrition line.
+- Step help toggle: enable/disable the “?” icon and hint behavior.
+- “Next” button: advances active step (loop or stop at last step). Update:
+  - previous step becomes faded
+  - current step becomes active
+  - next step becomes subtle
+- Store current state in JS (activeStepIndex, servings, units, showNutrition, helpEnabled).
+
+ACCESSIBILITY
+- Use semantic HTML.
+- Buttons have aria-labels.
+- Checkboxes are real <input type="checkbox">.
+- Focus states are subtle but visible (no neon outlines; use a quiet ring).
+
+CONTENT
+- Use 3 steps minimum:
+  STEP 1: “Prep the chicken and vegetables.”
+  STEP 2: “Sauté onions on low heat for 10 minutes.”
+  STEP 3: “Add the chicken and spices.”
+
+OUTPUT REQUIREMENTS
+- Return the full contents of index.html, styles.css, and app.js.
+- Ensure the page runs immediately and matches the described calm, minimalist mockup.
