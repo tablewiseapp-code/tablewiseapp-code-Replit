@@ -1,0 +1,127 @@
+```text
+Create a single desktop web page for “Weekly plan → Meals” in the Tablewise style: calm, professional, no clutter, Jobs-like restraint. Build as 3 files: index.html, styles.css, app.js. Vanilla HTML/CSS/JS only (no frameworks, no Tailwind/Bootstrap, no UI libraries).
+
+GOAL
+A calm recipe picker screen where the user selects 6–12 dinner options. The UI must feel like a quiet planning tool (not a marketplace). No cards, no heavy borders, no bright colors, no gamification, no ads.
+
+PAGE STRUCTURE (Desktop)
+- Top brand bar (very quiet):
+  - Left: circular “TW” mark + “Tablewise” + subtitle “Calm weekly planning”
+  - Right: minimal text links: “How it works”, “Plan”, “Cost”, and a subtle “Log in” button
+  - Keep the bar low height, lots of whitespace, hairline bottom divider.
+
+- Main area: centered surface container (max-width ~1200px, 80–90vh)
+  - Two columns:
+    1) LEFT FILTER RAIL (narrow, calm, collapsible sections)
+    2) RIGHT RESULTS CANVAS (dominant list)
+
+------------------------------------------------------------
+LEFT FILTER RAIL (calm + minimal)
+------------------------------------------------------------
+Design rules:
+- Must not look like a dense settings menu.
+- Use collapsible groups (accordion). Only 2 groups open by default.
+- Show a small “Filters (N)” count at top (N updates as user selects filters).
+- Add a “Clear all” text button (muted).
+
+Primary filters (visible by default):
+1) Max minutes: slider or segmented options (Any / 20 / 30 / 40 / 60)
+2) Dietary: checkboxes (Vegetarian, Kid friendly, Gluten-free)
+3) Meal type: chips (Breakfast, Lunch, Dinner, Lunch box)
+4) Cooking method: chips (Oven, Air fryer, Stovetop, No-cook)
+5) Source: chips (My recipes, Imported, Trusted authors, Personal)
+
+Advanced filters (collapsed by default under “More filters”):
+- Protein type (Chicken, Beef, Seafood, Plant-based)
+- With my notes (toggle)
+- Modified by me (toggle)
+- Servings (1–2, 3–4, 5+)
+- Ingredients: “Must include” and “Must exclude” with small addable chips
+
+Interaction rules:
+- Selecting any filter updates Filters (N).
+- “Clear all” resets everything.
+- Keep typography small and quiet, no bold headings except section titles.
+- No bright checkbox colors; use neutral grays.
+
+------------------------------------------------------------
+RIGHT RESULTS CANVAS (recipe list)
+------------------------------------------------------------
+Top of canvas:
+- Title: “Step 2 — Meals”
+- Subtitle: “Choose dinners with calm filters. Select 6–12 options. We’ll build a week from there.”
+- A quiet selected counter on the right: “Selected: X / 12”
+- No banners, no illustrations.
+
+Recipe results layout:
+- Render results as a clean vertical LIST (NOT cards).
+- Each row has:
+  - Left: two-letter monogram (PP, VG…) in a subtle circle
+  - Middle: Title (primary), and one muted metadata line:
+    “20 min • lunch • vegetarian • Tools: stove”
+    (keep it one line; truncate if long)
+  - Right: ONE primary action button “Add” (or if already selected, “Added” with subtle style)
+- Entire row is clickable to “Open recipe” (secondary action) but do NOT show an extra button.
+  - On click: open a minimal right-side inline drawer or a modal-like panel that shows a tiny preview (title + ingredients only) — keep it extremely minimal, no big overlays. Alternatively, use a simple details area below the row that expands.
+- Do NOT show “Ingredients” as a separate button for every row.
+- Selected recipes should have a subtle indicator (e.g., a thin left bar or a checkmark in gray), not a colored highlight.
+
+Bottom of canvas:
+- Primary action: “Generate weekly plan”
+  - Enabled only when Selected >= 6
+  - If less than 6 selected, disabled with a quiet hint text: “Select at least 6 to generate.”
+- Secondary text: “You can adjust this later.” (muted)
+
+Footer (very quiet):
+- “Built for families—no ads, no sponsored meals.”
+- “v0.1 prototype”
+- “Tablewise | Calm weekly planning”
+
+------------------------------------------------------------
+DATA + FUNCTIONALITY (app.js)
+------------------------------------------------------------
+Provide sample data array of ~12 recipes with fields:
+- id, title, minutes, mealType, tags (vegetarian, kidFriendly, glutenFree), tools[], sourceType, proteinType, servingsRange, hasNotes, modifiedByMe, ingredients[]
+
+Filtering:
+- Filters must actually work (minutes, dietary, meal type, method/tools, source, protein, notes, modified, servings).
+- Must include/exclude ingredients filter:
+  - User can type an ingredient and press Enter to add a chip.
+  - “Must include” filters recipes containing that ingredient string.
+  - “Must exclude” removes recipes containing that ingredient string.
+
+Selection:
+- Clicking “Add” toggles selection for that recipe.
+- Maintain selectedIds set in state.
+- Update “Selected: X / 12”.
+- Prevent selecting more than 12 (if user tries, do nothing and show a tiny muted inline message near the counter: “Max 12 selections.”)
+
+Generate weekly plan:
+- Clicking “Generate weekly plan” when enabled:
+  - Show a calm confirmation state in the canvas (no popups):
+    - “Weekly plan created.”
+    - List the selected recipe titles below.
+  - No navigation needed.
+
+State persistence:
+- Save filters + selectedIds to localStorage.
+- Restore on reload.
+
+------------------------------------------------------------
+STYLE & TONE
+------------------------------------------------------------
+- Off-white/warm gray background
+- Hairline dividers
+- Soft shadows only where necessary
+- Clean typography, generous whitespace
+- No bright colors
+- No emojis, no illustrations
+- No “card” UI
+
+OUTPUT
+Return complete code for:
+- index.html
+- styles.css
+- app.js
+Everything should run immediately and match the calm, minimalist mockup style.
+```
