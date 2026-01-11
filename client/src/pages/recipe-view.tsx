@@ -88,6 +88,26 @@ function saveNotes(notes: string) {
   }
 }
 
+function loadResultImage(): string | null {
+  try {
+    return localStorage.getItem("recipeResultImage");
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveResultImage(image: string | null) {
+  try {
+    if (image) {
+      localStorage.setItem("recipeResultImage", image);
+    } else {
+      localStorage.removeItem("recipeResultImage");
+    }
+  } catch (e) {
+    console.error("Failed to save result image:", e);
+  }
+}
+
 function formatAmount(value: number): string {
   if (value < 1) {
     const rounded = Math.round(value * 100) / 100;
@@ -145,7 +165,9 @@ export default function RecipeView() {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerStepId, setTimerStepId] = useState<number | null>(null);
+  const [resultImage, setResultImage] = useState<string | null>(loadResultImage);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (timerRunning && timerSeconds !== null && timerSeconds > 0) {
@@ -176,6 +198,25 @@ export default function RecipeView() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleAddResult = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setResultImage(base64);
+      saveResultImage(base64);
+    };
+    reader.readAsDataURL(file);
+    
+    e.target.value = "";
   };
 
   useEffect(() => {
@@ -416,6 +457,16 @@ export default function RecipeView() {
         {/* Center Recipe Canvas */}
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           
+          {/* Hidden file input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            data-testid="input-result-file"
+          />
+          
           {/* Header */}
           <header className={`px-10 pt-10 ${isFocusLayout ? "pb-6" : "pb-4"}`}>
             <h1 className={`font-medium text-foreground tracking-tight ${isFocusLayout ? "text-3xl" : "text-2xl"}`} data-testid="text-recipe-title">
@@ -429,6 +480,13 @@ export default function RecipeView() {
                 Protein 42g • Fat 18g • Carbs 22g
               </p>
             )}
+            <button
+              onClick={handleAddResult}
+              className="mt-3 px-4 py-1.5 text-xs text-muted-foreground border hairline rounded-full hover:text-foreground hover:border-muted-foreground transition-colors"
+              data-testid="button-add-result"
+            >
+              Add result
+            </button>
           </header>
           
           {/* Sticky Ingredients */}
@@ -559,14 +617,23 @@ export default function RecipeView() {
         
         {/* Right Image Column */}
         <aside className="w-[320px] flex-shrink-0 p-6 hidden lg:block">
-          <div 
-            className="w-full h-[280px] rounded-xl"
-            style={{
-              background: "linear-gradient(135deg, hsl(35 30% 85%) 0%, hsl(25 20% 78%) 50%, hsl(30 25% 70%) 100%)"
-            }}
-            data-testid="image-dish-placeholder"
-            aria-label="Dish photo placeholder"
-          />
+          {resultImage ? (
+            <img 
+              src={resultImage}
+              alt="Cooking result"
+              className="w-full h-auto max-h-[400px] object-cover rounded-xl"
+              data-testid="image-result"
+            />
+          ) : (
+            <div 
+              className="w-full h-[280px] rounded-xl"
+              style={{
+                background: "linear-gradient(135deg, hsl(35 30% 85%) 0%, hsl(25 20% 78%) 50%, hsl(30 25% 70%) 100%)"
+              }}
+              data-testid="image-dish-placeholder"
+              aria-label="Dish photo placeholder"
+            />
+          )}
         </aside>
       </div>
       
