@@ -230,39 +230,43 @@ export default function RecipeView() {
             </div>
           </div>
           
-          <div className="border-t hairline my-3 mx-3" />
-          
-          {/* Cup Size */}
-          <div className="px-2 relative">
-            <div 
-              className={`control-knob ${(state.units === "ml" || state.units === "cups") ? "active" : ""}`}
-              onClick={() => setShowCupSelector(!showCupSelector)}
-              data-testid="button-cup-size"
-              role="button"
-              aria-label="Select cup size"
-            >
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Cup</span>
-              <span className="text-xs text-foreground">{state.cupMl} ml</span>
-            </div>
-            
-            {showCupSelector && (
-              <div className="absolute left-full ml-2 top-0 bg-background border hairline rounded-lg shadow-sm py-1 z-20" data-testid="cup-size-selector">
-                {[200, 240, 250].map(size => (
-                  <button
-                    key={size}
-                    className={`block w-full px-3 py-1.5 text-xs text-left hover:bg-muted ${state.cupMl === size ? "text-foreground font-medium" : "text-muted-foreground"}`}
-                    onClick={() => {
-                      updateState({ cupMl: size });
-                      setShowCupSelector(false);
-                    }}
-                    data-testid={`button-cup-${size}`}
-                  >
-                    {size} ml
-                  </button>
-                ))}
+          {state.units === "cups" && (
+            <>
+              <div className="border-t hairline my-3 mx-3" />
+              
+              {/* Cup Size */}
+              <div className="px-2 relative">
+                <div 
+                  className="control-knob active"
+                  onClick={() => setShowCupSelector(!showCupSelector)}
+                  data-testid="button-cup-size"
+                  role="button"
+                  aria-label="Select cup size"
+                >
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Cup</span>
+                  <span className="text-xs text-foreground">{state.cupMl} ml</span>
+                </div>
+                
+                {showCupSelector && (
+                  <div className="absolute left-full ml-2 top-0 bg-background border hairline rounded-lg shadow-sm py-1 z-20" data-testid="cup-size-selector">
+                    {[200, 240, 250].map(size => (
+                      <button
+                        key={size}
+                        className={`block w-full px-3 py-1.5 text-xs text-left hover:bg-muted ${state.cupMl === size ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                        onClick={() => {
+                          updateState({ cupMl: size });
+                          setShowCupSelector(false);
+                        }}
+                        data-testid={`button-cup-${size}`}
+                      >
+                        {size} ml
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
           
           <div className="border-t hairline my-3 mx-3" />
           
