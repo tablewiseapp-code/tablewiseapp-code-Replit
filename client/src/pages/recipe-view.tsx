@@ -482,7 +482,7 @@ export default function RecipeView() {
             )}
             <button
               onClick={handleAddResult}
-              className="mt-3 px-4 py-1.5 text-xs text-muted-foreground border hairline rounded-full hover:text-foreground hover:border-muted-foreground transition-colors"
+              className="mt-3 px-4 py-1.5 text-xs text-muted-foreground border border-border rounded-full hover:text-foreground hover:border-foreground/30 transition-colors"
               data-testid="button-add-result"
             >
               Add result
