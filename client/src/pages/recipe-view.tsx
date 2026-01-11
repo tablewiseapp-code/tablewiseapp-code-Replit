@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Ingredient {
   id: string;
@@ -11,6 +11,7 @@ interface Step {
   id: number;
   instruction: string;
   hint: string;
+  timeMinutes?: number;
 }
 
 interface RecipeState {
@@ -35,8 +36,8 @@ const baseIngredients: Ingredient[] = [
 
 const steps: Step[] = [
   { id: 1, instruction: "Prep the chicken and vegetables.", hint: "Cut chicken into bite-sized pieces. Dice onion finely for even cooking." },
-  { id: 2, instruction: "Sauté onions on low heat for 10 minutes.", hint: "Low heat means the onions soften without browning; stir occasionally." },
-  { id: 3, instruction: "Add the chicken and spices.", hint: "Cook chicken until golden on all sides, about 5-7 minutes." },
+  { id: 2, instruction: "Sauté onions on low heat for 10 minutes.", hint: "Low heat means the onions soften without browning; stir occasionally.", timeMinutes: 10 },
+  { id: 3, instruction: "Add the chicken and spices.", hint: "Cook chicken until golden on all sides, about 5-7 minutes.", timeMinutes: 6 },
 ];
 
 const defaultState: RecipeState = {
@@ -141,6 +142,41 @@ export default function RecipeView() {
   const [notes, setNotes] = useState(loadNotes);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   const [showCupSelector, setShowCupSelector] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerStepId, setTimerStepId] = useState<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (timerRunning && timerSeconds !== null && timerSeconds > 0) {
+      timerRef.current = setTimeout(() => {
+        setTimerSeconds(prev => (prev !== null ? prev - 1 : null));
+      }, 1000);
+    } else if (timerSeconds === 0) {
+      setTimerRunning(false);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [timerRunning, timerSeconds]);
+
+  const startTimer = (stepId: number, minutes: number) => {
+    setTimerStepId(stepId);
+    setTimerSeconds(minutes * 60);
+    setTimerRunning(true);
+  };
+
+  const stopTimer = () => {
+    setTimerRunning(false);
+    setTimerSeconds(null);
+    setTimerStepId(null);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     saveState(state);
@@ -472,6 +508,34 @@ export default function RecipeView() {
                         <p className="text-sm text-muted-foreground">
                           {step.hint}
                         </p>
+                      </div>
+                    )}
+                    
+                    {/* Timer */}
+                    {stepNum === state.activeStep && step.timeMinutes && (
+                      <div className="mt-4 flex items-center gap-3">
+                        {timerStepId === step.id && timerSeconds !== null ? (
+                          <>
+                            <span className={`text-lg font-medium tabular-nums ${timerSeconds === 0 ? "text-foreground" : "text-muted-foreground"}`} data-testid="text-timer">
+                              {timerSeconds === 0 ? "Done!" : formatTime(timerSeconds)}
+                            </span>
+                            <button
+                              onClick={stopTimer}
+                              className="next-btn px-4 py-1.5 rounded-full text-xs"
+                              data-testid="button-timer-stop"
+                            >
+                              Stop
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => startTimer(step.id, step.timeMinutes!)}
+                            className="next-btn px-4 py-1.5 rounded-full text-xs"
+                            data-testid="button-timer-start"
+                          >
+                            Timer ({step.timeMinutes} min)
+                          </button>
+                        )}
                       </div>
                     )}
                     
