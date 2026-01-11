@@ -452,6 +452,26 @@ export default function RecipeView() {
               <span className="text-[10px] text-muted-foreground">Notes</span>
             </div>
           </div>
+          
+          <div className="border-t hairline my-3 mx-3" />
+          
+          {/* Add Result */}
+          <div className="px-2">
+            <div 
+              className="control-knob"
+              onClick={handleAddResult}
+              data-testid="button-add-result"
+              role="button"
+              aria-label="Add cooking result photo"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-muted-foreground">
+                <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                <circle cx="4.5" cy="6.5" r="1" fill="currentColor"/>
+                <path d="M1.5 10.5L4.5 7.5L6.5 9.5L9.5 5.5L12.5 9.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-[10px] text-muted-foreground">Result</span>
+            </div>
+          </div>
         </aside>
         
         {/* Center Recipe Canvas */}
@@ -518,17 +538,6 @@ export default function RecipeView() {
               />
             </section>
           )}
-          
-          {/* Add Result Button */}
-          <div className="px-10 py-3">
-            <button
-              onClick={handleAddResult}
-              className="px-4 py-1.5 text-xs text-muted-foreground border border-border rounded-full hover:text-foreground hover:border-foreground/30 transition-colors"
-              data-testid="button-add-result"
-            >
-              Add result
-            </button>
-          </div>
           
           {/* Steps */}
           <section className={`px-10 flex-1 ${isFocusLayout ? "py-8" : "py-5"}`}>
