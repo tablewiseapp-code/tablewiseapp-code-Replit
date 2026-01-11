@@ -316,6 +316,9 @@ export default function RecipeView() {
 
   const scrollToTop = () => {
     topRef.current?.scrollIntoView({ behavior: "smooth" });
+    setCompletedSteps(new Set());
+    setCheckedIngredients(new Set());
+    updateState({ activeStep: 1, finished: false, showStepHint: false });
   };
 
   const getScaledIngredients = () => {
