@@ -390,7 +390,7 @@ export default function RecipeView() {
               role="button"
               aria-label="Toggle step help"
             >
-              <span className="text-sm text-muted-foreground">?</span>
+              <span className="text-[10px] text-muted-foreground">Guidance</span>
             </div>
           </div>
           
