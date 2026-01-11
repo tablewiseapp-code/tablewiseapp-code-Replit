@@ -585,7 +585,7 @@ export default function WeeklyMeals() {
               {filteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">No recipes match your filters.</p>
               ) : (
-                filteredRecipes.map(recipe => {
+                filteredRecipes.slice(0, 10).map(recipe => {
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
                   const monogram = getMonogram(recipe.title);
