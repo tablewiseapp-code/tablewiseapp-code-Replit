@@ -1,0 +1,114 @@
+Upgrade the existing 3-file Recipe View (index.html, styles.css, app.js) so EVERY control works exactly as defined below. Keep the UI calm, minimal, and low-contrast—no new visual clutter.
+
+IMPLEMENTATION RULES
+- Vanilla JS only.
+- Use event delegation where appropriate.
+- Maintain a single source of truth state object:
+  state = {
+    units: "g",            // "g" | "ml" | "cups"
+    cupMl: 240,            // number
+    servings: 2,           // integer >= 1
+    layout: "focus",       // "focus" | "standard"
+    showMacros: false,
+    helpEnabled: false,
+    notesEnabled: false,
+    activeStep: 1,         // 1-based index
+    showStepHint: false    // only for active step
+  }
+- Persist these in localStorage:
+  - servings, units, cupMl, layout, showMacros, helpEnabled, notesEnabled, activeStep
+  - notes text (key: "recipeNotes")
+- On load: restore state from localStorage and render.
+
+DATA MODEL (ingredients + steps)
+- Define ingredients as structured data with base amounts for 1 serving:
+  [
+    { id:"chicken", amount:150, unit:"g", name:"chicken thighs" },
+    { id:"oil", amount:0.5, unit:"tbsp", name:"olive oil" },
+    { id:"yogurt", amount:0.25, unit:"cup", name:"yogurt" },
+    { id:"onion", amount:0.5, unit:"pc", name:"onion, chopped" },
+    { id:"garlic", amount:1, unit:"clove", name:"garlic" }
+  ]
+- Multiply amounts by state.servings for display.
+- Steps: at least 3 steps with a short hint per step.
+
+UNITS BEHAVIOR
+- If units = "g":
+  - Show metric amounts where possible: "g" stays "g", "ml" stays "ml".
+  - For "cup"/"tbsp"/"tsp"/"pc"/"clove": keep as-is (do NOT force-convert everything).
+- If units = "ml":
+  - Convert cups to ml using state.cupMl (e.g., 0.5 cup => 120 ml if cupMl=240).
+  - Convert tbsp/tsp to ml using: 1 tbsp = 15 ml, 1 tsp = 5 ml.
+  - g stays g (do not convert mass to volume).
+- If units = "cups":
+  - Convert ml to cups using state.cupMl.
+  - Convert tbsp/tsp to cups using cup size:
+    tbspMl=15, tspMl=5; cups = ml/state.cupMl.
+  - g stays g.
+- Always round nicely:
+  - < 1: keep 2 decimals max (0.33)
+  - 1–10: 1 decimal max (2.5)
+  - >10: whole numbers
+- Display fraction formatting for cups only if easy; otherwise decimals are acceptable.
+
+CUP SIZE CONTROL
+- Clicking Cup size opens a tiny inline chooser (not a modal):
+  options: 200, 240, 250 ml.
+- Selecting updates state.cupMl, saves, and re-renders.
+- Only visually “active” when units="cups" or units="ml" (still editable always).
+
+SERVINGS STEPPER
+- "-" decreases servings by 1 to a minimum of 1.
+- "+" increases servings by 1 up to 20.
+- On change: update ingredient quantities, save, re-render.
+
+LAYOUT TOGGLE
+- Toggles between:
+  - focus layout: active step larger, more whitespace, quieter surrounding UI.
+  - standard layout: slightly denser, smaller step emphasis.
+- Implement via a body/class switch (e.g., .layout-focus / .layout-standard).
+- Save and re-render.
+
+MACROS TOGGLE
+- showMacros true => show the single macros line.
+- false => hide.
+- Save and re-render.
+
+HELP TOGGLE + STEP “?” ICON
+- helpEnabled false:
+  - Hide (or disable) the step “?” icon entirely.
+  - Ensure no hint text is visible.
+- helpEnabled true:
+  - Show a small “?” icon next to the active step text only.
+  - Clicking it toggles state.showStepHint (inline hint under active step).
+  - Hints are simple single-line text (no bubbles, no chat UI).
+- Save helpEnabled and showStepHint.
+
+NOTES TOGGLE
+- notesEnabled true => show “My notes” area (minimal textarea) between ingredients and steps.
+- notesEnabled false => hide it.
+- Notes textarea content persists in localStorage ("recipeNotes") and remains saved even when hidden.
+- Save notesEnabled.
+
+NEXT BUTTON
+- Advances activeStep by 1 until the last step.
+- Update rendering so:
+  - previous step = faded
+  - active step = emphasized
+  - next step = subtle
+- When activeStep is last:
+  - Button label becomes “Finish”
+  - Clicking “Finish” keeps the last step active (no looping) and disables the button (or keep enabled but do nothing).
+- Save activeStep on every change.
+
+RENDERING
+- Implement a single render() that:
+  - paints ingredients based on state (scaled + converted),
+  - paints steps with previous/active/next styling,
+  - shows/hides macros, notes, help icon/hint,
+  - updates all active toggle styles.
+- Never manually tweak DOM in many places; update state then call render().
+
+OUTPUT
+- Return updated full contents of index.html, styles.css, app.js.
+- Ensure everything works immediately when run.

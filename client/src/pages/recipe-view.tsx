@@ -1,29 +1,160 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-const ingredients = [
-  { id: 1, quantity: "300g", name: "chicken thighs" },
-  { id: 2, quantity: "1 tbsp", name: "olive oil" },
-  { id: 3, quantity: "1/2 cup", name: "yogurt" },
-  { id: 4, quantity: "1", name: "onion, chopped" },
-  { id: 5, quantity: "2 cloves", name: "garlic" },
+interface Ingredient {
+  id: string;
+  amount: number;
+  unit: string;
+  name: string;
+}
+
+interface Step {
+  id: number;
+  instruction: string;
+  hint: string;
+}
+
+interface RecipeState {
+  units: "g" | "ml" | "cups";
+  cupMl: number;
+  servings: number;
+  layout: "focus" | "standard";
+  showMacros: boolean;
+  helpEnabled: boolean;
+  notesEnabled: boolean;
+  activeStep: number;
+  showStepHint: boolean;
+}
+
+const baseIngredients: Ingredient[] = [
+  { id: "chicken", amount: 150, unit: "g", name: "chicken thighs" },
+  { id: "oil", amount: 0.5, unit: "tbsp", name: "olive oil" },
+  { id: "yogurt", amount: 0.25, unit: "cup", name: "yogurt" },
+  { id: "onion", amount: 0.5, unit: "pc", name: "onion, chopped" },
+  { id: "garlic", amount: 1, unit: "clove", name: "garlic" },
 ];
 
-const steps = [
+const steps: Step[] = [
   { id: 1, instruction: "Prep the chicken and vegetables.", hint: "Cut chicken into bite-sized pieces. Dice onion finely for even cooking." },
   { id: 2, instruction: "Sauté onions on low heat for 10 minutes.", hint: "Low heat means the onions soften without browning; stir occasionally." },
   { id: 3, instruction: "Add the chicken and spices.", hint: "Cook chicken until golden on all sides, about 5-7 minutes." },
 ];
 
-export default function RecipeView() {
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [servings, setServings] = useState(2);
-  const [units, setUnits] = useState<"metric" | "cups">("metric");
-  const [showNutrition, setShowNutrition] = useState(false);
-  const [helpEnabled, setHelpEnabled] = useState(true);
-  const [showHint, setShowHint] = useState(false);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
+const defaultState: RecipeState = {
+  units: "g",
+  cupMl: 240,
+  servings: 2,
+  layout: "focus",
+  showMacros: false,
+  helpEnabled: false,
+  notesEnabled: false,
+  activeStep: 1,
+  showStepHint: false,
+};
 
-  const toggleIngredient = (id: number) => {
+function loadState(): RecipeState {
+  try {
+    const saved = localStorage.getItem("recipeState");
+    if (saved) {
+      return { ...defaultState, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.error("Failed to load state:", e);
+  }
+  return defaultState;
+}
+
+function saveState(state: RecipeState) {
+  try {
+    localStorage.setItem("recipeState", JSON.stringify(state));
+  } catch (e) {
+    console.error("Failed to save state:", e);
+  }
+}
+
+function loadNotes(): string {
+  try {
+    return localStorage.getItem("recipeNotes") || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function saveNotes(notes: string) {
+  try {
+    localStorage.setItem("recipeNotes", notes);
+  } catch (e) {
+    console.error("Failed to save notes:", e);
+  }
+}
+
+function formatAmount(value: number): string {
+  if (value < 1) {
+    const rounded = Math.round(value * 100) / 100;
+    return rounded.toString();
+  } else if (value <= 10) {
+    const rounded = Math.round(value * 10) / 10;
+    return rounded.toString();
+  } else {
+    return Math.round(value).toString();
+  }
+}
+
+function convertAmount(amount: number, fromUnit: string, targetUnits: "g" | "ml" | "cups", cupMl: number): { amount: number; unit: string } {
+  const tbspMl = 15;
+  const tspMl = 5;
+
+  if (targetUnits === "g") {
+    return { amount, unit: fromUnit };
+  }
+
+  if (targetUnits === "ml") {
+    if (fromUnit === "cup") {
+      return { amount: amount * cupMl, unit: "ml" };
+    }
+    if (fromUnit === "tbsp") {
+      return { amount: amount * tbspMl, unit: "ml" };
+    }
+    if (fromUnit === "tsp") {
+      return { amount: amount * tspMl, unit: "ml" };
+    }
+    return { amount, unit: fromUnit };
+  }
+
+  if (targetUnits === "cups") {
+    if (fromUnit === "ml") {
+      return { amount: amount / cupMl, unit: "cup" };
+    }
+    if (fromUnit === "tbsp") {
+      return { amount: (amount * tbspMl) / cupMl, unit: "cup" };
+    }
+    if (fromUnit === "tsp") {
+      return { amount: (amount * tspMl) / cupMl, unit: "cup" };
+    }
+    return { amount, unit: fromUnit };
+  }
+
+  return { amount, unit: fromUnit };
+}
+
+export default function RecipeView() {
+  const [state, setState] = useState<RecipeState>(loadState);
+  const [notes, setNotes] = useState(loadNotes);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [showCupSelector, setShowCupSelector] = useState(false);
+
+  useEffect(() => {
+    saveState(state);
+  }, [state]);
+
+  useEffect(() => {
+    saveNotes(notes);
+  }, [notes]);
+
+  const updateState = useCallback((updates: Partial<RecipeState>) => {
+    setState(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const toggleIngredient = (id: string) => {
     const newChecked = new Set(checkedIngredients);
     if (newChecked.has(id)) {
       newChecked.delete(id);
@@ -34,20 +165,35 @@ export default function RecipeView() {
   };
 
   const nextStep = () => {
-    setShowHint(false);
-    if (activeStepIndex < steps.length - 1) {
-      setActiveStepIndex(activeStepIndex + 1);
+    if (state.activeStep < steps.length) {
+      updateState({ activeStep: state.activeStep + 1, showStepHint: false });
     }
   };
 
   const toggleHint = () => {
-    if (helpEnabled) {
-      setShowHint(!showHint);
+    if (state.helpEnabled) {
+      updateState({ showStepHint: !state.showStepHint });
     }
   };
 
+  const getScaledIngredients = () => {
+    return baseIngredients.map(ing => {
+      const scaledAmount = ing.amount * state.servings;
+      const converted = convertAmount(scaledAmount, ing.unit, state.units, state.cupMl);
+      return {
+        ...ing,
+        displayAmount: formatAmount(converted.amount),
+        displayUnit: converted.unit,
+      };
+    });
+  };
+
+  const scaledIngredients = getScaledIngredients();
+  const isLastStep = state.activeStep === steps.length;
+  const isFocusLayout = state.layout === "focus";
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className={`min-h-screen bg-background flex items-center justify-center p-6 ${isFocusLayout ? "layout-focus" : "layout-standard"}`}>
       <div className="recipe-surface w-full max-w-[1200px] min-h-[700px] rounded-xl flex overflow-hidden">
         
         {/* Left Control Rail */}
@@ -56,17 +202,26 @@ export default function RecipeView() {
           {/* Units Toggle */}
           <div className="px-2">
             <div 
-              className={`control-knob ${units === "metric" ? "active" : ""}`}
-              onClick={() => setUnits("metric")}
-              data-testid="toggle-units-metric"
+              className={`control-knob ${state.units === "g" ? "active" : ""}`}
+              onClick={() => updateState({ units: "g" })}
+              data-testid="toggle-units-g"
               role="button"
-              aria-label="Switch to metric units"
+              aria-label="Switch to grams"
             >
-              <span className="text-xs text-muted-foreground">g / ml</span>
+              <span className="text-xs text-muted-foreground">g</span>
             </div>
             <div 
-              className={`control-knob ${units === "cups" ? "active" : ""}`}
-              onClick={() => setUnits("cups")}
+              className={`control-knob ${state.units === "ml" ? "active" : ""}`}
+              onClick={() => updateState({ units: "ml" })}
+              data-testid="toggle-units-ml"
+              role="button"
+              aria-label="Switch to milliliters"
+            >
+              <span className="text-xs text-muted-foreground">ml</span>
+            </div>
+            <div 
+              className={`control-knob ${state.units === "cups" ? "active" : ""}`}
+              onClick={() => updateState({ units: "cups" })}
               data-testid="toggle-units-cups"
               role="button"
               aria-label="Switch to cups"
@@ -78,11 +233,35 @@ export default function RecipeView() {
           <div className="border-t hairline my-3 mx-3" />
           
           {/* Cup Size */}
-          <div className="px-2">
-            <div className="control-knob">
+          <div className="px-2 relative">
+            <div 
+              className={`control-knob ${(state.units === "ml" || state.units === "cups") ? "active" : ""}`}
+              onClick={() => setShowCupSelector(!showCupSelector)}
+              data-testid="button-cup-size"
+              role="button"
+              aria-label="Select cup size"
+            >
               <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Cup</span>
-              <span className="text-xs text-foreground">240 ml</span>
+              <span className="text-xs text-foreground">{state.cupMl} ml</span>
             </div>
+            
+            {showCupSelector && (
+              <div className="absolute left-full ml-2 top-0 bg-background border hairline rounded-lg shadow-sm py-1 z-20" data-testid="cup-size-selector">
+                {[200, 240, 250].map(size => (
+                  <button
+                    key={size}
+                    className={`block w-full px-3 py-1.5 text-xs text-left hover:bg-muted ${state.cupMl === size ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                    onClick={() => {
+                      updateState({ cupMl: size });
+                      setShowCupSelector(false);
+                    }}
+                    data-testid={`button-cup-${size}`}
+                  >
+                    {size} ml
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="border-t hairline my-3 mx-3" />
@@ -93,17 +272,19 @@ export default function RecipeView() {
               <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Servings</span>
               <div className="flex items-center gap-2">
                 <button 
-                  className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded"
-                  onClick={() => setServings(Math.max(1, servings - 1))}
+                  className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded disabled:opacity-30"
+                  onClick={() => updateState({ servings: Math.max(1, state.servings - 1) })}
+                  disabled={state.servings <= 1}
                   data-testid="button-servings-decrease"
                   aria-label="Decrease servings"
                 >
                   –
                 </button>
-                <span className="text-sm text-foreground w-4 text-center" data-testid="text-servings-count">{servings}</span>
+                <span className="text-sm text-foreground w-4 text-center" data-testid="text-servings-count">{state.servings}</span>
                 <button 
-                  className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded"
-                  onClick={() => setServings(servings + 1)}
+                  className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded disabled:opacity-30"
+                  onClick={() => updateState({ servings: Math.min(20, state.servings + 1) })}
+                  disabled={state.servings >= 20}
                   data-testid="button-servings-increase"
                   aria-label="Increase servings"
                 >
@@ -115,26 +296,40 @@ export default function RecipeView() {
           
           <div className="border-t hairline my-3 mx-3" />
           
-          {/* Layout Toggle (decorative) */}
+          {/* Layout Toggle */}
           <div className="px-2">
-            <div className="control-knob" role="button" aria-label="Toggle layout">
+            <div 
+              className={`control-knob ${state.layout === "focus" ? "active" : ""}`}
+              onClick={() => updateState({ layout: state.layout === "focus" ? "standard" : "focus" })}
+              data-testid="toggle-layout"
+              role="button" 
+              aria-label="Toggle layout"
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-muted-foreground">
-                <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                <rect x="2" y="9" width="12" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                {state.layout === "focus" ? (
+                  <>
+                    <rect x="3" y="3" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                  </>
+                ) : (
+                  <>
+                    <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                    <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                    <rect x="2" y="9" width="12" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                  </>
+                )}
               </svg>
-              <span className="text-[10px] text-muted-foreground">Layout</span>
+              <span className="text-[10px] text-muted-foreground">{state.layout === "focus" ? "Focus" : "Standard"}</span>
             </div>
           </div>
           
           <div className="border-t hairline my-3 mx-3" />
           
-          {/* Nutrition Toggle */}
+          {/* Macros Toggle */}
           <div className="px-2">
             <div 
-              className={`control-knob ${showNutrition ? "active" : ""}`}
-              onClick={() => setShowNutrition(!showNutrition)}
-              data-testid="toggle-nutrition"
+              className={`control-knob ${state.showMacros ? "active" : ""}`}
+              onClick={() => updateState({ showMacros: !state.showMacros })}
+              data-testid="toggle-macros"
               role="button"
               aria-label="Toggle nutrition info"
             >
@@ -147,10 +342,9 @@ export default function RecipeView() {
           {/* Help Toggle */}
           <div className="px-2">
             <div 
-              className={`control-knob ${helpEnabled ? "active" : ""}`}
+              className={`control-knob ${state.helpEnabled ? "active" : ""}`}
               onClick={() => {
-                setHelpEnabled(!helpEnabled);
-                if (helpEnabled) setShowHint(false);
+                updateState({ helpEnabled: !state.helpEnabled, showStepHint: false });
               }}
               data-testid="toggle-help"
               role="button"
@@ -159,20 +353,38 @@ export default function RecipeView() {
               <span className="text-sm text-muted-foreground">?</span>
             </div>
           </div>
+          
+          <div className="border-t hairline my-3 mx-3" />
+          
+          {/* Notes Toggle */}
+          <div className="px-2">
+            <div 
+              className={`control-knob ${state.notesEnabled ? "active" : ""}`}
+              onClick={() => updateState({ notesEnabled: !state.notesEnabled })}
+              data-testid="toggle-notes"
+              role="button"
+              aria-label="Toggle notes"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-muted-foreground">
+                <path d="M2 3h10M2 6h8M2 9h6M2 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="text-[10px] text-muted-foreground">Notes</span>
+            </div>
+          </div>
         </aside>
         
         {/* Center Recipe Canvas */}
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           
           {/* Header */}
-          <header className="px-10 pt-10 pb-6">
-            <h1 className="text-3xl font-medium text-foreground tracking-tight" data-testid="text-recipe-title">
+          <header className={`px-10 pt-10 ${isFocusLayout ? "pb-6" : "pb-4"}`}>
+            <h1 className={`font-medium text-foreground tracking-tight ${isFocusLayout ? "text-3xl" : "text-2xl"}`} data-testid="text-recipe-title">
               Chicken Curry
             </h1>
             <p className="text-sm text-muted-foreground mt-2" data-testid="text-recipe-meta">
               Source: Personal • Last cooked: 2 weeks ago • Modified by you
             </p>
-            {showNutrition && (
+            {state.showMacros && (
               <p className="text-sm text-muted-foreground mt-2" data-testid="text-nutrition-info">
                 Protein 42g • Fat 18g • Carbs 22g
               </p>
@@ -181,8 +393,8 @@ export default function RecipeView() {
           
           {/* Sticky Ingredients */}
           <section className="sticky top-0 bg-background z-10 px-10 py-4 border-b hairline">
-            <ul className="space-y-2">
-              {ingredients.map((ing) => (
+            <ul className={`${isFocusLayout ? "space-y-2" : "space-y-1"}`}>
+              {scaledIngredients.map((ing) => (
                 <li key={ing.id} className="flex items-center gap-3">
                   <input 
                     type="checkbox" 
@@ -190,10 +402,10 @@ export default function RecipeView() {
                     onChange={() => toggleIngredient(ing.id)}
                     className="w-4 h-4 rounded border-gray-300 text-foreground focus-ring-quiet cursor-pointer accent-current"
                     data-testid={`checkbox-ingredient-${ing.id}`}
-                    aria-label={`${ing.quantity} ${ing.name}`}
+                    aria-label={`${ing.displayAmount} ${ing.displayUnit} ${ing.name}`}
                   />
                   <span className={`text-sm ${checkedIngredients.has(ing.id) ? "line-through text-muted-foreground" : ""}`}>
-                    <span className="font-medium">{ing.quantity}</span>{" "}
+                    <span className="font-medium">{ing.displayAmount} {ing.displayUnit}</span>{" "}
                     <span className="text-foreground">{ing.name}</span>
                   </span>
                 </li>
@@ -201,13 +413,29 @@ export default function RecipeView() {
             </ul>
           </section>
           
+          {/* Notes Section */}
+          {state.notesEnabled && (
+            <section className="px-10 py-4 border-b hairline">
+              <label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">My notes</label>
+              <textarea
+                className="w-full bg-transparent border hairline rounded-lg p-3 text-sm text-foreground resize-none focus-ring-quiet placeholder:text-muted-foreground"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add your notes here..."
+                data-testid="textarea-notes"
+              />
+            </section>
+          )}
+          
           {/* Steps */}
-          <section className="px-10 py-8 flex-1">
-            <div className="space-y-10">
+          <section className={`px-10 flex-1 ${isFocusLayout ? "py-8" : "py-5"}`}>
+            <div className={isFocusLayout ? "space-y-10" : "space-y-6"}>
               {steps.map((step, index) => {
+                const stepNum = index + 1;
                 let stepClass = "step-subtle";
-                if (index < activeStepIndex) stepClass = "step-faded";
-                if (index === activeStepIndex) stepClass = "step-active";
+                if (stepNum < state.activeStep) stepClass = "step-faded";
+                if (stepNum === state.activeStep) stepClass = "step-active";
                 
                 return (
                   <div 
@@ -219,13 +447,13 @@ export default function RecipeView() {
                       Step {step.id}
                     </div>
                     <div className="flex items-start gap-2">
-                      <p className={`text-lg ${index === activeStepIndex ? "text-foreground" : "text-muted-foreground"}`}>
+                      <p className={`${isFocusLayout ? "text-lg" : "text-base"} ${stepNum === state.activeStep ? "text-foreground" : "text-muted-foreground"}`}>
                         {step.instruction}
                       </p>
-                      {index === activeStepIndex && helpEnabled && (
+                      {stepNum === state.activeStep && state.helpEnabled && (
                         <button 
                           onClick={toggleHint}
-                          className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded-full text-xs"
+                          className={`flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded-full text-xs ${state.showStepHint ? "bg-muted" : ""}`}
                           data-testid="button-step-help"
                           aria-label="Show step hint"
                         >
@@ -235,7 +463,7 @@ export default function RecipeView() {
                     </div>
                     
                     {/* Hint */}
-                    {index === activeStepIndex && showHint && helpEnabled && (
+                    {stepNum === state.activeStep && state.showStepHint && state.helpEnabled && (
                       <div className="mt-3 pl-3 border-l-2 hairline" data-testid="text-step-hint">
                         <p className="text-sm text-muted-foreground">
                           {step.hint}
@@ -243,14 +471,15 @@ export default function RecipeView() {
                       </div>
                     )}
                     
-                    {/* Next Button */}
-                    {index === activeStepIndex && index < steps.length - 1 && (
+                    {/* Next/Finish Button */}
+                    {stepNum === state.activeStep && (
                       <button 
                         onClick={nextStep}
-                        className="next-btn mt-6 px-5 py-2 rounded-full text-sm"
+                        disabled={isLastStep}
+                        className={`next-btn mt-6 px-5 py-2 rounded-full text-sm ${isLastStep ? "opacity-50 cursor-not-allowed" : ""}`}
                         data-testid="button-next-step"
                       >
-                        Next
+                        {isLastStep ? "Finish" : "Next"}
                       </button>
                     )}
                   </div>
@@ -272,6 +501,14 @@ export default function RecipeView() {
           />
         </aside>
       </div>
+      
+      {/* Click outside to close cup selector */}
+      {showCupSelector && (
+        <div 
+          className="fixed inset-0 z-10" 
+          onClick={() => setShowCupSelector(false)}
+        />
+      )}
     </div>
   );
 }
