@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 
 interface Recipe {
   id: string;
@@ -30,11 +31,19 @@ interface Filters {
   mustExclude: string[];
 }
 
+interface PlanAssignment {
+  recipeId: string;
+  mealType: "Breakfast" | "Lunch" | "Dinner";
+  startDay: number;
+  spanDays: number;
+}
+
 interface WeeklyMealsState {
   filters: Filters;
   selectedIds: string[];
   expandedSections: string[];
   showMoreFilters: boolean;
+  planAssignments: PlanAssignment[];
 }
 
 const sampleRecipes: Recipe[] = [
@@ -71,7 +80,11 @@ const defaultState: WeeklyMealsState = {
   selectedIds: [],
   expandedSections: ["time", "dietary"],
   showMoreFilters: false,
+  planAssignments: [],
 };
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MEALS: ("Breakfast" | "Lunch" | "Dinner")[] = ["Breakfast", "Lunch", "Dinner"];
 
 function loadState(): WeeklyMealsState {
   try {
@@ -101,6 +114,112 @@ function getMonogram(title: string): string {
   return title.substring(0, 2).toUpperCase();
 }
 
+function DraggableRecipe({ recipe, isInPlan }: { recipe: Recipe; isInPlan: boolean }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `recipe-${recipe.id}`,
+    data: { recipe },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`p-3 bg-[#FAFAF8] rounded-lg border hairline cursor-grab ${isDragging ? "opacity-50" : ""} ${isInPlan ? "border-[#7A9E7E]" : ""}`}
+      data-testid={`draggable-recipe-${recipe.id}`}
+    >
+      <p className="text-xs font-medium text-foreground truncate">{recipe.title}</p>
+      <p className="text-[10px] text-muted-foreground">{recipe.minutes} min</p>
+    </div>
+  );
+}
+
+function DroppableCell({ 
+  day, 
+  meal, 
+  assignment, 
+  recipe,
+  onExtend,
+  onShrink,
+  onRemove 
+}: { 
+  day: number; 
+  meal: "Breakfast" | "Lunch" | "Dinner"; 
+  assignment: PlanAssignment | null;
+  recipe: Recipe | null;
+  onExtend: () => void;
+  onShrink: () => void;
+  onRemove: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cell-${meal}-${day}`,
+    data: { day, meal },
+  });
+
+  const isStartCell = assignment && assignment.startDay === day;
+  const isSpanned = assignment && assignment.startDay < day && day < assignment.startDay + assignment.spanDays;
+  
+  if (isSpanned) {
+    return null;
+  }
+
+  const spanDays = assignment?.spanDays || 1;
+  const canExtend = assignment && (assignment.startDay + assignment.spanDays) < 7;
+  const canShrink = assignment && assignment.spanDays > 1;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[80px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"}`}
+      style={isStartCell ? { gridColumn: `span ${spanDays}` } : undefined}
+      data-testid={`cell-${meal}-${day}`}
+    >
+      {recipe && isStartCell ? (
+        <div className="h-full flex flex-col">
+          <div className="flex items-start justify-between gap-1">
+            <p className="text-xs font-medium text-foreground leading-tight flex-1">{recipe.title}</p>
+            <button 
+              onClick={onRemove}
+              className="text-muted-foreground hover:text-foreground text-xs"
+              data-testid={`remove-${meal}-${day}`}
+            >
+              ×
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">{recipe.minutes} min</p>
+          {spanDays > 1 && (
+            <p className="text-[10px] text-[#7A9E7E] mt-1">{spanDays} days</p>
+          )}
+          <div className="mt-auto pt-2 flex gap-1">
+            {canShrink && (
+              <button
+                onClick={onShrink}
+                className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
+                data-testid={`shrink-${meal}-${day}`}
+              >
+                −
+              </button>
+            )}
+            {canExtend && (
+              <button
+                onClick={onExtend}
+                className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
+                data-testid={`extend-${meal}-${day}`}
+              >
+                +
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="h-full flex items-center justify-center">
+          <span className="text-xs text-muted-foreground/50">Drop here</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function WeeklyMeals() {
   const [, setLocation] = useLocation();
   const [state, setState] = useState<WeeklyMealsState>(loadState);
@@ -109,6 +228,7 @@ export default function WeeklyMeals() {
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
+  const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     saveState(state);
@@ -247,49 +367,184 @@ export default function WeeklyMeals() {
     return sampleRecipes.filter(r => state.selectedIds.includes(r.id));
   };
 
-  if (planGenerated) {
-    const selectedRecipes = getSelectedRecipes();
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Brand Bar */}
-        <header className="border-b hairline px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
-              <span className="text-xs font-medium text-foreground">TW</span>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-foreground">Tablewise</span>
-              <span className="text-xs text-muted-foreground ml-2">Calm weekly planning</span>
-            </div>
-          </div>
-        </header>
+  const getAssignmentForCell = (meal: "Breakfast" | "Lunch" | "Dinner", day: number): PlanAssignment | null => {
+    return state.planAssignments.find(a => 
+      a.mealType === meal && 
+      day >= a.startDay && 
+      day < a.startDay + a.spanDays
+    ) || null;
+  };
 
-        <main className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-md text-center">
-            <h1 className="text-2xl font-medium text-foreground mb-4">Weekly plan created.</h1>
-            <ul className="text-left space-y-2 mb-8">
-              {selectedRecipes.map(recipe => (
-                <li key={recipe.id} className="text-sm text-muted-foreground">
-                  • {recipe.title}
-                </li>
-              ))}
-            </ul>
+  const handleDragStart = (event: DragStartEvent) => {
+    const recipe = event.active.data.current?.recipe as Recipe;
+    setActiveRecipe(recipe);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveRecipe(null);
+    
+    const { active, over } = event;
+    if (!over) return;
+
+    const recipe = active.data.current?.recipe as Recipe;
+    if (!recipe) return;
+
+    const dropData = over.data.current as { day: number; meal: "Breakfast" | "Lunch" | "Dinner" } | undefined;
+    if (!dropData) return;
+
+    const { day, meal } = dropData;
+
+    const existingAssignment = getAssignmentForCell(meal, day);
+    if (existingAssignment) return;
+
+    setState(prev => ({
+      ...prev,
+      planAssignments: [
+        ...prev.planAssignments.filter(a => !(a.recipeId === recipe.id && a.mealType === meal)),
+        { recipeId: recipe.id, mealType: meal, startDay: day, spanDays: 1 }
+      ]
+    }));
+  };
+
+  const extendAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
+    setState(prev => ({
+      ...prev,
+      planAssignments: prev.planAssignments.map(a => {
+        if (a.mealType === meal && a.startDay === day) {
+          const nextDay = a.startDay + a.spanDays;
+          const hasConflict = prev.planAssignments.some(other => 
+            other !== a && 
+            other.mealType === meal && 
+            nextDay >= other.startDay && 
+            nextDay < other.startDay + other.spanDays
+          );
+          if (!hasConflict && nextDay < 7) {
+            return { ...a, spanDays: a.spanDays + 1 };
+          }
+        }
+        return a;
+      })
+    }));
+  };
+
+  const shrinkAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
+    setState(prev => ({
+      ...prev,
+      planAssignments: prev.planAssignments.map(a => {
+        if (a.mealType === meal && a.startDay === day && a.spanDays > 1) {
+          return { ...a, spanDays: a.spanDays - 1 };
+        }
+        return a;
+      })
+    }));
+  };
+
+  const removeAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
+    setState(prev => ({
+      ...prev,
+      planAssignments: prev.planAssignments.filter(a => !(a.mealType === meal && a.startDay === day))
+    }));
+  };
+
+  const selectedRecipes = getSelectedRecipes();
+
+  if (planGenerated) {
+    return (
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="min-h-screen bg-background flex flex-col">
+          <header className="border-b hairline px-8 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
+                <span className="text-xs font-medium text-foreground">TW</span>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-foreground">Tablewise</span>
+                <span className="text-xs text-muted-foreground ml-2">Weekly Plan</span>
+              </div>
+            </div>
             <button 
               onClick={() => setPlanGenerated(false)}
               className="text-sm text-muted-foreground hover:text-foreground"
               data-testid="button-back-to-selection"
             >
-              Back to selection
+              ← Back to selection
             </button>
+          </header>
+
+          <div className="flex-1 flex p-6 gap-6">
+            <aside className="w-[200px] flex-shrink-0">
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">Your recipes</h3>
+              <p className="text-xs text-muted-foreground mb-4">Drag to the calendar</p>
+              <div className="space-y-2">
+                {selectedRecipes.map(recipe => {
+                  const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
+                  return (
+                    <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} />
+                  );
+                })}
+              </div>
+            </aside>
+
+            <main className="flex-1">
+              <h2 className="text-lg font-medium text-foreground mb-4">Weekly Plan</h2>
+              <p className="text-sm text-muted-foreground mb-6">Drag meals to slots. Use +/− to extend across days.</p>
+
+              <div className="grid grid-cols-7 gap-2 mb-2">
+                {DAYS.map((day, i) => (
+                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {MEALS.map(meal => (
+                <div key={meal} className="mb-4">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{meal}</div>
+                  <div className="grid grid-cols-7 gap-2">
+                    {DAYS.map((_, dayIndex) => {
+                      const assignment = getAssignmentForCell(meal, dayIndex);
+                      const isSpanned = assignment && assignment.startDay < dayIndex;
+                      
+                      if (isSpanned) {
+                        return null;
+                      }
+
+                      const recipe = assignment ? sampleRecipes.find(r => r.id === assignment.recipeId) || null : null;
+
+                      return (
+                        <DroppableCell
+                          key={dayIndex}
+                          day={dayIndex}
+                          meal={meal}
+                          assignment={assignment}
+                          recipe={recipe}
+                          onExtend={() => assignment && extendAssignment(meal, assignment.startDay)}
+                          onShrink={() => assignment && shrinkAssignment(meal, assignment.startDay)}
+                          onRemove={() => assignment && removeAssignment(meal, assignment.startDay)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </main>
           </div>
-        </main>
-      </div>
+
+          <DragOverlay>
+            {activeRecipe && (
+              <div className="p-3 bg-[#FAFAF8] rounded-lg border border-[#7A9E7E] shadow-lg">
+                <p className="text-xs font-medium text-foreground">{activeRecipe.title}</p>
+                <p className="text-[10px] text-muted-foreground">{activeRecipe.minutes} min</p>
+              </div>
+            )}
+          </DragOverlay>
+        </div>
+      </DndContext>
     );
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Brand Bar */}
       <header className="border-b hairline px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
@@ -310,11 +565,9 @@ export default function WeeklyMeals() {
         </nav>
       </header>
 
-      {/* Main Container */}
       <div className="flex-1 flex justify-center p-6">
         <div className="w-full max-w-[1200px] flex gap-6">
           
-          {/* Left Filter Rail */}
           <aside className="w-[240px] flex-shrink-0">
             <div className="sticky top-6">
               <div className="flex items-center justify-between mb-4">
@@ -330,7 +583,6 @@ export default function WeeklyMeals() {
                 )}
               </div>
 
-              {/* Time Filter */}
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("time")}
@@ -356,7 +608,6 @@ export default function WeeklyMeals() {
                 )}
               </div>
 
-              {/* Dietary Filter */}
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("dietary")}
@@ -384,7 +635,6 @@ export default function WeeklyMeals() {
                 )}
               </div>
 
-              {/* Meal Type Filter */}
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("mealType")}
@@ -410,7 +660,6 @@ export default function WeeklyMeals() {
                 )}
               </div>
 
-              {/* Cooking Method Filter */}
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("method")}
@@ -436,7 +685,6 @@ export default function WeeklyMeals() {
                 )}
               </div>
 
-              {/* Source Filter */}
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("source")}
@@ -462,7 +710,6 @@ export default function WeeklyMeals() {
                 )}
               </div>
 
-              {/* More Filters Toggle */}
               <button 
                 onClick={() => setState(prev => ({ ...prev, showMoreFilters: !prev.showMoreFilters }))}
                 className="text-xs text-muted-foreground hover:text-foreground mb-3"
@@ -473,7 +720,6 @@ export default function WeeklyMeals() {
 
               {state.showMoreFilters && (
                 <>
-                  {/* Protein Type Filter */}
                   <div className="border-b hairline pb-3 mb-3">
                     <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Protein type</span>
                     <div className="flex flex-wrap gap-2">
@@ -490,7 +736,6 @@ export default function WeeklyMeals() {
                     </div>
                   </div>
 
-                  {/* Toggle Filters */}
                   <div className="border-b hairline pb-3 mb-3 space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -514,7 +759,6 @@ export default function WeeklyMeals() {
                     </label>
                   </div>
 
-                  {/* Must Include */}
                   <div className="border-b hairline pb-3 mb-3">
                     <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Must include</span>
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -536,7 +780,6 @@ export default function WeeklyMeals() {
                     />
                   </div>
 
-                  {/* Must Exclude */}
                   <div className="pb-3 mb-3">
                     <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Must exclude</span>
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -562,9 +805,7 @@ export default function WeeklyMeals() {
             </div>
           </aside>
 
-          {/* Right Results Canvas */}
           <main className="flex-1 min-w-0">
-            {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h1 className="text-xl font-medium text-foreground">Step 2 — Meals</h1>
@@ -580,7 +821,6 @@ export default function WeeklyMeals() {
               </div>
             </div>
 
-            {/* Recipe List */}
             <div className="space-y-4">
               {filteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">No recipes match your filters.</p>
@@ -603,14 +843,11 @@ export default function WeeklyMeals() {
                       className="bg-[#FAFAF8] rounded-2xl p-5 shadow-sm flex gap-4"
                       data-testid={`recipe-card-${recipe.id}`}
                     >
-                      {/* Left: Small Image */}
                       <div className="w-20 h-20 rounded-xl bg-foreground/5 flex-shrink-0 overflow-hidden flex items-center justify-center">
                         <span className="text-2xl font-medium text-muted-foreground/50">{monogram}</span>
                       </div>
                       
-                      {/* Right: Content */}
                       <div className="flex-1 min-w-0">
-                        {/* Top Row: Title, Add */}
                         <div className="flex items-start gap-3 mb-2">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
@@ -624,7 +861,6 @@ export default function WeeklyMeals() {
                           </button>
                         </div>
 
-                      {/* Tags Row */}
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.minutes} Min</span>
                         <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.mealType}</span>
@@ -636,7 +872,6 @@ export default function WeeklyMeals() {
                         )}
                       </div>
 
-                      {/* Metadata Lines */}
                       <div className="space-y-1 mb-4">
                         <p className="text-xs text-muted-foreground">Source: {recipe.sourceType}</p>
                         <div className="flex items-center gap-2">
@@ -645,7 +880,6 @@ export default function WeeklyMeals() {
                         <p className="text-xs text-muted-foreground">Tools: {recipe.tools.join(", ").toLowerCase()}</p>
                       </div>
 
-                      {/* Bottom Buttons */}
                       <div className="flex gap-2">
                         <button
                           onClick={() => setLocation("/")}
@@ -663,7 +897,6 @@ export default function WeeklyMeals() {
                         </button>
                       </div>
 
-                      {/* Expanded Details */}
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
                           <p className="text-xs font-medium text-foreground mb-2">Recipe preview</p>
@@ -681,7 +914,6 @@ export default function WeeklyMeals() {
               )}
             </div>
 
-            {/* Footer Actions */}
             <div className="mt-8 flex items-center justify-between">
               <div>
                 <button
@@ -699,7 +931,6 @@ export default function WeeklyMeals() {
               <p className="text-xs text-muted-foreground">You can adjust this later.</p>
             </div>
 
-            {/* Footer */}
             <footer className="mt-12 pt-6 border-t hairline text-center">
               <p className="text-xs text-muted-foreground">Built for families—no ads, no sponsored meals.</p>
               <p className="text-xs text-muted-foreground mt-1">v0.1 prototype</p>
