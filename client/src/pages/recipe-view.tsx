@@ -378,34 +378,6 @@ export default function RecipeView() {
           
           <div className="border-t hairline my-3 mx-3" />
           
-          {/* Layout Toggle */}
-          <div className="px-2">
-            <div 
-              className={`control-knob ${state.layout === "focus" ? "active" : ""}`}
-              onClick={() => updateState({ layout: state.layout === "focus" ? "standard" : "focus" })}
-              data-testid="toggle-layout"
-              role="button" 
-              aria-label="Toggle layout"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-muted-foreground">
-                {state.layout === "focus" ? (
-                  <>
-                    <rect x="3" y="3" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-                  </>
-                ) : (
-                  <>
-                    <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                    <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                    <rect x="2" y="9" width="12" height="5" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                  </>
-                )}
-              </svg>
-              <span className="text-[10px] text-muted-foreground">{state.layout === "focus" ? "Focus" : "Standard"}</span>
-            </div>
-          </div>
-          
-          <div className="border-t hairline my-3 mx-3" />
-          
           {/* Macros Toggle */}
           <div className="px-2">
             <div 
@@ -471,6 +443,21 @@ export default function RecipeView() {
                 <path d="M1.5 10.5L4.5 7.5L6.5 9.5L9.5 5.5L12.5 9.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className="text-[10px] text-muted-foreground">Result</span>
+            </div>
+          </div>
+          
+          <div className="border-t hairline my-3 mx-3" />
+          
+          {/* Focus Mode */}
+          <div className="px-2">
+            <div 
+              className={`control-knob ${state.layout === "focus" ? "active" : ""}`}
+              onClick={() => updateState({ layout: state.layout === "focus" ? "standard" : "focus" })}
+              data-testid="button-focus-mode"
+              role="button"
+              aria-label="Toggle focus mode"
+            >
+              <span className="text-[10px] text-muted-foreground text-center leading-tight">Focus mode</span>
             </div>
           </div>
         </aside>
