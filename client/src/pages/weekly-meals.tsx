@@ -600,25 +600,29 @@ export default function WeeklyMeals() {
                   return (
                     <div 
                       key={recipe.id} 
-                      className="bg-[#FAFAF8] rounded-2xl p-5 shadow-sm"
+                      className="bg-[#FAFAF8] rounded-2xl p-5 shadow-sm flex gap-4"
                       data-testid={`recipe-card-${recipe.id}`}
                     >
-                      {/* Top Row: Monogram, Title, Add */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-medium text-muted-foreground">{monogram}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
-                        </div>
-                        <button
-                          onClick={() => toggleSelection(recipe.id)}
-                          className={`px-3 py-1 text-xs rounded-full border flex-shrink-0 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
-                          data-testid={`button-add-${recipe.id}`}
-                        >
-                          {isSelected ? "Added" : "Add"}
-                        </button>
+                      {/* Left: Small Image */}
+                      <div className="w-20 h-20 rounded-xl bg-foreground/5 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                        <span className="text-2xl font-medium text-muted-foreground/50">{monogram}</span>
                       </div>
+                      
+                      {/* Right: Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Top Row: Title, Add */}
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
+                          </div>
+                          <button
+                            onClick={() => toggleSelection(recipe.id)}
+                            className={`px-3 py-1 text-xs rounded-full border flex-shrink-0 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
+                            data-testid={`button-add-${recipe.id}`}
+                          >
+                            {isSelected ? "Added" : "Add"}
+                          </button>
+                        </div>
 
                       {/* Tags Row */}
                       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -670,6 +674,7 @@ export default function WeeklyMeals() {
                           </ul>
                         </div>
                       )}
+                      </div>
                     </div>
                   );
                 })
