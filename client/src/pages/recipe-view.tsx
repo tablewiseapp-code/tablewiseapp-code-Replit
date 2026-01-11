@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import plovImage from "@assets/generated_images/traditional_plov_rice_dish.png";
 
 interface Ingredient {
   id: string;
@@ -490,7 +491,7 @@ export default function RecipeView() {
           {/* Header */}
           <header className={`px-10 pt-10 ${isFocusLayout ? "pb-6" : "pb-4"}`}>
             <h1 className={`font-medium text-foreground tracking-tight ${isFocusLayout ? "text-3xl" : "text-2xl"}`} data-testid="text-recipe-title">
-              Chicken Curry
+              Plov
             </h1>
             <p className="text-sm text-muted-foreground mt-2" data-testid="text-recipe-meta">
               Source: Personal • Last cooked: 2 weeks ago • Modified by you
@@ -638,13 +639,11 @@ export default function RecipeView() {
               data-testid="image-result"
             />
           ) : (
-            <div 
-              className="w-full h-[280px] rounded-xl"
-              style={{
-                background: "linear-gradient(135deg, hsl(35 30% 85%) 0%, hsl(25 20% 78%) 50%, hsl(30 25% 70%) 100%)"
-              }}
+            <img 
+              src={plovImage}
+              alt="Plov dish"
+              className="w-full h-auto max-h-[400px] object-cover rounded-xl"
               data-testid="image-dish-placeholder"
-              aria-label="Dish photo placeholder"
             />
           )}
         </aside>
