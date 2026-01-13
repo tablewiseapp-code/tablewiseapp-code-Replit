@@ -552,7 +552,7 @@ export default function RecipeView() {
               className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
               data-testid="button-back"
             >
-              ← Back
+              ← Plan weekly meals
             </button>
             <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
               Plov
