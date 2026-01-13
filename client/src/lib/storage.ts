@@ -5,6 +5,8 @@ export type Recipe = {
   steps: string[];
   createdAt: number;
   updatedAt: number;
+  image?: string;
+  sourceUrl?: string;
 };
 
 const STORAGE_KEY = "tw_current_recipe";

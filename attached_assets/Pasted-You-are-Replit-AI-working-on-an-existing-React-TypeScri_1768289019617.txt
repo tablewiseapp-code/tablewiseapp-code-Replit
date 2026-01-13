@@ -1,0 +1,104 @@
+You are Replit AI working on an existing React + TypeScript web app.
+
+CURRENT STATE
+- There is already an “Import Recipe” screen with:
+  - Title input
+  - Ingredients textarea (one per line)
+  - Steps textarea (one per line)
+  - “Save & open” and “Back” buttons
+- Everything is stored locally in the browser.
+- No backend exists and none should be added.
+
+GOAL
+Extend the existing Import Recipe screen by adding TWO new optional features:
+1) Take / add a photo
+2) Add a recipe URL
+
+These must be OPTIONAL and must NOT block saving a recipe.
+
+DO NOT redesign the whole screen.
+Add these features in a clean, minimal way.
+
+––––––––––––––––––
+FEATURE 1: TAKE / ADD A PHOTO
+––––––––––––––––––
+
+UI REQUIREMENTS
+- Add a new section ABOVE the Title input.
+- Label: “Photo (optional)”
+- Show a dashed card/button with:
+  - Camera icon or placeholder
+  - Text: “Take a photo or upload”
+- Clicking it should open a file input:
+  - <input type="file" accept="image/*" capture="environment">
+
+BEHAVIOR
+- Allow selecting ONE image only (for now).
+- After selection:
+  - Show a small preview thumbnail
+  - Show a small “Remove” (×) button
+- Image is optional.
+
+STORAGE
+- Store the image as a base64 string in localStorage.
+- Add to Recipe model:
+
+type Recipe = {
+  ...
+  image?: string; // base64
+}
+
+––––––––––––––––––
+FEATURE 2: ADD URL
+––––––––––––––––––
+
+UI REQUIREMENTS
+- Add a new section BELOW the photo section and ABOVE the Title input.
+- Label: “Source link (optional)”
+- Single-line input field with placeholder:
+  “Paste recipe link (Instagram, website, YouTube)”
+
+BEHAVIOR
+- Validate URL format lightly (try/catch new URL()).
+- If invalid, show a small inline hint (do NOT block saving).
+- If valid, store it.
+
+STORAGE
+- Extend Recipe model:
+
+type Recipe = {
+  ...
+  sourceUrl?: string;
+}
+
+––––––––––––––––––
+SAVE BEHAVIOR (IMPORTANT)
+––––––––––––––––––
+
+- “Save & open” must:
+  - Save title, ingredients, steps
+  - ALSO save image (if exists)
+  - ALSO save sourceUrl (if exists)
+- Recipe screen should:
+  - Display the image at the top if exists
+  - Display the source link as a small clickable link if exists
+
+––––––––––––––––––
+RULES
+––––––––––––––––––
+
+- Keep everything client-side only.
+- Use localStorage only.
+- Do NOT add external libraries unless absolutely necessary.
+- Do NOT remove or rename existing fields.
+- Keep styling consistent with the existing UI.
+- No advanced parsing, OCR, or AI logic yet.
+
+––––––––––––––––––
+DELIVERABLE
+––––––––––––––––––
+
+After implementation, output:
+1) Files changed
+2) Short explanation of how photo + URL are stored
+3) Manual test steps (3–4 bullets)
