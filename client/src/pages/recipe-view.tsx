@@ -550,10 +550,10 @@ export default function RecipeView() {
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => setLocation("/meals")}
-                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-                data-testid="button-back"
+                className="px-4 py-1.5 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
+                data-testid="button-back-to-selection"
               >
-                ← Plan weekly meals
+                ← <span className="hidden sm:inline">Back to recipe selection</span><span className="sm:hidden">Back</span>
               </button>
               <button
                 onClick={() => setLocation("/import")}
