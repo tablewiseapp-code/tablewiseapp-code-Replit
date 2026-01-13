@@ -1,6 +1,33 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { saveCurrentRecipe, generateId, type Recipe } from "@/lib/storage";
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition: new () => SpeechRecognitionInstance;
+  }
+}
 
 function isValidUrl(str: string): boolean {
   try {
@@ -11,6 +38,23 @@ function isValidUrl(str: string): boolean {
   }
 }
 
+function parseRecipeText(text: string): { title: string; ingredients: string[]; steps: string[] } {
+  const lines = text.split(/[.,!?]+/).map(l => l.trim()).filter(l => l.length > 0);
+  
+  if (lines.length === 0) {
+    return { title: "", ingredients: [], steps: [] };
+  }
+
+  const title = lines[0] || "";
+  const rest = lines.slice(1);
+  
+  const midpoint = Math.ceil(rest.length / 2);
+  const ingredients = rest.slice(0, midpoint);
+  const steps = rest.slice(midpoint);
+
+  return { title, ingredients, steps };
+}
+
 export default function ImportRecipe() {
   const [, setLocation] = useLocation();
   const [title, setTitle] = useState("");
@@ -19,6 +63,108 @@ export default function ImportRecipe() {
   const [image, setImage] = useState<string | null>(null);
   const [sourceUrl, setSourceUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState<"idle" | "recording" | "ready">("idle");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+
+  const speechSupported = typeof window !== "undefined" && 
+    (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const startDictation = () => {
+    if (!speechSupported) return;
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionAPI();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    let finalTranscript = "";
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + " ";
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      setTranscript(finalTranscript + interim);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+      setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    setVoiceStatus("recording");
+  };
+
+  const stopDictation = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsRecording(false);
+    setVoiceStatus(transcript.trim() ? "ready" : "idle");
+  };
+
+  const clearTranscript = () => {
+    setTranscript("");
+    setVoiceStatus("idle");
+  };
+
+  const handleTranscribeAndFill = () => {
+    if (!transcript.trim()) return;
+
+    setIsProcessing(true);
+
+    setTimeout(() => {
+      const parsed = parseRecipeText(transcript);
+
+      const hasExisting = title.trim() || ingredients.trim() || steps.trim();
+      
+      if (hasExisting) {
+        const replace = window.confirm("Replace existing content?");
+        if (replace) {
+          setTitle(parsed.title);
+          setIngredients(parsed.ingredients.join("\n"));
+          setSteps(parsed.steps.join("\n"));
+        } else {
+          if (parsed.title) setTitle(prev => prev ? prev + "\n" + parsed.title : parsed.title);
+          if (parsed.ingredients.length) setIngredients(prev => prev ? prev + "\n\n" + parsed.ingredients.join("\n") : parsed.ingredients.join("\n"));
+          if (parsed.steps.length) setSteps(prev => prev ? prev + "\n\n" + parsed.steps.join("\n") : parsed.steps.join("\n"));
+        }
+      } else {
+        setTitle(parsed.title);
+        setIngredients(parsed.ingredients.join("\n"));
+        setSteps(parsed.steps.join("\n"));
+      }
+
+      setIsProcessing(false);
+    }, 500);
+  };
 
   const urlValid = !sourceUrl.trim() || isValidUrl(sourceUrl.trim());
 
@@ -145,6 +291,73 @@ export default function ImportRecipe() {
             )}
           </div>
 
+          <div className="p-5 bg-[#FAFAF8] rounded-xl">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Voice (AI)</p>
+            <p className="text-sm font-medium text-foreground mb-1">Speak your recipe</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Say the recipe out loud — we'll transcribe it and auto-fill title, ingredients, and steps.
+            </p>
+
+            {!speechSupported ? (
+              <p className="text-xs text-muted-foreground">Voice transcription isn't supported in this browser.</p>
+            ) : (
+              <>
+                <div className="flex gap-2 mb-3">
+                  {!isRecording ? (
+                    <button
+                      onClick={startDictation}
+                      disabled={isProcessing}
+                      className="px-4 py-2 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+                      data-testid="button-start-dictation"
+                    >
+                      Start dictation
+                    </button>
+                  ) : (
+                    <button
+                      onClick={stopDictation}
+                      className="px-4 py-2 text-sm rounded-full bg-red-500 text-white hover:bg-red-600"
+                      data-testid="button-stop-dictation"
+                    >
+                      Stop
+                    </button>
+                  )}
+
+                  {voiceStatus === "ready" && (
+                    <button
+                      onClick={handleTranscribeAndFill}
+                      disabled={isProcessing}
+                      className="px-4 py-2 text-sm rounded-full border hairline text-foreground hover:bg-foreground/5 disabled:opacity-50"
+                      data-testid="button-transcribe"
+                    >
+                      {isProcessing ? "Processing…" : "Transcribe & auto-fill"}
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-2">
+                  {voiceStatus === "idle" && "Tip: Say title → ingredients → steps."}
+                  {voiceStatus === "recording" && "Listening…"}
+                  {voiceStatus === "ready" && "Transcript ready."}
+                </p>
+
+                {transcript && (
+                  <div className="mt-3 p-3 bg-white rounded-lg border hairline">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs text-foreground flex-1">{transcript}</p>
+                      <button
+                        onClick={clearTranscript}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                        data-testid="button-clear-transcript"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           <div>
             <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
               Title
@@ -217,9 +430,9 @@ Sauté onions until golden brown"
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">How it works</p>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>• Paste your recipe text—we'll split it into lines automatically</li>
+            <li>• Use voice dictation to speak your recipe</li>
             <li>• Add a photo and source link (both optional)</li>
             <li>• Your recipe is stored locally in your browser</li>
-            <li>• Edit or re-import anytime</li>
           </ul>
         </div>
       </div>

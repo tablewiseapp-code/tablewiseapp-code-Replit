@@ -1,0 +1,75 @@
+You are Replit AI. Update the existing “Import Recipe” screen (React + TypeScript). 
+We already have automatic AI generation that can parse free text into Title / Ingredients / Steps.
+Do NOT add a “where to put it” modal and do NOT require field focus.
+
+GOAL
+Add ONE microphone-based dictation feature that:
+1) Records voice
+2) Converts speech to raw text (transcript)
+3) Sends that raw text into the existing AI auto-splitting pipeline
+4) Auto-fills Title / Ingredients / Steps
+
+UI REQUIREMENTS
+Add a new card section between “Source link (optional)” and “Title”:
+
+- Label: “VOICE (AI)”
+- Title: “Speak your recipe”
+- Subtext: “Say the recipe out loud — we’ll transcribe it and auto-fill title, ingredients, and steps.”
+- Buttons:
+  - Primary: “Start dictation”
+  - While recording: button changes to “Stop”
+  - After stop (if transcript exists): show a button “Transcribe & auto-fill”
+- Show a small status line:
+  - Idle: “Tip: Say title → ingredients → steps.”
+  - Recording: “Listening…”
+  - After stop: “Transcript ready.”
+
+FUNCTIONAL REQUIREMENTS
+A) Speech-to-text (client-only)
+- Use the Web Speech API:
+  - const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+- If unsupported:
+  - Disable the dictation button and show: “Voice transcription isn’t supported in this browser.”
+- Setup:
+  - recognition.continuous = true
+  - recognition.interimResults = true
+  - recognition.lang = "en-US" (or keep as a constant to change later)
+- Accumulate FINAL results into `transcript` string (ignore interim for final buffer, but can display interim live if easy).
+- On Stop: stop recognition safely and freeze transcript.
+
+B) AI auto-fill integration (IMPORTANT)
+- The app already has an AI function that takes free text and returns:
+  { title: string, ingredients: string[], steps: string[] }
+- Find and reuse that existing function. Do NOT create a new AI pipeline.
+- When user clicks “Transcribe & auto-fill”:
+  1) Call the existing AI parsing function with the transcript text.
+  2) Set form fields:
+     - Title input value
+     - Ingredients textarea value as lines joined by "\n"
+     - Steps textarea value as lines joined by "\n"
+- Show loading state while AI runs:
+  - Disable buttons
+  - Button text: “Processing…”
+
+C) Quality + safety behavior
+- Provide “Clear” link to clear transcript only (does not clear fields).
+- Dictation must not overwrite existing fields blindly:
+  - If fields already contain text, append with a blank line separator OR ask via a simple confirm dialog:
+    “Replace existing content?” with OK=replace, Cancel=append.
+  (Choose the simplest: use window.confirm)
+
+D) No backend
+- No server routes.
+- No external libraries.
+- Keep everything client-side.
+
+DELIVERABLE
+- Implement this in the existing Import screen file.
+- Output:
+  - Files changed
+  - Manual test checklist:
+    1) Start dictation
+    2) Speak a recipe
+    3) Stop
+    4) Transcribe & auto-fill
+    5) Verify Title/Ingredients/Steps are filled
