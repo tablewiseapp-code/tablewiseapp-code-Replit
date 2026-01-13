@@ -1,0 +1,112 @@
+You are Replit AI. You will modify my existing web app (React + TypeScript) that currently has ONLY a single “Recipe” screen. Your task is to add a new “Import Recipe” flow and connect it from the existing Recipe screen via a button.
+
+HARD REQUIREMENTS
+- Keep everything client-side only (no backend).
+- Use localStorage for persistence (simple + reliable for now).
+- Keep UI clean and minimal.
+- Do NOT remove or break the existing Recipe screen. Only extend.
+
+WHAT I HAVE NOW (ASSUME)
+- There is a current page/component that shows a single recipe screen (RecipeView).
+- The project runs in Replit and already has a working app entry.
+- If routing does not exist, you must add routing.
+- If routing already exists, you must integrate with it.
+
+GOAL UX
+1) On the existing Recipe screen, add a primary button at the top: “Import recipe”.
+2) Clicking it navigates to a new screen: “Import Recipe”.
+3) The import screen lets me paste:
+   - Title (single line)
+   - Ingredients (one per line)
+   - Steps (one per line)
+4) A button “Save & open” saves the recipe to localStorage and navigates back to the Recipe screen, showing the newly imported recipe.
+5) Add a small “Back” button/link on the Import screen.
+
+DATA MODEL
+Create/extend a Recipe type:
+type Recipe = {
+  id: string;
+  title: string;
+  ingredients: string[]; // each line
+  steps: string[];       // each line
+  createdAt: number;
+  updatedAt: number;
+};
+
+LOCAL STORAGE
+- Key name: "tw_current_recipe"
+- Save full Recipe as JSON string.
+- On app load, the Recipe screen reads from localStorage. If missing, show an “Empty state”:
+  - Title: “No recipe yet”
+  - Button: “Import recipe”
+
+ROUTING (DO THIS EXACTLY)
+If the project already uses react-router:
+- Add a route for /import that renders ImportRecipePage
+- Ensure / renders the Recipe screen
+If the project does NOT use routing:
+- Install react-router-dom
+- Wrap app with <BrowserRouter>
+- Create Routes:
+  - "/" -> RecipePage
+  - "/import" -> ImportRecipePage
+
+PARSING RULES (IMPORT SCREEN)
+- Ingredients textarea: split by newline, trim each line, remove empty lines
+- Steps textarea: split by newline, trim each line, remove empty lines
+- Title: trim (allow empty, but prefer non-empty; show a small hint if empty)
+
+UI DETAILS (MINIMAL)
+ImportRecipePage layout:
+- Header: “IMPORT”
+- Title: “Bring your recipe”
+- Subtitle: “Paste a title, ingredient lines, and steps. Stored locally in your browser.”
+- Input: Title (placeholder: “e.g., Quinoa bowls with veggies”)
+- Textarea: Ingredients (label: “Ingredients (one per line)”)
+- Textarea: Steps (label: “Steps (one per line)”)
+- Buttons row:
+  - Primary: “Save & open”
+  - Secondary: “Back”
+- Small info card at bottom “How it works” with 2–3 bullets.
+
+RecipePage layout changes:
+- Add “Import recipe” button near the top (primary).
+- Display recipe title, then Ingredients list, then Steps list.
+- If empty state, show the empty state described above.
+
+FILES TO CREATE/EDIT (DO NOT GUESS RANDOM NAMES — LOCATE REAL ONES)
+- Find the current Recipe screen component file and edit it to add the button + read localStorage.
+- Add a new component/page: ImportRecipePage.tsx
+- Add/update the router in the main entry (App.tsx or main.tsx/index.tsx).
+- Add a small utility file lib/storage.ts for get/set current recipe (optional but preferred).
+
+IMPLEMENTATION STEPS (DO IN ORDER)
+1) Inspect the repo structure and identify:
+   - App entry file
+   - Existing Recipe screen component
+2) Add routing (or extend existing routing) with / and /import.
+3) Implement localStorage helpers:
+   - loadCurrentRecipe(): Recipe | null
+   - saveCurrentRecipe(recipe: Recipe): void
+4) Implement ImportRecipePage with controlled inputs and “Save & open”.
+5) Update Recipe screen to:
+   - load recipe on mount
+   - show empty state if none
+   - show recipe if present
+   - navigate to /import when “Import recipe” clicked
+6) Quick manual QA:
+   - Start app
+   - Click Import recipe
+   - Paste content
+   - Save & open
+   - Verify recipe renders and persists on refresh
+
+OUTPUT
+When finished, print:
+- Which files you changed/added
+- How to run in Replit (one short line)
+- A short manual test checklist (3–5 bullets)
+
+IMPORTANT
+- Do not add advanced features (photos/links) yet. Only the basic import flow described above.
+- Keep code TypeScript-safe and readable.

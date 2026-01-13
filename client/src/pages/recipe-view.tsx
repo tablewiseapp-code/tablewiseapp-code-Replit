@@ -547,13 +547,22 @@ export default function RecipeView() {
           
           {/* Header */}
           <header ref={topRef} className={`px-10 pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
-            <button
-              onClick={() => setLocation("/meals")}
-              className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
-              data-testid="button-back"
-            >
-              ← Plan weekly meals
-            </button>
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setLocation("/meals")}
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                data-testid="button-back"
+              >
+                ← Plan weekly meals
+              </button>
+              <button
+                onClick={() => setLocation("/import")}
+                className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+                data-testid="button-import-recipe"
+              >
+                Import recipe
+              </button>
+            </div>
             <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
               Plov
             </h1>
