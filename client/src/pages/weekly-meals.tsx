@@ -589,6 +589,14 @@ export default function WeeklyMeals() {
     }));
   };
 
+  const clearWeek = () => {
+    if (weekLocked) return;
+    setState(prev => ({
+      ...prev,
+      planAssignments: []
+    }));
+  };
+
   const selectedRecipes = getSelectedRecipes();
 
   if (planGenerated) {
@@ -613,6 +621,15 @@ export default function WeeklyMeals() {
               >
                 ← Back to selection
               </button>
+              {!weekLocked && state.planAssignments.length > 0 && (
+                <button
+                  onClick={clearWeek}
+                  className="px-3 py-1.5 text-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+                  data-testid="button-clear-week"
+                >
+                  Clear Week
+                </button>
+              )}
               {weekLocked ? (
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1.5 text-sm rounded-full bg-[#7A9E7E] text-white flex items-center gap-1.5">
@@ -639,6 +656,13 @@ export default function WeeklyMeals() {
                   Finalize Week
                 </button>
               )}
+              <button
+                onClick={() => setLocation("/grocery-list")}
+                className="px-4 py-1.5 text-sm rounded-full border-2 border-[#7A9E7E] text-[#7A9E7E] hover:bg-[#7A9E7E] hover:text-white"
+                data-testid="button-create-grocery-list"
+              >
+                Create Grocery List
+              </button>
             </div>
           </header>
 

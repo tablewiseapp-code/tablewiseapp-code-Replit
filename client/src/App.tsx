@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import RecipeView from "@/pages/recipe-view";
 import WeeklyMeals from "@/pages/weekly-meals";
 import ImportRecipe from "@/pages/import-recipe";
+import GroceryList from "@/pages/grocery-list";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={RecipeView}/>
       <Route path="/meals" component={WeeklyMeals}/>
       <Route path="/import" component={ImportRecipe}/>
+      <Route path="/grocery-list" component={GroceryList}/>
       <Route component={NotFound} />
     </Switch>
   );
