@@ -1,0 +1,169 @@
+Implement two features on the Weekly Plan screen in my React app:
+
+Finalize Week (a primary CTA that “locks” the plan)
+
+My Picks ⭐ prioritization (recipes marked as My Picks appear first and are visually emphasized + optionally auto-suggested)
+
+Existing UI
+
+Weekly Plan grid with days (Sun–Sat) and meal rows (Breakfast/Lunch/Dinner).
+
+Left sidebar list “Your recipes” that can be dragged into the calendar.
+
+Data assumptions
+
+Recipes:
+
+type RecipeUserMeta = {
+  isMyPick: boolean;
+  rating: number | null; // 1..5
+};
+
+type Recipe = {
+  id: string;
+  title: string;
+  cookTimeMin?: number;
+  userMeta?: RecipeUserMeta;
+};
+
+
+Weekly plan state:
+
+type MealType = "breakfast" | "lunch" | "dinner";
+type DayKey = "sun"|"mon"|"tue"|"wed"|"thu"|"fri"|"sat";
+
+type PlannedMeal = { recipeId: string };
+
+type WeekPlan = Record<DayKey, Record<MealType, PlannedMeal | null>>;
+
+1) Feature: Finalize Week (Lock / Unlock)
+UI
+
+Add a prominent primary button at the top-right of the Weekly Plan screen:
+
+Default label: “Finalize Week”
+
+Locked label: “Week Locked ✓” (with a subtle “Edit” / “Unlock” secondary button)
+
+Behavior
+
+User can still create/edit the plan normally while unlocked.
+
+When user clicks Finalize Week:
+
+Set weekLocked = true
+
+Show a subtle confirmation (“Week locked. You can unlock anytime.”)
+
+Disable drag-and-drop interactions and editing controls in the grid:
+
+No dragging recipes into slots
+
+No removing/replacing meals
+
+The UI should communicate locked state:
+
+Slightly reduce opacity of empty drop zones OR show a lock icon on the grid header
+
+Provide an Unlock action:
+
+Clicking Unlock sets weekLocked=false and re-enables editing
+
+Persistence
+
+Persist weekLocked and WeekPlan in localStorage:
+
+week_plan_v1
+
+week_locked_v1
+
+Must persist across refresh.
+
+Acceptance criteria
+
+While locked, user cannot modify the plan (no drag/drop, replace, clear).
+
+After refresh, locked state remains.
+
+Unlock restores full editing.
+
+2) Feature: My Picks ⭐ Prioritization
+Sidebar list ordering
+
+Update the left “recipes” sidebar to prioritize My Picks.
+
+Rules:
+
+Show a section at top: “My Picks ⭐” containing only isMyPick=true
+
+Below it show: “All Recipes”
+
+Within My Picks, sort by:
+
+rating desc (5 → 1), null last
+
+then cookTimeMin asc (faster first)
+
+then title asc
+
+Within All Recipes, sort by title asc (or keep current, but be consistent)
+
+Visual emphasis
+
+In recipe cards (sidebar + in-grid):
+
+If My Pick:
+
+show a badge: ★ My Pick
+
+If rating exists:
+
+show read-only stars summary (e.g. ★★★★☆)
+
+Optional (nice-to-have)
+
+Add a quick filter toggle above the sidebar:
+
+checkbox “Show only My Picks”
+This should only affect sidebar list, not the calendar.
+
+Acceptance criteria
+
+My Picks appear at top in a separate section.
+
+Ratings (if present) show visibly.
+
+Sorting is correct and stable even if userMeta is missing.
+
+Implementation details (must-do)
+
+Build a useLocalStorageState<T>(key, initial) hook to persist:
+
+WeekPlan
+
+weekLocked
+
+For drag/drop disable:
+
+If using a DnD library, disable its sensors/handlers when locked
+
+If custom HTML5 drag, prevent drop handlers when locked
+
+Add guards in all mutating actions:
+
+if (weekLocked) return;
+So even if UI misses something, the state won’t change.
+
+Output required
+
+Provide:
+
+Updated WeeklyPlan component code (TypeScript preferred)
+
+useLocalStorageState hook code
+
+Recipe sidebar rendering with My Picks section + sorting
+
+Locked-state UI and interaction guards
+
+Short explanation of where lock is enforced (UI + state guards)

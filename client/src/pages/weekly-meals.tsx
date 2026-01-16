@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
+import { useLocalStorageState } from "@/hooks/use-local-storage-state";
+import { StarRating } from "@/components/ui/star-rating";
+import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
 
 interface Recipe {
   id: string;
@@ -126,22 +129,20 @@ function getMonogram(title: string): string {
   return title.substring(0, 2).toUpperCase();
 }
 
-import { StarRating } from "@/components/ui/star-rating";
-import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
-
-function DraggableRecipe({ recipe, isInPlan }: { recipe: Recipe; isInPlan: boolean }) {
+function DraggableRecipe({ recipe, isInPlan, disabled }: { recipe: Recipe; isInPlan: boolean; disabled: boolean }) {
   const meta = getRecipeUserMeta(recipe.id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `recipe-${recipe.id}`,
     data: { recipe },
+    disabled: disabled
   });
 
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={`p-3 bg-[#FAFAF8] rounded-lg border hairline cursor-grab ${isDragging ? "opacity-50" : ""} ${isInPlan ? "border-[#7A9E7E]" : ""}`}
+      {...(disabled ? {} : listeners)}
+      {...(disabled ? {} : attributes)}
+      className={`p-3 bg-[#FAFAF8] rounded-lg border hairline ${disabled ? "opacity-75 cursor-default" : "cursor-grab"} ${isDragging ? "opacity-50" : ""} ${isInPlan ? "border-[#7A9E7E]" : ""}`}
       data-testid={`draggable-recipe-${recipe.id}`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -168,7 +169,8 @@ function DroppableCell({
   recipe,
   onExtend,
   onShrink,
-  onRemove 
+  onRemove,
+  disabled
 }: { 
   day: number; 
   meal: "Breakfast" | "Lunch" | "Dinner"; 
@@ -177,10 +179,12 @@ function DroppableCell({
   onExtend: () => void;
   onShrink: () => void;
   onRemove: () => void;
+  disabled: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${meal}-${day}`,
     data: { day, meal },
+    disabled: disabled
   });
 
   const isStartCell = assignment && assignment.startDay === day;
@@ -191,56 +195,72 @@ function DroppableCell({
   }
 
   const spanDays = assignment?.spanDays || 1;
-  const canExtend = assignment && (assignment.startDay + assignment.spanDays) < 7;
-  const canShrink = assignment && assignment.spanDays > 1;
+  const canExtend = !disabled && assignment && (assignment.startDay + assignment.spanDays) < 7;
+  const canShrink = !disabled && assignment && assignment.spanDays > 1;
 
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[80px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"}`}
+      className={`min-h-[80px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"} ${disabled && !recipe ? "opacity-50 bg-muted/20" : ""}`}
       style={isStartCell ? { gridColumn: `span ${spanDays}` } : undefined}
       data-testid={`cell-${meal}-${day}`}
     >
       {recipe && isStartCell ? (
         <div className="h-full flex flex-col">
           <div className="flex items-start justify-between gap-1">
-            <p className="text-xs font-medium text-foreground leading-tight flex-1">{recipe.title}</p>
-            <button 
-              onClick={onRemove}
-              className="text-muted-foreground hover:text-foreground text-xs"
-              data-testid={`remove-${meal}-${day}`}
-            >
-              ×
-            </button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1">
+                <p className="text-xs font-medium text-foreground leading-tight truncate">{recipe.title}</p>
+                {getRecipeUserMeta(recipe.id).isMyPick && <span className="text-[10px] text-yellow-500 flex-shrink-0">★</span>}
+              </div>
+            </div>
+            {!disabled && (
+              <button 
+                onClick={onRemove}
+                className="text-muted-foreground hover:text-foreground text-xs"
+                data-testid={`remove-${meal}-${day}`}
+              >
+                ×
+              </button>
+            )}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">{recipe.minutes} min</p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-[10px] text-muted-foreground">{recipe.minutes} min</p>
+            {getRecipeUserMeta(recipe.id).rating && (
+              <span className="text-[10px] text-yellow-600 font-medium">★ {getRecipeUserMeta(recipe.id).rating}</span>
+            )}
+          </div>
           {spanDays > 1 && (
             <p className="text-[10px] text-[#7A9E7E] mt-1">{spanDays} days</p>
           )}
-          <div className="mt-auto pt-2 flex gap-1">
-            {canShrink && (
-              <button
-                onClick={onShrink}
-                className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
-                data-testid={`shrink-${meal}-${day}`}
-              >
-                −
-              </button>
-            )}
-            {canExtend && (
-              <button
-                onClick={onExtend}
-                className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
-                data-testid={`extend-${meal}-${day}`}
-              >
-                +
-              </button>
-            )}
-          </div>
+          {!disabled && (
+            <div className="mt-auto pt-2 flex gap-1">
+              {canShrink && (
+                <button
+                  onClick={onShrink}
+                  className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
+                  data-testid={`shrink-${meal}-${day}`}
+                >
+                  −
+                </button>
+              )}
+              {canExtend && (
+                <button
+                  onClick={onExtend}
+                  className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
+                  data-testid={`extend-${meal}-${day}`}
+                >
+                  +
+                </button>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="h-full flex items-center justify-center">
-          <span className="text-xs text-muted-foreground/50">Drop here</span>
+          <span className="text-xs text-muted-foreground/30 italic">
+            {disabled ? (recipe ? "" : "Locked") : "Drop here"}
+          </span>
         </div>
       )}
     </div>
