@@ -1,0 +1,136 @@
+🎯 Replit Prompt — Fix Numbered Notes Reset Bug (React)
+
+Fix a bug in a React controlled <textarea> used for numbered notes.
+
+❌ Current bug
+
+When the user types a line without a number prefix (e.g. asdasd) and then presses Enter, the next auto-inserted number incorrectly resets to 1. instead of continuing sequentially.
+
+Example (current broken behavior):
+
+1. this is first
+2. this is second
+asdasd
+1. |
+
+
+Expected behavior:
+
+1. this is first
+2. this is second
+3. asdasd
+4. |
+
+✅ Core rule (MANDATORY)
+
+Never compute the next number by reading the previous line’s prefix.
+
+Instead:
+
+Treat the notes as a list of logical lines.
+
+After any change (typing, Enter, paste, delete):
+
+Strip all existing numbering from every line
+
+Re-number all non-empty lines sequentially from 1..N
+
+This guarantees numbering never resets.
+
+🔧 Required behavior
+Normalization
+
+Create a function:
+
+normalizeNumberedText(text: string): string
+
+
+It must:
+
+Split text by newline
+
+For each line:
+
+Remove leading markers like:
+
+^\d+\.\s*
+
+^\d+\)\s*
+
+^-+\s*
+
+^•\s*
+
+Trim only the marker, not user text
+
+Rebuild the text so that:
+
+Every non-empty line becomes: N. <original content>
+
+N is sequential across all lines
+
+Empty lines may remain empty but must not affect numbering
+
+Enter key handling
+
+In onKeyDown:
+
+On Enter:
+
+preventDefault()
+
+Insert only \n at the caret
+
+Call normalizeNumberedText on the full value
+
+Do NOT manually insert 1. / 2. / etc
+
+This prevents number resets.
+
+Paste handling
+
+In onPaste:
+
+Allow raw paste
+
+After paste completes:
+
+Run normalizeNumberedText
+
+Ignore any numbering in pasted text
+
+Deletion / edits
+
+If the user deletes or edits a line in the middle:
+
+All following lines must renumber automatically
+
+There must never be gaps, duplicates, or resets
+
+🎯 Invariants (must always be true)
+
+No unnumbered non-empty lines
+
+No duplicated numbers
+
+No reset to 1. unless textarea truly has only one line
+
+Lines like asdasd are automatically converted to N. asdasd
+
+🧠 Implementation constraints
+
+React controlled textarea
+
+Source of truth = value
+
+Caret position must remain stable after normalization
+
+Use selectionStart / selectionEnd + requestAnimationFrame or useLayoutEffect to restore caret
+
+📦 Output required
+
+Updated React component code (TypeScript preferred)
+
+The fixed normalizeNumberedText implementation
+
+Short explanation of why numbering can no longer reset

@@ -270,55 +270,70 @@ export default function RecipeView() {
     saveState(state);
   }, [state]);
 
+  const normalizeNumberedText = (text: string): string => {
+    const lines = text.split(/\r?\n/);
+    let number = 1;
+    
+    return lines.map(line => {
+      if (line.trim().length === 0) return "";
+      
+      // Remove leading markers: 1. 1) - •
+      const cleaned = line.replace(/^(\d+[\.\)]|[-•])\s*/, "").trim();
+      return `${number++}. ${cleaned}`;
+    }).join("\n");
+  };
+
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setNotes(newValue);
+    // Normal change handling is bypassed by normalizeNumberedText in specific handlers
+    // but we keep it for basic typing if needed.
+    setNotes(e.target.value);
   };
 
   const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
     if (e.key === "Enter") {
       e.preventDefault();
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      
       const textBefore = notes.substring(0, start);
       const textAfter = notes.substring(end);
+      
+      // Insert newline and normalize everything
+      const newRawText = textBefore + "\n " + textAfter; // Add space to ensure the new line is "non-empty" for normalization
+      const normalized = normalizeNumberedText(newRawText);
+      
+      setNotes(normalized);
 
-      const lines = textBefore.split("\n");
-      const lastLine = lines[lines.length - 1];
-      const match = lastLine.match(/^(\d+)\.\s/);
-
-      let nextNumber = 1;
-      if (match) {
-        nextNumber = parseInt(match[1]) + 1;
-      }
-
-      const insertion = `\n${nextNumber}. `;
-      const newText = textBefore + insertion + textAfter;
-      setNotes(newText);
-
-      // Set cursor position after insertion
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + insertion.length;
-      }, 0);
+      // Restore caret position
+      requestAnimationFrame(() => {
+        const linesBefore = textBefore.split("\n").length;
+        const normalizedLines = normalized.split("\n");
+        // Calculate new position: start of the new line + "N. " prefix
+        let newPos = 0;
+        for (let i = 0; i < linesBefore; i++) {
+          newPos += normalizedLines[i].length + 1;
+        }
+        textarea.selectionStart = textarea.selectionEnd = newPos;
+      });
     } else if (e.key === "Backspace") {
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-
       if (start === end) {
         const textBefore = notes.substring(0, start);
         const lines = textBefore.split("\n");
         const lastLine = lines[lines.length - 1];
+        
+        // Check if cursor is right after an empty numbered prefix (e.g. "1. ")
         const match = lastLine.match(/^(\d+)\.\s$/);
-
         if (match) {
           e.preventDefault();
-          const newText = notes.substring(0, start - match[0].length) + notes.substring(end);
-          setNotes(newText);
-          setTimeout(() => {
-            textarea.selectionStart = textarea.selectionEnd = start - match[0].length;
-          }, 0);
+          const newRawText = notes.substring(0, start - match[0].length) + notes.substring(end);
+          const normalized = normalizeNumberedText(newRawText);
+          setNotes(normalized);
+          
+          requestAnimationFrame(() => {
+            textarea.selectionStart = textarea.selectionEnd = Math.max(0, start - match[0].length);
+          });
         }
       }
     }
@@ -327,30 +342,17 @@ export default function RecipeView() {
   const handleNotesPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
     const pastedText = e.clipboardData.getData("text");
-    const lines = pastedText.split(/\r?\n/).filter(line => line.trim().length > 0);
-    
-    const cleanedLines = lines.map((line, index) => {
-      const cleaned = line.replace(/^\d+\.\s*/, "");
-      return `${index + 1}. ${cleaned}`;
-    });
-
     const textarea = e.currentTarget;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
+
     const textBefore = notes.substring(0, start);
     const textAfter = notes.substring(end);
-
-    const insertion = cleanedLines.join("\n") + "\n";
-    const newText = textBefore + insertion + textAfter;
     
-    // Simple re-numbering for the entire text to ensure consistency
-    const allLines = newText.split("\n").filter(line => line.trim().length > 0);
-    const renumberedText = allLines.map((line, index) => {
-      const cleaned = line.replace(/^\d+\.\s*/, "");
-      return `${index + 1}. ${cleaned}`;
-    }).join("\n") + "\n";
-
-    setNotes(renumberedText);
+    const newRawText = textBefore + pastedText + textAfter;
+    const normalized = normalizeNumberedText(newRawText);
+    
+    setNotes(normalized);
   };
 
   useEffect(() => {
