@@ -270,16 +270,43 @@ function DroppableCell({
 export default function WeeklyMeals() {
   const [, setLocation] = useLocation();
   const [state, setState] = useState<WeeklyMealsState>(loadState);
+  const [weekLocked, setWeekLocked] = useLocalStorageState<boolean>("week_locked_v1", false);
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
+  const [showOnlyMyPicks, setShowOnlyMyPicks] = useState(false);
 
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  const sortedSidebarRecipes = useMemo(() => {
+    const selected = sampleRecipes.filter(r => state.selectedIds.includes(r.id));
+    
+    const myPicks = selected.filter(r => getRecipeUserMeta(r.id).isMyPick);
+    const others = selected.filter(r => !getRecipeUserMeta(r.id).isMyPick);
+
+    const sortFn = (a: Recipe, b: Recipe) => {
+      const metaA = getRecipeUserMeta(a.id);
+      const metaB = getRecipeUserMeta(b.id);
+      
+      if ((metaA.rating || 0) !== (metaB.rating || 0)) {
+        return (metaB.rating || 0) - (metaA.rating || 0);
+      }
+      if (a.minutes !== b.minutes) {
+        return a.minutes - b.minutes;
+      }
+      return a.title.localeCompare(b.title);
+    };
+
+    return {
+      myPicks: myPicks.sort(sortFn),
+      others: others.sort((a, b) => a.title.localeCompare(b.title))
+    };
+  }, [state.selectedIds]);
 
   const updateFilters = useCallback((updates: Partial<Filters>) => {
     setState(prev => ({ ...prev, filters: { ...prev.filters, ...updates } }));
@@ -430,12 +457,14 @@ export default function WeeklyMeals() {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (weekLocked) return;
     const recipe = event.active.data.current?.recipe as Recipe;
     setActiveRecipe(recipe);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveRecipe(null);
+    if (weekLocked) return;
     
     const { active, over } = event;
     if (!over) return;
@@ -461,6 +490,7 @@ export default function WeeklyMeals() {
   };
 
   const extendAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
+    if (weekLocked) return;
     setState(prev => ({
       ...prev,
       planAssignments: prev.planAssignments.map(a => {
@@ -482,6 +512,7 @@ export default function WeeklyMeals() {
   };
 
   const shrinkAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
+    if (weekLocked) return;
     setState(prev => ({
       ...prev,
       planAssignments: prev.planAssignments.map(a => {
@@ -494,6 +525,7 @@ export default function WeeklyMeals() {
   };
 
   const removeAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
+    if (weekLocked) return;
     setState(prev => ({
       ...prev,
       planAssignments: prev.planAssignments.filter(a => !(a.mealType === meal && a.startDay === day))
@@ -516,32 +548,121 @@ export default function WeeklyMeals() {
                 <span className="text-xs text-muted-foreground ml-2">Weekly Plan</span>
               </div>
             </div>
-            <button 
-              onClick={() => setPlanGenerated(false)}
-              className="text-sm text-muted-foreground hover:text-foreground"
-              data-testid="button-back-to-selection"
-            >
-              ← Back to selection
-            </button>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setPlanGenerated(false)}
+                className="text-sm text-muted-foreground hover:text-foreground"
+                data-testid="button-back-to-selection"
+              >
+                ← Back to selection
+              </button>
+              {weekLocked ? (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1.5 text-sm rounded-full bg-[#7A9E7E] text-white flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                    Week Locked
+                  </span>
+                  <button
+                    onClick={() => setWeekLocked(false)}
+                    className="px-3 py-1.5 text-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+                    data-testid="button-unlock-week"
+                  >
+                    Unlock
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setWeekLocked(true)}
+                  className="px-4 py-1.5 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+                  data-testid="button-finalize-week"
+                >
+                  Finalize Week
+                </button>
+              )}
+            </div>
           </header>
 
           <div className="flex-1 flex p-6 gap-6">
-            <aside className="w-[200px] flex-shrink-0">
-              <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">Your recipes</h3>
-              <p className="text-xs text-muted-foreground mb-4">Drag to the calendar</p>
-              <div className="space-y-2">
-                {selectedRecipes.map(recipe => {
-                  const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
-                  return (
-                    <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} />
-                  );
-                })}
+            <aside className="w-[220px] flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Your recipes</h3>
+                <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyMyPicks}
+                    onChange={(e) => setShowOnlyMyPicks(e.target.checked)}
+                    className="w-3 h-3 accent-current rounded"
+                    data-testid="checkbox-show-mypicks-only"
+                  />
+                  My Picks only
+                </label>
               </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                {weekLocked ? "Week is locked" : "Drag to the calendar"}
+              </p>
+              
+              {sortedSidebarRecipes.myPicks.length > 0 && !showOnlyMyPicks && (
+                <>
+                  <h4 className="text-[10px] uppercase tracking-wide text-yellow-600 mb-2 flex items-center gap-1">
+                    ★ My Picks
+                  </h4>
+                  <div className="space-y-2 mb-4">
+                    {sortedSidebarRecipes.myPicks.map(recipe => {
+                      const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
+                      return (
+                        <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} disabled={weekLocked} />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+              
+              {showOnlyMyPicks ? (
+                <div className="space-y-2">
+                  {sortedSidebarRecipes.myPicks.map(recipe => {
+                    const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
+                    return (
+                      <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} disabled={weekLocked} />
+                    );
+                  })}
+                  {sortedSidebarRecipes.myPicks.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">No My Picks recipes selected</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {sortedSidebarRecipes.others.length > 0 && (
+                    <>
+                      <h4 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">All Recipes</h4>
+                      <div className="space-y-2">
+                        {sortedSidebarRecipes.others.map(recipe => {
+                          const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
+                          return (
+                            <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} disabled={weekLocked} />
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </aside>
 
             <main className="flex-1">
-              <h2 className="text-lg font-medium text-foreground mb-4">Weekly Plan</h2>
-              <p className="text-sm text-muted-foreground mb-6">Drag meals to slots. Use +/− to extend across days.</p>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium text-foreground">Weekly Plan</h2>
+                {weekLocked && (
+                  <span className="text-xs text-[#7A9E7E] bg-[#7A9E7E]/10 px-2 py-1 rounded">
+                    Locked - Unlock to edit
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                {weekLocked ? "Your week is finalized. Unlock to make changes." : "Drag meals to slots. Use +/− to extend across days."}
+              </p>
 
               <div className="grid grid-cols-7 gap-2 mb-2">
                 {DAYS.map((day, i) => (
@@ -575,6 +696,7 @@ export default function WeeklyMeals() {
                           onExtend={() => assignment && extendAssignment(meal, assignment.startDay)}
                           onShrink={() => assignment && shrinkAssignment(meal, assignment.startDay)}
                           onRemove={() => assignment && removeAssignment(meal, assignment.startDay)}
+                          disabled={weekLocked}
                         />
                       );
                     })}
