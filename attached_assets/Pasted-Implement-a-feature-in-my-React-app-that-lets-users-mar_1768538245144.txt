@@ -1,0 +1,184 @@
+Implement a feature in my React app that lets users mark recipes as “My Picks ⭐”, rate them with a 5-star self review, and filter recipes on the Step 2 — Meals screen by My Picks (and optionally by rating threshold).
+
+Context / Screens
+
+There is a Recipe Detail screen (where notes are).
+
+There is a Step 2 — Meals screen that lists recipes and already has filters like:
+
+“With my notes”
+
+“Modified by me”
+
+Add a new filter: My Picks ⭐
+
+Data Model
+
+Extend per-recipe user-specific metadata (do not change core recipe fields):
+
+type RecipeUserMeta = {
+  isMyPick: boolean;     // default false
+  rating: number | null; // 1..5, null if not rated
+  ratedAt?: string;      // optional ISO date
+};
+
+
+Assume recipes look like:
+
+type Recipe = {
+  id: string;
+  title: string;
+  // ...existing fields...
+  userMeta?: RecipeUserMeta;
+};
+
+Requirements
+1) Recipe Detail: My Picks ⭐ Toggle
+
+Add a toggle control near the recipe title area.
+
+Off state label: ☆ Add to My Picks
+
+On state label: ★ In My Picks
+
+Behavior:
+
+Clicking ON:
+
+Sets isMyPick=true
+
+Immediately reveals a 5-star rating UI (inline, not modal)
+
+Shows a prompt text above stars: “How did this turn out?”
+
+Clicking OFF:
+
+Sets isMyPick=false
+
+Rating should be preserved in data (do not delete it), but hidden unless isMyPick=true
+
+(If you prefer, you may set rating=null when turning off, but only if you justify in comments. Default: preserve.)
+
+2) 5-Star Self Review Component
+
+Create a reusable component:
+
+StarRating
+
+Props:
+
+value: number | null
+
+onChange(next: number): void
+
+readOnly?: boolean
+
+size?: "sm" | "md"
+
+Behavior:
+
+Render 5 clickable stars.
+
+Hover/focus shows preview highlight.
+
+Click sets rating 1..5.
+
+Clicking the currently selected star again may keep the rating (no toggle-off) unless you implement clear “clear rating” UI (optional).
+
+Accessible:
+
+Buttons with aria-labels like “Rate 3 out of 5”
+
+Keyboard support (left/right to change, enter/space to set) is a plus.
+
+When the rating is set:
+
+Update recipe userMeta.rating and set ratedAt = now (ISO string).
+
+3) Step 2 — Meals: Filters
+
+In the filters panel add:
+
+Checkbox: My Picks ⭐
+
+Filtering logic:
+
+When checked, show only recipes where userMeta.isMyPick === true.
+
+Combine with existing filters using AND behavior.
+
+Optional (recommended) rating filter:
+
+Dropdown or segmented control:
+
+“Any rating”
+
+“4★ & up”
+
+“3★ & up”
+
+“2★ & up”
+
+Only applies when My Picks filter is on (or apply globally if it’s easier, but explain).
+
+If rating is null, it should not match “X★ & up”.
+
+4) Recipe List UI Indicators
+
+On the Meals list items/cards:
+
+If isMyPick=true, show a small badge or icon: ★ My Pick
+
+If rating exists, show stars summary like ★★★★☆ (readOnly) or “4★”.
+
+5) Persistence
+
+Implement persistence in one of these ways (choose the simplest that matches the current app):
+
+If the app already uses a store (Context/Zustand/Redux), integrate there.
+
+Otherwise, store per-recipe userMeta in localStorage keyed by recipe id, e.g. recipe_user_meta_${id} or one consolidated key.
+
+Must persist across refresh.
+
+6) Code Output
+
+Provide:
+
+Updated components for Recipe Detail (toggle + rating).
+
+Updated Step 2 — Meals screen (filters + list).
+
+StarRating component.
+
+A small useRecipeUserMeta hook or helper functions for reading/writing meta + localStorage.
+
+Clear inline comments explaining:
+
+filtering logic
+
+persistence strategy
+
+why rating is shown only for My Picks
+
+Acceptance Criteria (must pass)
+
+Marking a recipe as “My Picks” immediately shows the star rating prompt.
+
+Rating saves and persists across refresh.
+
+Step 2 filter “My Picks ⭐” shows only those recipes.
+
+Rating threshold filter works (if implemented).
+
+UI shows badge + rating summary in the list.
+
+No crashes if userMeta is missing (must default safely).
+
+Style / Tech Constraints
+
+React + TypeScript preferred (ok if JS but TS is better).
+
+Keep it minimal and clean.
+
+Avoid heavy libraries. Use inline SVG stars or a simple icon approach.

@@ -201,7 +201,12 @@ function convertAmount(amount: number, fromUnit: string, targetUnits: "g" | "ml"
   return { amount, unit: fromUnit };
 }
 
+import { StarRating } from "@/components/ui/star-rating";
+import { useRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
+
 export default function RecipeView() {
+  const recipeId = "plov"; // Hardcoded for now based on current app state
+  const { meta, toggleMyPick, setRating } = useRecipeUserMeta(recipeId);
   const [, setLocation] = useLocation();
   const [state, setState] = useState<RecipeState>(loadState);
   const [notes, setNotes] = useState(loadNotes);
@@ -655,17 +660,36 @@ export default function RecipeView() {
                   </button>
                 )}
               </div>
-              <button
-                onClick={() => setLocation("/import")}
-                className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
-                data-testid="button-import-recipe"
-              >
-                Import recipe
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleMyPick}
+                  className={`px-4 py-1.5 text-sm rounded-full border hairline flex items-center gap-2 transition-colors ${
+                    meta.isMyPick ? "bg-yellow-50 border-yellow-200 text-yellow-700" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid="button-toggle-mypick"
+                >
+                  {meta.isMyPick ? "★ In My Picks" : "☆ Add to My Picks"}
+                </button>
+                <button
+                  onClick={() => setLocation("/import")}
+                  className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+                  data-testid="button-import-recipe"
+                >
+                  Import recipe
+                </button>
+              </div>
             </div>
-            <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
-              Plov
-            </h1>
+            <div className="flex flex-col gap-1">
+              <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
+                Plov
+              </h1>
+              {meta.isMyPick && (
+                <div className="flex flex-col gap-2 mt-4 p-4 bg-yellow-50/30 rounded-lg border border-yellow-100 w-fit">
+                  <p className="text-xs font-medium text-yellow-800">How did this turn out?</p>
+                  <StarRating value={meta.rating} onChange={setRating} />
+                </div>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground mt-2" data-testid="text-recipe-meta">
               Source: Personal • Modified by you
             </p>

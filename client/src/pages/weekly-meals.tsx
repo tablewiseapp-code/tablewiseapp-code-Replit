@@ -26,6 +26,8 @@ interface Filters {
   proteinType: string[];
   withNotes: boolean;
   modifiedByMe: boolean;
+  myPicks: boolean;
+  minRating: number | null;
   servings: string | null;
   mustInclude: string[];
   mustExclude: string[];
@@ -70,6 +72,8 @@ const defaultFilters: Filters = {
   proteinType: [],
   withNotes: false,
   modifiedByMe: false,
+  myPicks: false,
+  minRating: null,
   servings: null,
   mustInclude: [],
   mustExclude: [],
@@ -114,7 +118,11 @@ function getMonogram(title: string): string {
   return title.substring(0, 2).toUpperCase();
 }
 
+import { StarRating } from "@/components/ui/star-rating";
+import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
+
 function DraggableRecipe({ recipe, isInPlan }: { recipe: Recipe; isInPlan: boolean }) {
+  const meta = getRecipeUserMeta(recipe.id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `recipe-${recipe.id}`,
     data: { recipe },
@@ -128,8 +136,19 @@ function DraggableRecipe({ recipe, isInPlan }: { recipe: Recipe; isInPlan: boole
       className={`p-3 bg-[#FAFAF8] rounded-lg border hairline cursor-grab ${isDragging ? "opacity-50" : ""} ${isInPlan ? "border-[#7A9E7E]" : ""}`}
       data-testid={`draggable-recipe-${recipe.id}`}
     >
-      <p className="text-xs font-medium text-foreground truncate">{recipe.title}</p>
-      <p className="text-[10px] text-muted-foreground">{recipe.minutes} min</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-medium text-foreground truncate">{recipe.title}</p>
+        {meta.isMyPick && <span className="text-[10px] text-yellow-500">★</span>}
+      </div>
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-[10px] text-muted-foreground">{recipe.minutes} min</p>
+        {meta.rating && (
+          <div className="flex items-center gap-0.5">
+            <span className="text-[10px] font-medium text-yellow-600">{meta.rating}</span>
+            <span className="text-[8px] text-yellow-600">★</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -307,6 +326,8 @@ export default function WeeklyMeals() {
     count += state.filters.proteinType.length;
     if (state.filters.withNotes) count++;
     if (state.filters.modifiedByMe) count++;
+    if (state.filters.myPicks) count++;
+    if (state.filters.minRating !== null) count++;
     if (state.filters.servings) count++;
     count += state.filters.mustInclude.length;
     count += state.filters.mustExclude.length;
@@ -315,6 +336,7 @@ export default function WeeklyMeals() {
 
   const filterRecipes = (): Recipe[] => {
     return sampleRecipes.filter(recipe => {
+      const meta = getRecipeUserMeta(recipe.id);
       if (state.filters.maxMinutes !== null && recipe.minutes > state.filters.maxMinutes) return false;
       if (state.filters.dietary.length > 0) {
         const hasDietary = state.filters.dietary.every(d => {
@@ -334,6 +356,10 @@ export default function WeeklyMeals() {
       if (state.filters.proteinType.length > 0 && !state.filters.proteinType.includes(recipe.proteinType)) return false;
       if (state.filters.withNotes && !recipe.hasNotes) return false;
       if (state.filters.modifiedByMe && !recipe.modifiedByMe) return false;
+      if (state.filters.myPicks && !meta.isMyPick) return false;
+      if (state.filters.minRating !== null) {
+        if (!meta.rating || meta.rating < state.filters.minRating) return false;
+      }
       if (state.filters.servings) {
         if (!recipe.servingsRange.includes(state.filters.servings.replace("+", ""))) return false;
       }
@@ -736,6 +762,53 @@ export default function WeeklyMeals() {
                     </div>
                   </div>
 
+                  <div className="border-b hairline pb-3 mb-3">
+                    <button 
+                      onClick={() => toggleSection("myPicks")}
+                      className="flex items-center justify-between w-full text-left"
+                      data-testid="button-toggle-mypicks-section"
+                    >
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground">My Picks ⭐</span>
+                      <span className="text-xs text-muted-foreground">{state.expandedSections.includes("myPicks") ? "−" : "+"}</span>
+                    </button>
+                    {state.expandedSections.includes("myPicks") && (
+                      <div className="mt-3 space-y-3">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={state.filters.myPicks}
+                            onChange={() => updateFilters({ myPicks: !state.filters.myPicks })}
+                            className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
+                            data-testid="checkbox-filter-mypicks"
+                          />
+                          <span className="text-xs text-muted-foreground">Show only My Picks</span>
+                        </label>
+                        
+                        {state.filters.myPicks && (
+                          <div className="pl-5 space-y-2">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Minimum Rating</span>
+                            <div className="flex flex-wrap gap-1">
+                              {[null, 4, 3, 2].map(rating => (
+                                <button
+                                  key={String(rating)}
+                                  onClick={() => updateFilters({ minRating: rating })}
+                                  className={`px-2 py-0.5 text-[10px] rounded border hairline transition-colors ${
+                                    state.filters.minRating === rating 
+                                      ? "bg-foreground text-background border-foreground" 
+                                      : "text-muted-foreground hover:text-foreground border-muted-foreground/30"
+                                  }`}
+                                  data-testid={`button-filter-rating-${rating || "any"}`}
+                                >
+                                  {rating ? `${rating}★+` : "Any"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="border-b hairline pb-3 mb-3 space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -826,6 +899,7 @@ export default function WeeklyMeals() {
                 <p className="py-8 text-center text-sm text-muted-foreground">No recipes match your filters.</p>
               ) : (
                 filteredRecipes.slice(0, 10).map(recipe => {
+                  const meta = getRecipeUserMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
                   const monogram = getMonogram(recipe.title);
@@ -850,7 +924,16 @@ export default function WeeklyMeals() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3 mb-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
+                              {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">★ My Pick</span>}
+                            </div>
+                            {meta.rating && (
+                              <div className="mt-1 flex items-center gap-1">
+                                <StarRating value={meta.rating} onChange={() => {}} readOnly size="sm" />
+                                <span className="text-[10px] text-muted-foreground">{meta.rating}/5</span>
+                              </div>
+                            )}
                           </div>
                           <button
                             onClick={() => toggleSelection(recipe.id)}
