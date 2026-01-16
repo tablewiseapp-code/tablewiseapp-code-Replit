@@ -1,0 +1,77 @@
+React: Selected Recipes Only + Remove After First Drop + Still Allow Multi-Day
+
+Update the Weekly Plan screen with these requirements:
+
+A) Only show selected recipes on this page
+
+Remove the “My picks only” checkbox entirely.
+
+The left sidebar should show only recipes that were selected on Step 2 (“Meals selection”).
+
+Assume we have selectedRecipeIds: string[] available from app state (or pass as prop).
+
+Sidebar should render recipes where recipe.id is in selectedRecipeIds.
+
+B) Remove recipe from left sidebar after it’s dropped once
+
+Define “used” as: recipe appears at least once anywhere in the week plan grid.
+
+Sidebar should show ONLY unused selected recipes.
+
+When user drags a recipe from sidebar into a slot:
+
+Add it to that slot (create an instance)
+
+Sidebar should update so that recipe disappears immediately (because it is now “used”).
+
+C) Still allow placing the same recipe on multiple days
+
+Since it disappears from sidebar after first use, provide a new way to reuse it:
+
+Implement a “Selected this week” tray above the calendar:
+
+Compute usedRecipeIds from the week plan grid.
+
+Render a horizontal tray labeled: “Selected this week”
+
+Show draggable chips/cards for each used recipe (unique list).
+
+Dragging from this tray into a slot should create a new instance in that slot.
+
+Rules:
+
+Sidebar drag source = unused recipes (first placement)
+
+Tray drag source = used recipes (repeat placement)
+
+Meals already placed in the grid must remain draggable between slots (move instance).
+
+D) Keep grid drag between days
+
+Dragging an existing meal card inside the grid should MOVE it (not duplicate) unless user uses a specific “copy” action.
+
+Dragging from tray/sidebar into grid should ADD a new instance (duplicate).
+
+E) UX details
+
+Sidebar title: “Selected Recipes”
+
+Tray title: “Selected this week”
+
+If tray is empty, hide it.
+
+If sidebar is empty, show text: “All selected recipes are on your plan.”
+
+F) Output
+
+Provide updated React TypeScript code:
+
+WeeklyPlan screen
+
+Sidebar component
+
+“Selected this week” tray component
+
+DnD logic adjustments (add vs move behavior clearly separated)
+
+Ensure no crashes if selectedRecipeIds is empty

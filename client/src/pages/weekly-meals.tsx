@@ -162,6 +162,27 @@ function DraggableRecipe({ recipe, isInPlan, disabled }: { recipe: Recipe; isInP
   );
 }
 
+function DraggableRecipeSmall({ recipe, disabled }: { recipe: Recipe; disabled: boolean }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `tray-recipe-${recipe.id}`,
+    data: { recipe },
+    disabled: disabled
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...(disabled ? {} : listeners)}
+      {...(disabled ? {} : attributes)}
+      className={`px-3 py-1.5 bg-[#FAFAF8] rounded-full border hairline flex items-center gap-2 ${disabled ? "opacity-75 cursor-default" : "cursor-grab"} ${isDragging ? "opacity-50" : ""}`}
+      data-testid={`tray-recipe-${recipe.id}`}
+    >
+      <span className="text-xs font-medium text-foreground truncate max-w-[120px]">{recipe.title}</span>
+      {getRecipeUserMeta(recipe.id).isMyPick && <span className="text-[10px] text-yellow-500">★</span>}
+    </div>
+  );
+}
+
 function DroppableCell({ 
   day, 
   meal, 
@@ -187,6 +208,12 @@ function DroppableCell({
     disabled: disabled
   });
 
+  const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
+    id: `grid-${meal}-${day}`,
+    data: { recipe, day, meal },
+    disabled: !recipe || disabled
+  });
+
   const isStartCell = assignment && assignment.startDay === day;
   const isSpanned = assignment && assignment.startDay < day && day < assignment.startDay + assignment.spanDays;
   
@@ -201,12 +228,12 @@ function DroppableCell({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[80px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"} ${disabled && !recipe ? "opacity-50 bg-muted/20" : ""}`}
+      className={`min-h-[80px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"} ${disabled && !recipe ? "opacity-50 bg-muted/20" : ""} ${isDragging ? "opacity-30" : ""}`}
       style={isStartCell ? { gridColumn: `span ${spanDays}` } : undefined}
       data-testid={`cell-${meal}-${day}`}
     >
       {recipe && isStartCell ? (
-        <div className="h-full flex flex-col">
+        <div ref={setDraggableRef} {...listeners} {...attributes} className="h-full flex flex-col cursor-grab">
           <div className="flex items-start justify-between gap-1">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
@@ -216,7 +243,10 @@ function DroppableCell({
             </div>
             {!disabled && (
               <button 
-                onClick={onRemove}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
                 className="text-muted-foreground hover:text-foreground text-xs"
                 data-testid={`remove-${meal}-${day}`}
               >
@@ -237,7 +267,10 @@ function DroppableCell({
             <div className="mt-auto pt-2 flex gap-1">
               {canShrink && (
                 <button
-                  onClick={onShrink}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShrink();
+                  }}
                   className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
                   data-testid={`shrink-${meal}-${day}`}
                 >
@@ -246,7 +279,10 @@ function DroppableCell({
               )}
               {canExtend && (
                 <button
-                  onClick={onExtend}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExtend();
+                  }}
                   className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
                   data-testid={`extend-${meal}-${day}`}
                 >
@@ -277,17 +313,21 @@ export default function WeeklyMeals() {
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
-  const [showOnlyMyPicks, setShowOnlyMyPicks] = useState(false);
 
   useEffect(() => {
     saveState(state);
   }, [state]);
 
+  const usedRecipeIds = useMemo(() => {
+    return new Set(state.planAssignments.map(a => a.recipeId));
+  }, [state.planAssignments]);
+
   const sortedSidebarRecipes = useMemo(() => {
     const selected = sampleRecipes.filter(r => state.selectedIds.includes(r.id));
+    const unused = selected.filter(r => !usedRecipeIds.has(r.id));
     
-    const myPicks = selected.filter(r => getRecipeUserMeta(r.id).isMyPick);
-    const others = selected.filter(r => !getRecipeUserMeta(r.id).isMyPick);
+    const myPicks = unused.filter(r => getRecipeUserMeta(r.id).isMyPick);
+    const others = unused.filter(r => !getRecipeUserMeta(r.id).isMyPick);
 
     const sortFn = (a: Recipe, b: Recipe) => {
       const metaA = getRecipeUserMeta(a.id);
@@ -306,7 +346,11 @@ export default function WeeklyMeals() {
       myPicks: myPicks.sort(sortFn),
       others: others.sort((a, b) => a.title.localeCompare(b.title))
     };
-  }, [state.selectedIds]);
+  }, [state.selectedIds, usedRecipeIds]);
+
+  const trayRecipes = useMemo(() => {
+    return sampleRecipes.filter(r => usedRecipeIds.has(r.id));
+  }, [usedRecipeIds]);
 
   const updateFilters = useCallback((updates: Partial<Filters>) => {
     setState(prev => ({ ...prev, filters: { ...prev.filters, ...updates } }));
@@ -480,13 +524,26 @@ export default function WeeklyMeals() {
     const existingAssignment = getAssignmentForCell(meal, day);
     if (existingAssignment) return;
 
-    setState(prev => ({
-      ...prev,
-      planAssignments: [
-        ...prev.planAssignments.filter(a => !(a.recipeId === recipe.id && a.mealType === meal)),
-        { recipeId: recipe.id, mealType: meal, startDay: day, spanDays: 1 }
-      ]
-    }));
+    // Check if we are moving an existing assignment or adding a new one
+    const activeData = active.data.current as { day?: number; meal?: "Breakfast" | "Lunch" | "Dinner" } | undefined;
+    
+    setState(prev => {
+      let newAssignments = [...prev.planAssignments];
+      
+      if (activeData?.day !== undefined && activeData?.meal !== undefined) {
+        // Move behavior: Remove the old one first
+        newAssignments = newAssignments.filter(a => !(a.mealType === activeData.meal && a.startDay === activeData.day));
+      }
+
+      // Add behavior (or complete move): Add the new assignment
+      return {
+        ...prev,
+        planAssignments: [
+          ...newAssignments,
+          { recipeId: recipe.id, mealType: meal, startDay: day, spanDays: 1 }
+        ]
+      };
+    });
   };
 
   const extendAssignment = (meal: "Breakfast" | "Lunch" | "Dinner", day: number) => {
@@ -588,70 +645,51 @@ export default function WeeklyMeals() {
           <div className="flex-1 flex p-6 gap-6">
             <aside className="w-[220px] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Your recipes</h3>
-                <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showOnlyMyPicks}
-                    onChange={(e) => setShowOnlyMyPicks(e.target.checked)}
-                    className="w-3 h-3 accent-current rounded"
-                    data-testid="checkbox-show-mypicks-only"
-                  />
-                  My Picks only
-                </label>
+                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Selected Recipes</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-4">
                 {weekLocked ? "Week is locked" : "Drag to the calendar"}
               </p>
               
-              {sortedSidebarRecipes.myPicks.length > 0 && !showOnlyMyPicks && (
+              {sortedSidebarRecipes.myPicks.length > 0 && (
                 <>
                   <h4 className="text-[10px] uppercase tracking-wide text-yellow-600 mb-2 flex items-center gap-1">
                     ★ My Picks
                   </h4>
                   <div className="space-y-2 mb-4">
-                    {sortedSidebarRecipes.myPicks.map(recipe => {
-                      const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
-                      return (
-                        <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} disabled={weekLocked} />
-                      );
-                    })}
+                    {sortedSidebarRecipes.myPicks.map(recipe => (
+                      <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={false} disabled={weekLocked} />
+                    ))}
                   </div>
                 </>
               )}
               
-              {showOnlyMyPicks ? (
-                <div className="space-y-2">
-                  {sortedSidebarRecipes.myPicks.map(recipe => {
-                    const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
-                    return (
-                      <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} disabled={weekLocked} />
-                    );
-                  })}
-                  {sortedSidebarRecipes.myPicks.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">No My Picks recipes selected</p>
-                  )}
-                </div>
-              ) : (
+              {sortedSidebarRecipes.others.length > 0 ? (
                 <>
-                  {sortedSidebarRecipes.others.length > 0 && (
-                    <>
-                      <h4 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">All Recipes</h4>
-                      <div className="space-y-2">
-                        {sortedSidebarRecipes.others.map(recipe => {
-                          const isInPlan = state.planAssignments.some(a => a.recipeId === recipe.id);
-                          return (
-                            <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={isInPlan} disabled={weekLocked} />
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
+                  <h4 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">All Recipes</h4>
+                  <div className="space-y-2">
+                    {sortedSidebarRecipes.others.map(recipe => (
+                      <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={false} disabled={weekLocked} />
+                    ))}
+                  </div>
                 </>
+              ) : sortedSidebarRecipes.myPicks.length === 0 && (
+                <p className="text-xs text-muted-foreground italic">All selected recipes are on your plan.</p>
               )}
             </aside>
 
             <main className="flex-1">
+              {trayRecipes.length > 0 && (
+                <div className="mb-6 p-4 bg-[#F0EFEC] rounded-xl border hairline">
+                  <h3 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-3">Selected this week</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {trayRecipes.map(recipe => (
+                      <DraggableRecipeSmall key={recipe.id} recipe={recipe} disabled={weekLocked} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-medium text-foreground">Weekly Plan</h2>
                 {weekLocked && (
