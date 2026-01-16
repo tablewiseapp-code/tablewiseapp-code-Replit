@@ -344,7 +344,8 @@ export default function RecipeView() {
     <div className={`min-h-screen bg-background flex items-center justify-center p-6 ${isFocusMode ? "layout-focus" : "layout-standard"}`}>
       <div className="recipe-surface w-full max-w-[1200px] min-h-[700px] rounded-xl flex overflow-hidden">
         
-        {/* Left Control Rail */}
+        {/* Left Control Rail - Hidden in Focus Mode */}
+        {!isFocusMode && (
         <aside className="control-rail w-[84px] flex-shrink-0 border-r hairline py-6 flex flex-col gap-1">
           
           {/* Units Toggle */}
@@ -531,6 +532,7 @@ export default function RecipeView() {
             </div>
           </div>
         </aside>
+        )}
         
         {/* Center Recipe Canvas */}
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
@@ -548,13 +550,24 @@ export default function RecipeView() {
           {/* Header */}
           <header ref={topRef} className={`px-10 pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
             <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={() => setLocation("/meals")}
-                className="px-4 py-1.5 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
-                data-testid="button-back-to-selection"
-              >
-                ← <span className="hidden sm:inline">Back to recipe selection</span><span className="sm:hidden">Back</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setLocation("/meals")}
+                  className="px-4 py-1.5 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
+                  data-testid="button-back-to-selection"
+                >
+                  ← <span className="hidden sm:inline">Back to recipe selection</span><span className="sm:hidden">Back</span>
+                </button>
+                {isFocusMode && (
+                  <button
+                    onClick={() => updateState({ layout: "standard" })}
+                    className="px-3 py-1.5 text-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+                    data-testid="button-exit-focus"
+                  >
+                    Exit focus
+                  </button>
+                )}
+              </div>
               <button
                 onClick={() => setLocation("/import")}
                 className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
