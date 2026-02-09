@@ -552,7 +552,7 @@ export default function RecipeView() {
               role="button"
               aria-label="Toggle nutrition info"
             >
-              <span className="text-xs text-muted-foreground">БЖУ</span>
+              <span className="text-xs text-muted-foreground">{t("recipe.macros")}</span>
             </div>
           </div>
           
