@@ -313,10 +313,22 @@ export default function WeeklyMeals() {
   const [weekLocked, setWeekLocked] = useLocalStorageState<boolean>("week_locked_v1", false);
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
-  const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
+  const [ingredientsPanelRecipeId, setIngredientsPanelRecipeId] = useState<string | null>(null);
+
+  const ingredientsPanelRecipe = ingredientsPanelRecipeId
+    ? sampleRecipes.find(r => r.id === ingredientsPanelRecipeId) || null
+    : null;
+
+  const openIngredientsPanel = (recipeId: string) => {
+    setIngredientsPanelRecipeId(recipeId);
+  };
+
+  const closeIngredientsPanel = () => {
+    setIngredientsPanelRecipeId(null);
+  };
 
   const dayNames = [t("meals.sun"), t("meals.mon"), t("meals.tue"), t("meals.wed"), t("meals.thu"), t("meals.fri"), t("meals.sat")];
   const mealNames: Record<string, string> = { "Breakfast": t("meals.breakfast"), "Lunch": t("meals.lunch"), "Dinner": t("meals.dinner") };
@@ -1214,7 +1226,7 @@ export default function WeeklyMeals() {
                 filteredRecipes.slice(0, 10).map(recipe => {
                   const meta = getRecipeUserMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
-                  const isExpanded = expandedRecipe === recipe.id;
+                  
                   const monogram = getMonogram(recipe.title);
                   const displayTags = recipe.tags.map(tag => {
                     if (tag === "vegetarian") return t("meals.vegetarian");
@@ -1249,7 +1261,13 @@ export default function WeeklyMeals() {
                             )}
                           </div>
                           <button
-                            onClick={() => toggleSelection(recipe.id)}
+                            onClick={() => {
+                              if (isSelected) {
+                                openIngredientsPanel(recipe.id);
+                              } else {
+                                toggleSelection(recipe.id);
+                              }
+                            }}
                             className={`px-3 py-1 text-xs rounded-full border flex-shrink-0 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
                             data-testid={`button-add-${recipe.id}`}
                           >
@@ -1285,24 +1303,13 @@ export default function WeeklyMeals() {
                           {t("recipe.openRecipe")}
                         </button>
                         <button
-                          onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
+                          onClick={() => openIngredientsPanel(recipe.id)}
                           className="px-4 py-2 text-xs rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
                           data-testid={`button-ingredients-${recipe.id}`}
                         >
-                          Ingredients
+                          {t("meals.ingredientsButton") || "Ingredients"}
                         </button>
                       </div>
-
-                      {isExpanded && (
-                        <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
-                          <p className="text-xs font-medium text-foreground mb-2">{t("import.recipePreview")}</p>
-                          <ul className="space-y-1">
-                            {recipe.ingredients.slice(0, 5).map((ing, i) => (
-                              <li key={i} className="text-xs text-muted-foreground">• {ing}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                       </div>
                     </div>
                   );
@@ -1335,6 +1342,62 @@ export default function WeeklyMeals() {
           </main>
         </div>
       </div>
+
+      {ingredientsPanelRecipeId && (
+        <div className="fixed inset-0 z-50 flex justify-end" data-testid="ingredients-panel-overlay">
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={closeIngredientsPanel}
+          />
+          <div className="relative w-full max-w-sm bg-background border-s hairline shadow-lg flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b hairline">
+              <h3 className="text-sm font-medium text-foreground truncate" data-testid="text-ingredients-panel-title">
+                {ingredientsPanelRecipe?.title || ""}
+              </h3>
+              <button
+                onClick={closeIngredientsPanel}
+                className="text-muted-foreground hover:text-foreground text-lg leading-none px-1"
+                data-testid="button-close-ingredients-panel"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+                {t("meals.ingredientsButton") || "Ingredients"}
+              </p>
+              {ingredientsPanelRecipe && ingredientsPanelRecipe.ingredients.length > 0 ? (
+                <ul className="space-y-2">
+                  {ingredientsPanelRecipe.ingredients.map((ing, i) => (
+                    <li key={i} className="text-sm text-foreground flex items-start gap-2" data-testid={`panel-ingredient-${i}`}>
+                      <span className="text-muted-foreground mt-0.5">·</span>
+                      {ing}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground" data-testid="text-no-ingredients">
+                  {t("meals.ingredientsNotAvailable") || "Ingredients not available"}
+                </p>
+              )}
+            </div>
+            <div className="px-5 py-3 border-t hairline">
+              <button
+                onClick={() => {
+                  if (ingredientsPanelRecipeId && state.selectedIds.includes(ingredientsPanelRecipeId)) {
+                    toggleSelection(ingredientsPanelRecipeId);
+                  }
+                  closeIngredientsPanel();
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+                data-testid="button-remove-from-panel"
+              >
+                {t("meals.removeFromSelection") || "Remove from selection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
