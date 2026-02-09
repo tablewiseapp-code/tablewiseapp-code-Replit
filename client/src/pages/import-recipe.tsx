@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { saveCurrentRecipe, generateId, type Recipe } from "@/lib/storage";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type Language } from "@/lib/i18n";
 
 interface SpeechRecognitionEvent {
   resultIndex: number;
@@ -54,9 +54,15 @@ async function parseRecipeWithAI(text: string): Promise<{ title: string; ingredi
   return response.json();
 }
 
+const SPEECH_LOCALES: Record<Language, string> = {
+  en: "en-US",
+  ru: "ru-RU",
+  he: "he-IL",
+};
+
 export default function ImportRecipe() {
   const [, setLocation] = useLocation();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [title, setTitle] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState("");
@@ -90,7 +96,7 @@ export default function ImportRecipe() {
     
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = SPEECH_LOCALES[lang] || "en-US";
 
     let finalTranscript = "";
 
