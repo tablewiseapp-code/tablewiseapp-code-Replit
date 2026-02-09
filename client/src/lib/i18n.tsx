@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 
 export type Language = "en" | "ru" | "he";
 
@@ -586,12 +586,13 @@ const I18nContext = createContext<I18nContextType>({
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>(loadLanguage);
 
-  const setLang = (newLang: Language) => {
+  const setLang = useCallback((newLang: Language) => {
     setLangState(newLang);
     try {
       localStorage.setItem("tablewise_language", newLang);
     } catch {}
-  };
+    window.location.reload();
+  }, []);
 
   const dir = LANGUAGES.find(l => l.code === lang)?.dir || "ltr";
 
@@ -600,7 +601,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute("lang", lang);
   }, [lang, dir]);
 
-  const t = (key: string, params?: Record<string, string | number>): string => {
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     let text = translations[lang]?.[key] || translations.en[key] || key;
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
@@ -608,10 +609,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       });
     }
     return text;
-  };
+  }, [lang]);
+
+  const value = useMemo(() => ({ lang, setLang, t, dir }), [lang, setLang, t, dir]);
 
   return (
-    <I18nContext.Provider value={{ lang, setLang, t, dir }}>
+    <I18nContext.Provider value={value}>
       {children}
     </I18nContext.Provider>
   );
