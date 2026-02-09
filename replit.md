@@ -2,13 +2,22 @@
 
 ## Overview
 
-A calm, professional cooking workspace application designed for focus and clarity. The app displays recipes with a minimalist interface inspired by Steve Jobs' design philosophy - simplicity, restraint, and letting the interface "disappear while cooking." Features include ingredient scaling by servings, unit conversion (grams/ml/cups), step-by-step cooking guidance, and state persistence via localStorage.
+A calm, professional cooking workspace application designed for focus and clarity. The app displays recipes with a minimalist interface inspired by Steve Jobs' design philosophy - simplicity, restraint, and letting the interface "disappear while cooking." Features include recipe import (manual + AI voice), ingredient scaling by servings, unit conversion (grams/ml/cups), step-by-step cooking guidance, and persistent recipe storage in PostgreSQL.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+
+### PostgreSQL Recipe Storage - Feb 2026
+- Recipes now stored in PostgreSQL database (previously localStorage)
+- Full REST API: GET/POST/PATCH/DELETE at `/api/recipes`
+- New "My Recipes" page at `/recipes` listing all saved recipes
+- Recipe detail page at `/recipe/:id` with delete capability
+- Import recipe page saves to database and redirects to detail view
+- Database connection via `server/db.ts` with Drizzle ORM
+- Schema: `recipes` table with id, title, ingredients[], steps[], image, sourceUrl, cookTime, servings, tags[]
 
 ### Internationalization (i18n) - Feb 2026
 - Added multi-language support: English, Russian, Hebrew
@@ -18,6 +27,7 @@ Preferred communication style: Simple, everyday language.
 - RTL layout support for Hebrew via `dir="rtl"` on HTML element
 - 150+ translation keys covering all UI pages
 - Filter/data values remain in English for data matching; only display text is translated
+- Speech recognition language matches selected app language for dictation
 
 ## System Architecture
 
@@ -44,9 +54,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **ORM**: Drizzle ORM with PostgreSQL dialect
-- **Schema Location**: `shared/schema.ts` - defines users table with id, username, password
-- **Storage Interface**: Abstract `IStorage` interface in `server/storage.ts` with in-memory implementation (MemStorage) that can be swapped for database-backed storage
-- **Client Persistence**: localStorage for recipe UI state
+- **Schema Location**: `shared/schema.ts` - defines users and recipes tables
+- **Database Connection**: `server/db.ts` - Drizzle ORM with node-postgres pool
+- **Storage Interface**: `IStorage` interface in `server/storage.ts` with `DatabaseStorage` implementation using Drizzle queries
+- **Client Persistence**: localStorage for recipe UI state (servings, units, checked ingredients)
 
 ### Project Structure
 ```

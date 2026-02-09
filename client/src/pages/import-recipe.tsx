@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { saveCurrentRecipe, generateId, type Recipe } from "@/lib/storage";
+import { createRecipe } from "@/lib/storage";
 import { useI18n, type Language } from "@/lib/i18n";
 
 interface SpeechRecognitionEvent {
@@ -192,7 +192,12 @@ export default function ImportRecipe() {
     }
   };
 
-  const handleSave = () => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
     const parsedIngredients = ingredients
       .split("\n")
       .map(line => line.trim())
@@ -203,25 +208,21 @@ export default function ImportRecipe() {
       .map(line => line.trim())
       .filter(line => line.length > 0);
 
-    const recipe: Recipe = {
-      id: generateId(),
-      title: title.trim() || "Untitled Recipe",
-      ingredients: parsedIngredients,
-      steps: parsedSteps,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    if (image) {
-      recipe.image = image;
+    try {
+      const saved = await createRecipe({
+        title: title.trim() || "Untitled Recipe",
+        ingredients: parsedIngredients,
+        steps: parsedSteps,
+        image: image || null,
+        sourceUrl: sourceUrl.trim() && isValidUrl(sourceUrl.trim()) ? sourceUrl.trim() : null,
+      });
+      setLocation(`/recipe/${saved.id}`);
+    } catch (error: any) {
+      console.error("Failed to save recipe:", error);
+      alert(error.message || "Failed to save recipe");
+    } finally {
+      setIsSaving(false);
     }
-
-    if (sourceUrl.trim() && isValidUrl(sourceUrl.trim())) {
-      recipe.sourceUrl = sourceUrl.trim();
-    }
-
-    saveCurrentRecipe(recipe);
-    setLocation("/");
   };
 
   return (
@@ -423,10 +424,11 @@ Sauté onions until golden brown"
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleSave}
-              className="px-6 py-2.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+              disabled={isSaving}
+              className="px-6 py-2.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
               data-testid="button-save"
             >
-              {t("import.saveAndOpen")}
+              {isSaving ? t("import.saving") || "Saving..." : t("import.saveAndOpen")}
             </button>
             <button
               onClick={() => setLocation("/")}

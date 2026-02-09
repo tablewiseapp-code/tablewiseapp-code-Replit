@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useI18n, LANGUAGES } from "@/lib/i18n";
 import RecipeView from "@/pages/recipe-view";
+import RecipeList from "@/pages/recipe-list";
+import RecipeDetail from "@/pages/recipe-detail";
 import WeeklyMeals from "@/pages/weekly-meals";
 import ImportRecipe from "@/pages/import-recipe";
 import GroceryList from "@/pages/grocery-list";
@@ -13,6 +15,7 @@ import { useState, useRef, useEffect } from "react";
 
 const NAV_KEYS = [
   { path: "/", key: "nav.recipeView" },
+  { path: "/recipes", key: "nav.myRecipes" },
   { path: "/meals", key: "nav.weeklyMeals" },
   { path: "/import", key: "nav.importRecipe" },
   { path: "/grocery-list", key: "nav.groceryList" },
@@ -92,6 +95,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={RecipeView}/>
+      <Route path="/recipes" component={RecipeList}/>
+      <Route path="/recipe/:id" component={RecipeDetail}/>
       <Route path="/meals" component={WeeklyMeals}/>
       <Route path="/import" component={ImportRecipe}/>
       <Route path="/grocery-list" component={GroceryList}/>

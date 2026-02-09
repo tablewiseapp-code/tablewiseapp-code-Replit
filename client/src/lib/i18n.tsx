@@ -11,9 +11,23 @@ export const LANGUAGES: { code: Language; label: string; nativeLabel: string; di
 const translations: Record<Language, Record<string, string>> = {
   en: {
     "nav.recipeView": "Recipe View",
+    "nav.myRecipes": "My Recipes",
     "nav.weeklyMeals": "Weekly Meals",
     "nav.importRecipe": "Import Recipe",
     "nav.groceryList": "Grocery List",
+
+    "recipes.title": "My Recipes",
+    "recipes.subtitle": "Your saved recipes",
+    "recipes.loading": "Loading...",
+    "recipes.empty": "No recipes yet",
+    "recipes.importFirst": "Import your first recipe",
+    "recipes.ingredients": "ingredients",
+    "recipes.steps": "steps",
+
+    "recipeDetail.backToRecipes": "← Back to recipes",
+    "recipeDetail.source": "Source",
+    "recipeDetail.delete": "Delete",
+    "recipeDetail.deleteConfirm": "Delete this recipe?",
 
     "recipe.backToSelection": "← Back to selection",
     "recipe.addToMyPicks": "Add to My Picks",
@@ -157,6 +171,7 @@ const translations: Record<Language, Record<string, string>> = {
     "import.titleHint": "A title helps you find this recipe later",
     "import.ingredientsLabel": "Ingredients (one per line)",
     "import.stepsLabel": "Steps (one per line)",
+    "import.saving": "Saving...",
     "import.saveAndOpen": "Save & open",
     "import.back": "Back",
     "import.howItWorks": "How it works",
@@ -191,9 +206,23 @@ const translations: Record<Language, Record<string, string>> = {
 
   ru: {
     "nav.recipeView": "Рецепт",
+    "nav.myRecipes": "Мои рецепты",
     "nav.weeklyMeals": "Меню недели",
     "nav.importRecipe": "Импорт рецепта",
     "nav.groceryList": "Список покупок",
+
+    "recipes.title": "Мои рецепты",
+    "recipes.subtitle": "Ваши сохранённые рецепты",
+    "recipes.loading": "Загрузка...",
+    "recipes.empty": "Пока нет рецептов",
+    "recipes.importFirst": "Импортировать первый рецепт",
+    "recipes.ingredients": "ингредиентов",
+    "recipes.steps": "шагов",
+
+    "recipeDetail.backToRecipes": "← Назад к рецептам",
+    "recipeDetail.source": "Источник",
+    "recipeDetail.delete": "Удалить",
+    "recipeDetail.deleteConfirm": "Удалить этот рецепт?",
 
     "recipe.backToSelection": "← Назад к выбору",
     "recipe.addToMyPicks": "Добавить в Избранное",
@@ -337,6 +366,7 @@ const translations: Record<Language, Record<string, string>> = {
     "import.titleHint": "Название поможет найти рецепт позже",
     "import.ingredientsLabel": "Ингредиенты (по одному на строку)",
     "import.stepsLabel": "Шаги (по одному на строку)",
+    "import.saving": "Сохраняю...",
     "import.saveAndOpen": "Сохранить и открыть",
     "import.back": "Назад",
     "import.howItWorks": "Как это работает",
@@ -371,9 +401,23 @@ const translations: Record<Language, Record<string, string>> = {
 
   he: {
     "nav.recipeView": "מתכון",
+    "nav.myRecipes": "המתכונים שלי",
     "nav.weeklyMeals": "תפריט שבועי",
     "nav.importRecipe": "ייבוא מתכון",
     "nav.groceryList": "רשימת קניות",
+
+    "recipes.title": "המתכונים שלי",
+    "recipes.subtitle": "המתכונים השמורים שלך",
+    "recipes.loading": "טוען...",
+    "recipes.empty": "אין עדיין מתכונים",
+    "recipes.importFirst": "ייבא את המתכון הראשון שלך",
+    "recipes.ingredients": "מרכיבים",
+    "recipes.steps": "שלבים",
+
+    "recipeDetail.backToRecipes": "← חזרה למתכונים",
+    "recipeDetail.source": "מקור",
+    "recipeDetail.delete": "מחיקה",
+    "recipeDetail.deleteConfirm": "למחוק את המתכון הזה?",
 
     "recipe.backToSelection": "→ חזרה לבחירה",
     "recipe.addToMyPicks": "הוסף למועדפים",
@@ -517,6 +561,7 @@ const translations: Record<Language, Record<string, string>> = {
     "import.titleHint": "כותרת תעזור למצוא את המתכון אחר כך",
     "import.ingredientsLabel": "מרכיבים (אחד בכל שורה)",
     "import.stepsLabel": "שלבים (אחד בכל שורה)",
+    "import.saving": "שומר...",
     "import.saveAndOpen": "שמור ופתח",
     "import.back": "חזרה",
     "import.howItWorks": "איך זה עובד",

@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertRecipeSchema } from "@shared/schema";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -11,6 +12,69 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.get("/api/recipes", async (_req, res) => {
+    try {
+      const recipes = await storage.getAllRecipes();
+      res.json(recipes);
+    } catch (error: any) {
+      console.error("Error fetching recipes:", error);
+      res.status(500).json({ error: "Failed to fetch recipes" });
+    }
+  });
+
+  app.get("/api/recipes/:id", async (req, res) => {
+    try {
+      const recipe = await storage.getRecipe(req.params.id);
+      if (!recipe) {
+        return res.status(404).json({ error: "Recipe not found" });
+      }
+      res.json(recipe);
+    } catch (error: any) {
+      console.error("Error fetching recipe:", error);
+      res.status(500).json({ error: "Failed to fetch recipe" });
+    }
+  });
+
+  app.post("/api/recipes", async (req, res) => {
+    try {
+      const parsed = insertRecipeSchema.parse(req.body);
+      const recipe = await storage.createRecipe(parsed);
+      res.status(201).json(recipe);
+    } catch (error: any) {
+      console.error("Error creating recipe:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid recipe data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create recipe" });
+    }
+  });
+
+  app.patch("/api/recipes/:id", async (req, res) => {
+    try {
+      const recipe = await storage.updateRecipe(req.params.id, req.body);
+      if (!recipe) {
+        return res.status(404).json({ error: "Recipe not found" });
+      }
+      res.json(recipe);
+    } catch (error: any) {
+      console.error("Error updating recipe:", error);
+      res.status(500).json({ error: "Failed to update recipe" });
+    }
+  });
+
+  app.delete("/api/recipes/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteRecipe(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Recipe not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting recipe:", error);
+      res.status(500).json({ error: "Failed to delete recipe" });
+    }
+  });
+
   app.post("/api/parse-recipe", async (req, res) => {
     try {
       const { transcript } = req.body;
