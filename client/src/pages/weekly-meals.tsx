@@ -1152,6 +1152,61 @@ export default function WeeklyMeals() {
               </div>
             </div>
 
+            {state.selectedIds.length > 0 ? (
+              <div className="mb-6 p-5 bg-[#FAFAF8] rounded-xl border hairline" data-testid="panel-selected-recipes">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {t("meals.selectedRecipesPanel") || "Selected recipes"}
+                  </h3>
+                  <span className="text-xs text-muted-foreground">{state.selectedIds.length} / 12</span>
+                </div>
+                <div className="space-y-2">
+                  {selectedRecipes.map(recipe => {
+                    const displayTags: string[] = [];
+                    if (recipe.mealType) displayTags.push(recipe.mealType);
+                    recipe.tags.forEach(tag => {
+                      if (tag === "vegetarian") displayTags.push(t("meals.vegetarian"));
+                      else if (tag === "kidFriendly") displayTags.push(t("meals.kidFriendly"));
+                      else if (tag === "glutenFree") displayTags.push(t("meals.glutenFree"));
+                    });
+                    return (
+                      <div
+                        key={recipe.id}
+                        className="flex items-center gap-3 p-3 bg-white rounded-lg border hairline"
+                        data-testid={`selected-recipe-${recipe.id}`}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-foreground/5 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-medium text-muted-foreground/50">{getMonogram(recipe.title)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{recipe.title}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</span>
+                            {displayTags.slice(0, 3).map(tag => (
+                              <span key={tag} className="text-[10px] px-1.5 py-0 rounded bg-foreground/5 text-muted-foreground">{tag}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => toggleSelection(recipe.id)}
+                          className="text-xs text-muted-foreground hover:text-foreground flex-shrink-0 px-2 py-1 rounded hover:bg-foreground/5"
+                          data-testid={`remove-selected-${recipe.id}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-5 bg-[#FAFAF8] rounded-xl border hairline text-center" data-testid="panel-selected-recipes-empty">
+                <p className="text-xs text-muted-foreground">
+                  {t("meals.noRecipesSelected") || "No recipes selected yet"}
+                </p>
+              </div>
+            )}
+
             <div className="space-y-4">
               {filteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">{t("meals.noRecipesMatch")}</p>
