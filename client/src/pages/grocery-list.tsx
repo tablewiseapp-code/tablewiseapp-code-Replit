@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useI18n } from "@/lib/i18n";
 
 interface Recipe {
   id: string;
@@ -89,6 +90,7 @@ function loadState(): WeeklyMealsState | null {
 
 export default function GroceryList() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   
   const state = loadState();
@@ -142,6 +144,17 @@ export default function GroceryList() {
 
   const categoryOrder = ["Produce", "Meat & Poultry", "Seafood", "Dairy & Eggs", "Grains & Pasta", "Canned & Jarred", "Spices & Seasonings", "Other"];
 
+  const categoryTranslations: Record<string, string> = {
+    "Produce": t("grocery.produce"),
+    "Meat & Poultry": t("grocery.meatPoultry"),
+    "Seafood": t("grocery.seafood"),
+    "Dairy & Eggs": t("grocery.dairyEggs"),
+    "Grains & Pasta": t("grocery.grainsPasta"),
+    "Canned & Jarred": t("grocery.cannedJarred"),
+    "Spices & Seasonings": t("grocery.spicesSeasonings"),
+    "Other": t("grocery.other"),
+  };
+
   if (groceryData.usedRecipes.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -152,7 +165,7 @@ export default function GroceryList() {
             </div>
             <div>
               <span className="text-sm font-medium text-foreground">Tablewise</span>
-              <span className="text-xs text-muted-foreground ml-2">Grocery List</span>
+              <span className="text-xs text-muted-foreground ml-2">{t("grocery.groceryList")}</span>
             </div>
           </div>
           <button 
@@ -160,19 +173,19 @@ export default function GroceryList() {
             className="text-sm text-muted-foreground hover:text-foreground"
             data-testid="button-back-to-plan"
           >
-            ← Back to Weekly Plan
+            {t("grocery.backToPlan")}
           </button>
         </header>
 
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-lg text-muted-foreground mb-4">No meals planned yet</p>
+            <p className="text-lg text-muted-foreground mb-4">{t("grocery.noMeals")}</p>
             <button
               onClick={() => setLocation("/meals")}
               className="px-4 py-2 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
               data-testid="button-go-to-plan"
             >
-              Go to Weekly Plan
+              {t("grocery.goToPlan")}
             </button>
           </div>
         </div>
@@ -189,7 +202,7 @@ export default function GroceryList() {
           </div>
           <div>
             <span className="text-sm font-medium text-foreground">Tablewise</span>
-            <span className="text-xs text-muted-foreground ml-2">Grocery List</span>
+            <span className="text-xs text-muted-foreground ml-2">{t("grocery.groceryList")}</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -198,16 +211,16 @@ export default function GroceryList() {
             className="text-sm text-muted-foreground hover:text-foreground"
             data-testid="button-back-to-plan"
           >
-            ← Back to Weekly Plan
+            {t("grocery.backToPlan")}
           </button>
         </div>
       </header>
 
       <div className="flex-1 p-8 max-w-3xl mx-auto w-full">
         <div className="mb-8">
-          <h1 className="text-2xl font-medium text-foreground mb-2">Your Grocery List</h1>
+          <h1 className="text-2xl font-medium text-foreground mb-2">{t("grocery.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            {groceryData.totalItems} items from {groceryData.usedRecipes.length} recipes
+            {t("grocery.items", { total: groceryData.totalItems, recipes: groceryData.usedRecipes.length })}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {groceryData.usedRecipes.map(recipe => (
@@ -223,7 +236,7 @@ export default function GroceryList() {
 
         <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-muted-foreground">
-            {checkedItems.size} of {groceryData.totalItems} items checked
+            {t("grocery.checked", { checked: checkedItems.size, total: groceryData.totalItems })}
           </span>
           {checkedItems.size > 0 && (
             <button
@@ -231,7 +244,7 @@ export default function GroceryList() {
               className="text-xs text-muted-foreground hover:text-foreground"
               data-testid="button-uncheck-all"
             >
-              Uncheck all
+              {t("grocery.uncheckAll")}
             </button>
           )}
         </div>
@@ -244,7 +257,7 @@ export default function GroceryList() {
             return (
               <div key={category}>
                 <h2 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                  {category}
+                  {categoryTranslations[category] || category}
                   <span className="text-xs text-muted-foreground font-normal">({items.length})</span>
                 </h2>
                 <div className="space-y-2">

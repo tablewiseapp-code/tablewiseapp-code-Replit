@@ -8,6 +8,17 @@ A calm, professional cooking workspace application designed for focus and clarit
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### Internationalization (i18n) - Feb 2026
+- Added multi-language support: English, Russian, Hebrew
+- Translation system in `client/src/lib/i18n.tsx` with React Context
+- Language selector in dev nav bar (top-right)
+- Browser language auto-detection on first visit, persisted in localStorage (`tablewise_language`)
+- RTL layout support for Hebrew via `dir="rtl"` on HTML element
+- 150+ translation keys covering all UI pages
+- Filter/data values remain in English for data matching; only display text is translated
+
 ## System Architecture
 
 ### Frontend Architecture

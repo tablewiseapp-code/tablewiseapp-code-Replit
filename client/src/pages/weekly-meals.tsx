@@ -4,6 +4,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, us
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { StarRating } from "@/components/ui/star-rating";
 import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
+import { useI18n } from "@/lib/i18n";
 
 interface Recipe {
   id: string;
@@ -130,6 +131,7 @@ function getMonogram(title: string): string {
 }
 
 function DraggableRecipe({ recipe, isInPlan, disabled }: { recipe: Recipe; isInPlan: boolean; disabled: boolean }) {
+  const { t } = useI18n();
   const meta = getRecipeUserMeta(recipe.id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `recipe-${recipe.id}`,
@@ -150,7 +152,7 @@ function DraggableRecipe({ recipe, isInPlan, disabled }: { recipe: Recipe; isInP
         {meta.isMyPick && <span className="text-[10px] text-yellow-500">★</span>}
       </div>
       <div className="flex items-center justify-between mt-1">
-        <p className="text-[10px] text-muted-foreground">{recipe.minutes} min</p>
+        <p className="text-[10px] text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</p>
         {meta.rating && (
           <div className="flex items-center gap-0.5">
             <span className="text-[10px] font-medium text-yellow-600">{meta.rating}</span>
@@ -202,6 +204,7 @@ function DroppableCell({
   onRemove: () => void;
   disabled: boolean;
 }) {
+  const { t } = useI18n();
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${meal}-${day}`,
     data: { day, meal },
@@ -255,13 +258,13 @@ function DroppableCell({
             )}
           </div>
           <div className="flex items-center justify-between mt-1">
-            <p className="text-[10px] text-muted-foreground">{recipe.minutes} min</p>
+            <p className="text-[10px] text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</p>
             {getRecipeUserMeta(recipe.id).rating && (
               <span className="text-[10px] text-yellow-600 font-medium">★ {getRecipeUserMeta(recipe.id).rating}</span>
             )}
           </div>
           {spanDays > 1 && (
-            <p className="text-[10px] text-[#7A9E7E] mt-1">{spanDays} days</p>
+            <p className="text-[10px] text-[#7A9E7E] mt-1">{t("meals.days", { count: spanDays })}</p>
           )}
           {!disabled && (
             <div className="mt-auto pt-2 flex gap-1">
@@ -295,7 +298,7 @@ function DroppableCell({
       ) : (
         <div className="h-full flex items-center justify-center">
           <span className="text-xs text-muted-foreground/30 italic">
-            {disabled ? (recipe ? "" : "Locked") : "Drop here"}
+            {disabled ? (recipe ? "" : t("meals.locked")) : t("meals.dropHere")}
           </span>
         </div>
       )}
@@ -305,6 +308,7 @@ function DroppableCell({
 
 export default function WeeklyMeals() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const [state, setState] = useState<WeeklyMealsState>(loadState);
   const [weekLocked, setWeekLocked] = useLocalStorageState<boolean>("week_locked_v1", false);
   const [includeInput, setIncludeInput] = useState("");
@@ -313,6 +317,9 @@ export default function WeeklyMeals() {
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
+
+  const dayNames = [t("meals.sun"), t("meals.mon"), t("meals.tue"), t("meals.wed"), t("meals.thu"), t("meals.fri"), t("meals.sat")];
+  const mealNames: Record<string, string> = { "Breakfast": t("meals.breakfast"), "Lunch": t("meals.lunch"), "Dinner": t("meals.dinner") };
 
   useEffect(() => {
     saveState(state);
@@ -610,7 +617,7 @@ export default function WeeklyMeals() {
               </div>
               <div>
                 <span className="text-sm font-medium text-foreground">Tablewise</span>
-                <span className="text-xs text-muted-foreground ml-2">Weekly Plan</span>
+                <span className="text-xs text-muted-foreground ml-2">{t("meals.weeklyPlan")}</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -619,7 +626,7 @@ export default function WeeklyMeals() {
                 className="text-sm text-muted-foreground hover:text-foreground"
                 data-testid="button-back-to-selection"
               >
-                ← Back to selection
+                {t("meals.backToSelection")}
               </button>
               {!weekLocked && state.planAssignments.length > 0 && (
                 <button
@@ -627,7 +634,7 @@ export default function WeeklyMeals() {
                   className="px-3 py-1.5 text-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
                   data-testid="button-clear-week"
                 >
-                  Clear Week
+                  {t("meals.clearWeek")}
                 </button>
               )}
               {weekLocked ? (
@@ -637,14 +644,14 @@ export default function WeeklyMeals() {
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                       <path d="M7 11V7a5 5 0 0110 0v4"/>
                     </svg>
-                    Week Locked
+                    {t("meals.weekLocked")}
                   </span>
                   <button
                     onClick={() => setWeekLocked(false)}
                     className="px-3 py-1.5 text-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
                     data-testid="button-unlock-week"
                   >
-                    Unlock
+                    {t("meals.unlock")}
                   </button>
                 </div>
               ) : (
@@ -653,7 +660,7 @@ export default function WeeklyMeals() {
                   className="px-4 py-1.5 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
                   data-testid="button-finalize-week"
                 >
-                  Finalize Week
+                  {t("meals.finalizeWeek")}
                 </button>
               )}
               <button
@@ -661,7 +668,7 @@ export default function WeeklyMeals() {
                 className="px-4 py-1.5 text-sm rounded-full border-2 border-[#7A9E7E] text-[#7A9E7E] hover:bg-[#7A9E7E] hover:text-white"
                 data-testid="button-create-grocery-list"
               >
-                Create Grocery List
+                {t("meals.createGroceryList")}
               </button>
             </div>
           </header>
@@ -669,16 +676,16 @@ export default function WeeklyMeals() {
           <div className="flex-1 flex p-6 gap-6">
             <aside className="w-[220px] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Selected Recipes</h3>
+                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.selectedRecipes")}</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-4">
-                {weekLocked ? "Week is locked" : "Drag to the calendar"}
+                {weekLocked ? t("meals.weekIsLocked") : t("meals.dragToCalendar")}
               </p>
               
               {sortedSidebarRecipes.myPicks.length > 0 && (
                 <>
                   <h4 className="text-[10px] uppercase tracking-wide text-yellow-600 mb-2 flex items-center gap-1">
-                    ★ My Picks
+                    {`★ ${t("meals.myPicks")}`}
                   </h4>
                   <div className="space-y-2 mb-4">
                     {sortedSidebarRecipes.myPicks.map(recipe => (
@@ -690,7 +697,7 @@ export default function WeeklyMeals() {
               
               {sortedSidebarRecipes.others.length > 0 ? (
                 <>
-                  <h4 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">All Recipes</h4>
+                  <h4 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">{t("meals.allRecipes")}</h4>
                   <div className="space-y-2">
                     {sortedSidebarRecipes.others.map(recipe => (
                       <DraggableRecipe key={recipe.id} recipe={recipe} isInPlan={false} disabled={weekLocked} />
@@ -698,14 +705,14 @@ export default function WeeklyMeals() {
                   </div>
                 </>
               ) : sortedSidebarRecipes.myPicks.length === 0 && (
-                <p className="text-xs text-muted-foreground italic">All selected recipes are on your plan.</p>
+                <p className="text-xs text-muted-foreground italic">{t("meals.allOnPlan")}</p>
               )}
             </aside>
 
             <main className="flex-1">
               {trayRecipes.length > 0 && (
                 <div className="mb-6 p-4 bg-[#F0EFEC] rounded-xl border hairline">
-                  <h3 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-3">Selected this week</h3>
+                  <h3 className="text-[10px] uppercase tracking-wide text-muted-foreground mb-3">{t("meals.selectedThisWeek")}</h3>
                   <div className="flex flex-wrap gap-2">
                     {trayRecipes.map(recipe => (
                       <DraggableRecipeSmall key={recipe.id} recipe={recipe} disabled={weekLocked} />
@@ -715,28 +722,28 @@ export default function WeeklyMeals() {
               )}
 
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-foreground">Weekly Plan</h2>
+                <h2 className="text-lg font-medium text-foreground">{t("meals.weeklyPlanTitle")}</h2>
                 {weekLocked && (
                   <span className="text-xs text-[#7A9E7E] bg-[#7A9E7E]/10 px-2 py-1 rounded">
-                    Locked - Unlock to edit
+                    {t("meals.lockedUnlockToEdit")}
                   </span>
                 )}
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                {weekLocked ? "Your week is finalized. Unlock to make changes." : "Drag meals to slots. Use +/− to extend across days."}
+                {weekLocked ? t("meals.weekFinalized") : t("meals.dragToSlots")}
               </p>
 
               <div className="grid grid-cols-7 gap-2 mb-2">
                 {DAYS.map((day, i) => (
                   <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                    {day}
+                    {dayNames[i]}
                   </div>
                 ))}
               </div>
 
               {MEALS.map(meal => (
                 <div key={meal} className="mb-4">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{meal}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{mealNames[meal]}</div>
                   <div className="grid grid-cols-7 gap-2">
                     {DAYS.map((_, dayIndex) => {
                       const assignment = getAssignmentForCell(meal, dayIndex);
@@ -772,7 +779,7 @@ export default function WeeklyMeals() {
             {activeRecipe && (
               <div className="p-3 bg-[#FAFAF8] rounded-lg border border-[#7A9E7E] shadow-lg">
                 <p className="text-xs font-medium text-foreground">{activeRecipe.title}</p>
-                <p className="text-[10px] text-muted-foreground">{activeRecipe.minutes} min</p>
+                <p className="text-[10px] text-muted-foreground">{t("meals.min", { count: activeRecipe.minutes })}</p>
               </div>
             )}
           </DragOverlay>
@@ -790,15 +797,15 @@ export default function WeeklyMeals() {
           </div>
           <div>
             <span className="text-sm font-medium text-foreground">Tablewise</span>
-            <span className="text-xs text-muted-foreground ml-2">Calm weekly planning</span>
+            <span className="text-xs text-muted-foreground ml-2">{t("meals.calmPlanning")}</span>
           </div>
         </div>
         <nav className="flex items-center gap-6">
-          <a href="#" className="text-sm text-muted-foreground hover:text-foreground">How it works</a>
-          <a href="#" className="text-sm text-muted-foreground hover:text-foreground">Plan</a>
-          <a href="#" className="text-sm text-muted-foreground hover:text-foreground">Cost</a>
+          <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.howItWorks")}</a>
+          <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.plan")}</a>
+          <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.cost")}</a>
           <button className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 border hairline rounded-lg" data-testid="button-login">
-            Log in
+            {t("meals.logIn")}
           </button>
         </nav>
       </header>
@@ -809,14 +816,14 @@ export default function WeeklyMeals() {
           <aside className="w-[240px] flex-shrink-0">
             <div className="sticky top-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-foreground">Filters ({activeFilterCount})</span>
+                <span className="text-sm text-foreground">{t("meals.filters", { count: activeFilterCount })}</span>
                 {activeFilterCount > 0 && (
                   <button 
                     onClick={clearAllFilters}
                     className="text-xs text-muted-foreground hover:text-foreground"
                     data-testid="button-clear-filters"
                   >
-                    Clear all
+                    {t("meals.clearAll")}
                   </button>
                 )}
               </div>
@@ -827,7 +834,7 @@ export default function WeeklyMeals() {
                   className="flex items-center justify-between w-full text-left"
                   data-testid="button-toggle-time"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">Max minutes</span>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.maxMinutes")}</span>
                   <span className="text-xs text-muted-foreground">{state.expandedSections.includes("time") ? "−" : "+"}</span>
                 </button>
                 {state.expandedSections.includes("time") && (
@@ -839,7 +846,7 @@ export default function WeeklyMeals() {
                         className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.maxMinutes === mins ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                         data-testid={`filter-time-${mins ?? "any"}`}
                       >
-                        {mins ?? "Any"}
+                        {mins ?? t("meals.any")}
                       </button>
                     ))}
                   </div>
@@ -852,23 +859,30 @@ export default function WeeklyMeals() {
                   className="flex items-center justify-between w-full text-left"
                   data-testid="button-toggle-dietary"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">Dietary</span>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.dietary")}</span>
                   <span className="text-xs text-muted-foreground">{state.expandedSections.includes("dietary") ? "−" : "+"}</span>
                 </button>
                 {state.expandedSections.includes("dietary") && (
                   <div className="mt-3 space-y-2">
-                    {["Vegetarian", "Kid friendly", "Gluten-free"].map(diet => (
-                      <label key={diet} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={state.filters.dietary.includes(diet)}
-                          onChange={() => toggleArrayFilter("dietary", diet)}
-                          className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
-                          data-testid={`filter-dietary-${diet.toLowerCase().replace(" ", "-")}`}
-                        />
-                        <span className="text-xs text-muted-foreground">{diet}</span>
-                      </label>
-                    ))}
+                    {["Vegetarian", "Kid friendly", "Gluten-free"].map(diet => {
+                      const dietTranslations: Record<string, string> = {
+                        "Vegetarian": t("meals.vegetarian"),
+                        "Kid friendly": t("meals.kidFriendly"),
+                        "Gluten-free": t("meals.glutenFree"),
+                      };
+                      return (
+                        <label key={diet} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={state.filters.dietary.includes(diet)}
+                            onChange={() => toggleArrayFilter("dietary", diet)}
+                            className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
+                            data-testid={`filter-dietary-${diet.toLowerCase().replace(" ", "-")}`}
+                          />
+                          <span className="text-xs text-muted-foreground">{dietTranslations[diet] || diet}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -879,21 +893,29 @@ export default function WeeklyMeals() {
                   className="flex items-center justify-between w-full text-left"
                   data-testid="button-toggle-mealtype"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">Meal type</span>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.mealType")}</span>
                   <span className="text-xs text-muted-foreground">{state.expandedSections.includes("mealType") ? "−" : "+"}</span>
                 </button>
                 {state.expandedSections.includes("mealType") && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {["Breakfast", "Lunch", "Dinner", "Lunch box"].map(type => (
-                      <button
-                        key={type}
-                        onClick={() => toggleArrayFilter("mealType", type)}
-                        className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                        data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                    {["Breakfast", "Lunch", "Dinner", "Lunch box"].map(type => {
+                      const mealTypeTranslations: Record<string, string> = {
+                        "Breakfast": t("meals.breakfast"),
+                        "Lunch": t("meals.lunch"),
+                        "Dinner": t("meals.dinner"),
+                        "Lunch box": t("meals.lunchBox"),
+                      };
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => toggleArrayFilter("mealType", type)}
+                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
+                        >
+                          {mealTypeTranslations[type] || type}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -904,21 +926,29 @@ export default function WeeklyMeals() {
                   className="flex items-center justify-between w-full text-left"
                   data-testid="button-toggle-method"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">Cooking method</span>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.cookingMethod")}</span>
                   <span className="text-xs text-muted-foreground">{state.expandedSections.includes("method") ? "−" : "+"}</span>
                 </button>
                 {state.expandedSections.includes("method") && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {["Oven", "Air fryer", "Stovetop", "No-cook"].map(method => (
-                      <button
-                        key={method}
-                        onClick={() => toggleArrayFilter("cookingMethod", method)}
-                        className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.cookingMethod.includes(method) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                        data-testid={`filter-method-${method.toLowerCase().replace(" ", "-")}`}
-                      >
-                        {method}
-                      </button>
-                    ))}
+                    {["Oven", "Air fryer", "Stovetop", "No-cook"].map(method => {
+                      const methodTranslations: Record<string, string> = {
+                        "Oven": t("meals.oven"),
+                        "Air fryer": t("meals.airFryer"),
+                        "Stovetop": t("meals.stovetop"),
+                        "No-cook": t("meals.noCook"),
+                      };
+                      return (
+                        <button
+                          key={method}
+                          onClick={() => toggleArrayFilter("cookingMethod", method)}
+                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.cookingMethod.includes(method) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid={`filter-method-${method.toLowerCase().replace(" ", "-")}`}
+                        >
+                          {methodTranslations[method] || method}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -929,21 +959,29 @@ export default function WeeklyMeals() {
                   className="flex items-center justify-between w-full text-left"
                   data-testid="button-toggle-source"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">Source</span>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.source")}</span>
                   <span className="text-xs text-muted-foreground">{state.expandedSections.includes("source") ? "−" : "+"}</span>
                 </button>
                 {state.expandedSections.includes("source") && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {["My recipes", "Imported", "Trusted authors", "Personal"].map(src => (
-                      <button
-                        key={src}
-                        onClick={() => toggleArrayFilter("source", src)}
-                        className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.source.includes(src) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                        data-testid={`filter-source-${src.toLowerCase().replace(" ", "-")}`}
-                      >
-                        {src}
-                      </button>
-                    ))}
+                    {["My recipes", "Imported", "Trusted authors", "Personal"].map(src => {
+                      const sourceTranslations: Record<string, string> = {
+                        "My recipes": t("meals.myRecipes"),
+                        "Imported": t("meals.imported"),
+                        "Trusted authors": t("meals.trustedAuthors"),
+                        "Personal": t("meals.personal"),
+                      };
+                      return (
+                        <button
+                          key={src}
+                          onClick={() => toggleArrayFilter("source", src)}
+                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.source.includes(src) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid={`filter-source-${src.toLowerCase().replace(" ", "-")}`}
+                        >
+                          {sourceTranslations[src] || src}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -953,24 +991,32 @@ export default function WeeklyMeals() {
                 className="text-xs text-muted-foreground hover:text-foreground mb-3"
                 data-testid="button-more-filters"
               >
-                {state.showMoreFilters ? "− Less filters" : "+ More filters"}
+                {state.showMoreFilters ? t("meals.lessFilters") : t("meals.moreFilters")}
               </button>
 
               {state.showMoreFilters && (
                 <>
                   <div className="border-b hairline pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Protein type</span>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.proteinType")}</span>
                     <div className="flex flex-wrap gap-2">
-                      {["Chicken", "Beef", "Seafood", "Plant-based"].map(protein => (
-                        <button
-                          key={protein}
-                          onClick={() => toggleArrayFilter("proteinType", protein)}
-                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                          data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
-                        >
-                          {protein}
-                        </button>
-                      ))}
+                      {["Chicken", "Beef", "Seafood", "Plant-based"].map(protein => {
+                        const proteinTranslations: Record<string, string> = {
+                          "Chicken": t("meals.chicken"),
+                          "Beef": t("meals.beef"),
+                          "Seafood": t("meals.seafood"),
+                          "Plant-based": t("meals.plantBased"),
+                        };
+                        return (
+                          <button
+                            key={protein}
+                            onClick={() => toggleArrayFilter("proteinType", protein)}
+                            className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                            data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
+                          >
+                            {proteinTranslations[protein] || protein}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -980,7 +1026,7 @@ export default function WeeklyMeals() {
                       className="flex items-center justify-between w-full text-left"
                       data-testid="button-toggle-mypicks-section"
                     >
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground">My Picks ⭐</span>
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.myPicksFilter")}</span>
                       <span className="text-xs text-muted-foreground">{state.expandedSections.includes("myPicks") ? "−" : "+"}</span>
                     </button>
                     {state.expandedSections.includes("myPicks") && (
@@ -993,12 +1039,12 @@ export default function WeeklyMeals() {
                             className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
                             data-testid="checkbox-filter-mypicks"
                           />
-                          <span className="text-xs text-muted-foreground">Show only My Picks</span>
+                          <span className="text-xs text-muted-foreground">{t("meals.showOnlyMyPicks")}</span>
                         </label>
                         
                         {state.filters.myPicks && (
                           <div className="pl-5 space-y-2">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Minimum Rating</span>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">{t("meals.minimumRating")}</span>
                             <div className="flex flex-wrap gap-1">
                               {[null, 4, 3, 2].map(rating => (
                                 <button
@@ -1011,7 +1057,7 @@ export default function WeeklyMeals() {
                                   }`}
                                   data-testid={`button-filter-rating-${rating || "any"}`}
                                 >
-                                  {rating ? `${rating}★+` : "Any"}
+                                  {rating ? `${rating}★+` : t("meals.any")}
                                 </button>
                               ))}
                             </div>
@@ -1030,7 +1076,7 @@ export default function WeeklyMeals() {
                         className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
                         data-testid="filter-with-notes"
                       />
-                      <span className="text-xs text-muted-foreground">With my notes</span>
+                      <span className="text-xs text-muted-foreground">{t("meals.withMyNotes")}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1040,12 +1086,12 @@ export default function WeeklyMeals() {
                         className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
                         data-testid="filter-modified"
                       />
-                      <span className="text-xs text-muted-foreground">Modified by me</span>
+                      <span className="text-xs text-muted-foreground">{t("meals.modifiedByMe")}</span>
                     </label>
                   </div>
 
                   <div className="border-b hairline pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Must include</span>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustInclude")}</span>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {state.filters.mustInclude.map(ing => (
                         <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
@@ -1059,14 +1105,14 @@ export default function WeeklyMeals() {
                       value={includeInput}
                       onChange={(e) => setIncludeInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addIncludeIngredient()}
-                      placeholder="Type + Enter"
+                      placeholder={t("meals.typeEnter")}
                       className="w-full px-2 py-1 text-xs border hairline rounded bg-transparent focus-ring-quiet"
                       data-testid="input-must-include"
                     />
                   </div>
 
                   <div className="pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">Must exclude</span>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustExclude")}</span>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {state.filters.mustExclude.map(ing => (
                         <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
@@ -1080,7 +1126,7 @@ export default function WeeklyMeals() {
                       value={excludeInput}
                       onChange={(e) => setExcludeInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addExcludeIngredient()}
-                      placeholder="Type + Enter"
+                      placeholder={t("meals.typeEnter")}
                       className="w-full px-2 py-1 text-xs border hairline rounded bg-transparent focus-ring-quiet"
                       data-testid="input-must-exclude"
                     />
@@ -1093,33 +1139,33 @@ export default function WeeklyMeals() {
           <main className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h1 className="text-xl font-medium text-foreground">Step 2 — Meals</h1>
+                <h1 className="text-xl font-medium text-foreground">{t("meals.step2Title")}</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Choose dinners with calm filters. Select 6–12 options. We'll build a week from there.
+                  {t("meals.step2Desc")}
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-sm text-muted-foreground">Selected: {state.selectedIds.length} / 12</span>
+                <span className="text-sm text-muted-foreground">{t("meals.selected", { count: state.selectedIds.length })}</span>
                 {maxSelectionsHit && (
-                  <p className="text-xs text-muted-foreground mt-1">Max 12 selections.</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("meals.max12")}</p>
                 )}
               </div>
             </div>
 
             <div className="space-y-4">
               {filteredRecipes.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">No recipes match your filters.</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">{t("meals.noRecipesMatch")}</p>
               ) : (
                 filteredRecipes.slice(0, 10).map(recipe => {
                   const meta = getRecipeUserMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
                   const monogram = getMonogram(recipe.title);
-                  const displayTags = recipe.tags.map(t => {
-                    if (t === "vegetarian") return "Vegetarian";
-                    if (t === "kidFriendly") return "Kid friendly";
-                    if (t === "glutenFree") return "Gluten-free";
-                    return t;
+                  const displayTags = recipe.tags.map(tag => {
+                    if (tag === "vegetarian") return t("meals.vegetarian");
+                    if (tag === "kidFriendly") return t("meals.kidFriendly");
+                    if (tag === "glutenFree") return t("meals.glutenFree");
+                    return tag;
                   });
                   const extraTagCount = Math.max(0, recipe.ingredients.length - 3);
 
@@ -1138,7 +1184,7 @@ export default function WeeklyMeals() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
-                              {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">★ My Pick</span>}
+                              {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">{`★ ${t("meals.myPicks")}`}</span>}
                             </div>
                             {meta.rating && (
                               <div className="mt-1 flex items-center gap-1">
@@ -1152,12 +1198,12 @@ export default function WeeklyMeals() {
                             className={`px-3 py-1 text-xs rounded-full border flex-shrink-0 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
                             data-testid={`button-add-${recipe.id}`}
                           >
-                            {isSelected ? "Added" : "Add"}
+                            {isSelected ? t("meals.added") : t("meals.add")}
                           </button>
                         </div>
 
                       <div className="flex flex-wrap gap-1.5 mb-3">
-                        <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.minutes} Min</span>
+                        <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</span>
                         <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.mealType}</span>
                         {displayTags.map(tag => (
                           <span key={tag} className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{tag}</span>
@@ -1181,7 +1227,7 @@ export default function WeeklyMeals() {
                           className="px-4 py-2 text-xs rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
                           data-testid={`button-open-${recipe.id}`}
                         >
-                          Open recipe
+                          {t("recipe.openRecipe")}
                         </button>
                         <button
                           onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
@@ -1194,7 +1240,7 @@ export default function WeeklyMeals() {
 
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
-                          <p className="text-xs font-medium text-foreground mb-2">Recipe preview</p>
+                          <p className="text-xs font-medium text-foreground mb-2">{t("import.recipePreview")}</p>
                           <ul className="space-y-1">
                             {recipe.ingredients.slice(0, 5).map((ing, i) => (
                               <li key={i} className="text-xs text-muted-foreground">• {ing}</li>
@@ -1217,10 +1263,10 @@ export default function WeeklyMeals() {
                   className={`px-6 py-2.5 text-sm rounded-full ${canGenerate ? "bg-foreground text-background hover:bg-foreground/90" : "bg-foreground/20 text-muted-foreground cursor-not-allowed"}`}
                   data-testid="button-generate-plan"
                 >
-                  Generate weekly plan
+                  {t("meals.generateWeeklyPlan")}
                 </button>
                 {!canGenerate && (
-                  <p className="text-xs text-muted-foreground mt-2">Select at least 6 to generate.</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("meals.select6")}</p>
                 )}
               </div>
               <p className="text-xs text-muted-foreground">You can adjust this later.</p>

@@ -165,6 +165,7 @@ const translations: Record<Language, Record<string, string>> = {
     "import.howIt3": "Add a photo and source link (both optional)",
     "import.howIt4": "Your recipe is stored locally in your browser",
     "import.replaceConfirm": "Replace existing content with AI-generated recipe?",
+    "import.error": "Something went wrong. Try again.",
     "import.recipePreview": "Recipe preview",
 
     "grocery.title": "Your Grocery List",
@@ -344,6 +345,7 @@ const translations: Record<Language, Record<string, string>> = {
     "import.howIt3": "Добавьте фото и ссылку на источник (необязательно)",
     "import.howIt4": "Рецепт хранится локально в вашем браузере",
     "import.replaceConfirm": "Заменить содержимое рецептом от ИИ?",
+    "import.error": "Что-то пошло не так. Попробуйте ещё раз.",
     "import.recipePreview": "Предпросмотр рецепта",
 
     "grocery.title": "Ваш список покупок",
@@ -523,6 +525,7 @@ const translations: Record<Language, Record<string, string>> = {
     "import.howIt3": "הוסף תמונה וקישור למקור (אופציונלי)",
     "import.howIt4": "המתכון נשמר בדפדפן שלך",
     "import.replaceConfirm": "להחליף תוכן קיים במתכון מ-AI?",
+    "import.error": "משהו השתבש. נסה שוב.",
     "import.recipePreview": "תצוגה מקדימה",
 
     "grocery.title": "רשימת הקניות שלך",

@@ -203,10 +203,12 @@ function convertAmount(amount: number, fromUnit: string, targetUnits: "g" | "ml"
 
 import { StarRating } from "@/components/ui/star-rating";
 import { useRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
+import { useI18n } from "@/lib/i18n";
 
 export default function RecipeView() {
   const recipeId = "plov"; // Hardcoded for now based on current app state
   const { meta, toggleMyPick, setRating } = useRecipeUserMeta(recipeId);
+  const { t } = useI18n();
   const [, setLocation] = useLocation();
   const [state, setState] = useState<RecipeState>(loadState);
   const [notes, setNotes] = useState(loadNotes);
@@ -484,7 +486,7 @@ export default function RecipeView() {
                   role="button"
                   aria-label="Select cup size"
                 >
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Cup</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("recipe.cup")}</span>
                   <span className="text-xs text-foreground">{state.cupMl} ml</span>
                 </div>
                 
@@ -514,7 +516,7 @@ export default function RecipeView() {
           {/* Servings Stepper */}
           <div className="px-2">
             <div className="flex flex-col items-center gap-1 py-2">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Servings</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("recipe.servings")}</span>
               <div className="flex items-center gap-2">
                 <button 
                   className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded disabled:opacity-30"
@@ -567,7 +569,7 @@ export default function RecipeView() {
               role="button"
               aria-label="Toggle step help"
             >
-              <span className="text-[10px] text-muted-foreground">Guidance</span>
+              <span className="text-[10px] text-muted-foreground">{t("recipe.guidance")}</span>
             </div>
           </div>
           
@@ -582,7 +584,7 @@ export default function RecipeView() {
               role="button"
               aria-label="Toggle focus mode"
             >
-              <span className="text-[10px] text-muted-foreground text-center leading-tight">Focus</span>
+              <span className="text-[10px] text-muted-foreground text-center leading-tight">{t("recipe.focus")}</span>
             </div>
           </div>
           
@@ -600,7 +602,7 @@ export default function RecipeView() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-muted-foreground">
                 <path d="M2 3h10M2 6h8M2 9h6M2 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-              <span className="text-[10px] text-muted-foreground">Notes</span>
+              <span className="text-[10px] text-muted-foreground">{t("recipe.notes")}</span>
             </div>
           </div>
           
@@ -620,7 +622,7 @@ export default function RecipeView() {
                 <circle cx="4.5" cy="6.5" r="1" fill="currentColor"/>
                 <path d="M1.5 10.5L4.5 7.5L6.5 9.5L9.5 5.5L12.5 9.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-[10px] text-muted-foreground">Result</span>
+              <span className="text-[10px] text-muted-foreground">{t("recipe.result")}</span>
             </div>
           </div>
         </aside>
@@ -648,7 +650,7 @@ export default function RecipeView() {
                   className="px-4 py-1.5 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
                   data-testid="button-back-to-selection"
                 >
-                  ← <span className="hidden sm:inline">Back to recipe selection</span><span className="sm:hidden">Back</span>
+                  {t("recipe.backToSelection")}
                 </button>
                 {isFocusMode && (
                   <button
@@ -668,30 +670,30 @@ export default function RecipeView() {
                   }`}
                   data-testid="button-toggle-mypick"
                 >
-                  {meta.isMyPick ? "★ In My Picks" : "☆ Add to My Picks"}
+                  {meta.isMyPick ? "★ " + t("recipe.removeFromMyPicks") : "☆ " + t("recipe.addToMyPicks")}
                 </button>
                 <button
                   onClick={() => setLocation("/import")}
                   className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
                   data-testid="button-import-recipe"
                 >
-                  Import recipe
+                  {t("nav.importRecipe")}
                 </button>
               </div>
             </div>
             <div className="flex flex-col gap-1">
               <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
-                Plov
+                {t("recipe.plov")}
               </h1>
               {meta.isMyPick && (
                 <div className="flex flex-col gap-2 mt-4 p-4 bg-yellow-50/30 rounded-lg border border-yellow-100 w-fit">
-                  <p className="text-xs font-medium text-yellow-800">How did this turn out?</p>
+                  <p className="text-xs font-medium text-yellow-800">{t("recipe.howDidThisTurnOut")}</p>
                   <StarRating value={meta.rating} onChange={setRating} />
                 </div>
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-2" data-testid="text-recipe-meta">
-              Source: Personal • Modified by you
+              {t("recipe.source")}
             </p>
             {!isFocusMode && state.showMacros && (
               <p className="text-sm text-muted-foreground mt-2" data-testid="text-nutrition-info">
@@ -724,7 +726,7 @@ export default function RecipeView() {
             </ul>
             {!isFocusMode && allIngredientsChecked && (
               <p className="text-sm text-muted-foreground mt-3" data-testid="text-ingredients-ready">
-                Ingredients ready
+                {t("recipe.ingredientsReady")}
               </p>
             )}
           </section>
@@ -732,7 +734,7 @@ export default function RecipeView() {
           {/* Notes Section */}
           {!isFocusMode && state.notesEnabled && (
             <section className="px-10 py-4 border-b hairline">
-              <label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">My notes</label>
+              <label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">{t("recipe.myNotes")}</label>
               <textarea
                 className="w-full bg-transparent border hairline rounded-lg p-3 text-sm text-foreground resize-none focus-ring-quiet placeholder:text-muted-foreground"
                 rows={5}
@@ -750,7 +752,7 @@ export default function RecipeView() {
           <section className={`px-10 flex-1 ${isFocusMode ? "py-5" : "py-8"}`}>
             {/* Step indicator */}
             <p className="text-sm text-muted-foreground mb-6" data-testid="text-step-indicator">
-              Step {state.activeStep} of {steps.length}
+              {t("recipe.stepOf", { current: state.activeStep, total: steps.length })}
             </p>
             
             <div className={isFocusMode ? "space-y-6" : "space-y-10"}>
@@ -776,7 +778,7 @@ export default function RecipeView() {
                     <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                       Step {step.id}
                       {isCompleted && isPrevious && (
-                        <span className="ml-2">✓ Completed</span>
+                        <span className="ml-2">{t("recipe.completed")}</span>
                       )}
                     </div>
                     <div className="flex items-start gap-2">
@@ -810,14 +812,14 @@ export default function RecipeView() {
                         {timerStepId === step.id && timerSeconds !== null ? (
                           <>
                             <span className={`text-lg font-medium tabular-nums ${timerSeconds === 0 ? "text-foreground" : "text-muted-foreground"}`} data-testid="text-timer">
-                              {timerSeconds === 0 ? "Done!" : formatTime(timerSeconds)}
+                              {timerSeconds === 0 ? t("recipe.done") : formatTime(timerSeconds)}
                             </span>
                             <button
                               onClick={stopTimer}
                               className="next-btn px-4 py-1.5 rounded-full text-xs"
                               data-testid="button-timer-stop"
                             >
-                              Stop
+                              {t("recipe.stop")}
                             </button>
                           </>
                         ) : (
@@ -826,7 +828,7 @@ export default function RecipeView() {
                             className="next-btn px-4 py-1.5 rounded-full text-xs"
                             data-testid="button-timer-start"
                           >
-                            Timer ({step.timeMinutes} min)
+                            {t("recipe.startTimer", { min: step.timeMinutes! })}
                           </button>
                         )}
                       </div>
@@ -840,7 +842,7 @@ export default function RecipeView() {
                         className={`next-btn mt-6 px-5 py-2 rounded-full text-sm ${state.finished ? "opacity-50 cursor-not-allowed" : ""}`}
                         data-testid="button-next-step"
                       >
-                        {isLastStep ? "Finish" : "Completed"}
+                        {isLastStep ? t("recipe.finishCooking") : t("recipe.markDone")}
                       </button>
                     )}
                   </div>
@@ -855,7 +857,7 @@ export default function RecipeView() {
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="link-back-to-recipe"
               >
-                Back to recipe
+                {t("recipe.cookAgain")}
               </button>
             </div>
           </section>
