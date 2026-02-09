@@ -38,21 +38,19 @@ function isValidUrl(str: string): boolean {
   }
 }
 
-function parseRecipeText(text: string): { title: string; ingredients: string[]; steps: string[] } {
-  const lines = text.split(/[.,!?]+/).map(l => l.trim()).filter(l => l.length > 0);
-  
-  if (lines.length === 0) {
-    return { title: "", ingredients: [], steps: [] };
+async function parseRecipeWithAI(text: string): Promise<{ title: string; ingredients: string[]; steps: string[]; cookTime?: number; servings?: string; tags?: string[] }> {
+  const response = await fetch("/api/parse-recipe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transcript: text }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to parse recipe");
   }
 
-  const title = lines[0] || "";
-  const rest = lines.slice(1);
-  
-  const midpoint = Math.ceil(rest.length / 2);
-  const ingredients = rest.slice(0, midpoint);
-  const steps = rest.slice(midpoint);
-
-  return { title, ingredients, steps };
+  return response.json();
 }
 
 export default function ImportRecipe() {
@@ -68,6 +66,7 @@ export default function ImportRecipe() {
   const [transcript, setTranscript] = useState("");
   const [voiceStatus, setVoiceStatus] = useState<"idle" | "recording" | "ready">("idle");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const speechSupported = typeof window !== "undefined" && 
@@ -135,35 +134,33 @@ export default function ImportRecipe() {
     setVoiceStatus("idle");
   };
 
-  const handleTranscribeAndFill = () => {
+  const handleTranscribeAndFill = async () => {
     if (!transcript.trim()) return;
 
     setIsProcessing(true);
+    setAiError(null);
 
-    setTimeout(() => {
-      const parsed = parseRecipeText(transcript);
+    try {
+      const parsed = await parseRecipeWithAI(transcript);
 
       const hasExisting = title.trim() || ingredients.trim() || steps.trim();
-      
       if (hasExisting) {
-        const replace = window.confirm("Replace existing content?");
-        if (replace) {
-          setTitle(parsed.title);
-          setIngredients(parsed.ingredients.join("\n"));
-          setSteps(parsed.steps.join("\n"));
-        } else {
-          if (parsed.title) setTitle(prev => prev ? prev + "\n" + parsed.title : parsed.title);
-          if (parsed.ingredients.length) setIngredients(prev => prev ? prev + "\n\n" + parsed.ingredients.join("\n") : parsed.ingredients.join("\n"));
-          if (parsed.steps.length) setSteps(prev => prev ? prev + "\n\n" + parsed.steps.join("\n") : parsed.steps.join("\n"));
+        const replace = window.confirm("Replace existing content with AI-generated recipe?");
+        if (!replace) {
+          setIsProcessing(false);
+          return;
         }
-      } else {
-        setTitle(parsed.title);
-        setIngredients(parsed.ingredients.join("\n"));
-        setSteps(parsed.steps.join("\n"));
       }
 
+      setTitle(parsed.title || "");
+      setIngredients((parsed.ingredients || []).join("\n"));
+      setSteps((parsed.steps || []).join("\n"));
+    } catch (error: any) {
+      console.error("AI parse error:", error);
+      setAiError(error.message || "Something went wrong. Try again.");
+    } finally {
       setIsProcessing(false);
-    }, 500);
+    }
   };
 
   const urlValid = !sourceUrl.trim() || isValidUrl(sourceUrl.trim());
@@ -295,7 +292,7 @@ export default function ImportRecipe() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Voice (AI)</p>
             <p className="text-sm font-medium text-foreground mb-1">Speak your recipe</p>
             <p className="text-xs text-muted-foreground mb-4">
-              Say the recipe out loud — we'll transcribe it and auto-fill title, ingredients, and steps.
+              Say the recipe out loud — AI will structure it into a proper recipe with title, ingredients, and steps.
             </p>
 
             {!speechSupported ? (
@@ -326,19 +323,26 @@ export default function ImportRecipe() {
                     <button
                       onClick={handleTranscribeAndFill}
                       disabled={isProcessing}
-                      className="px-4 py-2 text-sm rounded-full border hairline text-foreground hover:bg-foreground/5 disabled:opacity-50"
+                      className="px-4 py-2 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F] disabled:opacity-50"
                       data-testid="button-transcribe"
                     >
-                      {isProcessing ? "Processing…" : "Transcribe & auto-fill"}
+                      {isProcessing ? "AI is thinking…" : "Generate recipe with AI"}
                     </button>
                   )}
                 </div>
 
                 <p className="text-xs text-muted-foreground mb-2">
-                  {voiceStatus === "idle" && "Tip: Say title → ingredients → steps."}
+                  {voiceStatus === "idle" && "Tip: Describe your recipe naturally — AI will organize it for you."}
                   {voiceStatus === "recording" && "Listening…"}
-                  {voiceStatus === "ready" && "Transcript ready."}
+                  {voiceStatus === "ready" && !isProcessing && "Transcript ready — click 'Generate recipe with AI' to structure it."}
+                  {isProcessing && "Sending to AI for structuring…"}
                 </p>
+
+                {aiError && (
+                  <div className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-xs text-red-600">{aiError}</p>
+                  </div>
+                )}
 
                 {transcript && (
                   <div className="mt-3 p-3 bg-white rounded-lg border hairline">
@@ -429,8 +433,8 @@ Sauté onions until golden brown"
         <div className="mt-12 p-5 bg-[#FAFAF8] rounded-xl">
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">How it works</p>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Paste your recipe text—we'll split it into lines automatically</li>
-            <li>• Use voice dictation to speak your recipe</li>
+            <li>• Speak your recipe naturally — AI will structure it with a proper title, ingredients with quantities, and step-by-step instructions</li>
+            <li>• Or type everything manually in the fields below</li>
             <li>• Add a photo and source link (both optional)</li>
             <li>• Your recipe is stored locally in your browser</li>
           </ul>
