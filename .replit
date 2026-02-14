@@ -3,3 +3,7 @@ run = "npm run dev"
 [deployment]
 deploymentTarget = "cloudrun"
 publicDir = "dist/public"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
