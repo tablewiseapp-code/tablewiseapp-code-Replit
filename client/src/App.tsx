@@ -4,7 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useI18n, LANGUAGES } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import RecipeView from "@/pages/recipe-view";
+import MainPage from "@/pages/main";
 import RecipeList from "@/pages/recipe-list";
 import RecipeDetail from "@/pages/recipe-detail";
 import WeeklyMeals from "@/pages/weekly-meals";
@@ -14,7 +17,7 @@ import NotFound from "@/pages/not-found";
 import { useState, useRef, useEffect } from "react";
 
 const NAV_KEYS = [
-  { path: "/", key: "nav.recipeView" },
+  { path: "/recipe-view", key: "nav.recipeView" },
   { path: "/recipes", key: "nav.myRecipes" },
   { path: "/meals", key: "nav.weeklyMeals" },
   { path: "/import", key: "nav.importRecipe" },
@@ -67,34 +70,91 @@ function LanguageSelector() {
 
 function DevNav() {
   const [location] = useLocation();
-  const { t } = useI18n();
+  const { t, lang, setLang } = useI18n();
   return (
-    <nav className="bg-[#2E2E2E] px-4 py-1.5 flex items-center gap-1 text-xs" data-testid="dev-nav">
-      <span className="text-white/40 mr-2 font-mono">DEV</span>
-      {NAV_KEYS.map(link => (
-        <Link
-          key={link.path}
-          href={link.path}
-          className={`px-3 py-1 rounded-full transition-colors ${
-            location === link.path
-              ? "bg-white/20 text-white"
-              : "text-white/60 hover:text-white hover:bg-white/10"
-          }`}
-          data-testid={`dev-nav-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
+    <>
+      <div className="bg-[#2E2E2E] px-3 py-2 flex items-center justify-between text-xs md:hidden" data-testid="dev-nav-mobile">
+        <span className="text-white/40 font-mono">DEV</span>
+        <MobileNavSheet
+          title="Navigation"
+          trigger={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 rounded-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              data-testid="dev-nav-mobile-trigger"
+            >
+              Menu
+            </Button>
+          }
         >
-          {t(link.key)}
-        </Link>
-      ))}
-      <div className="flex-1" />
-      <LanguageSelector />
-    </nav>
+          <div className="space-y-2">
+            {NAV_KEYS.map(link => (
+              <Link
+                key={link.path}
+                href={link.path}
+                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                  location === link.path
+                    ? "bg-foreground/10 text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                }`}
+                data-testid={`dev-nav-mobile-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
+              >
+                {t(link.key)}
+              </Link>
+            ))}
+          </div>
+          <div className="pt-2 border-t hairline">
+            <p className="text-xs text-muted-foreground mb-2">Language</p>
+            <div className="grid grid-cols-1 gap-2">
+              {LANGUAGES.map(l => (
+                <button
+                  key={l.code}
+                  onClick={() => setLang(l.code)}
+                  className={`text-left rounded-lg px-3 py-2 text-sm transition-colors ${
+                    lang === l.code
+                      ? "bg-foreground/10 text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                  }`}
+                  data-testid={`button-mobile-lang-${l.code}`}
+                >
+                  {l.nativeLabel}
+                </button>
+              ))}
+            </div>
+          </div>
+        </MobileNavSheet>
+      </div>
+
+      <nav className="hidden md:flex bg-[#2E2E2E] px-4 py-1.5 items-center gap-1 text-xs" data-testid="dev-nav">
+        <span className="text-white/40 mr-2 font-mono">DEV</span>
+        {NAV_KEYS.map(link => (
+          <Link
+            key={link.path}
+            href={link.path}
+            className={`px-3 py-1 rounded-full transition-colors ${
+              location === link.path
+                ? "bg-white/20 text-white"
+                : "text-white/60 hover:text-white hover:bg-white/10"
+            }`}
+            data-testid={`dev-nav-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
+          >
+            {t(link.key)}
+          </Link>
+        ))}
+        <div className="flex-1" />
+        <LanguageSelector />
+      </nav>
+    </>
   );
 }
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={RecipeView}/>
+      <Route path="/" component={MainPage}/>
+      <Route path="/recipe-view" component={RecipeView}/>
       <Route path="/recipes" component={RecipeList}/>
       <Route path="/recipe/:id" component={RecipeDetail}/>
       <Route path="/meals" component={WeeklyMeals}/>

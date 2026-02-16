@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { createRecipe } from "@/lib/storage";
 import { useI18n, type Language } from "@/lib/i18n";
+import { PageContainer } from "@/components/layout/page-container";
 
 interface SpeechRecognitionEvent {
   resultIndex: number;
@@ -227,7 +228,7 @@ export default function ImportRecipe() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-6 py-10">
+      <PageContainer size="md" className="py-8 sm:py-10">
         <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{t("import.label")}</p>
         <h1 className="text-2xl font-medium text-foreground mb-2">{t("import.title")}</h1>
         <p className="text-sm text-muted-foreground mb-8">
@@ -308,7 +309,7 @@ export default function ImportRecipe() {
               <p className="text-xs text-muted-foreground">{t("import.voiceNotSupported")}</p>
             ) : (
               <>
-                <div className="flex gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-3">
                   {!isRecording ? (
                     <button
                       onClick={startDictation}
@@ -421,18 +422,18 @@ Sauté onions until golden brown"
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-wrap gap-3 pt-4">
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-2.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+              className="px-6 py-2.5 min-h-10 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
               data-testid="button-save"
             >
               {isSaving ? t("import.saving") || "Saving..." : t("import.saveAndOpen")}
             </button>
             <button
-              onClick={() => setLocation("/")}
-              className="px-6 py-2.5 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground"
+              onClick={() => setLocation("/recipe-view")}
+              className="px-6 py-2.5 min-h-10 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground"
               data-testid="button-back"
             >
               {t("import.back")}
@@ -449,7 +450,7 @@ Sauté onions until golden brown"
             <li>{`• ${t("import.howIt4")}`}</li>
           </ul>
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
+import { AppHeader } from "@/components/layout/app-header";
+import { PageContainer } from "@/components/layout/page-container";
 
 interface Recipe {
   id: string;
@@ -155,39 +157,46 @@ export default function GroceryList() {
     "Other": t("grocery.other"),
   };
 
+  const headerMenu = (
+    <button
+      onClick={() => setLocation("/meals")}
+      className="w-full px-3 py-2 text-left text-sm rounded-lg border hairline text-muted-foreground hover:text-foreground"
+      data-testid="button-back-to-plan-mobile"
+    >
+      {t("grocery.backToPlan")}
+    </button>
+  );
+
   if (groceryData.usedRecipes.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b hairline px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
-              <span className="text-xs font-medium text-foreground">TW</span>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-foreground">Tablewise</span>
-              <span className="text-xs text-muted-foreground ml-2">{t("grocery.groceryList")}</span>
-            </div>
-          </div>
-          <button 
-            onClick={() => setLocation("/meals")}
-            className="text-sm text-muted-foreground hover:text-foreground"
-            data-testid="button-back-to-plan"
-          >
-            {t("grocery.backToPlan")}
-          </button>
-        </header>
+        <AppHeader
+          title="Tablewise"
+          subtitle={t("grocery.groceryList")}
+          desktopActions={
+            <button
+              onClick={() => setLocation("/meals")}
+              className="text-sm text-muted-foreground hover:text-foreground"
+              data-testid="button-back-to-plan"
+            >
+              {t("grocery.backToPlan")}
+            </button>
+          }
+          mobileMenuTitle={t("grocery.groceryList")}
+          mobileMenuContent={headerMenu}
+        />
 
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
+          <PageContainer size="md" className="text-center py-10">
             <p className="text-lg text-muted-foreground mb-4">{t("grocery.noMeals")}</p>
             <button
               onClick={() => setLocation("/meals")}
-              className="px-4 py-2 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+              className="px-4 py-2 min-h-10 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
               data-testid="button-go-to-plan"
             >
               {t("grocery.goToPlan")}
             </button>
-          </div>
+          </PageContainer>
         </div>
       </div>
     );
@@ -195,28 +204,23 @@ export default function GroceryList() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b hairline px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
-            <span className="text-xs font-medium text-foreground">TW</span>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-foreground">Tablewise</span>
-            <span className="text-xs text-muted-foreground ml-2">{t("grocery.groceryList")}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button 
+      <AppHeader
+        title="Tablewise"
+        subtitle={t("grocery.groceryList")}
+        desktopActions={
+          <button
             onClick={() => setLocation("/meals")}
             className="text-sm text-muted-foreground hover:text-foreground"
             data-testid="button-back-to-plan"
           >
             {t("grocery.backToPlan")}
           </button>
-        </div>
-      </header>
+        }
+        mobileMenuTitle={t("grocery.groceryList")}
+        mobileMenuContent={headerMenu}
+      />
 
-      <div className="flex-1 p-8 max-w-3xl mx-auto w-full">
+      <PageContainer size="lg" className="flex-1 py-6 sm:py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-medium text-foreground mb-2">{t("grocery.title")}</h1>
           <p className="text-sm text-muted-foreground">
@@ -234,7 +238,7 @@ export default function GroceryList() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
           <span className="text-sm text-muted-foreground">
             {t("grocery.checked", { checked: checkedItems.size, total: groceryData.totalItems })}
           </span>
@@ -290,7 +294,7 @@ export default function GroceryList() {
             );
           })}
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

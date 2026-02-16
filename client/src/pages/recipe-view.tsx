@@ -435,12 +435,12 @@ export default function RecipeView() {
   const allIngredientsChecked = baseIngredients.every(ing => checkedIngredients.has(ing.id));
 
   return (
-    <div className={`min-h-screen bg-background flex items-center justify-center p-6 ${isFocusMode ? "layout-focus" : "layout-standard"}`}>
-      <div className="recipe-surface w-full max-w-[1200px] min-h-[700px] rounded-xl flex overflow-hidden">
+    <div className={`min-h-screen bg-background flex items-start justify-center p-2 sm:p-4 lg:p-6 ${isFocusMode ? "layout-focus" : "layout-standard"}`}>
+      <div className="recipe-surface w-full max-w-[1200px] rounded-xl flex flex-col lg:flex-row overflow-hidden">
         
         {/* Left Control Rail - Hidden in Focus Mode */}
         {!isFocusMode && (
-        <aside className="control-rail w-[84px] flex-shrink-0 border-r hairline py-6 flex flex-col gap-1">
+        <aside className="control-rail w-[84px] flex-shrink-0 border-r hairline py-6 hidden md:flex md:flex-col gap-1">
           
           {/* Units Toggle */}
           <div className="px-2">
@@ -642,12 +642,12 @@ export default function RecipeView() {
           />
           
           {/* Header */}
-          <header ref={topRef} className={`px-10 pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
+          <header ref={topRef} className={`px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 lg:pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setLocation("/meals")}
-                  className="px-4 py-1.5 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
+                  className="px-4 py-2 min-h-10 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
                   data-testid="button-back-to-selection"
                 >
                   {t("recipe.backToSelection")}
@@ -655,17 +655,17 @@ export default function RecipeView() {
                 {isFocusMode && (
                   <button
                     onClick={() => updateState({ layout: "standard" })}
-                    className="px-3 py-1.5 text-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+                    className="px-3 py-2 min-h-10 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
                     data-testid="button-exit-focus"
                   >
                     Exit focus
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
                   onClick={toggleMyPick}
-                  className={`px-4 py-1.5 text-sm rounded-full border hairline flex items-center gap-2 transition-colors ${
+                  className={`px-4 py-2 min-h-10 text-sm rounded-full border hairline flex items-center gap-2 transition-colors ${
                     meta.isMyPick ? "bg-yellow-50 border-yellow-200 text-yellow-700" : "text-muted-foreground hover:text-foreground"
                   }`}
                   data-testid="button-toggle-mypick"
@@ -674,7 +674,7 @@ export default function RecipeView() {
                 </button>
                 <button
                   onClick={() => setLocation("/import")}
-                  className="px-4 py-1.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+                  className="px-4 py-2 min-h-10 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
                   data-testid="button-import-recipe"
                 >
                   {t("nav.importRecipe")}
@@ -701,9 +701,27 @@ export default function RecipeView() {
               </p>
             )}
           </header>
+
+          <section className="px-4 sm:px-6 lg:px-10 pb-4 lg:hidden">
+            {resultImage ? (
+              <img
+                src={resultImage}
+                alt="Cooking result"
+                className="w-full h-auto max-h-[320px] object-cover rounded-xl"
+                data-testid="image-result-mobile"
+              />
+            ) : (
+              <img
+                src={plovImage}
+                alt="Plov dish"
+                className="w-full h-auto max-h-[320px] object-cover rounded-xl"
+                data-testid="image-dish-placeholder-mobile"
+              />
+            )}
+          </section>
           
           {/* Sticky Ingredients */}
-          <section className="sticky top-0 bg-background z-10 px-10 py-4 border-b hairline">
+          <section className="sticky top-0 bg-background z-10 px-4 sm:px-6 lg:px-10 py-4 border-b hairline">
             <ul className={`${isFocusMode ? "space-y-1" : "space-y-2"}`}>
               {scaledIngredients.map((ing) => (
                 <li key={ing.id} className="flex items-center gap-3">
@@ -733,7 +751,7 @@ export default function RecipeView() {
           
           {/* Notes Section */}
           {!isFocusMode && state.notesEnabled && (
-            <section className="px-10 py-4 border-b hairline">
+            <section className="px-4 sm:px-6 lg:px-10 py-4 border-b hairline">
               <label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">{t("recipe.myNotes")}</label>
               <textarea
                 className="w-full bg-transparent border hairline rounded-lg p-3 text-sm text-foreground resize-none focus-ring-quiet placeholder:text-muted-foreground"
@@ -749,7 +767,7 @@ export default function RecipeView() {
           )}
           
           {/* Steps */}
-          <section className={`px-10 flex-1 ${isFocusMode ? "py-5" : "py-8"}`}>
+          <section className={`px-4 sm:px-6 lg:px-10 flex-1 ${isFocusMode ? "py-5" : "py-8"}`}>
             {/* Step indicator */}
             <p className="text-sm text-muted-foreground mb-6" data-testid="text-step-indicator">
               {t("recipe.stepOf", { current: state.activeStep, total: steps.length })}
@@ -808,7 +826,7 @@ export default function RecipeView() {
                     
                     {/* Timer */}
                     {!isFocusMode && isActive && step.timeMinutes && (
-                      <div className="mt-4 flex items-center gap-3">
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
                         {timerStepId === step.id && timerSeconds !== null ? (
                           <>
                             <span className={`text-lg font-medium tabular-nums ${timerSeconds === 0 ? "text-foreground" : "text-muted-foreground"}`} data-testid="text-timer">
@@ -864,7 +882,7 @@ export default function RecipeView() {
         </main>
         
         {/* Right Image Column */}
-        <aside className="w-[320px] flex-shrink-0 p-6 hidden lg:block">
+        <aside className="w-[280px] xl:w-[320px] flex-shrink-0 p-6 hidden lg:block">
           {resultImage ? (
             <img 
               src={resultImage}

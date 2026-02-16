@@ -1,3 +1,4 @@
+import "dotenv/config";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -5,7 +6,7 @@ import { insertRecipeSchema } from "@shared/schema";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPEN_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY ?? process.env.OPEN_API_KEY,
 });
 
 export async function registerRoutes(
