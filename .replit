@@ -3,7 +3,7 @@ modules = ["nodejs-20"]
 
 [deployment]
 deploymentTarget = "cloudrun"
-run = ["npm", "run", "dev"]
+run = ["npm", "run", "start"]
 publicDir = "dist/public"
 
 [[ports]]
