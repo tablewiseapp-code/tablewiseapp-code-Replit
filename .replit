@@ -3,8 +3,12 @@ modules = ["nodejs-20"]
 
 [deployment]
 deploymentTarget = "cloudrun"
+run = ["npm", "run", "dev"]
 publicDir = "dist/public"
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[nix]
+packages = ["vim"]
