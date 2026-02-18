@@ -61,6 +61,28 @@ const SPEECH_LOCALES: Record<Language, string> = {
   he: "he-IL",
 };
 
+function getSpeechErrorMessage(error: string): string {
+  if (error === "not-allowed" || error === "service-not-allowed") {
+    return "Microphone permission was denied. Please allow microphone access and try again.";
+  }
+  if (error === "audio-capture") {
+    return "No microphone was found on this device/browser.";
+  }
+  if (error === "network") {
+    return "Speech recognition failed due to a network error. Please try again.";
+  }
+  if (error === "no-speech") {
+    return "No speech was detected. Try speaking louder or closer to the microphone.";
+  }
+  return "Unable to start voice dictation in this browser.";
+}
+
+function showErrorPopup(message: string): void {
+  if (typeof window !== "undefined") {
+    window.alert(message);
+  }
+}
+
 export default function ImportRecipe() {
   const [, setLocation] = useLocation();
   const { t, lang } = useI18n();
@@ -76,10 +98,15 @@ export default function ImportRecipe() {
   const [voiceStatus, setVoiceStatus] = useState<"idle" | "recording" | "ready">("idle");
   const [isProcessing, setIsProcessing] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
-  const speechSupported = typeof window !== "undefined" && 
-    (window.SpeechRecognition || window.webkitSpeechRecognition);
+  const isSecureOrigin = typeof window !== "undefined" &&
+    (window.isSecureContext || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const SpeechRecognitionAPI = typeof window !== "undefined"
+    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+    : undefined;
+  const speechSupported = Boolean(SpeechRecognitionAPI) && isSecureOrigin;
 
   useEffect(() => {
     return () => {
@@ -90,12 +117,12 @@ export default function ImportRecipe() {
   }, []);
 
   const startDictation = () => {
-    if (!speechSupported) return;
-
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!speechSupported || !SpeechRecognitionAPI) return;
+    setVoiceError(null);
     const recognition = new SpeechRecognitionAPI();
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    recognition.continuous = true;
+    recognition.continuous = !isIOS;
     recognition.interimResults = true;
     recognition.lang = SPEECH_LOCALES[lang] || "en-US";
 
@@ -117,6 +144,9 @@ export default function ImportRecipe() {
       console.error("Speech recognition error:", event.error);
       setIsRecording(false);
       setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
+      const message = getSpeechErrorMessage(event.error);
+      setVoiceError(message);
+      showErrorPopup(message);
     };
 
     recognition.onend = () => {
@@ -125,9 +155,18 @@ export default function ImportRecipe() {
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
-    setVoiceStatus("recording");
+    try {
+      recognition.start();
+      setIsRecording(true);
+      setVoiceStatus("recording");
+    } catch (error) {
+      console.error("Speech recognition start failed:", error);
+      setIsRecording(false);
+      setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
+      const message = "Unable to start voice dictation in this browser. Try Chrome on Android or Safari on iOS.";
+      setVoiceError(message);
+      showErrorPopup(message);
+    }
   };
 
   const stopDictation = () => {
@@ -141,6 +180,7 @@ export default function ImportRecipe() {
   const clearTranscript = () => {
     setTranscript("");
     setVoiceStatus("idle");
+    setVoiceError(null);
   };
 
   const handleTranscribeAndFill = async () => {
@@ -166,7 +206,9 @@ export default function ImportRecipe() {
       setSteps((parsed.steps || []).join("\n"));
     } catch (error: any) {
       console.error("AI parse error:", error);
-      setAiError(error.message || t("import.error"));
+      const message = error.message || t("import.error");
+      setAiError(message);
+      showErrorPopup(message);
     } finally {
       setIsProcessing(false);
     }
@@ -220,7 +262,8 @@ export default function ImportRecipe() {
       setLocation(`/recipe/${saved.id}`);
     } catch (error: any) {
       console.error("Failed to save recipe:", error);
-      alert(error.message || "Failed to save recipe");
+      const message = error.message || "Failed to save recipe";
+      showErrorPopup(message);
     } finally {
       setIsSaving(false);
     }
@@ -306,7 +349,11 @@ export default function ImportRecipe() {
             </p>
 
             {!speechSupported ? (
-              <p className="text-xs text-muted-foreground">{t("import.voiceNotSupported")}</p>
+              <p className="text-xs text-muted-foreground">
+                {!isSecureOrigin
+                  ? "Voice transcription requires HTTPS (or localhost). Open the app using a secure URL."
+                  : t("import.voiceNotSupported")}
+              </p>
             ) : (
               <>
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -347,6 +394,12 @@ export default function ImportRecipe() {
                   {voiceStatus === "ready" && !isProcessing && t("import.transcriptReady")}
                   {isProcessing && t("import.sendingToAi")}
                 </p>
+
+                {voiceError && (
+                  <div className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-xs text-red-600">{voiceError}</p>
+                  </div>
+                )}
 
                 {aiError && (
                   <div className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
