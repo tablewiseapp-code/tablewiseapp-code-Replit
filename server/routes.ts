@@ -3,11 +3,24 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRecipeSchema } from "@shared/schema";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY ?? process.env.OPEN_API_KEY,
 });
+
+function inferAudioFileExtension(mimeType?: string): "webm" | "mp3" | "mp4" | "wav" | "ogg" {
+  if (!mimeType) return "webm";
+  const normalized = mimeType.toLowerCase();
+
+  if (normalized.includes("webm")) return "webm";
+  if (normalized.includes("mpeg") || normalized.includes("mp3")) return "mp3";
+  if (normalized.includes("mp4") || normalized.includes("m4a")) return "mp4";
+  if (normalized.includes("wav")) return "wav";
+  if (normalized.includes("ogg")) return "ogg";
+
+  return "webm";
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -73,6 +86,34 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Error deleting recipe:", error);
       res.status(500).json({ error: "Failed to delete recipe" });
+    }
+  });
+
+  app.post("/api/transcribe-audio", async (req, res) => {
+    try {
+      const { audio, mimeType, language } = req.body ?? {};
+
+      if (!audio || typeof audio !== "string") {
+        return res.status(400).json({ error: "Audio data is required" });
+      }
+
+      const audioBuffer = Buffer.from(audio, "base64");
+      if (!audioBuffer.length) {
+        return res.status(400).json({ error: "Audio data is invalid" });
+      }
+
+      const fileExt = inferAudioFileExtension(mimeType);
+      const file = await toFile(audioBuffer, `dictation.${fileExt}`);
+      const response = await openai.audio.transcriptions.create({
+        model: "gpt-4o-mini-transcribe",
+        file,
+        ...(typeof language === "string" && language.length > 0 ? { language } : {}),
+      });
+
+      res.json({ transcript: response.text ?? "" });
+    } catch (error: any) {
+      console.error("Error transcribing audio:", error);
+      res.status(500).json({ error: error.message || "Failed to transcribe audio" });
     }
   });
 

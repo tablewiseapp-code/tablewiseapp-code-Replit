@@ -4,33 +4,6 @@ import { createRecipe } from "@/lib/storage";
 import { useI18n, type Language } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-
-interface SpeechRecognitionInstance {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start: () => void;
-  stop: () => void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognitionInstance;
-    webkitSpeechRecognition: new () => SpeechRecognitionInstance;
-  }
-}
-
 function isValidUrl(str: string): boolean {
   try {
     new URL(str);
@@ -55,14 +28,23 @@ async function parseRecipeWithAI(text: string): Promise<{ title: string; ingredi
   return response.json();
 }
 
-const SPEECH_LOCALES: Record<Language, string> = {
-  en: "en-US",
-  ru: "ru-RU",
-  he: "he-IL",
+const TRANSCRIPTION_LANG_CODES: Record<Language, string> = {
+  en: "en",
+  ru: "ru",
+  he: "he",
 };
 
-function getSpeechErrorMessage(error: string): string {
-  if (error === "not-allowed" || error === "service-not-allowed") {
+const AUDIO_MIME_TYPE_CANDIDATES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+  "audio/ogg;codecs=opus",
+  "audio/ogg",
+  "audio/wav",
+] as const;
+
+function getVoiceErrorMessage(error: string): string {
+  if (error === "permission-denied" || error === "not-allowed" || error === "service-not-allowed") {
     return "Microphone permission was denied. Please allow microphone access and try again.";
   }
   if (error === "audio-capture") {
@@ -74,7 +56,62 @@ function getSpeechErrorMessage(error: string): string {
   if (error === "no-speech") {
     return "No speech was detected. Try speaking louder or closer to the microphone.";
   }
-  return "Unable to start voice dictation in this browser.";
+  return "Unable to record voice in this browser.";
+}
+
+function getSupportedRecorderMimeType(): string | null {
+  if (typeof window === "undefined" || typeof MediaRecorder === "undefined") {
+    return null;
+  }
+
+  if (typeof MediaRecorder.isTypeSupported !== "function") {
+    return null;
+  }
+
+  for (const mimeType of AUDIO_MIME_TYPE_CANDIDATES) {
+    if (MediaRecorder.isTypeSupported(mimeType)) {
+      return mimeType;
+    }
+  }
+
+  return null;
+}
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Failed to read audio data"));
+        return;
+      }
+      const data = reader.result.split(",")[1] || "";
+      resolve(data);
+    };
+    reader.onerror = () => reject(new Error("Failed to read audio data"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function transcribeAudio(blob: Blob, lang: Language): Promise<string> {
+  const base64Audio = await blobToBase64(blob);
+  const response = await fetch("/api/transcribe-audio", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      audio: base64Audio,
+      mimeType: blob.type,
+      language: TRANSCRIPTION_LANG_CODES[lang],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to transcribe audio");
+  }
+
+  const payload = await response.json();
+  return (payload.transcript || "").trim();
 }
 
 function showErrorPopup(message: string): void {
@@ -99,98 +136,151 @@ export default function ImportRecipe() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const [recordedAudioBlob, setRecordedAudioBlob] = useState<Blob | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   const isSecureOrigin = typeof window !== "undefined" &&
     (window.isSecureContext || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-  const SpeechRecognitionAPI = typeof window !== "undefined"
-    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
-    : undefined;
-  const speechSupported = Boolean(SpeechRecognitionAPI) && isSecureOrigin;
+  const recorderMimeType = getSupportedRecorderMimeType();
+  const voiceSupported = typeof window !== "undefined" &&
+    typeof navigator !== "undefined" &&
+    Boolean(navigator.mediaDevices?.getUserMedia) &&
+    typeof MediaRecorder !== "undefined" &&
+    isSecureOrigin;
 
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
 
-  const startDictation = () => {
-    if (!speechSupported || !SpeechRecognitionAPI) return;
-    setVoiceError(null);
-    const recognition = new SpeechRecognitionAPI();
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    recognition.continuous = !isIOS;
-    recognition.interimResults = true;
-    recognition.lang = SPEECH_LOCALES[lang] || "en-US";
+  const stopActiveStream = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  };
 
-    let finalTranscript = "";
-
-    recognition.onresult = (event) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript + " ";
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-      setTranscript(finalTranscript + interim);
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      setIsRecording(false);
-      setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
-      const message = getSpeechErrorMessage(event.error);
+  const startDictation = async () => {
+    if (!voiceSupported) {
+      const message = !isSecureOrigin
+        ? "Voice transcription requires HTTPS (or localhost). Open the app using a secure URL."
+        : t("import.voiceNotSupported");
       setVoiceError(message);
       showErrorPopup(message);
-    };
+      return;
+    }
 
-    recognition.onend = () => {
-      setIsRecording(false);
-      setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
-    };
+    setVoiceError(null);
+    setAiError(null);
+    setTranscript("");
+    setRecordedAudioBlob(null);
+    chunksRef.current = [];
 
-    recognitionRef.current = recognition;
     try {
-      recognition.start();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stopActiveStream();
+      streamRef.current = stream;
+
+      const recorderOptions = recorderMimeType ? { mimeType: recorderMimeType } : undefined;
+      const recorder = recorderOptions ? new MediaRecorder(stream, recorderOptions) : new MediaRecorder(stream);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onerror = (event: any) => {
+        console.error("Audio recording error:", event);
+        const message = getVoiceErrorMessage(event?.error?.name?.toLowerCase() ?? "network");
+        setVoiceError(message);
+        setIsRecording(false);
+        setVoiceStatus("idle");
+        showErrorPopup(message);
+        stopActiveStream();
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, {
+          type: recorder.mimeType || recorderMimeType || "audio/webm",
+        });
+
+        setRecordedAudioBlob(blob.size > 0 ? blob : null);
+        setIsRecording(false);
+        setVoiceStatus(blob.size > 0 ? "ready" : "idle");
+
+        if (blob.size === 0) {
+          const message = "No audio was captured. Please try again.";
+          setVoiceError(message);
+          showErrorPopup(message);
+        }
+
+        stopActiveStream();
+      };
+
+      recorderRef.current = recorder;
+      recorder.start(250);
       setIsRecording(true);
       setVoiceStatus("recording");
-    } catch (error) {
-      console.error("Speech recognition start failed:", error);
-      setIsRecording(false);
-      setVoiceStatus(finalTranscript.trim() ? "ready" : "idle");
-      const message = "Unable to start voice dictation in this browser. Try Chrome on Android or Safari on iOS.";
+    } catch (error: any) {
+      console.error("Audio recording start failed:", error);
+      const message = getVoiceErrorMessage(
+        error?.name === "NotAllowedError" ? "not-allowed" : "audio-capture",
+      );
       setVoiceError(message);
+      setIsRecording(false);
+      setVoiceStatus("idle");
       showErrorPopup(message);
+      stopActiveStream();
     }
   };
 
   const stopDictation = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+      return;
     }
+
     setIsRecording(false);
-    setVoiceStatus(transcript.trim() ? "ready" : "idle");
+    setVoiceStatus(recordedAudioBlob ? "ready" : "idle");
+    stopActiveStream();
   };
 
   const clearTranscript = () => {
     setTranscript("");
+    setRecordedAudioBlob(null);
     setVoiceStatus("idle");
     setVoiceError(null);
   };
 
   const handleTranscribeAndFill = async () => {
-    if (!transcript.trim()) return;
+    if (!recordedAudioBlob && !transcript.trim()) return;
 
     setIsProcessing(true);
     setAiError(null);
+    setVoiceError(null);
 
     try {
-      const parsed = await parseRecipeWithAI(transcript);
+      let transcriptToParse = transcript.trim();
+
+      if (recordedAudioBlob) {
+        transcriptToParse = await transcribeAudio(recordedAudioBlob, lang);
+        setTranscript(transcriptToParse);
+      }
+
+      if (!transcriptToParse) {
+        throw new Error("Couldn't transcribe your audio. Please try again.");
+      }
+
+      const parsed = await parseRecipeWithAI(transcriptToParse);
 
       const hasExisting = title.trim() || ingredients.trim() || steps.trim();
       if (hasExisting) {
@@ -348,7 +438,7 @@ export default function ImportRecipe() {
               {t("import.voiceDesc")}
             </p>
 
-            {!speechSupported ? (
+            {!voiceSupported ? (
               <p className="text-xs text-muted-foreground">
                 {!isSecureOrigin
                   ? "Voice transcription requires HTTPS (or localhost). Open the app using a secure URL."
