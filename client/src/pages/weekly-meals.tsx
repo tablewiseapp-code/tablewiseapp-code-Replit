@@ -770,8 +770,8 @@ export default function WeeklyMeals() {
                 {weekLocked ? t("meals.weekFinalized") : t("meals.dragToSlots")}
               </p>
 
-              <div className="overflow-x-auto">
-                <div className="min-w-[680px]">
+              <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 pb-2">
+                <div className="min-w-[680px] w-max">
                   <div className="grid grid-cols-7 gap-2 mb-2">
                     {DAYS.map((day, i) => (
                       <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">

@@ -30,7 +30,7 @@ export function MobileNavSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent side={side} className="w-[calc(100vw-0.75rem)] max-w-none overflow-y-auto px-4 py-4 sm:w-[85vw] sm:max-w-sm">
+      <SheetContent side={side} className="w-screen max-w-none overflow-y-auto rounded-none px-4 py-4 sm:w-[85vw] sm:max-w-sm sm:rounded-lg">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : null}
