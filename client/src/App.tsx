@@ -75,56 +75,72 @@ function DevNav() {
     <>
       <div className="bg-[#2E2E2E] px-4 py-2 flex items-center justify-between text-xs sm:hidden" data-testid="dev-nav-mobile">
         <span className="text-white/40 font-mono">DEV</span>
-        <MobileNavSheet
-          title="Navigation"
-          trigger={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="min-h-11 px-4 rounded-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
-              data-testid="dev-nav-mobile-trigger"
-            >
-              Menu
-            </Button>
-          }
-        >
-          <div className="space-y-2">
-            {NAV_KEYS.map(link => (
-              <Link
-                key={link.path}
-                href={link.path}
-                className={`block rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                  location === link.path
-                    ? "bg-foreground/10 text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center rounded-full border border-white/20 bg-white/5 p-1">
+            {LANGUAGES.map(l => (
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                className={`min-h-9 px-2 rounded-full text-[10px] font-medium transition-colors ${
+                  lang === l.code ? "bg-white/20 text-white" : "text-white/70 hover:text-white"
                 }`}
-                data-testid={`dev-nav-mobile-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
+                data-testid={`button-mobile-topbar-lang-${l.code}`}
               >
-                {t(link.key)}
-              </Link>
+                {l.code.toUpperCase()}
+              </button>
             ))}
           </div>
-          <div className="pt-2 border-t hairline">
-            <p className="text-xs text-muted-foreground mb-2">Language</p>
-            <div className="grid grid-cols-1 gap-2">
-              {LANGUAGES.map(l => (
-                <button
-                  key={l.code}
-                  onClick={() => setLang(l.code)}
-                  className={`text-left rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                    lang === l.code
+          <MobileNavSheet
+            title="Navigation"
+            trigger={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-h-11 px-4 rounded-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                data-testid="dev-nav-mobile-trigger"
+              >
+                Menu
+              </Button>
+            }
+          >
+            <div className="space-y-2">
+              {NAV_KEYS.map(link => (
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={`block rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                    location === link.path
                       ? "bg-foreground/10 text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                   }`}
-                  data-testid={`button-mobile-lang-${l.code}`}
+                  data-testid={`dev-nav-mobile-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
                 >
-                  {l.nativeLabel}
-                </button>
+                  {t(link.key)}
+                </Link>
               ))}
             </div>
-          </div>
-        </MobileNavSheet>
+            <div className="pt-2 border-t hairline">
+              <p className="text-xs text-muted-foreground mb-2">Language</p>
+              <div className="grid grid-cols-1 gap-2">
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => setLang(l.code)}
+                    className={`text-left rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                      lang === l.code
+                        ? "bg-foreground/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                    }`}
+                    data-testid={`button-mobile-lang-${l.code}`}
+                  >
+                    {l.nativeLabel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </MobileNavSheet>
+        </div>
       </div>
 
       <nav className="hidden sm:flex bg-[#2E2E2E] px-4 py-2 items-center gap-1 text-xs" data-testid="dev-nav">
