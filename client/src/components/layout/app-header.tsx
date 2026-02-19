@@ -57,10 +57,10 @@ export function AppHeader({
           </div>
         )}
 
-        <div className="hidden md:flex items-center gap-3">{desktopActions}</div>
+        <div className="hidden sm:flex items-center gap-3">{desktopActions}</div>
 
         {mobileMenuContent ? (
-          <div className="md:hidden">
+          <div className="sm:hidden">
             <MobileNavSheet
               title={mobileMenuTitle}
               description={mobileMenuDescription}
@@ -69,7 +69,7 @@ export function AppHeader({
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9 rounded-full"
+                  className="h-11 w-11 rounded-full"
                   data-testid="app-header-mobile-menu"
                 >
                   <Menu className="h-4 w-4" />

@@ -19,7 +19,7 @@ export default function RecipeList() {
   return (
     <div className="min-h-screen bg-background">
       <PageContainer size="md" className="py-8 sm:py-10">
-        <h1 className="text-2xl font-medium text-foreground mb-2" data-testid="text-page-title">
+        <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2" data-testid="text-page-title">
           {t("recipes.title") || "My Recipes"}
         </h1>
         <p className="text-sm text-muted-foreground mb-8" data-testid="text-page-subtitle">
@@ -37,14 +37,14 @@ export default function RecipeList() {
             </p>
             <Link
               href="/import"
-              className="inline-block px-6 py-2.5 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+              className="inline-flex items-center px-6 py-2.5 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
               data-testid="link-import-first"
             >
               {t("recipes.importFirst") || "Import your first recipe"}
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {recipes.map((recipe) => (
               <Link
                 key={recipe.id}

@@ -179,7 +179,7 @@ function DraggableRecipeSmall({ recipe, meta, disabled }: { recipe: Recipe; meta
       ref={setNodeRef}
       {...(disabled ? {} : listeners)}
       {...(disabled ? {} : attributes)}
-      className={`px-3 py-1.5 bg-[#FAFAF8] rounded-full border hairline flex items-center gap-2 ${disabled ? "opacity-75 cursor-default" : "cursor-grab"} ${isDragging ? "opacity-50" : ""}`}
+      className={`px-3 py-2 min-h-11 bg-[#FAFAF8] rounded-full border hairline flex items-center gap-2 ${disabled ? "opacity-75 cursor-default" : "cursor-grab"} ${isDragging ? "opacity-50" : ""}`}
       data-testid={`tray-recipe-${recipe.id}`}
     >
       <span className="text-xs font-medium text-foreground truncate max-w-[120px]">{recipe.title}</span>
@@ -236,7 +236,7 @@ function DroppableCell({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[80px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"} ${disabled && !recipe ? "opacity-50 bg-muted/20" : ""} ${isDragging ? "opacity-30" : ""}`}
+      className={`min-h-[96px] p-2 rounded-lg border hairline ${isOver ? "bg-[#7A9E7E]/10 border-[#7A9E7E]" : "bg-background"} ${disabled && !recipe ? "opacity-50 bg-muted/20" : ""} ${isDragging ? "opacity-30" : ""}`}
       style={isStartCell ? { gridColumn: `span ${spanDays}` } : undefined}
       data-testid={`cell-${meal}-${day}`}
     >
@@ -255,7 +255,7 @@ function DroppableCell({
                   e.stopPropagation();
                   onRemove();
                 }}
-                className="text-muted-foreground hover:text-foreground text-xs"
+                className="text-muted-foreground hover:text-foreground text-xs min-h-11 min-w-11"
                 data-testid={`remove-${meal}-${day}`}
               >
                 Ã—
@@ -279,7 +279,7 @@ function DroppableCell({
                     e.stopPropagation();
                     onShrink();
                   }}
-                  className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
+                  className="text-[10px] px-2.5 py-2 min-h-11 rounded border hairline text-muted-foreground hover:text-foreground"
                   data-testid={`shrink-${meal}-${day}`}
                 >
                   -
@@ -291,7 +291,7 @@ function DroppableCell({
                     e.stopPropagation();
                     onExtend();
                   }}
-                  className="text-[10px] px-1.5 py-0.5 rounded border hairline text-muted-foreground hover:text-foreground"
+                  className="text-[10px] px-2.5 py-2 min-h-11 rounded border hairline text-muted-foreground hover:text-foreground"
                   data-testid={`extend-${meal}-${day}`}
                 >
                   +
@@ -628,7 +628,7 @@ export default function WeeklyMeals() {
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end sm:items-center">
         <button
           onClick={() => setPlanGenerated(false)}
-          className="text-sm text-muted-foreground hover:text-foreground text-left"
+          className="text-sm min-h-11 px-2 text-muted-foreground hover:text-foreground text-left"
           data-testid="button-back-to-selection"
         >
           {t("meals.backToSelection")}
@@ -636,7 +636,7 @@ export default function WeeklyMeals() {
         {!weekLocked && state.planAssignments.length > 0 && (
           <button
             onClick={clearWeek}
-            className="px-3 py-2 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+            className="px-3 py-2 min-h-11 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
             data-testid="button-clear-week"
           >
             {t("meals.clearWeek")}
@@ -653,7 +653,7 @@ export default function WeeklyMeals() {
             </span>
             <button
               onClick={() => setWeekLocked(false)}
-              className="px-3 py-2 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+              className="px-3 py-2 min-h-11 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
               data-testid="button-unlock-week"
             >
               {t("meals.unlock")}
@@ -662,7 +662,7 @@ export default function WeeklyMeals() {
         ) : (
           <button
             onClick={() => setWeekLocked(true)}
-            className="px-4 py-2 min-h-10 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+            className="px-4 py-2 min-h-11 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
             data-testid="button-finalize-week"
           >
             {t("meals.finalizeWeek")}
@@ -670,7 +670,7 @@ export default function WeeklyMeals() {
         )}
         <button
           onClick={() => setLocation("/grocery-list")}
-          className="px-4 py-2 min-h-10 text-sm rounded-full border-2 border-[#7A9E7E] text-[#7A9E7E] hover:bg-[#7A9E7E] hover:text-white"
+          className="px-4 py-2 min-h-11 text-sm rounded-full border-2 border-[#7A9E7E] text-[#7A9E7E] hover:bg-[#7A9E7E] hover:text-white"
           data-testid="button-create-grocery-list"
         >
           {t("meals.createGroceryList")}
@@ -738,7 +738,7 @@ export default function WeeklyMeals() {
                   <MobileNavSheet
                     title={t("meals.selectedRecipes")}
                     trigger={
-                      <Button type="button" variant="outline" className="rounded-full mobile-readable-xs">
+                      <Button type="button" variant="outline" className="rounded-full mobile-readable-xs min-h-11">
                         {t("meals.selectedRecipes")}
                       </Button>
                     }
@@ -759,7 +759,7 @@ export default function WeeklyMeals() {
               )}
 
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium text-foreground">{t("meals.weeklyPlanTitle")}</h2>
+                <h2 className="text-base sm:text-lg md:text-xl font-medium text-foreground">{t("meals.weeklyPlanTitle")}</h2>
                 {weekLocked && (
                   <span className="text-xs text-[#7A9E7E] bg-[#7A9E7E]/10 px-2 py-1 rounded">
                     {t("meals.lockedUnlockToEdit")}
@@ -842,7 +842,7 @@ export default function WeeklyMeals() {
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.howItWorks")}</a>
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.plan")}</a>
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.cost")}</a>
-            <button className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 border hairline rounded-lg" data-testid="button-login">
+            <button className="text-sm min-h-11 text-muted-foreground hover:text-foreground px-3 py-1.5 border hairline rounded-lg" data-testid="button-login">
               {t("meals.logIn")}
             </button>
           </nav>
@@ -850,10 +850,10 @@ export default function WeeklyMeals() {
         mobileMenuTitle={t("meals.calmPlanning")}
         mobileMenuContent={
           <div className="space-y-2">
-            <a href="#" className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.howItWorks")}</a>
-            <a href="#" className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.plan")}</a>
-            <a href="#" className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.cost")}</a>
-            <button className="w-full text-left px-3 py-2 text-sm rounded-lg border hairline text-muted-foreground hover:text-foreground" data-testid="button-login-mobile">
+            <a href="#" className="block px-3 py-2.5 min-h-11 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.howItWorks")}</a>
+            <a href="#" className="block px-3 py-2.5 min-h-11 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.plan")}</a>
+            <a href="#" className="block px-3 py-2.5 min-h-11 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.cost")}</a>
+            <button className="w-full text-left px-3 py-2.5 min-h-11 text-sm rounded-lg border hairline text-muted-foreground hover:text-foreground" data-testid="button-login-mobile">
               {t("meals.logIn")}
             </button>
           </div>
@@ -864,13 +864,13 @@ export default function WeeklyMeals() {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           
           <aside className="w-full lg:w-[240px] lg:flex-shrink-0">
-            <div className="sticky top-6">
+            <div className="lg:sticky lg:top-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-foreground">{t("meals.filters", { count: activeFilterCount })}</span>
                 {activeFilterCount > 0 && (
                   <button 
                     onClick={clearAllFilters}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="text-xs min-h-11 px-2 text-muted-foreground hover:text-foreground"
                     data-testid="button-clear-filters"
                   >
                     {t("meals.clearAll")}
@@ -881,7 +881,7 @@ export default function WeeklyMeals() {
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("time")}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-time"
                 >
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.maxMinutes")}</span>
@@ -893,7 +893,7 @@ export default function WeeklyMeals() {
                       <button
                         key={mins ?? "any"}
                         onClick={() => updateFilters({ maxMinutes: mins })}
-                        className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.maxMinutes === mins ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                        className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.maxMinutes === mins ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                         data-testid={`filter-time-${mins ?? "any"}`}
                       >
                         {mins ?? t("meals.any")}
@@ -906,7 +906,7 @@ export default function WeeklyMeals() {
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("dietary")}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-dietary"
                 >
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.dietary")}</span>
@@ -940,7 +940,7 @@ export default function WeeklyMeals() {
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("mealType")}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-mealtype"
                 >
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.mealType")}</span>
@@ -959,7 +959,7 @@ export default function WeeklyMeals() {
                         <button
                           key={type}
                           onClick={() => toggleArrayFilter("mealType", type)}
-                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                           data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
                         >
                           {mealTypeTranslations[type] || type}
@@ -973,7 +973,7 @@ export default function WeeklyMeals() {
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("method")}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-method"
                 >
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.cookingMethod")}</span>
@@ -992,7 +992,7 @@ export default function WeeklyMeals() {
                         <button
                           key={method}
                           onClick={() => toggleArrayFilter("cookingMethod", method)}
-                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.cookingMethod.includes(method) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.cookingMethod.includes(method) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                           data-testid={`filter-method-${method.toLowerCase().replace(" ", "-")}`}
                         >
                           {methodTranslations[method] || method}
@@ -1006,7 +1006,7 @@ export default function WeeklyMeals() {
               <div className="border-b hairline pb-3 mb-3">
                 <button 
                   onClick={() => toggleSection("source")}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-source"
                 >
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.source")}</span>
@@ -1025,7 +1025,7 @@ export default function WeeklyMeals() {
                         <button
                           key={src}
                           onClick={() => toggleArrayFilter("source", src)}
-                          className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.source.includes(src) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.source.includes(src) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                           data-testid={`filter-source-${src.toLowerCase().replace(" ", "-")}`}
                         >
                           {sourceTranslations[src] || src}
@@ -1038,7 +1038,7 @@ export default function WeeklyMeals() {
 
               <button 
                 onClick={() => setState(prev => ({ ...prev, showMoreFilters: !prev.showMoreFilters }))}
-                className="text-xs text-muted-foreground hover:text-foreground mb-3"
+                className="text-xs min-h-11 px-2 text-muted-foreground hover:text-foreground mb-3"
                 data-testid="button-more-filters"
               >
                 {state.showMoreFilters ? t("meals.lessFilters") : t("meals.moreFilters")}
@@ -1060,7 +1060,7 @@ export default function WeeklyMeals() {
                           <button
                             key={protein}
                             onClick={() => toggleArrayFilter("proteinType", protein)}
-                            className={`px-3 py-1 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                            className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                             data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
                           >
                             {proteinTranslations[protein] || protein}
@@ -1073,7 +1073,7 @@ export default function WeeklyMeals() {
                   <div className="border-b hairline pb-3 mb-3">
                     <button 
                       onClick={() => toggleSection("myPicks")}
-                      className="flex items-center justify-between w-full text-left"
+                      className="flex items-center justify-between w-full text-left min-h-11"
                       data-testid="button-toggle-mypicks-section"
                     >
                       <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.myPicksFilter")}</span>
@@ -1100,7 +1100,7 @@ export default function WeeklyMeals() {
                                 <button
                                   key={String(rating)}
                                   onClick={() => updateFilters({ minRating: rating })}
-                                  className={`px-2 py-0.5 text-[10px] rounded border hairline transition-colors ${
+                                  className={`px-3 py-2 min-h-11 text-[10px] rounded border hairline transition-colors ${
                                     state.filters.minRating === rating 
                                       ? "bg-foreground text-background border-foreground" 
                                       : "text-muted-foreground hover:text-foreground border-muted-foreground/30"
@@ -1156,7 +1156,7 @@ export default function WeeklyMeals() {
                       onChange={(e) => setIncludeInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addIncludeIngredient()}
                       placeholder={t("meals.typeEnter")}
-                      className="w-full px-2 py-1 text-xs border hairline rounded bg-transparent focus-ring-quiet"
+                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
                       data-testid="input-must-include"
                     />
                   </div>
@@ -1177,7 +1177,7 @@ export default function WeeklyMeals() {
                       onChange={(e) => setExcludeInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addExcludeIngredient()}
                       placeholder={t("meals.typeEnter")}
-                      className="w-full px-2 py-1 text-xs border hairline rounded bg-transparent focus-ring-quiet"
+                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
                       data-testid="input-must-exclude"
                     />
                   </div>
@@ -1189,7 +1189,7 @@ export default function WeeklyMeals() {
           <main className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
               <div>
-                <h1 className="text-xl font-medium text-foreground">{t("meals.step2Title")}</h1>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-medium text-foreground">{t("meals.step2Title")}</h1>
                 <p className="text-sm text-muted-foreground mt-1">
                   {t("meals.step2Desc")}
                 </p>
@@ -1239,7 +1239,7 @@ export default function WeeklyMeals() {
                         </div>
                         <button
                           onClick={() => toggleSelection(recipe.id)}
-                          className="text-xs text-muted-foreground hover:text-foreground flex-shrink-0 px-2 py-1 rounded hover:bg-foreground/5"
+                          className="text-xs min-h-11 text-muted-foreground hover:text-foreground flex-shrink-0 px-2 py-1 rounded hover:bg-foreground/5"
                           data-testid={`remove-selected-${recipe.id}`}
                         >
                           Ã—
@@ -1257,7 +1257,7 @@ export default function WeeklyMeals() {
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {visibleFilteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">{t("meals.noRecipesMatch")}</p>
               ) : (
@@ -1300,7 +1300,7 @@ export default function WeeklyMeals() {
                           </div>
                           <button
                             onClick={() => toggleSelection(recipe.id)}
-                            className={`px-3 py-2 mobile-readable-xs rounded-full border flex-shrink-0 min-h-10 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
+                            className={`px-3 py-2 mobile-readable-xs rounded-full border flex-shrink-0 min-h-11 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
                             data-testid={`button-add-${recipe.id}`}
                           >
                             {isSelected ? t("meals.added") : t("meals.add")}
@@ -1329,14 +1329,14 @@ export default function WeeklyMeals() {
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => setLocation("/recipe-view")}
-                          className="px-4 py-2 mobile-readable-xs min-h-10 rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+                          className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
                           data-testid={`button-open-${recipe.id}`}
                         >
                           {t("recipe.openRecipe")}
                         </button>
                         <button
                           onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
-                          className="px-4 py-2 mobile-readable-xs min-h-10 rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
+                          className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
                           data-testid={`button-ingredients-${recipe.id}`}
                         >
                           Ingredients
@@ -1365,7 +1365,7 @@ export default function WeeklyMeals() {
                 <button
                   onClick={generatePlan}
                   disabled={!canGenerate}
-                  className={`px-6 py-2.5 min-h-10 text-sm rounded-full ${canGenerate ? "bg-foreground text-background hover:bg-foreground/90" : "bg-foreground/20 text-muted-foreground cursor-not-allowed"}`}
+                  className={`px-6 py-2.5 min-h-11 text-sm rounded-full ${canGenerate ? "bg-foreground text-background hover:bg-foreground/90" : "bg-foreground/20 text-muted-foreground cursor-not-allowed"}`}
                   data-testid="button-generate-plan"
                 >
                   {t("meals.generateWeeklyPlan")}

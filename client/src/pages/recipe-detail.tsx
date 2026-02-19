@@ -71,7 +71,7 @@ export default function RecipeDetail() {
           />
         )}
 
-        <h1 className="text-2xl font-medium text-foreground mb-2" data-testid="text-recipe-title">
+        <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2" data-testid="text-recipe-title">
           {recipe.title}
         </h1>
 
@@ -142,7 +142,7 @@ export default function RecipeDetail() {
         <div className="flex flex-wrap gap-3 pt-4 border-t hairline">
           <button
             onClick={handleDelete}
-            className="px-5 py-2 text-sm rounded-full border border-red-200 text-red-500 hover:bg-red-50"
+            className="px-5 py-2 min-h-11 text-sm rounded-full border border-red-200 text-red-500 hover:bg-red-50"
             data-testid="button-delete-recipe"
           >
             {t("recipeDetail.delete") || "Delete"}

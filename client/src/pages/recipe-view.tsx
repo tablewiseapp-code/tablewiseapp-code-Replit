@@ -435,7 +435,7 @@ export default function RecipeView() {
   const allIngredientsChecked = baseIngredients.every(ing => checkedIngredients.has(ing.id));
 
   return (
-    <div className={`min-h-screen bg-background flex items-start justify-center p-2 sm:p-4 lg:p-6 ${isFocusMode ? "layout-focus" : "layout-standard"}`}>
+    <div className={`min-h-screen bg-background flex items-start justify-center p-0 sm:p-4 lg:p-6 ${isFocusMode ? "layout-focus" : "layout-standard"}`}>
       <div className="recipe-surface w-full max-w-[1200px] rounded-xl flex flex-col lg:flex-row overflow-hidden">
         
         {/* Left Control Rail - Hidden in Focus Mode */}
@@ -642,12 +642,12 @@ export default function RecipeView() {
           />
           
           {/* Header */}
-          <header ref={topRef} className={`px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 lg:pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
+          <header ref={topRef} className={`px-4 sm:px-6 lg:px-10 pt-5 sm:pt-8 lg:pt-10 ${isFocusMode ? "pb-4" : "pb-6"}`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setLocation("/meals")}
-                  className="px-4 py-2 min-h-10 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
+                  className="px-4 py-2 min-h-11 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground hover:border-foreground/30 flex items-center gap-1"
                   data-testid="button-back-to-selection"
                 >
                   {t("recipe.backToSelection")}
@@ -655,7 +655,7 @@ export default function RecipeView() {
                 {isFocusMode && (
                   <button
                     onClick={() => updateState({ layout: "standard" })}
-                    className="px-3 py-2 min-h-10 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
+                    className="px-3 py-2 min-h-11 mobile-readable-xs rounded-full border hairline text-muted-foreground hover:text-foreground"
                     data-testid="button-exit-focus"
                   >
                     Exit focus
@@ -665,7 +665,7 @@ export default function RecipeView() {
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
                   onClick={toggleMyPick}
-                  className={`px-4 py-2 min-h-10 text-sm rounded-full border hairline flex items-center gap-2 transition-colors ${
+                  className={`px-4 py-2 min-h-11 text-sm rounded-full border hairline flex items-center gap-2 transition-colors ${
                     meta.isMyPick ? "bg-yellow-50 border-yellow-200 text-yellow-700" : "text-muted-foreground hover:text-foreground"
                   }`}
                   data-testid="button-toggle-mypick"
@@ -674,7 +674,7 @@ export default function RecipeView() {
                 </button>
                 <button
                   onClick={() => setLocation("/import")}
-                  className="px-4 py-2 min-h-10 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+                  className="px-4 py-2 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
                   data-testid="button-import-recipe"
                 >
                   {t("nav.importRecipe")}
@@ -682,7 +682,7 @@ export default function RecipeView() {
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-2xl" : "text-3xl"}`} data-testid="text-recipe-title">
+              <h1 className={`font-medium text-foreground tracking-tight ${isFocusMode ? "text-xl sm:text-2xl" : "text-xl sm:text-2xl lg:text-3xl"}`} data-testid="text-recipe-title">
                 {t("recipe.plov")}
               </h1>
               {meta.isMyPick && (
@@ -806,7 +806,7 @@ export default function RecipeView() {
                       {isActive && state.helpEnabled && (
                         <button 
                           onClick={toggleHint}
-                          className={`flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded-full text-xs ${state.showStepHint ? "bg-muted" : ""}`}
+                          className={`flex-shrink-0 w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground focus-ring-quiet rounded-full text-xs ${state.showStepHint ? "bg-muted" : ""}`}
                           data-testid="button-step-help"
                           aria-label="Show step hint"
                         >
@@ -834,7 +834,7 @@ export default function RecipeView() {
                             </span>
                             <button
                               onClick={stopTimer}
-                              className="next-btn px-4 py-1.5 rounded-full text-xs"
+                              className="next-btn px-4 py-2 min-h-11 rounded-full text-xs"
                               data-testid="button-timer-stop"
                             >
                               {t("recipe.stop")}
@@ -843,7 +843,7 @@ export default function RecipeView() {
                         ) : (
                           <button
                             onClick={() => startTimer(step.id, step.timeMinutes!)}
-                            className="next-btn px-4 py-1.5 rounded-full text-xs"
+                            className="next-btn px-4 py-2 min-h-11 rounded-full text-xs"
                             data-testid="button-timer-start"
                           >
                             {t("recipe.startTimer", { min: step.timeMinutes! })}
@@ -857,7 +857,7 @@ export default function RecipeView() {
                       <button 
                         onClick={completeStep}
                         disabled={state.finished}
-                        className={`next-btn mt-6 px-5 py-2 rounded-full text-sm ${state.finished ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`next-btn mt-6 px-5 py-2 min-h-11 rounded-full text-sm ${state.finished ? "opacity-50 cursor-not-allowed" : ""}`}
                         data-testid="button-next-step"
                       >
                         {isLastStep ? t("recipe.finishCooking") : t("recipe.markDone")}
@@ -872,7 +872,7 @@ export default function RecipeView() {
             <div className="mt-12">
               <button
                 onClick={scrollToTop}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm min-h-11 px-2 text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="link-back-to-recipe"
               >
                 {t("recipe.cookAgain")}

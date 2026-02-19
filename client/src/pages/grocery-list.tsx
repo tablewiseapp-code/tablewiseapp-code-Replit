@@ -160,7 +160,7 @@ export default function GroceryList() {
   const headerMenu = (
     <button
       onClick={() => setLocation("/meals")}
-      className="w-full px-3 py-2 text-left text-sm rounded-lg border hairline text-muted-foreground hover:text-foreground"
+      className="w-full px-3 py-2.5 min-h-11 text-left text-sm rounded-lg border hairline text-muted-foreground hover:text-foreground"
       data-testid="button-back-to-plan-mobile"
     >
       {t("grocery.backToPlan")}
@@ -176,7 +176,7 @@ export default function GroceryList() {
           desktopActions={
             <button
               onClick={() => setLocation("/meals")}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm min-h-11 px-2 text-muted-foreground hover:text-foreground"
               data-testid="button-back-to-plan"
             >
               {t("grocery.backToPlan")}
@@ -191,7 +191,7 @@ export default function GroceryList() {
             <p className="text-lg text-muted-foreground mb-4">{t("grocery.noMeals")}</p>
             <button
               onClick={() => setLocation("/meals")}
-              className="px-4 py-2 min-h-10 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+              className="px-4 py-2 min-h-11 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
               data-testid="button-go-to-plan"
             >
               {t("grocery.goToPlan")}
@@ -210,7 +210,7 @@ export default function GroceryList() {
         desktopActions={
           <button
             onClick={() => setLocation("/meals")}
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm min-h-11 px-2 text-muted-foreground hover:text-foreground"
             data-testid="button-back-to-plan"
           >
             {t("grocery.backToPlan")}
@@ -222,7 +222,7 @@ export default function GroceryList() {
 
       <PageContainer size="lg" className="flex-1 py-6 sm:py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-medium text-foreground mb-2">{t("grocery.title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2">{t("grocery.title")}</h1>
           <p className="text-sm text-muted-foreground">
             {t("grocery.items", { total: groceryData.totalItems, recipes: groceryData.usedRecipes.length })}
           </p>
@@ -245,7 +245,7 @@ export default function GroceryList() {
           {checkedItems.size > 0 && (
             <button
               onClick={() => setCheckedItems(new Set())}
-              className="text-xs text-muted-foreground hover:text-foreground"
+              className="text-xs min-h-11 px-2 text-muted-foreground hover:text-foreground"
               data-testid="button-uncheck-all"
             >
               {t("grocery.uncheckAll")}
@@ -253,7 +253,7 @@ export default function GroceryList() {
           )}
         </div>
 
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
           {categoryOrder.map(category => {
             const items = groceryData.categorized[category];
             if (!items || items.length === 0) return null;

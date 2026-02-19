@@ -273,7 +273,7 @@ export default function ImportRecipe() {
     <div className="min-h-screen bg-background">
       <PageContainer size="md" className="py-8 sm:py-10">
         <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{t("import.label")}</p>
-        <h1 className="text-2xl font-medium text-foreground mb-2">{t("import.title")}</h1>
+        <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2">{t("import.title")}</h1>
         <p className="text-sm text-muted-foreground mb-8">
           {t("import.subtitle")}
         </p>
@@ -302,7 +302,7 @@ export default function ImportRecipe() {
                 />
                 <button
                   onClick={removeImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-foreground text-background rounded-full flex items-center justify-center text-xs hover:bg-foreground/80"
+                  className="absolute -top-2 -right-2 w-11 h-11 bg-foreground text-background rounded-full flex items-center justify-center text-xs hover:bg-foreground/80"
                   data-testid="button-remove-photo"
                 >
                   ×
@@ -361,7 +361,7 @@ export default function ImportRecipe() {
                     <button
                       onClick={startDictation}
                       disabled={isProcessing}
-                      className="px-4 py-2 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+                      className="px-4 py-2 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
                       data-testid="button-start-dictation"
                     >
                       {t("import.startDictation")}
@@ -369,7 +369,7 @@ export default function ImportRecipe() {
                   ) : (
                     <button
                       onClick={stopDictation}
-                      className="px-4 py-2 text-sm rounded-full bg-red-500 text-white hover:bg-red-600"
+                      className="px-4 py-2 min-h-11 text-sm rounded-full bg-red-500 text-white hover:bg-red-600"
                       data-testid="button-stop-dictation"
                     >
                       {t("import.stopDictation")}
@@ -380,7 +380,7 @@ export default function ImportRecipe() {
                     <button
                       onClick={handleTranscribeAndFill}
                       disabled={isProcessing}
-                      className="px-4 py-2 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F] disabled:opacity-50"
+                      className="px-4 py-2 min-h-11 text-sm rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F] disabled:opacity-50"
                       data-testid="button-transcribe"
                     >
                       {isProcessing ? t("import.aiThinking") : t("import.generateWithAi")}
@@ -413,7 +413,7 @@ export default function ImportRecipe() {
                       <p className="text-xs text-foreground flex-1">{transcript}</p>
                       <button
                         onClick={clearTranscript}
-                        className="text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs min-h-11 px-2 text-muted-foreground hover:text-foreground"
                         data-testid="button-clear-transcript"
                       >
                         {t("import.clear")}
@@ -475,18 +475,18 @@ Sauté onions until golden brown"
             />
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-4">
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-2.5 min-h-10 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
               data-testid="button-save"
             >
               {isSaving ? t("import.saving") || "Saving..." : t("import.saveAndOpen")}
             </button>
             <button
               onClick={() => setLocation("/recipe-view")}
-              className="px-6 py-2.5 min-h-10 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground"
+              className="w-full sm:w-auto px-6 py-2.5 min-h-11 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground"
               data-testid="button-back"
             >
               {t("import.back")}

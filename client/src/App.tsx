@@ -73,7 +73,7 @@ function DevNav() {
   const { t, lang, setLang } = useI18n();
   return (
     <>
-      <div className="bg-[#2E2E2E] px-3 py-2 flex items-center justify-between text-xs md:hidden" data-testid="dev-nav-mobile">
+      <div className="bg-[#2E2E2E] px-4 py-2 flex items-center justify-between text-xs sm:hidden" data-testid="dev-nav-mobile">
         <span className="text-white/40 font-mono">DEV</span>
         <MobileNavSheet
           title="Navigation"
@@ -82,7 +82,7 @@ function DevNav() {
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 px-3 rounded-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+              className="min-h-11 px-4 rounded-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
               data-testid="dev-nav-mobile-trigger"
             >
               Menu
@@ -94,7 +94,7 @@ function DevNav() {
               <Link
                 key={link.path}
                 href={link.path}
-                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                className={`block rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   location === link.path
                     ? "bg-foreground/10 text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
@@ -112,7 +112,7 @@ function DevNav() {
                 <button
                   key={l.code}
                   onClick={() => setLang(l.code)}
-                  className={`text-left rounded-lg px-3 py-2 text-sm transition-colors ${
+                  className={`text-left rounded-lg px-3 py-2.5 text-sm transition-colors ${
                     lang === l.code
                       ? "bg-foreground/10 text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
@@ -127,7 +127,7 @@ function DevNav() {
         </MobileNavSheet>
       </div>
 
-      <nav className="hidden md:flex bg-[#2E2E2E] px-4 py-1.5 items-center gap-1 text-xs" data-testid="dev-nav">
+      <nav className="hidden sm:flex bg-[#2E2E2E] px-4 py-2 items-center gap-1 text-xs" data-testid="dev-nav">
         <span className="text-white/40 mr-2 font-mono">DEV</span>
         {NAV_KEYS.map(link => (
           <Link
