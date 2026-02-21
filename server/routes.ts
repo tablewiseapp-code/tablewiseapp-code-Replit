@@ -22,6 +22,36 @@ function inferAudioFileExtension(mimeType?: string): "webm" | "mp3" | "mp4" | "w
   return "webm";
 }
 
+async function verifyTranscriptText(
+  transcript: string,
+  language?: string,
+): Promise<string> {
+  if (!transcript.trim()) return transcript;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: `You correct speech-to-text transcripts.
+- Keep the original language.
+- Do not translate.
+- Preserve meaning exactly.
+- Fix obvious word errors, spelling, grammar, and punctuation.
+- Do not add new facts or extra explanations.
+- Return only the corrected transcript text.`,
+      },
+      {
+        role: "user",
+        content: `Language hint: ${language || "auto"}\n\nTranscript:\n${transcript}`,
+      },
+    ],
+  });
+
+  return response.choices[0]?.message?.content?.trim() || transcript;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -91,7 +121,7 @@ export async function registerRoutes(
 
   app.post("/api/transcribe-audio", async (req, res) => {
     try {
-      const { audio, mimeType, language } = req.body ?? {};
+      const { audio, mimeType, language, verifyText } = req.body ?? {};
 
       if (!audio || typeof audio !== "string") {
         return res.status(400).json({ error: "Audio data is required" });
@@ -110,7 +140,25 @@ export async function registerRoutes(
         ...(typeof language === "string" && language.length > 0 ? { language } : {}),
       });
 
-      res.json({ transcript: response.text ?? "" });
+      const rawTranscript = (response.text ?? "").trim();
+      const shouldVerify = verifyText !== false;
+
+      if (!rawTranscript || !shouldVerify) {
+        return res.json({ transcript: rawTranscript, rawTranscript });
+      }
+
+      let transcript = rawTranscript;
+      try {
+        transcript = await verifyTranscriptText(
+          rawTranscript,
+          typeof language === "string" ? language : undefined,
+        );
+      } catch (verificationError: any) {
+        // Fallback to the original transcript if cleanup fails.
+        console.error("Error verifying transcript text:", verificationError);
+      }
+
+      res.json({ transcript, rawTranscript });
     } catch (error: any) {
       console.error("Error transcribing audio:", error);
       res.status(500).json({ error: error.message || "Failed to transcribe audio" });

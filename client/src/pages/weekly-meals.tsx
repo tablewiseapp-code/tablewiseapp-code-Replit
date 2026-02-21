@@ -9,21 +9,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
+import { fetchRecipes } from "@/lib/storage";
+import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 
-interface Recipe {
-  id: string;
-  title: string;
-  minutes: number;
-  mealType: string;
-  tags: string[];
-  tools: string[];
-  sourceType: string;
-  proteinType: string;
-  servingsRange: string;
-  hasNotes: boolean;
-  modifiedByMe: boolean;
-  ingredients: string[];
-}
+type Recipe = PlannerRecipe;
 
 interface Filters {
   maxMinutes: number | null;
@@ -55,29 +44,6 @@ interface WeeklyMealsState {
   showMoreFilters: boolean;
   planAssignments: PlanAssignment[];
 }
-
-const sampleRecipes: Recipe[] = [
-  { id: "r1", title: "Plov with Chicken", minutes: 40, mealType: "Dinner", tags: ["kidFriendly"], tools: ["Stovetop"], sourceType: "My recipes", proteinType: "Chicken", servingsRange: "3-4", hasNotes: true, modifiedByMe: true, ingredients: ["rice", "chicken", "onion", "carrot", "garlic", "cumin"] },
-  { id: "r2", title: "Vegetable Stir Fry", minutes: 20, mealType: "Dinner", tags: ["vegetarian", "glutenFree"], tools: ["Stovetop"], sourceType: "Imported", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["broccoli", "bell pepper", "soy sauce", "garlic", "ginger"] },
-  { id: "r3", title: "Baked Salmon", minutes: 30, mealType: "Dinner", tags: ["glutenFree"], tools: ["Oven"], sourceType: "Trusted authors", proteinType: "Seafood", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["salmon", "lemon", "dill", "olive oil", "garlic"] },
-  { id: "r4", title: "Pasta Carbonara", minutes: 25, mealType: "Dinner", tags: [], tools: ["Stovetop"], sourceType: "My recipes", proteinType: "Beef", servingsRange: "3-4", hasNotes: true, modifiedByMe: false, ingredients: ["pasta", "bacon", "eggs", "parmesan", "black pepper"] },
-  { id: "r5", title: "Greek Salad", minutes: 15, mealType: "Lunch", tags: ["vegetarian", "glutenFree"], tools: ["No-cook"], sourceType: "Personal", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: false, modifiedByMe: true, ingredients: ["cucumber", "tomato", "feta", "olives", "olive oil"] },
-  { id: "r6", title: "Chicken Nuggets", minutes: 25, mealType: "Dinner", tags: ["kidFriendly"], tools: ["Air fryer"], sourceType: "My recipes", proteinType: "Chicken", servingsRange: "3-4", hasNotes: false, modifiedByMe: false, ingredients: ["chicken breast", "breadcrumbs", "eggs", "flour"] },
-  { id: "r7", title: "Beef Tacos", minutes: 30, mealType: "Dinner", tags: ["kidFriendly"], tools: ["Stovetop"], sourceType: "Imported", proteinType: "Beef", servingsRange: "3-4", hasNotes: true, modifiedByMe: true, ingredients: ["ground beef", "taco shells", "lettuce", "tomato", "cheese", "sour cream"] },
-  { id: "r8", title: "Overnight Oats", minutes: 5, mealType: "Breakfast", tags: ["vegetarian"], tools: ["No-cook"], sourceType: "Personal", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["oats", "milk", "yogurt", "honey", "berries"] },
-  { id: "r9", title: "Grilled Cheese Sandwich", minutes: 10, mealType: "Lunch box", tags: ["vegetarian", "kidFriendly"], tools: ["Stovetop"], sourceType: "My recipes", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["bread", "cheese", "butter"] },
-  { id: "r10", title: "Shrimp Scampi", minutes: 20, mealType: "Dinner", tags: ["glutenFree"], tools: ["Stovetop"], sourceType: "Trusted authors", proteinType: "Seafood", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["shrimp", "garlic", "butter", "white wine", "parsley", "lemon"] },
-  { id: "r11", title: "Veggie Wrap", minutes: 10, mealType: "Lunch box", tags: ["vegetarian"], tools: ["No-cook"], sourceType: "Personal", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: true, modifiedByMe: false, ingredients: ["tortilla", "hummus", "spinach", "tomato", "cucumber"] },
-  { id: "r12", title: "Roast Chicken", minutes: 60, mealType: "Dinner", tags: ["glutenFree", "kidFriendly"], tools: ["Oven"], sourceType: "My recipes", proteinType: "Chicken", servingsRange: "5+", hasNotes: true, modifiedByMe: true, ingredients: ["whole chicken", "lemon", "rosemary", "garlic", "potatoes"] },
-  { id: "r13", title: "Mushroom Risotto", minutes: 35, mealType: "Dinner", tags: ["vegetarian"], tools: ["Stovetop"], sourceType: "My recipes", proteinType: "Plant-based", servingsRange: "3-4", hasNotes: false, modifiedByMe: false, ingredients: ["arborio rice", "mushrooms", "vegetable broth", "onion", "parmesan"] },
-  { id: "r14", title: "Lentil Soup", minutes: 45, mealType: "Dinner", tags: ["vegetarian", "glutenFree"], tools: ["Stovetop"], sourceType: "Personal", proteinType: "Plant-based", servingsRange: "3-4", hasNotes: true, modifiedByMe: false, ingredients: ["lentils", "carrot", "celery", "onion", "vegetable broth", "cumin"] },
-  { id: "r15", title: "Chicken Caesar Salad", minutes: 20, mealType: "Lunch", tags: ["kidFriendly"], tools: ["No-cook"], sourceType: "Imported", proteinType: "Chicken", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["romaine lettuce", "grilled chicken", "caesar dressing", "croutons", "parmesan"] },
-  { id: "r16", title: "Beef Stew", minutes: 120, mealType: "Dinner", tags: ["glutenFree"], tools: ["Stovetop"], sourceType: "My recipes", proteinType: "Beef", servingsRange: "5+", hasNotes: true, modifiedByMe: true, ingredients: ["beef chuck", "potatoes", "carrots", "onion", "beef broth", "thyme"] },
-  { id: "r17", title: "Fish Tacos", minutes: 25, mealType: "Dinner", tags: ["kidFriendly"], tools: ["Stovetop"], sourceType: "Trusted authors", proteinType: "Seafood", servingsRange: "3-4", hasNotes: false, modifiedByMe: false, ingredients: ["white fish", "corn tortillas", "cabbage slaw", "lime", "crema"] },
-  { id: "r18", title: "Quinoa Bowl", minutes: 15, mealType: "Lunch box", tags: ["vegetarian", "glutenFree"], tools: ["No-cook"], sourceType: "Personal", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["quinoa", "chickpeas", "cucumber", "tomato", "lemon tahini dressing"] },
-  { id: "r19", title: "Omelette", minutes: 10, mealType: "Breakfast", tags: ["vegetarian", "glutenFree"], tools: ["Stovetop"], sourceType: "My recipes", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: false, modifiedByMe: false, ingredients: ["eggs", "cheese", "spinach", "mushrooms"] },
-  { id: "r20", title: "Avocado Toast", minutes: 5, mealType: "Breakfast", tags: ["vegetarian"], tools: ["No-cook"], sourceType: "Personal", proteinType: "Plant-based", servingsRange: "1-2", hasNotes: true, modifiedByMe: false, ingredients: ["bread", "avocado", "red pepper flakes", "lemon juice"] },
-];
 
 const defaultFilters: Filters = {
   maxMinutes: null,
@@ -316,6 +282,9 @@ export default function WeeklyMeals() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
   const [state, setState] = useState<WeeklyMealsState>(loadState);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
+  const [recipesError, setRecipesError] = useState<string | null>(null);
   const [weekLocked, setWeekLocked] = useLocalStorageState<boolean>("week_locked_v1", false);
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
@@ -323,13 +292,62 @@ export default function WeeklyMeals() {
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setIsLoadingRecipes(true);
+
+    fetchRecipes()
+      .then((data) => {
+        if (!active) return;
+        setRecipes(toPlannerRecipes(data));
+        setRecipesError(null);
+      })
+      .catch((error) => {
+        console.error("Failed to load recipes for weekly meals:", error);
+        if (!active) return;
+        setRecipes([]);
+        setRecipesError(error instanceof Error ? error.message : "Failed to load recipes");
+      })
+      .finally(() => {
+        if (active) setIsLoadingRecipes(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isLoadingRecipes) return;
+    const availableIds = new Set(recipes.map((recipe) => recipe.id));
+
+    setState((prev) => {
+      const selectedIds = prev.selectedIds.filter((id) => availableIds.has(id));
+      const planAssignments = prev.planAssignments.filter((assignment) => availableIds.has(assignment.recipeId));
+
+      if (
+        selectedIds.length === prev.selectedIds.length &&
+        planAssignments.length === prev.planAssignments.length
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        selectedIds,
+        planAssignments,
+      };
+    });
+  }, [recipes, isLoadingRecipes]);
+
   const recipeMetaMap = useMemo(() => {
     const map = new Map<string, RecipeUserMeta>();
-    for (const recipe of sampleRecipes) {
+    for (const recipe of recipes) {
       map.set(recipe.id, getRecipeUserMeta(recipe.id));
     }
     return map;
-  }, [state.selectedIds, state.planAssignments, planGenerated]);
+  }, [recipes, state.selectedIds, state.planAssignments, planGenerated]);
 
   const getMeta = useCallback((recipeId: string): RecipeUserMeta => {
     return recipeMetaMap.get(recipeId) ?? { isMyPick: false, rating: null };
@@ -347,7 +365,7 @@ export default function WeeklyMeals() {
   }, [state.planAssignments]);
 
   const sortedSidebarRecipes = useMemo(() => {
-    const selected = sampleRecipes.filter(r => state.selectedIds.includes(r.id));
+    const selected = recipes.filter(r => state.selectedIds.includes(r.id));
     const unused = selected.filter(r => !usedRecipeIds.has(r.id));
     
     const myPicks = unused.filter(r => getMeta(r.id).isMyPick);
@@ -370,11 +388,11 @@ export default function WeeklyMeals() {
       myPicks: myPicks.sort(sortFn),
       others: others.sort((a, b) => a.title.localeCompare(b.title))
     };
-  }, [state.selectedIds, usedRecipeIds, getMeta]);
+  }, [recipes, state.selectedIds, usedRecipeIds, getMeta]);
 
   const trayRecipes = useMemo(() => {
-    return sampleRecipes.filter(r => usedRecipeIds.has(r.id));
-  }, [usedRecipeIds]);
+    return recipes.filter(r => usedRecipeIds.has(r.id));
+  }, [recipes, usedRecipeIds]);
 
   const updateFilters = useCallback((updates: Partial<Filters>) => {
     setState(prev => ({ ...prev, filters: { ...prev.filters, ...updates } }));
@@ -458,7 +476,7 @@ export default function WeeklyMeals() {
   };
 
   const filterRecipes = (): Recipe[] => {
-    return sampleRecipes.filter(recipe => {
+    return recipes.filter(recipe => {
       const meta = getMeta(recipe.id);
       if (state.filters.maxMinutes !== null && recipe.minutes > state.filters.maxMinutes) return false;
       if (state.filters.dietary.length > 0) {
@@ -514,7 +532,7 @@ export default function WeeklyMeals() {
   };
 
   const getSelectedRecipes = () => {
-    return sampleRecipes.filter(r => state.selectedIds.includes(r.id));
+    return recipes.filter(r => state.selectedIds.includes(r.id));
   };
 
   const getAssignmentForCell = (meal: "Breakfast" | "Lunch" | "Dinner", day: number): PlanAssignment | null => {
@@ -623,6 +641,67 @@ export default function WeeklyMeals() {
   };
 
   const selectedRecipes = getSelectedRecipes();
+
+  if (isLoadingRecipes) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <AppHeader title="Tablewise" subtitle={t("meals.calmPlanning")} onBrandClick={() => setLocation("/")} />
+        <PageContainer size="xl" className="flex-1 py-6">
+          <p className="text-sm text-muted-foreground">{t("recipes.loading") || "Loading recipes..."}</p>
+        </PageContainer>
+      </div>
+    );
+  }
+
+  if (recipesError) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <AppHeader title="Tablewise" subtitle={t("meals.calmPlanning")} onBrandClick={() => setLocation("/")} />
+        <PageContainer size="xl" className="flex-1 py-6">
+          <div className="rounded-xl border hairline p-5 bg-[#FAFAF8] max-w-xl">
+            <p className="text-sm text-foreground mb-3">Failed to load recipes.</p>
+            <p className="text-xs text-muted-foreground mb-4">{recipesError}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 min-h-11 rounded-full bg-foreground text-background text-sm"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => setLocation("/import")}
+                className="px-4 py-2 min-h-11 rounded-full border hairline text-sm text-muted-foreground hover:text-foreground"
+              >
+                {t("nav.importRecipe")}
+              </button>
+            </div>
+          </div>
+        </PageContainer>
+      </div>
+    );
+  }
+
+  if (recipes.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <AppHeader title="Tablewise" subtitle={t("meals.calmPlanning")} onBrandClick={() => setLocation("/")} />
+        <PageContainer size="xl" className="flex-1 py-6">
+          <div className="rounded-xl border hairline p-5 bg-[#FAFAF8] max-w-xl">
+            <p className="text-sm text-foreground mb-3">{t("recipes.empty") || "No recipes yet"}</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Import at least one recipe to build a weekly plan.
+            </p>
+            <button
+              onClick={() => setLocation("/import")}
+              className="px-4 py-2 min-h-11 rounded-full bg-foreground text-background text-sm"
+            >
+              {t("nav.importRecipe")}
+            </button>
+          </div>
+        </PageContainer>
+      </div>
+    );
+  }
 
   if (planGenerated) {
     const planActionControls = (
@@ -793,7 +872,7 @@ export default function WeeklyMeals() {
                             return null;
                           }
 
-                          const recipe = assignment ? sampleRecipes.find(r => r.id === assignment.recipeId) || null : null;
+                          const recipe = assignment ? recipes.find(r => r.id === assignment.recipeId) || null : null;
 
                           return (
                             <DroppableCell
@@ -1341,11 +1420,11 @@ export default function WeeklyMeals() {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setLocation("/recipe-view")}
-                          className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
-                          data-testid={`button-open-${recipe.id}`}
-                        >
+                          <button
+                            onClick={() => setLocation(`/recipe/${recipe.id}`)}
+                            className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
+                            data-testid={`button-open-${recipe.id}`}
+                          >
                           {t("recipe.openRecipe")}
                         </button>
                         <button
