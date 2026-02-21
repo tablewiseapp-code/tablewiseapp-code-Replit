@@ -16,6 +16,26 @@ const Table = React.forwardRef<
 ))
 Table.displayName = "Table"
 
+const TableDesktop = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("hidden sm:block relative w-full overflow-auto", className)}
+    {...props}
+  />
+))
+TableDesktop.displayName = "TableDesktop"
+
+const TableMobileCards = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("sm:hidden space-y-3", className)} {...props} />
+))
+TableMobileCards.displayName = "TableMobileCards"
+
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
@@ -110,6 +130,8 @@ TableCaption.displayName = "TableCaption"
 
 export {
   Table,
+  TableDesktop,
+  TableMobileCards,
   TableHeader,
   TableBody,
   TableFooter,

@@ -70,6 +70,7 @@ export function AppHeader({
                   variant="outline"
                   size="icon"
                   className="h-11 w-11 rounded-full"
+                  aria-label="Open navigation menu"
                   data-testid="app-header-mobile-menu"
                 >
                   <Menu className="h-4 w-4" />

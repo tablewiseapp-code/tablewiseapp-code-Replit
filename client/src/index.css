@@ -73,9 +73,81 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Prevent iOS auto-zoom on text controls. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  /* Ensure tap targets meet the 44px mobile minimum. */
+  button,
+  a[role="button"],
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    min-height: 44px;
+  }
+
+  /* Keep keyboard focus visible across the app. */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  input:focus-visible,
+  button:focus-visible,
+  a:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* WCAG AA contrast check: target 4.5:1 for normal text and 3:1 for large text. */
 }
 
 @layer utilities {
+  /* ===== TOUCH & INTERACTION ===== */
+  .touch-active {
+    @apply active:scale-95 active:opacity-80 transition-transform;
+  }
+
+  .no-touch-delay {
+    touch-action: manipulation;
+  }
+
+  .scroll-momentum {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .horizontal-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ===== SPACING ===== */
+  .page-padding-y {
+    @apply py-4 sm:py-6 lg:py-8;
+  }
+
+  /* ===== SIZING ===== */
+  .min-touch-target {
+    @apply min-h-11 min-w-11;
+  }
+
+  /* ===== VIEWPORT ===== */
+  .max-h-screen-dynamic {
+    max-height: 100dvh;
+  }
+
+  /* ===== TEXT SIZING ===== */
+  .text-readable-xs {
+    @apply text-xs sm:text-sm;
+  }
+
+  .text-readable-sm {
+    @apply text-sm sm:text-base;
+  }
+
   .app-container {
     width: 100%;
     margin-inline: auto;
@@ -99,15 +171,19 @@
   }
 
   .mobile-readable-xs {
-    font-size: 0.75rem;
-    line-height: 1.1rem;
+    font-size: clamp(0.8125rem, 1.5vw, 0.875rem);
   }
 
-  @media (max-width: 767px) {
-    .mobile-readable-xs {
-      font-size: 0.8125rem;
-      line-height: 1.25rem;
-    }
+  .mobile-readable-sm {
+    font-size: clamp(0.875rem, 2vw, 0.9375rem);
+  }
+
+  .image-fade-in {
+    @apply opacity-0 transition-opacity duration-500;
+  }
+
+  .image-fade-in.image-loaded {
+    @apply opacity-100;
   }
 
   .recipe-surface {

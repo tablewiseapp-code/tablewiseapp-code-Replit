@@ -707,14 +707,22 @@ export default function RecipeView() {
               <img
                 src={resultImage}
                 alt="Cooking result"
-                className="w-full h-auto max-h-[320px] object-cover rounded-xl"
+                className="image-fade-in w-full h-auto max-h-[320px] object-cover rounded-xl"
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 1024px) 100vw, 0px"
+                onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
                 data-testid="image-result-mobile"
               />
             ) : (
               <img
                 src={plovImage}
                 alt="Plov dish"
-                className="w-full h-auto max-h-[320px] object-cover rounded-xl"
+                className="image-fade-in w-full h-auto max-h-[320px] object-cover rounded-xl"
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 1024px) 100vw, 0px"
+                onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
                 data-testid="image-dish-placeholder-mobile"
               />
             )}
@@ -887,14 +895,22 @@ export default function RecipeView() {
             <img 
               src={resultImage}
               alt="Cooking result"
-              className="w-full h-auto max-h-[400px] object-cover rounded-xl"
+              className="image-fade-in w-full h-auto max-h-[400px] object-cover rounded-xl"
+              loading="lazy"
+              decoding="async"
+              sizes="(min-width: 1280px) 320px, 280px"
+              onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
               data-testid="image-result"
             />
           ) : (
             <img 
               src={plovImage}
               alt="Plov dish"
-              className="w-full h-auto max-h-[400px] object-cover rounded-xl"
+              className="image-fade-in w-full h-auto max-h-[400px] object-cover rounded-xl"
+              loading="lazy"
+              decoding="async"
+              sizes="(min-width: 1280px) 320px, 280px"
+              onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
               data-testid="image-dish-placeholder"
             />
           )}

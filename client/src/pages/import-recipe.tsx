@@ -387,11 +387,16 @@ export default function ImportRecipe() {
                 <img 
                   src={image} 
                   alt="Recipe preview" 
-                  className="w-32 h-32 object-cover rounded-lg border hairline"
+                  className="image-fade-in w-32 h-32 object-cover rounded-lg border hairline"
+                  loading="lazy"
+                  decoding="async"
+                  sizes="128px"
+                  onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
                   data-testid="img-preview"
                 />
                 <button
                   onClick={removeImage}
+                  aria-label="Remove recipe photo"
                   className="absolute -top-2 -right-2 w-11 h-11 bg-foreground text-background rounded-full flex items-center justify-center text-xs hover:bg-foreground/80"
                   data-testid="button-remove-photo"
                 >

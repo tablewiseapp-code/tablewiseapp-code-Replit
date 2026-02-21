@@ -66,7 +66,11 @@ export default function RecipeDetail() {
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="w-full h-44 sm:h-48 object-cover rounded-xl mb-6"
+            className="image-fade-in w-full h-44 sm:h-48 object-cover rounded-xl mb-6"
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 768px) 100vw, 768px"
+            onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
             data-testid="img-recipe-hero"
           />
         )}

@@ -57,7 +57,11 @@ export default function RecipeList() {
                     <img
                       src={recipe.image}
                       alt={recipe.title}
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+                      className="image-fade-in w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+                      loading="lazy"
+                      decoding="async"
+                      sizes="(max-width: 640px) 56px, 64px"
+                      onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
                       data-testid={`img-recipe-${recipe.id}`}
                     />
                   )}

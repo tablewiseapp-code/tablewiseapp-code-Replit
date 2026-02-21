@@ -255,6 +255,7 @@ function DroppableCell({
                   e.stopPropagation();
                   onRemove();
                 }}
+                aria-label={`Remove ${recipe.title} from ${meal}`}
                 className="text-muted-foreground hover:text-foreground text-xs min-h-11 min-w-11"
                 data-testid={`remove-${meal}-${day}`}
               >
@@ -761,7 +762,7 @@ export default function WeeklyMeals() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base sm:text-lg md:text-xl font-medium text-foreground">{t("meals.weeklyPlanTitle")}</h2>
                 {weekLocked && (
-                  <span className="text-xs text-[#7A9E7E] bg-[#7A9E7E]/10 px-2 py-1 rounded">
+                  <span className="text-readable-xs text-[#7A9E7E] bg-[#7A9E7E]/10 px-2 py-1 rounded">
                     {t("meals.lockedUnlockToEdit")}
                   </span>
                 )}
@@ -770,11 +771,11 @@ export default function WeeklyMeals() {
                 {weekLocked ? t("meals.weekFinalized") : t("meals.dragToSlots")}
               </p>
 
-              <div className="-mx-4 overflow-x-auto touch-pan-x px-4 sm:mx-0 sm:px-0 pb-2">
-                <div className="min-w-[680px] w-max">
+              <div className="overflow-x-auto scroll-momentum -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">
+                <div className="min-w-min w-max">
                   <div className="grid grid-cols-7 gap-2 mb-2">
                     {DAYS.map((day, i) => (
-                      <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                      <div key={day} className="text-center text-readable-xs font-medium text-muted-foreground py-2">
                         {dayNames[i]}
                       </div>
                     ))}
@@ -782,7 +783,7 @@ export default function WeeklyMeals() {
 
                   {MEALS.map(meal => (
                     <div key={meal} className="mb-4">
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{mealNames[meal]}</div>
+                      <div className="text-readable-xs uppercase tracking-wide text-muted-foreground mb-2">{mealNames[meal]}</div>
                       <div className="grid grid-cols-7 gap-2">
                         {DAYS.map((_, dayIndex) => {
                           const assignment = getAssignmentForCell(meal, dayIndex);
@@ -1146,7 +1147,13 @@ export default function WeeklyMeals() {
                       {state.filters.mustInclude.map(ing => (
                         <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
                           {ing}
-                          <button onClick={() => removeIncludeIngredient(ing)} className="text-muted-foreground hover:text-foreground">Ã—</button>
+                          <button
+                            onClick={() => removeIncludeIngredient(ing)}
+                            aria-label={`Remove ${ing} from must include`}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            Ã—
+                          </button>
                         </span>
                       ))}
                     </div>
@@ -1167,7 +1174,13 @@ export default function WeeklyMeals() {
                       {state.filters.mustExclude.map(ing => (
                         <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
                           {ing}
-                          <button onClick={() => removeExcludeIngredient(ing)} className="text-muted-foreground hover:text-foreground">Ã—</button>
+                          <button
+                            onClick={() => removeExcludeIngredient(ing)}
+                            aria-label={`Remove ${ing} from must exclude`}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            Ã—
+                          </button>
                         </span>
                       ))}
                     </div>
@@ -1239,6 +1252,7 @@ export default function WeeklyMeals() {
                         </div>
                         <button
                           onClick={() => toggleSelection(recipe.id)}
+                          aria-label={`Remove ${recipe.title} from selected recipes`}
                           className="text-xs min-h-11 text-muted-foreground hover:text-foreground flex-shrink-0 px-2 py-1 rounded hover:bg-foreground/5"
                           data-testid={`remove-selected-${recipe.id}`}
                         >
@@ -1378,9 +1392,9 @@ export default function WeeklyMeals() {
             </div>
 
             <footer className="mt-12 pt-6 border-t hairline text-center">
-              <p className="text-xs text-muted-foreground">Built for families - no ads, no sponsored meals.</p>
-              <p className="text-xs text-muted-foreground mt-1">v0.1 prototype</p>
-              <p className="text-xs text-muted-foreground mt-1">Tablewise | Calm weekly planning</p>
+              <p className="text-readable-xs text-muted-foreground">Built for families - no ads, no sponsored meals.</p>
+              <p className="text-readable-xs text-muted-foreground mt-1">v0.1 prototype</p>
+              <p className="text-readable-xs text-muted-foreground mt-1">Tablewise | Calm weekly planning</p>
             </footer>
           </main>
         </div>
