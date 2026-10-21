@@ -12,3 +12,7 @@ externalPort = 80
 
 [nix]
 packages = ["vim"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 240000
