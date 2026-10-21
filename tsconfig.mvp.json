@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["client/src/**/*", "shared/schema.ts", "script/test-mvp-grocery.ts", "script/test-mvp-browser.ts"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": { "incremental": false, "target": "ES2022" }
+}

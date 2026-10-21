@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation, Link } from "wouter";
+import { Switch, Route, useLocation, useSearch, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,7 +7,8 @@ import { I18nProvider, useI18n, LANGUAGES } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import RecipeView from "@/pages/recipe-view";
-import MainPage from "@/pages/main";
+import MvpPlanner from "@/pages/mvp-planner";
+import MvpGrocery from "@/pages/mvp-grocery";
 import RecipeList from "@/pages/recipe-list";
 import RecipeDetail from "@/pages/recipe-detail";
 import WeeklyMeals from "@/pages/weekly-meals";
@@ -17,12 +18,17 @@ import NotFound from "@/pages/not-found";
 import { useState, useRef, useEffect } from "react";
 
 const NAV_KEYS = [
+  { path: "/plan", key: "nav.dinnerPlan" },
   { path: "/recipe-view", key: "nav.recipeView" },
   { path: "/recipes", key: "nav.myRecipes" },
   { path: "/meals", key: "nav.weeklyMeals" },
   { path: "/import", key: "nav.importRecipe" },
   { path: "/grocery-list", key: "nav.groceryList" },
 ];
+
+function GroceryEntry() {
+  return new URLSearchParams(useSearch()).get("source") === "mvp" ? <MvpGrocery /> : <GroceryList />;
+}
 
 function LanguageSelector() {
   const { lang, setLang } = useI18n();
@@ -169,13 +175,14 @@ function DevNav() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={MainPage}/>
+      <Route path="/" component={MvpPlanner}/>
+      <Route path="/plan" component={MvpPlanner}/>
       <Route path="/recipe-view" component={RecipeView}/>
       <Route path="/recipes" component={RecipeList}/>
       <Route path="/recipe/:id" component={RecipeDetail}/>
       <Route path="/meals" component={WeeklyMeals}/>
       <Route path="/import" component={ImportRecipe}/>
-      <Route path="/grocery-list" component={GroceryList}/>
+      <Route path="/grocery-list" component={GroceryEntry}/>
       <Route component={NotFound} />
     </Switch>
   );

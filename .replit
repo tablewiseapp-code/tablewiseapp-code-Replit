@@ -16,3 +16,27 @@ packages = ["vim"]
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 240000
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "TableWise isolated preview"
+
+[[workflows.workflow]]
+name = "TableWise isolated preview"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:test-catalog -- --test-socket /tmp/tablewise-phase2-pilot/socket"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"

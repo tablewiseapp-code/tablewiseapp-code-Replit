@@ -1,0 +1,100 @@
+Phase 3 conditionally approved. Proceed with **Phase 4 — Grocery List Integration**.
+
+The goal is to complete the core MVP customer journey:
+
+**Choose three dinners → Assign them to days → Confirm the weekly plan → Generate a grocery list.**
+
+### 1. Before implementation
+
+Review `docs/phase-3-planner.md` and inspect the actual Phase 3 implementation.
+
+Confirm the data contract for the new week-specific planner state.
+
+Do not assume that the new planner uses the legacy `weeklyMealsState` structure.
+
+Also investigate why the real recipe catalog is empty.
+
+Do not seed or modify any database without first verifying that it is an approved development or test environment.
+
+If Phase 2 seed data is missing, explain why and report the exact safe steps needed to populate the catalog.
+
+### 2. Grocery-list integration
+
+Connect the existing grocery-list functionality to the new MVP planner.
+
+Requirements:
+
+- Read the confirmed plan for the selected calendar week.
+- Retrieve the corresponding recipes from the existing backend.
+- Include ingredients from those three recipes only.
+- Group ingredients into understandable categories.
+- Preserve ingredient quantities and units.
+- Never silently discard duplicate ingredient quantities.
+- Combine quantities only when units and ingredient identities can be matched safely.
+- Otherwise, keep separate entries.
+- Allow customers to check off grocery items.
+- Persist checkmarks for the selected week.
+- Update the grocery list when a recipe is replaced.
+- Handle deleted or unavailable recipes without corrupting saved plans.
+- Handle API failures without clearing the customer's existing selections.
+
+Reuse existing grocery logic where practical.
+
+### 3. User experience
+
+After confirming three dinners, provide an obvious action:
+
+**View Grocery List**
+
+The grocery page should display the selected week's ingredients and allow customers to return to the planner.
+
+Keep the interface simple and mobile-friendly.
+
+Preserve existing language support, including Hebrew RTL.
+
+### 4. Testing
+
+Verify:
+
+1. Three dinners generate the correct ingredients.
+2. Unrelated recipes are excluded.
+3. Duplicate ingredients retain correct quantities.
+4. Different measurement units are not incorrectly merged.
+5. Replacing a dinner updates the list.
+6. Refreshing preserves the plan and appropriate grocery checkmarks.
+7. A missing recipe is handled safely.
+8. API outages do not erase plans.
+9. The advanced planner still works.
+10. Mobile and RTL layouts work.
+
+Run the relevant tests, focused TypeScript checks, and production build.
+
+Clearly distinguish tests using fixtures from tests using actual PostgreSQL records.
+
+### 5. Scope restrictions
+
+Do not implement analytics yet.
+
+Do not introduce authentication, AI recommendations, pantry inventory, or grocery delivery integrations.
+
+Do not rewrite the advanced planner.
+
+Do not deploy or invite customers.
+
+Do not fix unrelated pre-existing TypeScript errors unless they block this phase.
+
+### 6. Completion report
+
+Create `docs/phase-4-grocery.md` containing:
+
+- Implementation summary
+- Files changed
+- Data flow between planner, recipes, and grocery list
+- Test results
+- Real-database verification status
+- Remaining bugs and security risks
+- Recommended next steps
+
+**Stop after Phase 4 and wait for my approval.**
+
+The MVP must be tested with real database-backed recipes before customer release.

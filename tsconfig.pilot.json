@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["server/index.ts", "server/routes.ts", "server/security.ts", "server/request-schemas.ts", "server/storage.ts", "shared/schema.ts", "script/test-pilot-security.ts", "script/test-pilot-startup.ts", "script/local-test-app.ts"],
+  "compilerOptions": { "incremental": false, "target": "ES2022" }
+}

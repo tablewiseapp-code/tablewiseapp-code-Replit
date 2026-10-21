@@ -1,13 +1,21 @@
 import "dotenv/config";
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertRecipeSchema } from "@shared/schema";
+import type { IStorage } from "./storage";
 import OpenAI, { toFile } from "openai";
+import { installPilotSecurity, pilotConfig, type PilotConfig } from "./security";
+import { recipeInput, recipePatch, recipeId, parseInput, audioInput } from "./request-schemas";
+import { analyticsBatchSchema, validEventTimes } from "../shared/pilot-analytics";
+import { pilotEventStore, AnalyticsCapacityError, type PilotEventStore } from "./pilot-analytics";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? process.env.OPEN_API_KEY,
-});
+export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "deleteRecipe">;
+export type RouteDependencies = {
+  storage?: RecipeStorage;
+  config?: PilotConfig;
+  ai?: () => OpenAI;
+  now?: () => number;
+  analytics?: Pick<PilotEventStore, "record" | "summary">;
+};
 
 function inferAudioFileExtension(mimeType?: string): "webm" | "mp3" | "mp4" | "wav" | "ogg" {
   if (!mimeType) return "webm";
@@ -23,6 +31,7 @@ function inferAudioFileExtension(mimeType?: string): "webm" | "mp3" | "mp4" | "w
 }
 
 async function verifyTranscriptText(
+  openai: OpenAI,
   transcript: string,
   language?: string,
 ): Promise<string> {
@@ -31,6 +40,7 @@ async function verifyTranscriptText(
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0,
+    max_completion_tokens: 2048,
     messages: [
       {
         role: "system",
@@ -54,14 +64,60 @@ async function verifyTranscriptText(
 
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  app: Express,
+  dependencies: RouteDependencies = {},
 ): Promise<Server> {
+  const security = installPilotSecurity(app, dependencies.config ?? pilotConfig(), dependencies.now);
+  const storage = dependencies.storage ?? (await import("./storage")).storage;
+  let client: OpenAI | undefined;
+  const getAI = () => {
+    if (dependencies.ai) return dependencies.ai();
+    const apiKey = process.env.OPENAI_API_KEY ?? process.env.OPEN_API_KEY;
+    if (!apiKey) throw new Error("AI is not configured");
+    return client ??= new OpenAI({ apiKey, timeout: 20_000, maxRetries: 0 });
+  };
+  app.use("/api", (req, res, next) => {
+    if (["POST", "PATCH", "PUT"].includes(req.method) && !req.is("application/json")) {
+      return res.status(415).json({ error: "Use application/json." });
+    }
+    if (/^\/transcribe-audio\/?$/i.test(req.path)) return next();
+    if (/^\/analytics\/events\/?$/i.test(req.path)) return express.json({ limit: "16kb", inflate: false })(req, res, next);
+    express.json({ limit: "64kb", inflate: false })(req, res, next);
+  });
+  const analytics = dependencies.analytics ?? pilotEventStore;
+  app.post("/api/analytics/events", async (req, res) => {
+    const parsed = analyticsBatchSchema.safeParse(req.body);
+    if (!parsed.success || !validEventTimes(parsed.data, (dependencies.now ?? Date.now)())) {
+      return res.status(400).json({ error: "Invalid pilot event batch." });
+    }
+    if (!security.analyticsPilotPermit(parsed.data.pilotId, res)) return;
+    try {
+      await analytics.record(parsed.data);
+      res.status(204).end();
+    } catch (error) {
+      console.error("api_failure operation=pilot_event_write");
+      res.status(error instanceof AnalyticsCapacityError ? 503 : 500).json({ error: "Pilot analytics is unavailable." });
+    }
+  });
+  app.get("/api/analytics/summary", async (_req, res) => {
+    try { res.json(await analytics.summary()); }
+    catch {
+      console.error("api_failure operation=pilot_summary");
+      res.status(503).json({ error: "Pilot analytics is unavailable." });
+    }
+  });
+  app.use("/api/recipes/:id", (req, res, next) => {
+    if (!recipeId.safeParse(req.params.id).success) {
+      return res.status(400).json({ error: "Invalid recipe identifier." });
+    }
+    next();
+  });
   app.get("/api/recipes", async (_req, res) => {
     try {
       const recipes = await storage.getAllRecipes();
       res.json(recipes);
     } catch (error: any) {
-      console.error("Error fetching recipes:", error);
+      console.error("api_failure operation=recipe_list");
       res.status(500).json({ error: "Failed to fetch recipes" });
     }
   });
@@ -74,20 +130,20 @@ export async function registerRoutes(
       }
       res.json(recipe);
     } catch (error: any) {
-      console.error("Error fetching recipe:", error);
+      console.error("api_failure operation=recipe_get");
       res.status(500).json({ error: "Failed to fetch recipe" });
     }
   });
 
   app.post("/api/recipes", async (req, res) => {
     try {
-      const parsed = insertRecipeSchema.parse(req.body);
+      const parsed = recipeInput.parse(req.body);
       const recipe = await storage.createRecipe(parsed);
       res.status(201).json(recipe);
     } catch (error: any) {
-      console.error("Error creating recipe:", error);
+      console.error("api_failure operation=recipe_create");
       if (error.name === "ZodError") {
-        return res.status(400).json({ error: "Invalid recipe data", details: error.errors });
+        return res.status(400).json({ error: "Invalid recipe data" });
       }
       res.status(500).json({ error: "Failed to create recipe" });
     }
@@ -95,13 +151,15 @@ export async function registerRoutes(
 
   app.patch("/api/recipes/:id", async (req, res) => {
     try {
-      const recipe = await storage.updateRecipe(req.params.id, req.body);
+      const data = recipePatch.safeParse(req.body);
+      if (!data.success) return res.status(400).json({ error: "Invalid recipe data" });
+      const recipe = await storage.updateRecipe(req.params.id, data.data);
       if (!recipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
       res.json(recipe);
     } catch (error: any) {
-      console.error("Error updating recipe:", error);
+      console.error("api_failure operation=recipe_update");
       res.status(500).json({ error: "Failed to update recipe" });
     }
   });
@@ -114,19 +172,16 @@ export async function registerRoutes(
       }
       res.json({ success: true });
     } catch (error: any) {
-      console.error("Error deleting recipe:", error);
+      console.error("api_failure operation=recipe_delete");
       res.status(500).json({ error: "Failed to delete recipe" });
     }
   });
 
-  app.post("/api/transcribe-audio", async (req, res) => {
+  app.post("/api/transcribe-audio", express.json({ limit: "6mb", inflate: false }), security.aiPermit, async (req, res) => {
     try {
-      const { audio, mimeType, language, verifyText } = req.body ?? {};
-
-      if (!audio || typeof audio !== "string") {
-        return res.status(400).json({ error: "Audio data is required" });
-      }
-
+      const input = audioInput.safeParse(req.body);
+      if (!input.success) return res.status(400).json({ error: "Invalid audio input." });
+      const { audio, mimeType, language, verifyText } = input.data;
       const audioBuffer = Buffer.from(audio, "base64");
       if (!audioBuffer.length) {
         return res.status(400).json({ error: "Audio data is invalid" });
@@ -134,6 +189,7 @@ export async function registerRoutes(
 
       const fileExt = inferAudioFileExtension(mimeType);
       const file = await toFile(audioBuffer, `dictation.${fileExt}`);
+      const openai = getAI();
       const response = await openai.audio.transcriptions.create({
         model: "gpt-4o-mini-transcribe",
         file,
@@ -141,6 +197,7 @@ export async function registerRoutes(
       });
 
       const rawTranscript = (response.text ?? "").trim();
+      if (rawTranscript.length > 12000) return res.status(502).json({ error: "Transcript exceeds supported length." });
       const shouldVerify = verifyText !== false;
 
       if (!rawTranscript || !shouldVerify) {
@@ -150,29 +207,30 @@ export async function registerRoutes(
       let transcript = rawTranscript;
       try {
         transcript = await verifyTranscriptText(
+          openai,
           rawTranscript,
           typeof language === "string" ? language : undefined,
         );
       } catch (verificationError: any) {
         // Fallback to the original transcript if cleanup fails.
-        console.error("Error verifying transcript text:", verificationError);
+        console.error("api_failure operation=transcript_verify");
       }
 
       res.json({ transcript, rawTranscript });
     } catch (error: any) {
-      console.error("Error transcribing audio:", error);
-      res.status(500).json({ error: error.message || "Failed to transcribe audio" });
+      console.error("api_failure operation=audio_transcribe");
+      res.status(502).json({ error: "Failed to transcribe audio" });
+    } finally {
+      res.locals.releaseAI();
     }
   });
 
-  app.post("/api/parse-recipe", async (req, res) => {
+  app.post("/api/parse-recipe", security.aiPermit, async (req, res) => {
     try {
-      const { transcript } = req.body;
-
-      if (!transcript || typeof transcript !== "string" || transcript.trim().length === 0) {
-        return res.status(400).json({ error: "Transcript text is required" });
-      }
-
+      const input = parseInput.safeParse(req.body);
+      if (!input.success) return res.status(400).json({ error: "Invalid transcript text." });
+      const { transcript } = input.data;
+      const openai = getAI();
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -218,12 +276,17 @@ Rules:
       } catch {
         return res.status(500).json({ error: "AI returned invalid format. Please try again." });
       }
-      res.json(parsed);
+      const output = recipeInput.safeParse(parsed);
+      if (!output.success) return res.status(502).json({ error: "AI returned an invalid recipe." });
+      res.json(output.data);
     } catch (error: any) {
-      console.error("Error parsing recipe:", error);
-      res.status(500).json({ error: error.message || "Failed to parse recipe" });
+      console.error("api_failure operation=recipe_parse");
+      res.status(502).json({ error: "Failed to parse recipe" });
+    } finally {
+      res.locals.releaseAI();
     }
   });
 
+  app.use("/api", (_req, res) => res.status(404).json({ error: "API route not found." }));
   return httpServer;
 }

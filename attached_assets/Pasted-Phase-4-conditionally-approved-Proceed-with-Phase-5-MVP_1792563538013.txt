@@ -1,0 +1,84 @@
+Phase 4 conditionally approved. Proceed with **Phase 5 — MVP Analytics and Return Measurement**.
+
+Our primary Lean Startup hypothesis is:
+
+Customers who use Tablewise to plan dinners will find it valuable enough to return and plan another week.
+
+The objective of Phase 5 is to measure this behavior with minimal implementation complexity.
+
+**1. Review existing implementation**
+
+Read `docs/phase-3-planner.md` and `docs/phase-4-grocery.md`.
+
+Inspect the actual week-specific planner state and grocery integration before changing anything.
+
+**2. Anonymous pilot identification**
+
+Create a persistent anonymous pilot ID per browser.
+
+Do not introduce accounts or collect names, emails, IP addresses, or unnecessary personal information.
+
+**3. Track five events**
+
+- `planner_opened`
+- `meal_selected`
+- `plan_completed`
+- `grocery_list_opened`
+- `next_week_plan_created`
+
+Store the event name, anonymous pilot ID, timestamp, calendar-week identifier, and only essential metadata.
+
+Ensure events are not incorrectly duplicated by React rerenders, refreshes, or retries.
+
+**4. Return behavior**
+
+Ensure customers can create a plan for a later calendar week without losing previous plans.
+
+Define `next_week_plan_created` as a completed plan in a later calendar week than that browser's first completed plan.
+
+Do not count opening the application or editing the same week's plan as a return conversion.
+
+**5. Analytics storage**
+
+Use a minimal PostgreSQL-backed event table.
+
+Validate incoming events and enforce reasonable payload limits.
+
+Event delivery must not block the planning experience.
+
+Provide a developer-only way to inspect aggregated results. Do not expose individual event records or unrestricted analytics endpoints publicly.
+
+**6. Security requirements**
+
+Before implementing analytics, review how the new endpoint will be protected against abuse.
+
+Do not rely on hidden frontend navigation for access control.
+
+Do not expose paid AI endpoints or unrestricted recipe mutation endpoints to public pilot customers.
+
+If safeguards are required before analytics can be implemented safely, explain them and implement the smallest necessary protections within the approved scope.
+
+**7. Verification**
+
+Test event creation, duplicate prevention, failed delivery, page refresh, week rollover, and repeat-week measurement.
+
+Run focused TypeScript checks, relevant tests, and the production build.
+
+Distinguish real PostgreSQL/API tests from fixture-based tests.
+
+**8. Restrictions**
+
+- Do not introduce a third-party analytics platform.
+- Do not implement user accounts.
+- Do not redesign the planner or grocery list.
+- Do not add new customer-facing features.
+- Do not deploy or invite customers.
+- Do not modify production data without explicit approval.
+
+**9. Completion report**
+
+Create `docs/phase-5-analytics.md`.
+
+Include changed files, event definitions, persistence strategy, security measures, test results, and remaining pilot-release blockers.
+
+Stop after Phase 5 and wait for approval.

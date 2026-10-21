@@ -7,8 +7,8 @@ Implement one approved MVP phase at a time, report its results, then stop for
 separate approval. Approval to implement a phase is not permission to deploy,
 modify production data, or invite external test customers.
 
-**Why:** The user explicitly approved only the recipe catalog phase and required
-separate later-phase, deployment, and customer-testing gates.
+**Why:** The user requires separate approval for each MVP phase, deployment,
+and customer testing; implementation approval does not imply any of the others.
 
 **How to apply:** Before any seed or database-writing test, establish and report
 isolation using non-secret provisioning/configuration evidence, not database
