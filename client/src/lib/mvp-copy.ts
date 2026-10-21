@@ -11,7 +11,7 @@ const copy = {
     recipes: "Recipes",
     dinnersSelected: "{count} of 3 dinners chosen",
     browseRecipes: "Choose a dinner",
-    selectedDinners: "Choose when you want to cook these dishes",
+    selectedDinners: "Choose when you want to eat each meal",
     chooseDay: "Choose an evening",
     unassigned: "Choose a day",
     remove: "Remove dinner",
