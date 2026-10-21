@@ -19,7 +19,7 @@ export const dinnerCatalog: DinnerSeed[] = [
     ],
   }),
   dinner("oven-baked-chicken", {
-    title: "Oven-baked chicken", cookTime: 50, servings: "4",
+    title: "Oven-baked chicken", prepTime: 10, cookTime: 50, servings: "4",
     ingredients: ["800 g boneless chicken thighs", "800 g potatoes, cut into 2 cm cubes", "400 g carrots, cut into 1 cm slices", "2 tbsp olive oil", "1 tsp paprika", "1 tsp dried thyme", "1 tsp salt", "0.5 tsp black pepper"],
     steps: [
       "Heat the oven to 220°C. Toss the potatoes and carrots with half the oil and half the salt on a large baking tray. Roast for 15 minutes.",

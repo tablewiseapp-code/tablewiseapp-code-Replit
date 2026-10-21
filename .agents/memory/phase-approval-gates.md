@@ -36,3 +36,13 @@ as pilot blockers, but unrelated hardening is outside the catalog phase.
 
 **How to apply:** Carry these requirements into later-phase approval discussions;
 do not call the catalog work a pilot-ready or complete MVP.
+
+Public catalog approval is not limited to the twelve dinner test fixtures.
+
+**Why:** After an owner-run production review found three existing recipes and
+no reviewed seed matches, the user explicitly approved public reading of those
+three existing recipes.
+
+**How to apply:** Do not replace or delete production recipes merely because
+they are not test fixtures. Keep that public-read approval separate from
+permission to seed, edit, delete, enable paid AI, or invite pilot customers.

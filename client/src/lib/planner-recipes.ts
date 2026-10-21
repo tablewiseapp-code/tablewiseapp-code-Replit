@@ -1,12 +1,17 @@
 import type { Recipe as StoredRecipe } from "@/lib/storage";
+import { recipeToolKeys, type RecipeToolKey } from "./recipe-tools";
 
 export type PlannerRecipe = {
   id: string;
   title: string;
   minutes: number;
+  prepTime?: number | null;
+  cookTime?: number | null;
+  servings?: string | null;
   mealType: string;
   tags: string[];
   tools: string[];
+  equipment?: RecipeToolKey[];
   sourceType: string;
   proteinType: string;
   servingsRange: string;
@@ -99,9 +104,13 @@ export function toPlannerRecipe(recipe: StoredRecipe): PlannerRecipe {
     id: recipe.id,
     title: recipe.title,
     minutes: inferMinutes(recipe),
+    prepTime: recipe.prepTime ?? null,
+    cookTime: recipe.cookTime ?? null,
+    servings: recipe.servings ?? null,
     mealType: inferMealType(recipe),
     tags: (recipe.tags ?? []).map(normalizeTag),
     tools: inferTools(recipe.steps),
+    equipment: recipeToolKeys(recipe.steps),
     sourceType: inferSourceType(recipe),
     proteinType: inferProteinType(recipe.ingredients),
     servingsRange: inferServingsRange(recipe.servings),

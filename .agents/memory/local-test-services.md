@@ -24,6 +24,15 @@ data/socket directories despite the earlier successful verification.
 authorized isolated test target, verify/report it before restoring reviewed
 fixtures, and never use the configured database as a substitute.
 
+Recheck recent source edits after a workspace restart, too.
+
+**Why:** After one restart, an earlier successful multi-file patch was absent
+while later frontend changes remained, leaving the feature only partly wired.
+
+**How to apply:** Verify the intended changes with targeted searches before
+continuing. Reapply only missing changes, rather than assuming all edits either
+survived or disappeared.
+
 Installed skill instructions do not guarantee that every documented testing
 service is available in this workspace.
 
@@ -35,3 +44,14 @@ through that attempted call.
 capabilities if needed, or use the available local Chromium with the existing
 WebSocket dependency for direct browser checks. Keep its temporary profile
 separate from user browser state.
+
+CDP condition checks must return simple values and wait for the new document
+after navigation or reload.
+
+**Why:** Returning a React DOM node by value caused an “Object reference chain
+is too long” serialization error. Checking an existing DOM marker immediately
+after reload could also inspect the old document rather than the new one.
+
+**How to apply:** Return booleans or specific text/attributes, await a page-load
+signal before checking the new page, and bound browser-tab cleanup requests so
+failed interaction tests cannot hang indefinitely while closing.

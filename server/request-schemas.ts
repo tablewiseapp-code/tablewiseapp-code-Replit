@@ -15,6 +15,7 @@ export const recipeInput = z.object({
   image: safeURL.nullable().optional(),
   sourceUrl: safeURL.nullable().optional(),
   cookTime: z.number().int().min(0).max(10080).nullable().optional(),
+  prepTime: z.number().int().min(0).max(10080).nullable().optional(),
   servings: z.string().trim().min(1).max(40).nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(50)).max(20).nullable().optional(),
 }).strict();

@@ -25,11 +25,14 @@ export const recipes = pgTable("recipes", {
   image: text("image"),
   sourceUrl: text("source_url"),
   cookTime: integer("cook_time"),
+  prepTime: integer("prep_time"),
   servings: text("servings"),
   tags: text("tags").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, table => [
+  check("recipes_prep_time_check", sql`${table.prepTime} IS NULL OR ${table.prepTime} BETWEEN 0 AND 10080`),
+]);
 
 export const insertRecipeSchema = createInsertSchema(recipes).omit({
   id: true,
@@ -38,7 +41,8 @@ export const insertRecipeSchema = createInsertSchema(recipes).omit({
 });
 
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
-export type Recipe = typeof recipes.$inferSelect;
+// Optional for compatibility with recipes created before preparation-time metadata.
+export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime"> & { prepTime?: number | null };
 
 // Telemetry contains no names, email, IP, user agent, referrer, or recipe text.
 export const pilotEvents = pgTable("pilot_events", {

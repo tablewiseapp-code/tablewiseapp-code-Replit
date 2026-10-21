@@ -23,6 +23,10 @@
     "analytics:summary": "tsx script/pilot-summary.ts",
     "test:mvp": "tsx script/test-mvp-grocery.ts",
     "test:mvp-browser": "tsx script/test-mvp-browser.ts",
+    "test:recipe-timing": "tsx script/test-recipe-timing.ts",
+    "test:meals-timing": "tsx script/test-meals-timing.ts",
+    "test:meals-timing-browser": "tsx script/test-meals-timing-browser.ts",
+    "timing:setup:local": "tsx script/setup-local-preparation-time.ts",
     "dev:test-catalog": "tsx script/local-test-app.ts",
     "db:push": "drizzle-kit push"
   },

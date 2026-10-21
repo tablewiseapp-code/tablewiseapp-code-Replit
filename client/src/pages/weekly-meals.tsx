@@ -11,6 +11,9 @@ import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
 import { fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
+import { MealRecipeFacts, RecipeTimeProvider, RecipeTimeToggle, useRecipeTime } from "@/components/recipe-time-display";
+import { recipeStageMinutes } from "@/lib/recipe-time";
+import { useMvpCopy } from "@/lib/mvp-copy";
 
 type Recipe = PlannerRecipe;
 
@@ -101,7 +104,6 @@ function getMonogram(title: string): string {
 }
 
 function DraggableRecipe({ recipe, meta, isInPlan, disabled }: { recipe: Recipe; meta: RecipeUserMeta; isInPlan: boolean; disabled: boolean }) {
-  const { t } = useI18n();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `recipe-${recipe.id}`,
     data: { recipe },
@@ -121,7 +123,7 @@ function DraggableRecipe({ recipe, meta, isInPlan, disabled }: { recipe: Recipe;
         {meta.isMyPick && <span className="text-[10px] text-yellow-500">*</span>}
       </div>
       <div className="flex items-center justify-between mt-1">
-        <p className="text-[10px] text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</p>
+        <MealRecipeFacts recipe={recipe} context="suggestion" compact />
         {meta.rating && (
           <div className="flex items-center gap-0.5">
             <span className="text-[10px] font-medium text-yellow-600">{meta.rating}</span>
@@ -148,7 +150,10 @@ function DraggableRecipeSmall({ recipe, meta, disabled }: { recipe: Recipe; meta
       className={`px-3 py-2 min-h-11 bg-[#FAFAF8] rounded-full border hairline flex items-center gap-2 ${disabled ? "opacity-75 cursor-default" : "cursor-grab"} ${isDragging ? "opacity-50" : ""}`}
       data-testid={`tray-recipe-${recipe.id}`}
     >
-      <span className="text-xs font-medium text-foreground truncate max-w-[120px]">{recipe.title}</span>
+      <div className="min-w-0">
+        <span className="block max-w-[180px] truncate text-xs font-medium text-foreground">{recipe.title}</span>
+        <MealRecipeFacts recipe={recipe} context="tray" compact />
+      </div>
       {meta.isMyPick && <span className="text-[10px] text-yellow-500">★</span>}
     </div>
   );
@@ -230,7 +235,7 @@ function DroppableCell({
             )}
           </div>
           <div className="flex items-center justify-between mt-1">
-            <p className="text-[10px] text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</p>
+            <MealRecipeFacts recipe={recipe} context={`plan-${meal}-${day}`} compact />
             {recipeMeta?.rating && (
               <span className="text-[10px] text-yellow-600 font-medium">★ {recipeMeta.rating}</span>
             )}
@@ -279,8 +284,14 @@ function DroppableCell({
 }
 
 export default function WeeklyMeals() {
+  return <RecipeTimeProvider><WeeklyMealsContent /></RecipeTimeProvider>;
+}
+
+function WeeklyMealsContent() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
+  const { t: timeCopy } = useMvpCopy();
+  const { mode: timeMode } = useRecipeTime();
   const [state, setState] = useState<WeeklyMealsState>(loadState);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
@@ -478,7 +489,10 @@ export default function WeeklyMeals() {
   const filterRecipes = (): Recipe[] => {
     return recipes.filter(recipe => {
       const meta = getMeta(recipe.id);
-      if (state.filters.maxMinutes !== null && recipe.minutes > state.filters.maxMinutes) return false;
+      if (state.filters.maxMinutes !== null) {
+        const minutes = recipeStageMinutes(recipe, timeMode);
+        if (minutes === null || minutes > state.filters.maxMinutes) return false;
+      }
       if (state.filters.dietary.length > 0) {
         const hasDietary = state.filters.dietary.every(d => {
           if (d === "Vegetarian") return recipe.tags.includes("vegetarian");
@@ -808,6 +822,7 @@ export default function WeeklyMeals() {
           />
 
           <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
+            <RecipeTimeToggle />
             <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
               <aside className="hidden lg:block w-[220px] flex-shrink-0">
                 {planSidebarContent}
@@ -902,7 +917,7 @@ export default function WeeklyMeals() {
             {activeRecipe && (
               <div className="p-3 bg-[#FAFAF8] rounded-lg border border-[#7A9E7E] shadow-lg">
                 <p className="text-xs font-medium text-foreground">{activeRecipe.title}</p>
-                <p className="text-[10px] text-muted-foreground">{t("meals.min", { count: activeRecipe.minutes })}</p>
+                <MealRecipeFacts recipe={activeRecipe} context="drag" compact />
               </div>
             )}
           </DragOverlay>
@@ -941,6 +956,7 @@ export default function WeeklyMeals() {
       />
 
       <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
+        <RecipeTimeToggle />
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           
           <aside className="w-full lg:w-[240px] lg:flex-shrink-0">
@@ -964,7 +980,7 @@ export default function WeeklyMeals() {
                   className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-time"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.maxMinutes")}</span>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.maxMinutes")} · {timeCopy(timeMode)}</span>
                   <span className="text-xs text-muted-foreground">{state.expandedSections.includes("time") ? "-" : "+"}</span>
                 </button>
                 {state.expandedSections.includes("time") && (
@@ -1323,7 +1339,7 @@ export default function WeeklyMeals() {
                         <div className="flex-1 min-w-0">
                           <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="mobile-readable-xs text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</span>
+                            <MealRecipeFacts recipe={recipe} context="selected" />
                             {displayTags.slice(0, 3).map(tag => (
                               <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground">{tag}</span>
                             ))}
@@ -1401,7 +1417,7 @@ export default function WeeklyMeals() {
                         </div>
 
                       <div className="flex flex-wrap gap-1.5 mb-3">
-                        <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{t("meals.min", { count: recipe.minutes })}</span>
+                        <MealRecipeFacts recipe={recipe} context="catalog" />
                         <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.mealType}</span>
                         {displayTags.map(tag => (
                           <span key={tag} className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{tag}</span>
@@ -1416,17 +1432,9 @@ export default function WeeklyMeals() {
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-0.5 text-[10px] bg-foreground/5 rounded text-muted-foreground">{recipe.proteinType.toLowerCase()}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">Tools: {recipe.tools.join(", ").toLowerCase()}</p>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => setLocation(`/recipe/${recipe.id}`)}
-                            className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full bg-[#7A9E7E] text-white hover:bg-[#6B8E6F]"
-                            data-testid={`button-open-${recipe.id}`}
-                          >
-                          {t("recipe.openRecipe")}
-                        </button>
                         <button
                           onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
                           className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"

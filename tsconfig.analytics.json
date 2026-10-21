@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "include": ["client/src/**/*", "shared/**/*", "server/index.ts", "server/routes.ts", "server/security.ts",
-    "server/pilot-analytics.ts", "server/storage.ts", "script/test-pilot-analytics*.ts", "script/test-mvp-browser.ts", "script/setup-local-analytics.ts", "script/pilot-summary.ts"],
+    "server/pilot-analytics.ts", "server/storage.ts", "script/test-pilot-analytics*.ts", "script/test-mvp-browser.ts", "script/setup-local-analytics.ts", "script/pilot-summary.ts",
+    "script/test-recipe-timing.ts", "script/test-meals-timing*.ts", "script/setup-local-preparation-time.ts"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": { "incremental": false, "target": "ES2022" }
 }

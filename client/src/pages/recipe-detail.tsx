@@ -1,21 +1,33 @@
 import { useEffect, useState } from "react";
 import { useRoute, useLocation, Link } from "wouter";
-import { fetchRecipe, deleteRecipe, type Recipe } from "@/lib/storage";
+import { fetchRecipe, deleteRecipe, updateRecipe, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
+import { useMvpCopy } from "@/lib/mvp-copy";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
+  const { t: timingCopy } = useMvpCopy();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/recipe/:id");
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [prepTime, setPrepTime] = useState("");
+  const [cookTime, setCookTime] = useState("");
+  const [savingTimes, setSavingTimes] = useState(false);
+  const [timingStatus, setTimingStatus] = useState<"saved" | "error" | null>(null);
 
   useEffect(() => {
     if (!params?.id) return;
     fetchRecipe(params.id)
-      .then(setRecipe)
+      .then(value => {
+        setRecipe(value);
+        setPrepTime(value.prepTime == null ? "" : String(value.prepTime));
+        setCookTime(value.cookTime == null ? "" : String(value.cookTime));
+      })
       .catch(() => setError("Recipe not found"))
       .finally(() => setLoading(false));
   }, [params?.id]);
@@ -80,8 +92,11 @@ export default function RecipeDetail() {
         </h1>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mobile-readable-xs text-muted-foreground mb-6">
-          {recipe.cookTime && (
-            <span data-testid="text-cook-time">{recipe.cookTime} min</span>
+          {recipe.prepTime != null && (
+            <span data-testid="text-prep-time">{timingCopy("preparation")}: {recipe.prepTime} {timingCopy("minutesShort")}</span>
+          )}
+          {recipe.cookTime != null && (
+            <span data-testid="text-cook-time">{timingCopy("cooking")}: {recipe.cookTime} {timingCopy("minutesShort")}</span>
           )}
           {recipe.servings && (
             <span data-testid="text-servings">{recipe.servings} {t("recipe.servings") || "servings"}</span>
@@ -98,6 +113,54 @@ export default function RecipeDetail() {
             </a>
           )}
         </div>
+
+        <details className="mb-6 rounded-xl border hairline p-4">
+          <summary className="cursor-pointer text-sm font-medium">{timingCopy("editTiming")}</summary>
+          <form className="mt-4 space-y-3" onSubmit={async event => {
+            event.preventDefault();
+            if (savingTimes) return;
+            setSavingTimes(true);
+            setTimingStatus(null);
+            try {
+              const updated = await updateRecipe(recipe.id, {
+                prepTime: prepTime.trim() === "" ? null : Number(prepTime),
+                cookTime: cookTime.trim() === "" ? null : Number(cookTime),
+              });
+              setRecipe(updated);
+              await queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+              setTimingStatus("saved");
+            } catch {
+              setTimingStatus("error");
+            } finally {
+              setSavingTimes(false);
+            }
+          }}>
+            <p className="text-xs text-muted-foreground">{timingCopy("timingHelp")}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1 text-sm">
+                <span>{timingCopy("preparation")} ({timingCopy("minutesLabel")})</span>
+                <input type="number" min="0" max="10080" step="1" value={prepTime}
+                  onChange={event => { setPrepTime(event.target.value); setTimingStatus(null); }}
+                  disabled={savingTimes} data-testid="input-prep-time"
+                  className="block min-h-11 w-full rounded-lg border bg-background px-3" />
+              </label>
+              <label className="space-y-1 text-sm">
+                <span>{timingCopy("cooking")} ({timingCopy("minutesLabel")})</span>
+                <input type="number" min="0" max="10080" step="1" value={cookTime}
+                  onChange={event => { setCookTime(event.target.value); setTimingStatus(null); }}
+                  disabled={savingTimes} data-testid="input-cooking-time"
+                  className="block min-h-11 w-full rounded-lg border bg-background px-3" />
+              </label>
+            </div>
+            <button type="submit" disabled={savingTimes} data-testid="button-save-times"
+              className="min-h-11 rounded-full bg-primary px-4 text-sm text-primary-foreground disabled:opacity-50">
+              {timingCopy("saveTiming")}
+            </button>
+            {timingStatus && <p role={timingStatus === "error" ? "alert" : "status"} className="text-sm">
+              {timingCopy(timingStatus === "error" ? "timingSaveFailed" : "timingSaved")}
+            </p>}
+          </form>
+        </details>
 
         {recipe.tags && recipe.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">

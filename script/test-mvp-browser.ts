@@ -115,13 +115,48 @@ async function main() {
     }
     await navigate(`/plan?week=${week}`);
     // Only this brand-new tab's weeks are modified; no user contexts touched.
-    await evaluate(`localStorage.setItem('tablewise_language','en'); localStorage.removeItem(${JSON.stringify(planStorage)}); localStorage.removeItem(${JSON.stringify(checkStorage)});`);
+    await evaluate(`localStorage.setItem('tablewise_language','en'); localStorage.setItem('tablewise:time-display:v1','cooking'); localStorage.removeItem(${JSON.stringify(planStorage)}); localStorage.removeItem(${JSON.stringify(checkStorage)});`);
     if (analyticsPool) {
       await evaluate(`localStorage.removeItem(${JSON.stringify(pilotJournalKey)}); localStorage.removeItem(${JSON.stringify(planKey("2026-10-26"))}); localStorage.removeItem(${JSON.stringify(checkKey("2026-10-26"))});`);
     }
     await reload();
     await wait(`${element(`mvp-choose-${recipes[0].id}`)} && !${element(`mvp-choose-${recipes[0].id}`)}.disabled`);
+    assert.equal(await evaluate(`${element("mvp-selected-heading")}.textContent`), "Choose when you want to cook these dishes");
+    for (const recipe of recipes) {
+      const facts = await evaluate(`${element(`mvp-catalog-facts-${recipe.id}`)}.textContent`) as string;
+      assert.ok(facts.includes(`Portions: ${recipe.servings}`));
+      assert.ok(facts.includes(recipe.prepTime == null || recipe.cookTime == null ? "Total time not specified" : `Total Time: ${recipe.prepTime + recipe.cookTime} min`));
+    }
     for (let i = 0; i < 3; i++) await click(`mvp-choose-${recipes[i].id}`);
+    for (const recipe of recipes.slice(0, 3)) {
+      const facts = await evaluate(`${element(`mvp-selected-facts-${recipe.id}`)}.textContent`) as string;
+      assert.ok(facts.includes(`Portions: ${recipe.servings}`));
+      assert.ok(facts.includes(recipe.prepTime == null || recipe.cookTime == null ? "Total time not specified" : `Total Time: ${recipe.prepTime + recipe.cookTime} min`));
+    }
+    console.log("PASS real API/browser: scheduling heading, actual portions and known/unknown total times appear beneath available and selected recipes.");
+    const beforeTimeToggle = await raw(planStorage);
+    await click("mvp-time-preparation");
+    assert.equal(await evaluate(`${element("mvp-time-preparation")}.getAttribute('aria-pressed')`), "true");
+    for (const recipe of recipes) {
+      const facts = await evaluate(`${element(`mvp-catalog-facts-${recipe.id}`)}.textContent`) as string;
+      assert.ok(facts.includes(recipe.prepTime == null ? "Preparation time not specified" : `Preparation: ${recipe.prepTime} min`));
+    }
+    for (const recipe of recipes.slice(0, 3)) {
+      const facts = await evaluate(`${element(`mvp-selected-facts-${recipe.id}`)}.textContent`) as string;
+      assert.ok(facts.includes(recipe.prepTime == null ? "Preparation time not specified" : `Preparation: ${recipe.prepTime} min`));
+    }
+    const chicken = recipes.find(recipe => recipe.id === "tablewise:dinner:v1:oven-baked-chicken")!;
+    assert.equal(chicken.prepTime, 10);
+    assert.equal(chicken.cookTime, 50);
+    assert.ok((await evaluate(`${element(`mvp-catalog-facts-${chicken.id}`)}.textContent`) as string).includes("Preparation: 10 min"));
+    assert.equal(await raw(planStorage), beforeTimeToggle);
+    await reload();
+    await wait(`${element(`mvp-catalog-facts-${chicken.id}`)}`);
+    assert.equal(await evaluate(`${element("mvp-time-preparation")}.getAttribute('aria-pressed')`), "true");
+    assert.equal(await raw(planStorage), beforeTimeToggle);
+    await click("mvp-time-total");
+    assert.ok((await evaluate(`${element(`mvp-catalog-facts-${chicken.id}`)}.textContent`) as string).includes("Total Time: 60 min"));
+    console.log("PASS real API/browser: preparation/total toggle updates catalog and selections, persists its preference, leaves plans unchanged, and shows chicken preparation 10 versus total 60.");
     assert.equal(await evaluate(`${element(`mvp-choose-${recipes[3].id}`)}.disabled`), true);
     for (let i = 0; i < 3; i++) await select(`mvp-day-${recipes[i].id}`, `2026-10-${19 + i}`);
     await click("mvp-confirm");

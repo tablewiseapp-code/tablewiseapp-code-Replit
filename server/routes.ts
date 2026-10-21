@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import type { IStorage } from "./storage";
+import { isMissingPreparationColumn } from "./storage";
 import OpenAI, { toFile } from "openai";
 import { installPilotSecurity, pilotConfig, type PilotConfig } from "./security";
 import { recipeInput, recipePatch, recipeId, parseInput, audioInput } from "./request-schemas";
@@ -142,6 +143,9 @@ export async function registerRoutes(
       res.status(201).json(recipe);
     } catch (error: any) {
       console.error("api_failure operation=recipe_create");
+      if (isMissingPreparationColumn(error)) {
+        return res.status(503).json({ error: "Recipe timing storage needs setup. No changes were saved." });
+      }
       if (error.name === "ZodError") {
         return res.status(400).json({ error: "Invalid recipe data" });
       }
@@ -160,6 +164,9 @@ export async function registerRoutes(
       res.json(recipe);
     } catch (error: any) {
       console.error("api_failure operation=recipe_update");
+      if (isMissingPreparationColumn(error)) {
+        return res.status(503).json({ error: "Recipe timing storage needs setup. No changes were saved." });
+      }
       res.status(500).json({ error: "Failed to update recipe" });
     }
   });

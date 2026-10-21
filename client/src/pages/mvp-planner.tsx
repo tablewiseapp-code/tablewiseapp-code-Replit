@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronDown, CircleHelp, Clock3, Leaf, Plus, RotateCcw, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronDown, CircleHelp, Clock3, Leaf, Plus, RotateCcw, Users, UtensilsCrossed } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { useRecipeCatalog, useWeekPlan } from "@/hooks/use-week-workspace";
@@ -8,12 +8,36 @@ import { addDays, assignDinner, canConfirm, confirmPlan, parseCalendarDate, plan
 import type { Recipe } from "@/lib/storage";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePilotPage } from "@/hooks/use-pilot-page";
+import { recipeStageMinutes, type RecipeTimeMode } from "@/lib/recipe-time";
 
 const buttonBase = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] disabled:cursor-not-allowed disabled:opacity-45";
 
 function localDate(value: string, locale: string, options: Intl.DateTimeFormatOptions) {
   const date = parseCalendarDate(value);
   return date ? new Intl.DateTimeFormat(locale, options).format(date) : value;
+}
+
+type TimeMode = RecipeTimeMode;
+
+function RecipeFacts({ recipe, context, timeMode }: { recipe: Recipe; context: "catalog" | "selected"; timeMode: TimeMode }) {
+  const { t } = useMvpCopy();
+  const portions = recipe.servings?.trim();
+  const minutes = recipeStageMinutes(recipe, timeMode);
+  const hasTime = minutes !== null;
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#798279]"
+      data-testid={`mvp-${context}-facts-${recipe.id}`}>
+      <span className="inline-flex items-center gap-1">
+        <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        {portions ? t("portions", { count: portions }) : t("portionsUnknown")}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <Clock3 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        {hasTime ? `${t(timeMode)}: ${minutes} ${t("minutesShort")}`
+          : t(timeMode === "preparation" ? "preparationTimeUnknown" : "totalTimeUnknown")}
+      </span>
+    </div>
+  );
 }
 
 function PlannerForWeek({ week }: { week: string }) {
@@ -23,6 +47,11 @@ function PlannerForWeek({ week }: { week: string }) {
   const workspace = useWeekPlan(week);
   const catalog = useRecipeCatalog();
   const [replacingId, setReplacingId] = useState<string | null>(null);
+  const [timeMode, setTimeMode] = useState<TimeMode>(() => {
+    try {
+      return localStorage.getItem("tablewise:time-display:v1") === "preparation" ? "preparation" : "total";
+    } catch { return "total"; }
+  });
   const plan = workspace.plan;
   const recipes = catalog.data ?? [];
   const byId = useMemo(() => new Map(recipes.map(recipe => [recipe.id, recipe])), [recipes]);
@@ -136,6 +165,19 @@ function PlannerForWeek({ week }: { week: string }) {
                   </div>
                   {recipes.length > 0 && <span className="text-xs text-[#758077]">{recipes.length}</span>}
                 </div>
+                <div role="group" aria-label={t("timeDisplay")} className="mb-4 flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-[#68756a]">{t("timeDisplay")}:</span>
+                  {(["preparation", "total"] as const).map(mode => (
+                    <button key={mode} type="button" aria-pressed={timeMode === mode}
+                      data-testid={`mvp-time-${mode}`} onClick={() => {
+                        setTimeMode(mode);
+                        try { localStorage.setItem("tablewise:time-display:v1", mode); } catch { /* Optional display preference only. */ }
+                      }}
+                      className={`min-h-11 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${timeMode === mode ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
+                      {t(mode)}
+                    </button>
+                  ))}
+                </div>
                 {recipes.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-5 text-sm leading-6 text-[#68756a]">
                     {catalog.isFetching || catalog.isPending ? t("loading") : catalog.isError ? t("catalogError") : t("noRecipes")}
@@ -145,7 +187,6 @@ function PlannerForWeek({ week }: { week: string }) {
                     const selected = plan.selectedRecipeIds.includes(recipe.id);
                     const canChoose = !selected && plan.selectedRecipeIds.length < 3 &&
                       !workspace.issue && !catalog.isError && !catalog.isFetching;
-                    const cooking = typeof recipe.cookTime === "number" && recipe.cookTime > 0;
                     return (
                       <article key={recipe.id} className={`flex min-w-0 flex-col rounded-2xl border p-4 transition-colors ${selected ? "border-[#9eb69d] bg-[#f2f6ef]" : "border-[#dfe3da] bg-[#fbfbf7]"}`}>
                         <div className="flex items-start justify-between gap-3">
@@ -153,7 +194,7 @@ function PlannerForWeek({ week }: { week: string }) {
                           {selected && <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d9e7d8] text-[#42624e]"><Check className="h-4 w-4" aria-hidden="true" /></span>}
                         </div>
                         <div className="mt-3 flex min-h-7 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#798279]">
-                          {cooking && <span className="inline-flex items-center gap-1"><Clock3 className="h-3.5 w-3.5" />{recipe.cookTime} {t("minutesShort")}</span>}
+                          <RecipeFacts recipe={recipe} context="catalog" timeMode={timeMode} />
                           {recipe.tags?.slice(0, 2).map(tag => <span key={tag} className="rounded-full bg-[#eef0e9] px-2 py-1">{tag}</span>)}
                         </div>
                         <button type="button" disabled={!selected && !canChoose} onClick={() => updatePlan(toggleDinner(plan, recipe.id))}
@@ -172,9 +213,9 @@ function PlannerForWeek({ week }: { week: string }) {
                 <div className="flex items-center justify-between gap-2 border-b border-[#e4e7df] pb-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#9a704f]">{t("weekShort")}</p>
-                    <h2 className="mt-1 text-lg font-semibold">{t("selectedDinners")}</h2>
+                    <h2 className="mt-1 text-lg font-semibold" data-testid="mvp-selected-heading">{t("selectedDinners")}</h2>
                   </div>
-                  <span className="rounded-full bg-[#e9eee5] px-2.5 py-1 text-sm font-semibold text-[#526c56]">{plan.selectedRecipeIds.length}/3</span>
+                  <span className="shrink-0 rounded-full bg-[#e9eee5] px-2.5 py-1 text-sm font-semibold text-[#526c56]">{plan.selectedRecipeIds.length}/3</span>
                 </div>
                 {plan.selectedRecipeIds.length === 0 ? (
                   <div className="py-7 text-center">
@@ -196,6 +237,7 @@ function PlannerForWeek({ week }: { week: string }) {
                             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e8eee4] text-xs font-semibold text-[#58725d]">{String(index + 1).padStart(2, "0")}</span>
                             <div className="min-w-0 flex-1">
                               <p className={`break-words text-sm font-semibold ${unavailable ? "text-[#815b49]" : "text-[#34443a]"}`}>{recipe?.title ?? id}</p>
+                              {recipe && <div className="mt-2"><RecipeFacts recipe={recipe} context="selected" timeMode={timeMode} /></div>}
                               {unavailable && <p className="mt-1 text-xs text-[#936e5b]">{t("incomplete")}</p>}
                               <label className="mt-3 block">
                                 <span className="sr-only">{t("chooseDay")}: {recipe?.title ?? id}</span>

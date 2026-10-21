@@ -1,3 +1,4 @@
 - [Phase approval gates](phase-approval-gates.md) — MVP phases need separate approval; isolated database verification and server safeguards gate writes and public testing.
 - [Local test services](local-test-services.md) — managed service lifetimes and browser-test capability limitations in this workspace.
 - [Pilot measurement](pilot-measurement.md) — primary hypothesis and user-defined later-calendar-week conversion, not pageview or same-week editing.
+- [Recipe timing](recipe-timing-semantics.md) — current toggle is Preparation / Total Time; derive total only from two known, separately stored stage durations.

@@ -27,7 +27,9 @@ async function main() {
     await pool.query(`CREATE TABLE IF NOT EXISTS recipes (
       id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
       title text NOT NULL, ingredients text[] NOT NULL, steps text[] NOT NULL,
-      image text, source_url text, cook_time integer, servings text, tags text[],
+      image text, source_url text, cook_time integer,
+      prep_time integer CHECK (prep_time IS NULL OR prep_time BETWEEN 0 AND 10080),
+      servings text, tags text[],
       created_at timestamp NOT NULL DEFAULT now(), updated_at timestamp NOT NULL DEFAULT now()
     )`);
     assert.equal(dinnerCatalog.length, 12);

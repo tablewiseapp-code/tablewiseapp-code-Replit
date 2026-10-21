@@ -8,6 +8,7 @@ export type Recipe = {
   image?: string | null;
   sourceUrl?: string | null;
   cookTime?: number | null;
+  prepTime?: number | null;
   servings?: string | null;
   tags?: string[] | null;
 };

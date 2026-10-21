@@ -6,6 +6,7 @@ import { dinnerCatalog, type DinnerSeed } from "./dinner-catalog";
 function sameContent(row: schema.Recipe, seed: DinnerSeed): boolean {
   return row.title === seed.title
     && row.cookTime === seed.cookTime && row.servings === seed.servings
+    && (row.prepTime ?? null) === (seed.prepTime ?? null)
     && row.image === (seed.image ?? null) && row.sourceUrl === (seed.sourceUrl ?? null)
     && JSON.stringify(row.ingredients) === JSON.stringify(seed.ingredients)
     && JSON.stringify(row.steps) === JSON.stringify(seed.steps)

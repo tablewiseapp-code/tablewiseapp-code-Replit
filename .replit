@@ -40,3 +40,8 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[userenv]
+
+[userenv.production]
+TABLEWISE_PUBLIC_CATALOG_REVIEWED = "true"

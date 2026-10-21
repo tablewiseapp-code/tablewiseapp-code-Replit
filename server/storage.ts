@@ -1,6 +1,19 @@
 import { type User, type InsertUser, type Recipe, type InsertRecipe, users, recipes } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, getTableColumns, sql } from "drizzle-orm";
 import { recipeInput, recipePatch } from "./request-schemas";
+
+// JSON row lookup returns NULL if the additive column has not been installed.
+// Public reads stay compatible with the existing production schema.
+const recipeColumns = {
+  ...getTableColumns(recipes),
+  prepTime: sql<number | null>`(to_jsonb(${recipes})->>'prep_time')::integer`,
+};
+
+export function isMissingPreparationColumn(error: unknown): boolean {
+  const value = error as { code?: string; message?: string; cause?: { code?: string; message?: string } } | null;
+  const databaseError = value?.cause ?? value;
+  return databaseError?.code === "42703" && Boolean(databaseError.message?.includes("prep_time"));
+}
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -15,7 +28,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  constructor(private readonly connection?: typeof import("./db").db) {}
+  constructor(private readonly connection?: Omit<typeof import("./db").db, "$client">) {}
 
   private async database() {
     return this.connection ?? (await import("./db")).db;
@@ -41,19 +54,19 @@ export class DatabaseStorage implements IStorage {
 
   async getAllRecipes(): Promise<Recipe[]> {
     const db = await this.database();
-    return db.select().from(recipes).orderBy(desc(recipes.createdAt));
+    return db.select(recipeColumns).from(recipes).orderBy(desc(recipes.createdAt));
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {
     const db = await this.database();
-    const [recipe] = await db.select().from(recipes).where(eq(recipes.id, id));
+    const [recipe] = await db.select(recipeColumns).from(recipes).where(eq(recipes.id, id));
     return recipe;
   }
 
   async createRecipe(recipe: InsertRecipe): Promise<Recipe> {
     const values = recipeInput.parse(recipe);
     const db = await this.database();
-    const [created] = await db.insert(recipes).values(values).returning();
+    const [created] = await db.insert(recipes).values(values).returning(recipeColumns);
     return created;
   }
 
@@ -64,13 +77,13 @@ export class DatabaseStorage implements IStorage {
       .update(recipes)
       .set({ ...values, updatedAt: new Date() })
       .where(eq(recipes.id, id))
-      .returning();
+      .returning(recipeColumns);
     return updated;
   }
 
   async deleteRecipe(id: string): Promise<boolean> {
     const db = await this.database();
-    const result = await db.delete(recipes).where(eq(recipes.id, id)).returning();
+    const result = await db.delete(recipes).where(eq(recipes.id, id)).returning({ id: recipes.id });
     return result.length > 0;
   }
 }
