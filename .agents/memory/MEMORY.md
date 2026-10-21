@@ -1,0 +1,1 @@
+- [Phase approval gates](phase-approval-gates.md) — MVP phases need separate approval; isolated database verification and server safeguards gate writes and public testing.

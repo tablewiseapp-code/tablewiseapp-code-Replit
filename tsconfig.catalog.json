@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["shared/schema.ts", "server/seeds/**/*.ts", "script/*catalog*.ts", "script/local-test-*.ts", "script/seed-recipes.ts"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": { "incremental": false }
+}

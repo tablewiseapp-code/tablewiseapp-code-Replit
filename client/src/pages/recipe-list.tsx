@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { fetchRecipes, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
@@ -8,13 +8,47 @@ export default function RecipeList() {
   const { t } = useI18n();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [retrying, setRetrying] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const mountedRef = useRef(false);
+  const requestIdRef = useRef(0);
+
+  const loadRecipes = useCallback(() => {
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+    setHasError(false);
+    fetchRecipes()
+      .then((result) => {
+        if (mountedRef.current && requestId === requestIdRef.current) {
+          setRecipes(result);
+        }
+      })
+      .catch(() => {
+        if (mountedRef.current && requestId === requestIdRef.current) {
+          setHasError(true);
+        }
+      })
+      .finally(() => {
+        if (mountedRef.current && requestId === requestIdRef.current) {
+          setLoading(false);
+          setRetrying(false);
+        }
+      });
+  }, []);
+
+  const retryRecipes = useCallback(() => {
+    setRetrying(true);
+    loadRecipes();
+  }, [loadRecipes]);
 
   useEffect(() => {
-    fetchRecipes()
-      .then(setRecipes)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    mountedRef.current = true;
+    loadRecipes();
+    return () => {
+      mountedRef.current = false;
+      requestIdRef.current += 1;
+    };
+  }, [loadRecipes]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -27,9 +61,39 @@ export default function RecipeList() {
         </p>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground" data-testid="text-loading">
-            {t("recipes.loading") || "Loading..."}
-          </p>
+          <div>
+            <p className="text-sm text-muted-foreground" role="status" data-testid="text-loading">
+              {t("recipes.loading") || "Loading..."}
+            </p>
+            {retrying && (
+              <button
+                type="button"
+                onClick={retryRecipes}
+                disabled
+                className="mt-4 inline-flex items-center justify-center px-6 py-2.5 min-h-11 text-sm rounded-full border hairline text-foreground opacity-50 cursor-not-allowed"
+                data-testid="button-retry"
+              >
+                {t("recipes.retry") || "Try again"}
+              </button>
+            )}
+          </div>
+        ) : hasError ? (
+          <div className="text-center py-16">
+            <p className="text-sm text-muted-foreground mb-4" role="alert" data-testid="text-error">
+              {t("recipes.error") || "We couldn’t load your recipes. Please try again."}
+            </p>
+            <button
+              type="button"
+              onClick={retryRecipes}
+              disabled={loading}
+              className="inline-flex items-center justify-center px-6 py-2.5 min-h-11 text-sm rounded-full border hairline text-foreground hover:bg-[#FAFAF8] disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="button-retry"
+            >
+              {loading
+                ? t("recipes.loading") || "Loading..."
+                : t("recipes.retry") || "Try again"}
+            </button>
+          </div>
         ) : recipes.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-sm text-muted-foreground mb-4" data-testid="text-empty">

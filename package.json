@@ -9,6 +9,10 @@
     "build": "tsx script/build.ts",
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
+    "seed:recipes": "tsx script/seed-recipes.ts",
+    "test:catalog": "tsx script/test-dinner-catalog.ts",
+    "test:catalog-browser": "tsx script/test-catalog-browser.ts",
+    "dev:test-catalog": "tsx script/local-test-app.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
