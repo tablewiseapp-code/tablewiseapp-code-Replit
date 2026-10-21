@@ -35,6 +35,14 @@ calendar cells have **Show Recipe** links to the corresponding recipe detail.
 Their pointer and keyboard events do not start dragging. The decorative drag
 overlay has no interactive recipe link.
 
+The visible label is now **See full recipe** in both planners. The default
+Three dinners page includes the link beneath available recipes and selected
+dishes; opening a recipe does not change selections, assignments or groceries.
+Production was inspected read-only: its database and public API both contain
+three existing recipes, with no reviewed dinner seed IDs. The twelve reviewed
+dinner fixtures remain isolated test data, not a production import. Publishing
+the UI does not import those fixtures into production.
+
 ## Editing
 
 On a recipe's detail page, open **Edit recipe times** to enter separate

@@ -9,6 +9,7 @@ import type { Recipe } from "@/lib/storage";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recipeStageMinutes, type RecipeTimeMode } from "@/lib/recipe-time";
+import { recipeToolKeys } from "@/lib/recipe-tools";
 
 const buttonBase = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] disabled:cursor-not-allowed disabled:opacity-45";
 
@@ -22,6 +23,7 @@ type TimeMode = RecipeTimeMode;
 function RecipeFacts({ recipe, context, timeMode }: { recipe: Recipe; context: "catalog" | "selected"; timeMode: TimeMode }) {
   const { t } = useMvpCopy();
   const portions = recipe.servings?.trim();
+  const tools = recipeToolKeys(recipe.steps);
   const minutes = recipeStageMinutes(recipe, timeMode);
   const hasTime = minutes !== null;
   return (
@@ -36,6 +38,12 @@ function RecipeFacts({ recipe, context, timeMode }: { recipe: Recipe; context: "
         {hasTime ? `${t(timeMode)}: ${minutes} ${t("minutesShort")}`
           : t(timeMode === "preparation" ? "preparationTimeUnknown" : "totalTimeUnknown")}
       </span>
+      <span className="basis-full">{t("toolsUsed")}: {tools.length ? tools.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</span>
+      <Link href={`/recipe/${recipe.id}`} aria-label={`${t("showRecipe")}: ${recipe.title}`}
+        data-testid={`mvp-show-${context}-${recipe.id}`}
+        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d9dfd4] bg-white px-3 font-medium text-[#42624e] hover:bg-[#f2f6ef]">
+        {t("showRecipe")}
+      </Link>
     </div>
   );
 }

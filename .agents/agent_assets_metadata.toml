@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "E3h-s9NFpZe0dNzn-g-97"
+uri = "file://imports/researched-dinners.csv"
+type = "table"
+title = "12 source-checked dinner recipes"
+description = "Review the published yields, preparation and cooking times, calculated totals, and original recipe links. Full ingredients and instructions are loaded in preview."
+logical_id = "83f747d6-4e63-456f-924b-06c8d189d149"
+content_hash = "sha256:3ffbbf2603a6ffd8b18c1f7f579a8e349d3c6e77f73defb2ff292486ec9f2ce0"
+size = 1425
+mtime_ms = 1792570450484
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:7a187424-42c1-4c10-8541-b778e38b2dbf/83f747d6-4e63-456f-924b-06c8d189d149/cc67e256-ee89-4551-9403-1dc8fc391ea9"
+storage_version_token = "1792570494324319"
+content_type = "text/csv"

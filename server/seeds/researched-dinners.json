@@ -1,0 +1,180 @@
+{
+  "reviewedOn": "2026-10-21",
+  "policy": "Published ingredient quantities, preparation/cooking times and yields; concise independently worded instruction summaries. No copied photographs. Optional sides remain optional. See sourceUrl for the publisher's full recipe.",
+  "recipes": [
+    {
+      "id": "tablewise:real:v1:chicken-curry",
+      "title": "Easy chicken curry",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/easy-chicken-curry",
+      "prepTime": 5, "cookTime": 45, "servings": "4",
+      "tags": ["Dinner", "Chicken", "Source-verified"],
+      "ingredients": ["2 tbsp sunflower oil", "1 onion, thinly sliced", "2 garlic cloves, crushed", "1 thumb-sized piece ginger, grated", "6 boneless skinless chicken thighs", "3 tbsp medium curry paste", "400 g canned chopped tomatoes", "100 g Greek yogurt", "1 small bunch coriander, chopped", "50 g ground almonds", "Salt, to taste", "Naan bread or cooked basmati rice, optional, to serve"],
+      "steps": [
+        "In a large frying pan, soften the onion in the oil with a pinch of salt over medium heat for 8–10 minutes.",
+        "Stir in the garlic and ginger for 1 minute. Cut the chicken into approximately 3 cm pieces and fry in the pan for 5 minutes.",
+        "Add the curry paste, tomatoes and 250 ml water. Bring to a boil, then simmer uncovered for 25–30 minutes, until the sauce thickens and the chicken is cooked through.",
+        "Mix in the yogurt, coriander and ground almonds. Adjust seasoning and serve; naan or separately cooked rice is optional."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:salmon-egg-fried-rice",
+      "title": "Salmon egg-fried rice",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/salmon-egg-fried-rice",
+      "prepTime": 10, "cookTime": 10, "servings": "2–3",
+      "tags": ["Dinner", "Fish", "Source-verified"],
+      "ingredients": ["1 thumb-sized piece ginger, grated", "1–2 garlic cloves, grated", "2 tbsp low-salt soy sauce", "0.5 tbsp rice wine vinegar", "2 tbsp vegetable oil", "1 large carrot, chopped", "175 g baby corn and mangetout, chopped", "2 skinless smoked salmon fillets", "250 g pouch cooked brown basmati rice", "2 eggs", "Hot sauce, optional, to serve"],
+      "steps": [
+        "Combine the ginger, garlic, soy sauce and vinegar in a bowl.",
+        "Heat a large wok with 1 tablespoon oil. Add the carrot, mixed vegetables and salmon; cook the fish for approximately 2 minutes per side.",
+        "Stir in the ready-cooked rice, separating the fish into flakes. Push the mixture aside, add the remaining oil and scramble the eggs in the clear space.",
+        "Fold everything together with the soy mixture and heat thoroughly for a few minutes. Offer hot sauce separately."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:lentil-leek-soup",
+      "title": "Red lentil, carrot and leek soup",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/lentil-soup",
+      "prepTime": 10, "cookTime": 60, "servings": "4",
+      "tags": ["Dinner", "Vegetarian", "Source-verified"],
+      "ingredients": ["2 litres vegetable stock", "150 g red lentils", "6 carrots, finely chopped", "2 medium leeks, sliced (about 300 g)", "1 small handful parsley, chopped", "Salt and black pepper, to taste"],
+      "steps": [
+        "Heat the vegetable stock in a large saucepan and stir in the red lentils.",
+        "Bring to a boil and let the lentils start softening for a few minutes.",
+        "Add carrots and leeks, season to taste, cover and simmer gently for 45–60 minutes until the vegetables are tender and the lentils break down.",
+        "Top each portion with parsley. The source also allows ham stock; this version selects its vegetarian stock option."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:baked-salmon",
+      "title": "Simple baked salmon",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/baked-salmon",
+      "prepTime": 5, "cookTime": 15, "servings": "4",
+      "tags": ["Dinner", "Fish", "Source-verified"],
+      "ingredients": ["4 skinless salmon fillets", "1 tbsp olive oil", "Salt and black pepper, to taste", "Chopped herbs, optional, to serve", "Lemon slices, optional, to serve", "Steamed long-stem broccoli, optional, to serve"],
+      "steps": [
+        "Preheat the oven to 180°C, or 160°C fan. Brush the salmon with olive oil and season.",
+        "Arrange the fillets in an ovenproof dish. Cover for a softer finish, or leave uncovered for a lightly roasted surface.",
+        "Bake for 10–15 minutes, adjusting for thickness, until the fish is opaque and flakes readily.",
+        "Serve with the optional herbs, lemon and separately steamed broccoli. Those accompaniments are not a fixed quantity in the source."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:coconut-chickpea-curry",
+      "title": "Coconut chickpea and kale curry",
+      "sourceUrl": "https://www.budgetbytes.com/coconut-curry-chickpeas/",
+      "prepTime": 10, "cookTime": 25, "servings": "4",
+      "tags": ["Dinner", "Vegan", "Source-verified"],
+      "ingredients": ["1.5 tbsp curry powder", "1 tsp cumin", "1 yellow onion, diced", "2 garlic cloves, minced", "1 tsp fresh ginger, grated", "2 tbsp olive oil", "2 cans chickpeas (15 oz each), drained", "1 can tomato sauce (8 oz)", "1 can full-fat coconut milk (13.5 oz)", "4 oz kale, chopped", "Salt, to taste", "Cooked rice or bread, optional, to serve"],
+      "steps": [
+        "Dice the onion, mince the garlic, grate the ginger and chop the kale.",
+        "Toast the curry powder and cumin in a dry deep skillet over medium-low heat for approximately 1 minute.",
+        "Add the olive oil, onion, garlic and ginger; soften for approximately 5 minutes. Stir in drained chickpeas, tomato sauce and coconut milk.",
+        "Bring to a simmer, reduce the heat and cook for 15 minutes, stirring occasionally.",
+        "Fold in the kale and cook approximately 5 minutes more, until tender. Salt to taste and offer separately prepared rice or bread if desired."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:sundried-tomato-pasta",
+      "title": "One-pot creamy sun-dried tomato pasta",
+      "sourceUrl": "https://www.budgetbytes.com/one-pot-creamy-sun-dried-tomato-pasta/",
+      "prepTime": 10, "cookTime": 20, "servings": "4",
+      "tags": ["Dinner", "Pasta", "Source-verified"],
+      "ingredients": ["0.5 cup sun-dried tomatoes", "2 tbsp butter", "2 garlic cloves, minced", "8 oz fettuccine", "0.5 tsp dried basil", "Black pepper, to taste", "2 cups chicken broth", "2 oz cream cheese", "1 cup whole milk", "0.25 cup grated Parmesan"],
+      "steps": [
+        "Chop the sun-dried tomatoes. Melt the butter in a deep skillet and gently fry the garlic for approximately 1 minute.",
+        "Add pasta, tomatoes, basil, pepper and chicken broth. Break the pasta if necessary so it sits in the liquid.",
+        "Cover, bring to a boil, then reduce to a gentle simmer. Stir every few minutes and replace the lid.",
+        "Cook for 7–10 minutes until the pasta is tender and most broth is absorbed. Over low heat, melt in the cream cheese, then stir in milk and Parmesan to finish the sauce."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:black-bean-quesadillas",
+      "title": "Black bean and corn quesadillas",
+      "sourceUrl": "https://www.budgetbytes.com/hearty-black-bean-quesadillas/",
+      "prepTime": 5, "cookTime": 10, "servings": "10 quesadillas",
+      "tags": ["Dinner", "Vegetarian", "Source-verified"],
+      "ingredients": ["1 can black beans (15 oz), drained", "1 cup frozen corn", "0.5 cup red onion, diced", "1 garlic clove, minced", "0.25 bunch cilantro (about 0.5 cup chopped)", "2 cups shredded cheddar cheese", "1 packet taco seasoning", "10 flour tortillas (7-inch)"],
+      "steps": [
+        "Combine drained black beans and frozen corn in a bowl; the corn need not be thawed first.",
+        "Mix in the diced onion, garlic, cilantro, cheese and taco seasoning. The source permits a shop-bought packet instead of homemade seasoning.",
+        "Spread approximately half a cup of filling over one half of each tortilla, then fold closed.",
+        "Brown both sides in a skillet over medium heat until crisp and the filling is hot and melted. Cut into wedges.",
+        "The publisher's yield is 10 quesadillas, not a claim that the batch supplies 10 full dinner portions. Its 10-minute cooking time is the published value; multiple skillet batches may take longer."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:spanish-omelette",
+      "title": "Spanish potato and pepper omelette",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/spanish-omelette",
+      "prepTime": 10, "cookTime": 30, "servings": "3–4",
+      "tags": ["Dinner", "Vegetarian", "Source-verified"],
+      "ingredients": ["500 g waxy potatoes", "Butter, a knob plus a little extra for the pan", "2 small onions, finely sliced", "1 red pepper, chopped", "8–9 eggs", "25 g chives", "Salt and black pepper, to taste"],
+      "steps": [
+        "Slice the potatoes approximately 0.5 cm thick. Gently cook onions in butter in a roughly 24 cm frying pan for 10–15 minutes, then add pepper for 5 minutes.",
+        "Meanwhile, soften the potatoes in a saucepan of boiling water for 8–10 minutes, then drain.",
+        "Beat eggs in a jug, add seasoning and snipped chives. Heat the grill and add a little more butter and the potatoes to the frying pan.",
+        "Pour in the eggs and cook gently for approximately 15 minutes until almost set and browned beneath.",
+        "Finish under the grill for 1–2 minutes. Protect yourself from the hot handle; use a suitable pan. The metadata retains the publisher's stated 30-minute cooking time."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:tuna-pasta-bake",
+      "title": "Easy tuna and sweetcorn pasta bake",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/easy-tuna-pasta-bake",
+      "prepTime": 10, "cookTime": 20, "servings": "4",
+      "tags": ["Dinner", "Fish", "Pasta", "Source-verified"],
+      "ingredients": ["400 g fusilli pasta", "100 g frozen peas", "50 g butter", "50 g plain flour", "600 ml milk", "1 tsp Dijon mustard", "2 cans tuna (195 g each), drained", "4 spring onions, sliced", "198 g canned sweetcorn, drained", "100 g cheddar cheese, grated", "Salt and black pepper, to taste"],
+      "steps": [
+        "Cook pasta in a saucepan according to its packet, adding peas for the last 3 minutes.",
+        "Meanwhile, melt butter in a second saucepan. Stir in flour and cook for 2 minutes, then gradually whisk in milk.",
+        "Bring the sauce gently to a boil while stirring until thick. Remove from heat, add mustard and season.",
+        "Heat the grill to medium. Drain pasta and peas, combine with tuna, spring onions, sweetcorn and sauce, and transfer to a shallow baking dish.",
+        "Scatter over cheddar and grill approximately 5 minutes until bubbling and golden."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:garlic-butter-chicken",
+      "title": "Garlic butter baked chicken thighs",
+      "sourceUrl": "https://www.budgetbytes.com/garlic-butter-baked-chicken-thighs/",
+      "prepTime": 5, "cookTime": 35, "servings": "5",
+      "tags": ["Dinner", "Chicken", "Source-verified"],
+      "ingredients": ["4 tbsp butter", "4 garlic cloves, minced", "0.25 tsp paprika", "0.25 tsp salt", "Black pepper, to taste", "1 lemon", "2 tbsp chopped parsley, optional", "5 boneless skinless chicken thighs (about 1.25 lb)"],
+      "steps": [
+        "Heat the oven to 400°F (approximately 200°C). Melt the butter in a microwave-safe bowl for approximately 30 seconds.",
+        "Stir in garlic, paprika, salt, pepper and half the optional parsley.",
+        "Place the chicken in an 8 by 8 inch baking dish and coat with garlic butter. Add sliced lemon around the pieces.",
+        "Bake for 30–35 minutes, until the chicken reaches an internal temperature of 165°F (74°C).",
+        "Spoon the cooking juices over the chicken and finish with the remaining optional parsley."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:sichuan-beef-stir-fry",
+      "title": "Beef and Sichuan pepper stir-fry",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/beef-sichuan-pepper-stir-fry",
+      "prepTime": 10, "cookTime": 10, "servings": "4",
+      "tags": ["Dinner", "Beef", "Source-verified"],
+      "ingredients": ["2 tbsp rapeseed oil", "300 g steak, thinly sliced", "1 tbsp cornflour", "2 mixed peppers, sliced", "200 g baby corn, halved", "2 small red onions, sliced", "0.5 tsp chilli flakes", "1 tsp Sichuan peppercorns, ground", "2 tbsp low-salt dark soy sauce", "1 tbsp chilli oil, optional", "300 g cooked brown basmati rice"],
+      "steps": [
+        "Grind the Sichuan peppercorns using a pestle and mortar.",
+        "Heat 1 tablespoon rapeseed oil in a large wok. Add steak and cornflour, turn to coat, and fry for 2–3 minutes until browned; transfer to a plate.",
+        "Add remaining oil, peppers, baby corn and onion. Stir-fry for 3–4 minutes, then return beef and its juices with chilli flakes and Sichuan pepper.",
+        "Cook for 1 minute, add soy sauce and 50 ml water, and stir until the sauce coats everything. Serve with the ready-cooked rice and optional chilli oil."
+      ]
+    },
+    {
+      "id": "tablewise:real:v1:spaghetti-meatballs",
+      "title": "Spaghetti with beef and sausage meatballs",
+      "sourceUrl": "https://www.bbcgoodfood.com/recipes/meatballs-spaghetti",
+      "prepTime": 30, "cookTime": 45, "servings": "6",
+      "tags": ["Dinner", "Beef", "Pasta", "Source-verified"],
+      "ingredients": ["8 sausages, skins removed", "500 g minced beef", "4 garlic cloves, crushed", "1 small bunch parsley, chopped", "3 tbsp dried breadcrumbs", "1 egg, beaten", "Plain flour, for rolling", "4 tbsp sunflower oil", "2 cans chopped tomatoes", "1 pinch sugar", "500 g spaghetti", "Grated Parmesan, to serve", "Salt and black pepper, to taste"],
+      "steps": [
+        "Combine sausage meat, beef, half the garlic and parsley, breadcrumbs and egg in a large bowl. Season and mix.",
+        "On a floured chopping board, roll dessertspoon-sized portions into balls. Brown in batches in a large frying pan with 3 tablespoons oil, then set aside.",
+        "Discard excess fat and clean the pan. Warm the remaining oil, briefly fry remaining garlic, then cook the tomatoes for 5 minutes; season with sugar, salt and pepper.",
+        "Return meatballs, cover and simmer gently for approximately 30 minutes, turning in the sauce and adding a little water if needed.",
+        "Cook spaghetti in a saucepan during the final 15 minutes. Stir parsley into the sauce and serve over drained pasta with Parmesan."
+      ]
+    }
+  ]
+}

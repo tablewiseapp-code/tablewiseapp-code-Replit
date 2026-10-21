@@ -1,5 +1,5 @@
 run = "npm run dev"
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "postgresql-16"]
 
 [deployment]
 deploymentTarget = "cloudrun"
@@ -12,6 +12,7 @@ externalPort = 80
 
 [nix]
 packages = ["vim"]
+channel = "stable-25_05"
 
 [postMerge]
 path = "scripts/post-merge.sh"
@@ -27,15 +28,15 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "TableWise isolated preview"
+args = "TableWise researched preview"
 
 [[workflows.workflow]]
-name = "TableWise isolated preview"
+name = "TableWise researched preview"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev:test-catalog -- --test-socket /tmp/tablewise-phase2-pilot/socket"
+args = "npm run dev:researched"
 waitForPort = 5000
 
 [workflows.workflow.metadata]

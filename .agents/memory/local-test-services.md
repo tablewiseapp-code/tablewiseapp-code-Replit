@@ -55,3 +55,14 @@ after reload could also inspect the old document rather than the new one.
 **How to apply:** Return booleans or specific text/attributes, await a page-load
 signal before checking the new page, and bound browser-tab cleanup requests so
 failed interaction tests cannot hang indefinitely while closing.
+
+Removing a workflow can leave a separately spawned server descendant holding
+its port even after removal reports success.
+
+**Why:** Replacing a preview workflow failed with EADDRINUSE because the old
+wrapper's server child survived removal.
+
+**How to apply:** Prefer starting the verified preview server in the wrapper's
+own process. If a replacement fails on a busy port, identify and stop only the
+removed workflow's verified descendants before restarting; do not kill unrelated
+services or create a second server on another port.

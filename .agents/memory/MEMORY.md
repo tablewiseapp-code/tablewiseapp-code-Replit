@@ -2,3 +2,5 @@
 - [Local test services](local-test-services.md) — managed service lifetimes and browser-test capability limitations in this workspace.
 - [Pilot measurement](pilot-measurement.md) — primary hypothesis and user-defined later-calendar-week conversion, not pageview or same-week editing.
 - [Recipe timing](recipe-timing-semantics.md) — current toggle is Preparation / Total Time; derive total only from two known, separately stored stage durations.
+- [Planner UI coverage](planner-ui-coverage.md) — recipe-detail links must cover default available/selected dishes, not only the advanced meals planner.
+- [Recipe provenance](recipe-provenance.md) — MVP evaluation needs real, web-researched recipes with proper data, not synthetic regression fixtures.

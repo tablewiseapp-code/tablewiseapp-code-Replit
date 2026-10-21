@@ -1370,7 +1370,7 @@ function WeeklyMealsContent() {
               {visibleFilteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">{t("meals.noRecipesMatch")}</p>
               ) : (
-                visibleFilteredRecipes.slice(0, 10).map(recipe => {
+                visibleFilteredRecipes.map(recipe => {
                   const meta = getMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;

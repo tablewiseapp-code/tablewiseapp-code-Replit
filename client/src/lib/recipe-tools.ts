@@ -10,6 +10,7 @@ const equipment = [
   { label: "toolBlender", pattern: /\b(?:blender|food processor)\b/i },
   { label: "toolMicrowave", pattern: /\bmicrowave\b/i },
   { label: "toolAirFryer", pattern: /\bair[ -]?fryer\b/i },
+  { label: "toolGrill", pattern: /\b(?:grill|broiler)\b/i },
 ] as const;
 
 export type RecipeToolKey = typeof equipment[number]["label"];
