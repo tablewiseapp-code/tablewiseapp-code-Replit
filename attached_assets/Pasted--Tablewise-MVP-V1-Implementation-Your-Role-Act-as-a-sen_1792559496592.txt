@@ -1,0 +1,547 @@
+# Tablewise — MVP V1 Implementation
+
+## Your Role
+
+Act as a senior full-stack engineer, product engineer, and technical lead working on the existing Tablewise application.
+
+Your objective is to transform the current application into a focused, customer-testable MVP, following the principles of *The Lean Startup* by Eric Ries.
+
+**Important: This is an existing application, not a greenfield project.**
+
+Before making changes, inspect the current implementation and reuse existing functionality wherever possible.
+
+Do not rebuild the application from scratch.
+
+---
+
+# 1. Product Context
+
+## Product Name
+
+Tablewise
+
+## The Customer Problem
+
+People regularly struggle to answer:
+
+**"What should we cook this week?"**
+
+They spend time deciding what to cook, remembering familiar meals, and figuring out what groceries they need.
+
+Tablewise should make that decision easier.
+
+## MVP Value Proposition
+
+**Plan three dinners for the coming week in approximately five minutes and automatically generate a grocery list.**
+
+The MVP must help customers complete this experience with minimal effort.
+
+## Our Core Hypothesis
+
+People who struggle to decide what to cook will find enough value in Tablewise's weekly meal-planning experience that they will return to use it again the following week.
+
+We want to validate this hypothesis with real customers.
+
+## Lean Startup Principle
+
+We are building a Minimum Viable Product to maximize validated learning with minimum implementation effort.
+
+Do not add functionality merely because it seems useful.
+
+Every implementation decision should support one of these objectives:
+
+1. Help customers choose meals.
+2. Help customers organize those meals into a weekly plan.
+3. Help customers generate a grocery list.
+4. Measure whether customers complete the experience and return.
+
+Anything outside these objectives is out of scope unless necessary for security, reliability, or correct operation.
+
+---
+
+# 2. Existing Application Architecture
+
+The current Tablewise application uses:
+
+### Frontend
+- React 19
+- TypeScript
+- Vite
+- Wouter routing
+- Tailwind CSS
+- shadcn/ui and Radix UI
+- React hooks
+- TanStack React Query
+
+### Backend
+- Node.js
+- Express
+- TypeScript
+- REST APIs
+
+### Database
+- PostgreSQL
+- Drizzle ORM
+
+### Existing Functionality
+- Recipe creation and storage
+- Recipe listing and detail views
+- AI-assisted recipe import
+- Audio transcription
+- Weekly meal planning
+- Drag-and-drop meal assignment
+- Grocery-list generation
+- Recipe ratings and favorites
+- English, Russian, and Hebrew translations
+
+### Important Existing Files
+
+Review these files before implementing anything:
+
+- `client/src/App.tsx`
+- `client/src/pages/weekly-meals.tsx`
+- `client/src/pages/grocery-list.tsx`
+- `client/src/pages/recipe-list.tsx`
+- `client/src/pages/recipe-detail.tsx`
+- `client/src/pages/import-recipe.tsx`
+- `client/src/lib/storage.ts`
+- `client/src/lib/planner-recipes.ts`
+- `client/src/hooks/use-local-storage-state.ts`
+- `client/src/hooks/use-recipe-user-meta.ts`
+- `client/src/lib/i18n.tsx`
+- `server/index.ts`
+- `server/routes.ts`
+- `server/storage.ts`
+- `shared/schema.ts`
+
+These paths reflect the existing repository. Verify them before editing.
+
+The current application stores recipes in PostgreSQL, while weekly meal-planning state and some user preferences are stored in browser localStorage.
+
+The existing weekly planner is relatively large and contains substantial UI and interaction logic.
+
+Prefer extracting reusable logic or introducing a separate MVP page over rewriting the entire existing planner.
+
+---
+
+# 3. MVP Scope
+
+## Included in MVP V1
+
+### A. Ready-to-Use Recipe Catalog
+
+Customers should immediately see 10–15 familiar dinner recipes.
+
+Each recipe must include:
+- Name
+- Cooking time
+- Ingredients
+- Preparation steps
+- Number of servings
+
+Recipes should be familiar, practical, and easy to prepare.
+
+Examples:
+- Tomato pasta
+- Oven-baked chicken
+- Vegetable fried rice
+- Baked salmon
+- Chicken stir-fry
+- Vegetable omelet
+- Beef tacos
+- Lentil soup
+- Chicken and rice
+- Roasted vegetables with potatoes
+- Homemade pizza
+- Pasta with mushrooms
+
+Use realistic ingredients and quantities.
+
+Recipes must be stored through the existing PostgreSQL recipe model.
+
+Implement an idempotent seed mechanism so running it again does not duplicate recipes or overwrite customer-created data.
+
+### B. Simplified Weekly Planner
+
+The primary customer screen should answer:
+
+**"What are we cooking this week?"**
+
+Customers should be able to:
+1. Browse available dinner recipes.
+2. Select three recipes.
+3. Assign those recipes to three different days.
+4. Replace a selected recipe.
+5. Change assigned days.
+6. Confirm their plan.
+7. Return later and see their saved plan.
+
+The interface should be simple, calm, and intuitive.
+
+Do not require drag-and-drop. Simple buttons and day selectors are sufficient and preferable for mobile usability.
+
+### C. Grocery List
+
+After planning three dinners, customers should be able to generate a grocery list.
+
+Requirements:
+- Include ingredients from selected recipes only.
+- Group ingredients into understandable categories.
+- Preserve quantities.
+- Avoid exact duplicate entries.
+- Do not incorrectly combine quantities with different units.
+- Allow users to check off ingredients.
+- Update the list when the meal plan changes.
+- Handle missing or deleted recipes gracefully.
+
+Reuse the existing grocery-list logic where appropriate.
+
+### D. Browser Persistence
+
+For MVP V1, user accounts are not required.
+
+The weekly plan may remain in localStorage.
+
+Requirements:
+- Refreshing the page must not erase the plan.
+- Returning to the application in the same browser must restore the plan.
+- Plans should be associated with a specific calendar week.
+- A new week should allow creating a new plan without unexpectedly overwriting the previous week's plan.
+- Grocery-list checkmarks should behave predictably when the plan changes.
+
+Do not introduce a complex authentication system for this MVP.
+
+### E. Minimal Analytics
+
+We need to learn how real customers use the application.
+
+Track:
+
+1. `planner_opened`
+2. `meal_selected`
+3. `plan_completed`
+4. `grocery_list_opened`
+5. `next_week_plan_created`
+
+Each event should include:
+- Event name
+- Timestamp
+- Anonymous pilot identifier
+- Relevant minimal metadata, such as week identifier or selected meal count
+
+Do not store unnecessary personal information, recipe transcripts, or sensitive data.
+
+Use a lightweight implementation suitable for five initial test customers.
+
+Ensure that event tracking failures never block the main customer flow.
+
+---
+
+# 4. Explicitly Out of Scope
+
+Do not implement:
+
+- User registration or login
+- Household collaboration
+- AI-generated weekly meal plans
+- AI recommendations
+- AI voice input changes
+- Complex recipe filters
+- Nutritional analysis
+- Calorie tracking
+- Pantry inventory
+- Grocery delivery integrations
+- Payment systems
+- Subscription management
+- Push notifications
+- Social features
+- A full analytics dashboard
+- A major database redesign
+
+Existing functionality can remain in the codebase but should not distract MVP customers.
+
+**Do not delete existing features unless absolutely necessary.**
+
+---
+
+# 5. Implementation Phases
+
+Work sequentially.
+
+Do not attempt to implement everything in a single uncontrolled change.
+
+## Phase 1 — Repository Audit and Baseline
+
+First inspect the existing application.
+
+Tasks:
+
+1. Map current routes.
+2. Understand recipe data retrieval and persistence.
+3. Understand the weekly planner state structure.
+4. Understand how grocery-list generation reads the weekly plan.
+5. Identify existing reusable components.
+6. Identify potential regressions.
+7. Inspect available tests and scripts.
+8. Identify any security or data-isolation issues that would prevent safe customer testing.
+
+Produce a concise implementation plan describing:
+- Files to create
+- Files to modify
+- Existing logic to reuse
+- Required data changes
+- Main technical risks
+- How each phase will be tested
+
+**Do not modify application code during Phase 1.**
+
+Present your findings and proposed plan, then wait for my approval before Phase 2.
+
+## Phase 2 — Seed Recipe Catalog
+
+After approval:
+
+1. Implement 10–15 realistic dinner recipes.
+2. Reuse the existing recipe schema.
+3. Create a safe, repeatable seed mechanism.
+4. Verify recipes are retrieved from PostgreSQL.
+5. Ensure existing recipes are not overwritten.
+6. Handle empty catalog and API errors.
+
+Acceptance criteria:
+- A fresh test environment can load the catalog.
+- Every seeded recipe has usable ingredients and steps.
+- Running the seed process twice does not create duplicates.
+- Existing customer-created recipes remain unchanged.
+
+## Phase 3 — MVP Planner
+
+Build a focused MVP planning experience.
+
+Suggested route:
+
+`/`
+
+You may introduce a dedicated component such as:
+
+`client/src/pages/mvp-planner.tsx`
+
+Requirements:
+
+1. Show the heading "What are we cooking this week?"
+2. Display available dinner recipes.
+3. Let customers select up to three.
+4. Clearly show selection progress.
+5. Let customers assign each recipe to a distinct day.
+6. Allow replacing recipes.
+7. Display the completed weekly plan.
+8. Persist the plan in localStorage.
+9. Restore it after refresh.
+10. Work on mobile and desktop.
+11. Show clear loading, empty, and error states.
+
+Keep the existing advanced planner available internally if practical.
+
+Do not introduce unnecessary animations, onboarding screens, or complex interactions.
+
+Acceptance criteria:
+- A new customer can plan three dinners without instructions.
+- The interaction works without drag-and-drop.
+- No duplicate day assignments are allowed.
+- The plan survives a refresh.
+- Existing application functionality remains intact.
+
+## Phase 4 — Grocery List Integration
+
+Connect the new MVP planner to grocery-list generation.
+
+Requirements:
+
+1. Generate a grocery list from the current plan.
+2. Read the correct selected recipes.
+3. Group ingredients by category.
+4. Preserve original ingredient information.
+5. Handle duplicates safely.
+6. Allow checking items.
+7. Recalculate when meals change.
+8. Handle deleted recipes.
+9. Allow returning to the planner.
+
+Acceptance criteria:
+- Three selected dinners produce the correct grocery list.
+- Replacing a meal updates the list.
+- Unrelated recipes are excluded.
+- Ingredient quantities are not silently lost.
+- The flow works after a browser refresh.
+
+## Phase 5 — Analytics and Week-Two Return
+
+Implement minimal tracking.
+
+Requirements:
+
+1. Generate an anonymous identifier for each pilot browser.
+2. Track the five MVP events.
+3. Record events reliably without blocking the UI.
+4. Distinguish a new week's plan from repeated activity in the same week.
+5. Make it easy for a customer to plan the next week.
+6. Preserve prior-week data where practical.
+7. Provide a simple way for the developer to inspect aggregated pilot results without exposing raw event data publicly.
+
+Acceptance criteria:
+- We can determine how many pilot users completed a plan.
+- We can determine how many opened a grocery list.
+- We can determine how many planned another week.
+- Tracking failures do not prevent planning.
+- Analytics do not expose sensitive data.
+
+## Phase 6 — Quality Assurance and Pilot Release
+
+Test the complete customer experience.
+
+Required scenarios:
+
+1. First-time visitor opens the application.
+2. Recipes load correctly.
+3. Customer selects three dinners.
+4. Customer assigns them to three days.
+5. Customer replaces one dinner.
+6. Customer confirms the plan.
+7. Customer opens the grocery list.
+8. Customer checks off ingredients.
+9. Customer refreshes the browser.
+10. Customer returns to the saved plan.
+11. Customer creates a plan for the following week.
+12. Customer uses the application on mobile.
+13. Recipe API becomes temporarily unavailable.
+14. A planned recipe is deleted.
+15. Local storage contains invalid or outdated data.
+16. Multiple test customers use the deployed application.
+
+Run available TypeScript checks, builds, and relevant tests.
+
+Fix regressions before declaring the MVP ready.
+
+---
+
+# 6. UX and Design Requirements
+
+The MVP should feel calm, simple, and professional.
+
+Follow the existing Tablewise design language.
+
+Principles:
+- Minimal visual clutter
+- Clear typography
+- Generous spacing
+- Mobile-first usability
+- Obvious primary actions
+- Clear progress indicators
+- Understandable error messages
+- No unnecessary configuration
+
+A customer should understand what to do within a few seconds of opening the application.
+
+Avoid showing internal development navigation to pilot customers.
+
+Keep existing internationalization infrastructure working, including Hebrew RTL behavior.
+
+---
+
+# 7. Technical Constraints
+
+Follow these rules throughout implementation:
+
+1. Reuse the existing React, Express, PostgreSQL, and Drizzle stack.
+2. Do not introduce new frameworks without a strong reason.
+3. Avoid unnecessary dependencies.
+4. Do not make destructive database changes.
+5. Do not overwrite existing recipes or user data.
+6. Preserve compatibility with existing APIs where practical.
+7. Use TypeScript types rather than `any` where feasible.
+8. Validate untrusted inputs.
+9. Handle malformed localStorage data safely.
+10. Avoid logging full API responses or sensitive information.
+11. Keep analytics endpoints appropriately protected.
+12. Never expose OpenAI API keys or other secrets in frontend code.
+13. Do not silently modify unrelated features.
+14. Prefer small, maintainable components.
+15. Add tests for important business logic where practical.
+
+If you discover an existing issue that prevents safe MVP testing, explain it and propose the smallest appropriate fix.
+
+---
+
+# 8. Definition of Done
+
+The MVP is complete when a test customer can:
+
+1. Open Tablewise without registration.
+2. See a ready-to-use recipe catalog.
+3. Choose three dinners.
+4. Assign them to different days.
+5. Confirm the weekly plan.
+6. Generate a grocery list.
+7. Refresh without losing the plan.
+8. Return the following week and plan again.
+
+Additionally:
+- The experience works on mobile.
+- Critical errors are handled.
+- Analytics events are recorded.
+- Existing features have not been unintentionally broken.
+- Customer data is handled safely.
+
+Do not consider the project complete merely because the UI renders.
+
+The entire end-to-end flow must work.
+
+---
+
+# 9. Required Reporting After Every Phase
+
+After completing a phase, provide:
+
+### Summary
+What was implemented.
+
+### Files Changed
+List all created and modified files.
+
+### Technical Decisions
+Explain important decisions and why they were made.
+
+### Testing
+Describe what was tested, what passed, and what could not be verified.
+
+### Known Issues
+List unresolved issues and risks.
+
+### Next Phase
+Explain what should happen next.
+
+**Stop after each phase and wait for my approval before continuing.**
+
+Do not automatically move to the next phase.
+
+---
+
+# 10. Start Now
+
+Begin with **Phase 1 only: Repository Audit and Baseline**.
+
+Read the actual existing code and produce a detailed but concise implementation plan.
+
+Do not implement features yet.
+
+Do not modify application code yet.
+
+Do not install dependencies yet.
+
+Do not run destructive database commands.
+
+I want to review and approve your proposed implementation before any changes are made.
+
+Remember: our goal is not to build the most feature-rich meal-planning application.
+
+Our goal is to test whether helping people decide what to cook during the week creates enough value that they come back and use Tablewise again.
