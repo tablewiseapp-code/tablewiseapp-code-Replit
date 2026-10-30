@@ -172,8 +172,11 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     }
     next();
   });
-  const aiPermit = (req: Request, res: Response, next: NextFunction) => {
+  const requireAIEnabled = (_req: Request, res: Response, next: NextFunction) => {
     if (!config.aiEnabled) return res.status(503).json({ error: "Paid AI is disabled." });
+    next();
+  };
+  const aiPermit = (req: Request, res: Response, next: NextFunction) => requireOperator(req, res, () => requireAIEnabled(req, res, () => {
     if (!consume(res, "ai:minute", 5, 60_000) ||
         !consume(res, "ai:hour", 20, 3600_000) ||
         !consume(res, "ai:day", 40, 86400_000)) return;
@@ -183,8 +186,8 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     let released = false;
     res.locals.releaseAI = () => { if (!released) { activeAI--; released = true; } };
     next();
-  };
-  return { aiPermit, authorized, analyticsPilotPermit, config };
+  }));
+  return { aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, config };
 }
 
 export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {

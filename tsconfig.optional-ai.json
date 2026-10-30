@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["server/replit_integrations/**/*", "server/security.ts", "script/test-optional-ai-routes.ts"],
+  "compilerOptions": { "incremental": false }
+}

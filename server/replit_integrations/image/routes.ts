@@ -1,32 +1,26 @@
-import type { Express, Request, Response } from "express";
-import { openai } from "./client";
+import type { Express } from "express";
+import type { PilotSecurity } from "../../security";
+import { apiErrorHandler } from "../../security";
+import { optionalRouter, jsonBody, validate, imageBody } from "../route-security";
 import { requireImageResult } from "./result";
 
-export function registerImageRoutes(app: Express): void {
-  app.post("/api/generate-image", async (req: Request, res: Response) => {
-    try {
-      const { prompt, size = "1024x1024" } = req.body;
+const loadImage = () => import("./client");
 
-      if (!prompt) {
-        return res.status(400).json({ error: "Prompt is required" });
-      }
-
-      const response = await openai.images.generate({
-        model: "gpt-image-1",
-        prompt,
-        n: 1,
-        size: size as "1024x1024" | "512x512" | "256x256",
-      });
-
-      const imageData = requireImageResult(response);
-      res.json({
-        url: imageData.url,
-        b64_json: imageData.b64_json,
-      });
-    } catch (error) {
-      console.error("Error generating image:", error);
-      res.status(500).json({ error: "Failed to generate image" });
-    }
-  });
+export function registerImageRoutes(app: Express, security: PilotSecurity, deps: {
+  loadProvider?: typeof loadImage;
+} = {}): void {
+  const router = optionalRouter(security, "/api/generate-image");
+  router.post("/api/generate-image",
+    jsonBody("24kb"), validate(imageBody), security.aiPermit, async (req, res, next) => {
+      try {
+        const { prompt, size } = imageBody.parse(req.body);
+        const { openai } = await (deps.loadProvider ?? loadImage)();
+        const response = await openai.images.generate({ model: "gpt-image-1", prompt, n: 1, size });
+        const imageData = requireImageResult(response);
+        res.json({ url: imageData.url, b64_json: imageData.b64_json });
+      } catch (error) { next(error); }
+      finally { res.locals.releaseAI(); }
+    });
+  router.use(apiErrorHandler);
+  app.use(router);
 }
-
