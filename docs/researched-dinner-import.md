@@ -71,7 +71,7 @@ This test only accepts the verified isolated socket-only database. In a disposab
 - repeated import without duplicates or timestamp changes;
 - complete rollback if an existing imported record was edited.
 
-`npm run dev:researched` verifies the development catalog matches these twelve approved records before starting preview. It disables AI calls, operator mutations and pilot-event collection. It does not seed or migrate at startup.
+`npm run dev:researched` verifies these twelve approved records before starting preview. It also permits unrelated legitimate records and separately validates a recognized full synthetic test batch, if present; see `docs/development-test-recipes.md`. It disables AI calls, operator mutations and pilot-event collection. It does not seed or migrate at startup, and content validation alone is not proof of database isolation.
 
 The browser checks also support this researched catalog:
 

@@ -6,6 +6,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipePlannerURL } from "@/lib/week-plan";
+import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
@@ -118,10 +119,18 @@ export default function RecipeDetail() {
               className="underline hover:text-foreground"
               data-testid="link-source"
             >
-              {t("recipeDetail.source") || "Source"}
+              {isDevelopmentFixture(recipe) ? "Supplied link (unverified)" : t("recipeDetail.source") || "Source"}
             </a>
           )}
         </div>
+
+        {isDevelopmentFixture(recipe) && (
+          <p className="mb-6 rounded-xl border hairline p-4 text-sm" data-testid="synthetic-provenance">
+            Synthetic test recipe, not an official or verified chef recipe. Chef references are
+            not authorship or endorsement. Supplied links are unverified; collection pages do
+            not verify this individual recipe. Missing times, servings and classifications are unknown.
+          </p>
+        )}
 
         <details className="mb-6 rounded-xl border hairline p-4">
           <summary className="cursor-pointer text-sm font-medium">{timingCopy("editTiming")}</summary>

@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["script/*development-fixture*.ts", "script/development-fixture-import.ts", "script/researched-preview.ts", "server/seeds/preview-catalog.ts"],
+  "compilerOptions": { "incremental": false, "target": "ES2022" }
+}
