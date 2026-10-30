@@ -1,5 +1,6 @@
 import { db } from "../../db";
-import { conversations, messages } from "@shared/schema";
+// Optional chat models stay separate from the active recipe migration schema.
+import { conversations, messages } from "@shared/models/chat";
 import { eq, desc } from "drizzle-orm";
 
 export interface IChatStorage {

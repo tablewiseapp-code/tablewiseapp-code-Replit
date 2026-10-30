@@ -11,6 +11,7 @@ async function main() {
   // Start in this process: a detached server child can survive workflow removal
   // and keep port 5000 bound. Keep the verified pool alive for the server.
   process.env.NODE_ENV = "development";
+  process.env.TABLEWISE_DEV_CURATED_CATALOG ??= "true";
   process.env.TABLEWISE_PUBLIC_CATALOG_REVIEWED = "true";
   process.env.TABLEWISE_AI_ENABLED = "false";
   process.env.TABLEWISE_ANALYTICS_ENABLED = "false";

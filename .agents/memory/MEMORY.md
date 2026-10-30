@@ -4,5 +4,6 @@
 - [Recipe timing](recipe-timing-semantics.md) — current toggle is Preparation / Total Time; derive total only from two known, separately stored stage durations.
 - [Planner UI coverage](planner-ui-coverage.md) — recipe-detail links must cover default available/selected dishes, not only the advanced meals planner.
 - [Recipe provenance](recipe-provenance.md) — MVP evaluation needs real, web-researched recipes with proper data, not synthetic regression fixtures.
-- [Development fixture policy](development-fixture-policy.md) — owner approved supplied synthetic fixtures and rebuilding the missing importer, with development-only safeguards.
+- [Development fixture policy](development-fixture-policy.md) — show 20 complete development recipes; hide and preserve the rest; label synthetic estimates honestly.
 - [Meal classification](meal-classification.md) — explicit reviewed tags, honest unknowns, and all meal types within the unchanged three-recipe workflow.
+- [Type-check repairs](typecheck-repairs.md) — keep optional integration models outside recipe migrations; distinguish stale compiler-cache diagnostics from real errors.

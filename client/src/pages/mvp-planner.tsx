@@ -26,7 +26,7 @@ type TimeMode = RecipeTimeMode;
 function RecipeFacts({ recipe, context, timeMode, week }: { recipe: Recipe; context: "catalog" | "selected"; timeMode: TimeMode; week: string }) {
   const { t } = useMvpCopy();
   const portions = recipe.servings?.trim();
-  const tools = recipeToolKeys(recipe.steps);
+  const tools = recipeToolKeys(recipe.steps, recipe.equipment);
   const minutes = recipeStageMinutes(recipe, timeMode);
   const hasTime = minutes !== null;
   return (
@@ -41,7 +41,10 @@ function RecipeFacts({ recipe, context, timeMode, week }: { recipe: Recipe; cont
         {hasTime ? `${t(timeMode)}: ${minutes} ${t("minutesShort")}`
           : t(timeMode === "preparation" ? "preparationTimeUnknown" : "totalTimeUnknown")}
       </span>
+      {timeMode === "total" && recipe.prepTime != null &&
+        <span>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</span>}
       <span className="basis-full">{t("toolsUsed")}: {tools.length ? tools.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</span>
+      {recipe.metadataEstimated && <span className="basis-full">{t("developmentEstimates")}</span>}
       <Link href={plannerRecipeURL(recipe.id, week)} aria-label={`${t("showRecipe")}: ${recipe.title}`}
         data-testid={`mvp-show-${context}-${recipe.id}`}
         className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d9dfd4] bg-white px-3 font-medium text-[#42624e] hover:bg-[#f2f6ef]">

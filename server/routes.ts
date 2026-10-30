@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { type Express } from "express";
+import { developmentCatalogEnabled, developmentRecipeReadOnly, curateDevelopmentCatalog, curateDevelopmentRecipe } from "./seeds/curated-development-catalog";
 import { createServer, type Server } from "http";
 import type { IStorage } from "./storage";
 import { isMissingPreparationColumn } from "./storage";
@@ -111,12 +112,15 @@ export async function registerRoutes(
     if (!recipeId.safeParse(req.params.id).success) {
       return res.status(400).json({ error: "Invalid recipe identifier." });
     }
+    if (["PATCH", "PUT", "DELETE"].includes(req.method) && developmentRecipeReadOnly(req.params.id)) {
+      return res.status(409).json({ error: "The curated development recipes are read-only. Stored recipes are preserved." });
+    }
     next();
   });
   app.get("/api/recipes", async (_req, res) => {
     try {
       const recipes = await storage.getAllRecipes();
-      res.json(recipes);
+      res.json(developmentCatalogEnabled() ? curateDevelopmentCatalog(recipes) : recipes);
     } catch (error: any) {
       console.error("api_failure operation=recipe_list");
       res.status(500).json({ error: "Failed to fetch recipes" });
@@ -129,7 +133,7 @@ export async function registerRoutes(
       if (!recipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
-      res.json(recipe);
+      res.json(developmentCatalogEnabled() ? curateDevelopmentRecipe(recipe) : recipe);
     } catch (error: any) {
       console.error("api_failure operation=recipe_get");
       res.status(500).json({ error: "Failed to fetch recipe" });

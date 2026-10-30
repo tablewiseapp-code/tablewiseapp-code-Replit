@@ -1,3 +1,5 @@
+import type { RecipeToolKey } from "./recipe-tools";
+
 export type Recipe = {
   id: string;
   title: string;
@@ -11,6 +13,9 @@ export type Recipe = {
   prepTime?: number | null;
   servings?: string | null;
   tags?: string[] | null;
+  equipment?: RecipeToolKey[];
+  metadataEstimated?: boolean;
+  developmentReadOnly?: boolean;
 };
 
 export async function fetchRecipes(): Promise<Recipe[]> {

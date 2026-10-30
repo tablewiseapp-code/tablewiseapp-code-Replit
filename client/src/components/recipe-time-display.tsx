@@ -47,7 +47,7 @@ export function RecipeTimeToggle() {
 }
 
 export function MealRecipeFacts({ recipe, context, compact = false }: {
-  recipe: RecipeTimeData & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[] };
+  recipe: RecipeTimeData & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[]; metadataEstimated?: boolean };
   context: string;
   compact?: boolean;
 }) {
@@ -74,6 +74,8 @@ export function MealRecipeFacts({ recipe, context, compact = false }: {
           {t("toolsUsed")}: {recipe.equipment?.length ? recipe.equipment.map(tool => t(tool)).join(", ") : t("toolsUnknown")}
         </span>
       </span>
+      {mode === "total" && recipe.prepTime != null &&
+        <span>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</span>}
       {context !== "drag" && (
         <Link href={`/recipe/${recipe.id}`} onPointerDown={event => event.stopPropagation()}
           onKeyDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}
@@ -83,6 +85,7 @@ export function MealRecipeFacts({ recipe, context, compact = false }: {
           {t("showRecipe")}
         </Link>
       )}
+      {recipe.metadataEstimated && <span className="basis-full">{t("developmentEstimates")}</span>}
     </div>
   );
 }

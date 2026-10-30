@@ -16,7 +16,9 @@ const equipment = [
 export type RecipeToolKey = typeof equipment[number]["label"];
 
 // Report equipment supported by the instructions, not a default "No-cook" guess.
-export function recipeToolKeys(steps: string[]): RecipeToolKey[] {
+export function recipeToolKeys(steps: string[], explicit?: readonly string[] | null): RecipeToolKey[] {
+  const declared = equipment.filter(tool => explicit?.includes(tool.label)).map(tool => tool.label);
+  if (declared.length) return declared;
   const text = steps.join(" ");
   return equipment.filter(tool => tool.pattern.test(text)).map(tool => tool.label);
 }

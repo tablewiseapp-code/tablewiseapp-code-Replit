@@ -7,6 +7,7 @@ import { useMvpCopy } from "@/lib/mvp-copy";
 import { useQueryClient } from "@tanstack/react-query";
 import { recipePlannerURL } from "@/lib/week-plan";
 import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
+import { recipeToolKeys } from "@/lib/recipe-tools";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
@@ -36,7 +37,7 @@ export default function RecipeDetail() {
   }, [params?.id]);
 
   const handleDelete = async () => {
-    if (!recipe) return;
+    if (!recipe || recipe.developmentReadOnly) return;
     const confirmed = window.confirm(t("recipeDetail.deleteConfirm") || "Delete this recipe?");
     if (!confirmed) return;
     try {
@@ -111,6 +112,11 @@ export default function RecipeDetail() {
           {recipe.servings && (
             <span data-testid="text-servings">{recipe.servings} {t("recipe.servings") || "servings"}</span>
           )}
+          <span data-testid="text-tools">
+            {timingCopy("toolsUsed")}: {recipeToolKeys(recipe.steps, recipe.equipment).map(tool => timingCopy(tool)).join(", ") || timingCopy("toolsUnknown")}
+          </span>
+          {recipe.metadataEstimated &&
+            <span className="basis-full" data-testid="text-development-estimates">{timingCopy("developmentEstimates")}</span>}
           {recipe.sourceUrl && (
             <a
               href={recipe.sourceUrl}
@@ -132,11 +138,13 @@ export default function RecipeDetail() {
           </p>
         )}
 
+        {recipe.developmentReadOnly && <p className="mb-4 text-sm text-muted-foreground" role="note"
+          data-testid="development-read-only">{timingCopy("developmentReadOnly")}</p>}
         <details className="mb-6 rounded-xl border hairline p-4">
           <summary className="cursor-pointer text-sm font-medium">{timingCopy("editTiming")}</summary>
           <form className="mt-4 space-y-3" onSubmit={async event => {
             event.preventDefault();
-            if (savingTimes) return;
+            if (savingTimes || recipe.developmentReadOnly) return;
             setSavingTimes(true);
             setTimingStatus(null);
             try {
@@ -159,18 +167,18 @@ export default function RecipeDetail() {
                 <span>{timingCopy("preparation")} ({timingCopy("minutesLabel")})</span>
                 <input type="number" min="0" max="10080" step="1" value={prepTime}
                   onChange={event => { setPrepTime(event.target.value); setTimingStatus(null); }}
-                  disabled={savingTimes} data-testid="input-prep-time"
+                  disabled={savingTimes || recipe.developmentReadOnly} data-testid="input-prep-time"
                   className="block min-h-11 w-full rounded-lg border bg-background px-3" />
               </label>
               <label className="space-y-1 text-sm">
                 <span>{timingCopy("cooking")} ({timingCopy("minutesLabel")})</span>
                 <input type="number" min="0" max="10080" step="1" value={cookTime}
                   onChange={event => { setCookTime(event.target.value); setTimingStatus(null); }}
-                  disabled={savingTimes} data-testid="input-cooking-time"
+                  disabled={savingTimes || recipe.developmentReadOnly} data-testid="input-cooking-time"
                   className="block min-h-11 w-full rounded-lg border bg-background px-3" />
               </label>
             </div>
-            <button type="submit" disabled={savingTimes} data-testid="button-save-times"
+            <button type="submit" disabled={savingTimes || recipe.developmentReadOnly} data-testid="button-save-times"
               className="min-h-11 rounded-full bg-primary px-4 text-sm text-primary-foreground disabled:opacity-50">
               {timingCopy("saveTiming")}
             </button>
@@ -227,6 +235,7 @@ export default function RecipeDetail() {
         <div className="flex flex-wrap gap-3 pt-4 border-t hairline">
           <button
             onClick={handleDelete}
+            disabled={recipe.developmentReadOnly}
             className="px-5 py-2 min-h-11 text-sm rounded-full border border-red-200 text-red-500 hover:bg-red-50"
             data-testid="button-delete-recipe"
           >

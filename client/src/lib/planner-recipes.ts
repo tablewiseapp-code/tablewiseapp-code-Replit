@@ -12,6 +12,7 @@ export type PlannerRecipe = {
   tags: string[];
   tools: string[];
   equipment?: RecipeToolKey[];
+  metadataEstimated?: boolean;
   sourceType: string;
   proteinType: string;
   servingsRange: string;
@@ -110,7 +111,8 @@ export function toPlannerRecipe(recipe: StoredRecipe): PlannerRecipe {
     mealType: inferMealType(recipe),
     tags: (recipe.tags ?? []).map(normalizeTag),
     tools: inferTools(recipe.steps),
-    equipment: recipeToolKeys(recipe.steps),
+    equipment: recipeToolKeys(recipe.steps, recipe.equipment),
+    metadataEstimated: recipe.metadataEstimated,
     sourceType: inferSourceType(recipe),
     proteinType: inferProteinType(recipe.ingredients),
     servingsRange: inferServingsRange(recipe.servings),
