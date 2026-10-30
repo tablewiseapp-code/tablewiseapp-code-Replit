@@ -1,5 +1,9 @@
 # Saved recipe credits — development
 
+**Navigation update:** `/meals` is now the main screen; `/` and the retired
+`/plan` redirect there. Earlier references to two planners describe the
+previous layout. The current behavior is documented in `docs/meals-home.md`.
+
 The owner approved saved Chef / Mine attribution fields in development.
 
 ## Using it

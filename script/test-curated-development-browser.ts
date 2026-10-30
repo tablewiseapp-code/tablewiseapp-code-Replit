@@ -20,13 +20,26 @@ async function main() {
   const el = (id: string) => `document.querySelector(${JSON.stringify(`[data-testid="${id}"]`)})`;
   try {
     await call("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1000, deviceScaleFactor: 1, mobile: false });
-    await navigate(`${base}/plan`);
+    await navigate(`${base}/`);
     await evaluate("localStorage.clear();localStorage.setItem('tablewise_language','en');localStorage.setItem('tablewise:time-display:v1','total')");
-    await navigate(`${base}/plan`);
-    await wait(el(`mvp-catalog-facts-${recipes[0].id}`));
-    assert.equal(await evaluate("document.querySelectorAll('[data-testid^=\"mvp-choose-\"]').length"), 20);
+    await navigate(`${base}/`);
+    await wait("location.pathname === '/meals'");
+    await wait(el(`meals-catalog-facts-${recipes[0].id}`));
+    assert.equal(await evaluate("document.querySelectorAll('[data-testid^=\"recipe-card-\"]').length"), 20);
+    assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
+    assert.equal(await evaluate("document.querySelector('[data-testid=\"dev-nav\"] a').getAttribute('href')"), "/meals");
+    assert.equal(await evaluate("Boolean(document.querySelector('a[href=\"/plan\"]'))"), false);
+    const legacyKey = "tablewise:mvp:plan:v1:2026-10-19";
+    const legacyValue = JSON.stringify({ version: 1, weekStart: "2026-10-19",
+      selectedRecipeIds: [recipes[0].id], assignments: { [recipes[0].id]: "2026-10-19" }, confirmed: false });
+    await evaluate(`localStorage.setItem(${JSON.stringify(legacyKey)},${JSON.stringify(legacyValue)})`);
+    await navigate(`${base}/plan?week=2026-10-19`);
+    await wait("location.pathname === '/meals'");
+    await wait(el(`meals-catalog-facts-${recipes[0].id}`));
+    assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
+    assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
     for (const recipe of recipes) {
-      const facts = await evaluate(`${el(`mvp-catalog-facts-${recipe.id}`)}.textContent`);
+      const facts = await evaluate(`${el(`meals-catalog-facts-${recipe.id}`)}.textContent`);
       assert.match(facts, /Portions:/); assert.match(facts, /Preparation:/);
       assert.match(facts, /Tools used:/); assert.doesNotMatch(facts, /not specified/);
       assert.equal(facts.includes("Development estimates"), Boolean(recipe.metadataEstimated));
@@ -39,6 +52,7 @@ async function main() {
       await navigate(`${base}/recipe/${encodeURIComponent(recipe.id)}`);
       await wait(`${el("text-recipe-title")}?.textContent.trim()===${JSON.stringify(recipe.title)}`);
       await wait(el("text-tools"));
+      assert.equal(await evaluate(`${el("link-back-to-planner")}.getAttribute('href')`), "/meals");
       assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
       assert.ok(await evaluate(`Boolean(${el("recipe-credit-editor")})`));
       assert.match(await evaluate(`${el("text-prep-time")}.textContent`), new RegExp(`\\b${recipe.prepTime}\\b`));
@@ -72,12 +86,15 @@ async function main() {
     assert.equal(await evaluate(`fetch('/api/development/recipe-credits/${encodeURIComponent(recipes[0].id)}',{method:'PATCH',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.status)`), 400);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
+    await evaluate(`${el("dev-nav-mobile-trigger")}.click()`);
+    await wait(el("dev-nav-mobile-link-meals"));
+    assert.equal(await evaluate(`Boolean(${el("dev-nav-mobile-link-plan")})`), false);
     await navigate(`${base}/recipes`);
     await wait(el(`recipe-credit-${recipes[0].id}`));
     for (const recipe of recipes) assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
     assert.deepEqual(browser.exceptions, []);
-    console.log("PASS real development API/browser: exactly 20 visible recipes; all 20 detail pages and both planners show portions, preparation, tools and creator/Mine/reference credits; credit editors available; all 8 estimate notices; content input/save/delete protection; researched/estimated content edit-attempt/reload stability; proxy same-origin credit validation; list/detail consistency; mobile overflow and runtime checks. No API mocks or data mutations.");
+    console.log("PASS real development API/browser: home and retired /plan redirect to /meals; desktop/mobile navigation has no /plan; legacy saved data preserved; 20 visible recipes; all 20 detail pages return to /meals and show portions, preparation, tools and creator/Mine/reference credits; credit editors and estimate notices; content protection; list/detail consistency; mobile layout; no runtime exceptions, API mocks or data mutations.");
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -69,7 +69,9 @@ async function main() {
     const previous = loads;
     await call("Page.navigate", { url: `${base}${path}` });
     await waitLoad(previous);
-    await wait(`location.pathname === ${JSON.stringify(path.split("?")[0])} && document.readyState === 'complete'`);
+    const requested = path.split("?")[0];
+    const destination = requested === "/" || requested === "/plan" ? "/meals" : requested;
+    await wait(`location.pathname === ${JSON.stringify(destination)} && document.readyState === 'complete'`);
   };
   const text = (id: string) => evaluate<string>(`${element(id)}?.textContent ?? ''`);
   try {
@@ -133,10 +135,9 @@ async function main() {
       await call("Emulation.setDeviceMetricsOverride", { width, height: 844, deviceScaleFactor: 1, mobile: true });
       assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "Calendar must not overflow the page.");
     }
-    await navigate("/plan?week=2026-10-19");
-    await click("mvp-filters-toggle");
-    await wait(element("mvp-time-preparation"));
-    await click("mvp-time-preparation");
+    await navigate("/");
+    await wait("location.pathname === '/meals'");
+    await click("meals-time-preparation");
     await navigate("/meals");
     await wait(element("meals-time-preparation"));
     assert.equal(await evaluate(`${element("meals-time-preparation")}.getAttribute('aria-pressed')`), "true");
@@ -147,7 +148,7 @@ async function main() {
       assert.equal(await evaluate("document.documentElement.dir"), direction);
       assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "Selection must not overflow the page.");
     }
-    console.log("PASS real browser: shared MVP/advanced time preference, 320/390px calendar, Russian/Hebrew selection rendering.");
+    console.log("PASS real browser: home redirects to meals with persistent time preference, 320/390px calendar, Russian/Hebrew selection rendering.");
 
     assert.equal(errors.length, 0);
     console.log("PASS real browser: no runtime exceptions. Missing/zero normalization is covered separately by the meals timing unit tests, not by browser API fixtures.");

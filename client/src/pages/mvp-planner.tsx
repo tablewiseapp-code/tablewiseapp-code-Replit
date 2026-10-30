@@ -351,7 +351,7 @@ export default function MvpPlanner() {
           <section role="alert" className="rounded-2xl border border-[#d8c6b7] bg-[#fffaf4] p-6">
             <h1 className="text-xl font-semibold">{t("invalidWeek")}</h1>
             <p className="mt-2 text-sm text-[#6b746d]">{t("invalidWeekHint")}</p>
-            <Link href="/plan" className={`${buttonBase} mt-5 bg-[#42624e] text-white`}>{t("backPlanner")}</Link>
+            <Link href="/meals" className={`${buttonBase} mt-5 bg-[#42624e] text-white`}>{t("backPlanner")}</Link>
           </section>
         </PageContainer>
       </div>
