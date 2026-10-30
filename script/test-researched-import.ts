@@ -14,6 +14,7 @@ async function main() {
     await client.query(`CREATE TABLE recipes (
       id varchar PRIMARY KEY, title text NOT NULL, ingredients text[] NOT NULL,
       steps text[] NOT NULL, image text, source_url text, cook_time integer,
+      credit_kind text, credit_name varchar(120),
       servings text, tags text[], created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now())`);
     for (let i = 1; i <= 3; i++) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { creditKind, creditName, recipeCreditInput } from "../shared/recipe-credit";
 
 const line = z.string().trim().min(1).max(1000);
 const safeURL = z.string().max(2048).url().refine(value => {
@@ -8,7 +9,7 @@ const safeURL = z.string().max(2048).url().refine(value => {
   } catch { return false; }
 }, "Use an HTTP(S) URL without credentials");
 
-export const recipeInput = z.object({
+const recipeBase = z.object({
   title: z.string().trim().min(1).max(200),
   ingredients: z.array(line).min(1).max(100),
   steps: z.array(z.string().trim().min(1).max(2000)).min(1).max(100),
@@ -19,7 +20,20 @@ export const recipeInput = z.object({
   servings: z.string().trim().min(1).max(40).nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(50)).max(20).nullable().optional(),
 }).strict();
-export const recipePatch = recipeInput.partial().refine(value => Object.keys(value).length > 0);
+export const recipeInput = recipeBase.extend({
+  creditKind: creditKind.nullable().optional(), creditName,
+}).superRefine((value, ctx) => {
+  if (value.creditKind) {
+    const parsed = recipeCreditInput.safeParse({ creditKind: value.creditKind, creditName: value.creditName });
+    if (!parsed.success) parsed.error.issues.forEach(issue => ctx.addIssue(issue));
+  } else if (value.creditName) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["creditKind"], message: "Choose Chef or Mine." });
+  }
+}).transform(value => value.creditKind ? {
+  ...value, ...recipeCreditInput.parse({ creditKind: value.creditKind, creditName: value.creditName }),
+} : value);
+// Attribution is changed atomically through its bounded, separate endpoint.
+export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0);
 export const recipeId = z.string().min(1).max(150).regex(/^[a-zA-Z0-9:_-]+$/);
 export const parseInput = z.object({
   transcript: z.string().trim().min(1).max(12000),

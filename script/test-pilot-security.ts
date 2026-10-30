@@ -32,6 +32,7 @@ async function fixture(overrides: Partial<PilotConfig> = {}, externalStore?: Rec
   const releases: (() => void)[] = [];
   const rows = new Map([["fixture", stored("fixture")]]);
   const store: RecipeStorage = externalStore ?? {
+    async updateRecipeCredit() { throw new Error("Development credits are not enabled by this legacy test store."); },
     async getAllRecipes() { if (failDB) throw new Error(secretMarker); return [...rows.values()]; },
     async getRecipe(id) { return rows.get(id); },
     async createRecipe(value) {

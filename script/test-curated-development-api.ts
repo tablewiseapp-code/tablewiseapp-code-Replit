@@ -22,6 +22,7 @@ async function main() {
     getRecipe: async id => structuredClone(rows.find(r => r.id === id)),
     createRecipe: async () => { writes++; throw new Error("Unexpected write"); },
     updateRecipe: async () => { writes++; throw new Error("Unexpected write"); },
+    updateRecipeCredit: async () => { writes++; throw new Error("Unexpected credit write"); },
     deleteRecipe: async () => { writes++; throw new Error("Unexpected write"); },
   };
   const oldNode = process.env.NODE_ENV, oldFlag = process.env.TABLEWISE_DEV_CURATED_CATALOG;

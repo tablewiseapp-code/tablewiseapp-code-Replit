@@ -6,7 +6,8 @@ preparation time and tools.
 
 ## Current behavior
 
-- The database still contains 112 original, unchanged records.
+- The database still contains all 112 original records, with their original
+  recipe contents and timestamps preserved.
 - The development API's catalog returns exactly 20: the 12 researched recipes
   plus eight explicitly selected synthetic fixtures.
 - All 20 have portions, preparation time, cooking time, calculated total time,
@@ -46,12 +47,15 @@ Both list and selected detail responses use the same metadata. Hidden recipes
 remain stored and their existing detail URLs remain available; this does not
 delete recipes or rewrite saved plans.
 
-The twenty selected entries are explicitly **read-only**. Their detail pages
+The twenty selected entries' **recipe contents are read-only**. Their detail pages
 show a translated notice and disable timing inputs, Save and Delete. The API
 also rejects authenticated PATCH/PUT/DELETE attempts for these entries before
 they reach storage. This prevents clearing required timings or changing a
 stored synthetic fixture while its development estimate remains displayed.
 The restriction only applies while the development curation is enabled.
+The subsequently approved Chef / Mine credit fields are a separate editable
+metadata exception; see `docs/recipe-credits.md`. They do not permit overwriting
+ingredients, steps, timings or original timestamps.
 
 The curation requires **both** `NODE_ENV=development` and
 `TABLEWISE_DEV_CURATED_CATALOG=true`. It is disabled in production even if
@@ -80,9 +84,11 @@ test expects that full view; it should not be run expecting 112 cards while the
   checks.
 - Existing main-planner and advanced-timing browser suites passed against
   the twenty-entry development view.
-- A fresh read-only database snapshot matched the complete post-import
+- Before the later creator-credit fields were added, a fresh read-only database snapshot matched the complete post-import
   112-record baseline exactly, including all stored metadata and timestamps.
   The secure snapshot is in ignored
   `generated-artifacts/main-development-curated-20-storage.json`.
 
-No recipe mutations were performed to create this view.
+No recipe-content mutations were performed to create this view. The later
+credit feature added two nullable metadata fields and twelve verified creator
+credits, while a separate comparison preserved every original column.

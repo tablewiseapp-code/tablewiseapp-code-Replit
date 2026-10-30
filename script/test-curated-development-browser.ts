@@ -10,6 +10,11 @@ async function main() {
   assert.equal(response.status, 200);
   const recipes = await response.json() as Recipe[];
   assert.deepEqual(recipes.map(r => r.id), curatedDevelopmentIds);
+  const expectedCredit = (r: Recipe) => r.creditKind === "mine" ?
+    `Mine${r.creditName ? ` — ${r.creditName}` : ""}` :
+    r.creditName ? `${r.chefReference ? "Chef reference (synthetic recipe)" : "Chef / creator"}: ${r.creditName}` :
+    `Chef reference (synthetic recipe): ${r.chefReference}`;
+  for (const r of recipes) assert.ok(r.creditKind === "mine" || r.creditName || r.chefReference, "Every selected recipe needs an honest creator/reference credit.");
   const browser = await openTestTab();
   const { evaluate, wait, navigate, call } = browser;
   const el = (id: string) => `document.querySelector(${JSON.stringify(`[data-testid="${id}"]`)})`;
@@ -25,6 +30,7 @@ async function main() {
       assert.match(facts, /Portions:/); assert.match(facts, /Preparation:/);
       assert.match(facts, /Tools used:/); assert.doesNotMatch(facts, /not specified/);
       assert.equal(facts.includes("Development estimates"), Boolean(recipe.metadataEstimated));
+      assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
     }
     for (const recipe of recipes) {
       const detailResponse: Response = await fetch(`${base}/api/recipes/${encodeURIComponent(recipe.id)}`);
@@ -33,6 +39,8 @@ async function main() {
       await navigate(`${base}/recipe/${encodeURIComponent(recipe.id)}`);
       await wait(`${el("text-recipe-title")}?.textContent.trim()===${JSON.stringify(recipe.title)}`);
       await wait(el("text-tools"));
+      assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
+      assert.ok(await evaluate(`Boolean(${el("recipe-credit-editor")})`));
       assert.match(await evaluate(`${el("text-prep-time")}.textContent`), new RegExp(`\\b${recipe.prepTime}\\b`));
       assert.ok((await evaluate(`${el("text-servings")}.textContent`)).includes(recipe.servings!));
       assert.doesNotMatch(await evaluate(`${el("text-tools")}.textContent`), /not specified/);
@@ -57,11 +65,19 @@ async function main() {
       const facts = await evaluate(`${el(`meals-catalog-facts-${recipe.id}`)}.textContent`);
       assert.match(facts, /Portions:/); assert.match(facts, /Preparation:/);
       assert.match(facts, /Tools used:/); assert.doesNotMatch(facts, /not specified/);
+      assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
     }
+    // Exercise the real proxy's same-origin gate with invalid input: validation
+    // must reject before storage, without changing any recipe or credit.
+    assert.equal(await evaluate(`fetch('/api/development/recipe-credits/${encodeURIComponent(recipes[0].id)}',{method:'PATCH',headers:{'Content-Type':'application/json'},body:'{}'}).then(r=>r.status)`), 400);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
+    await navigate(`${base}/recipes`);
+    await wait(el(`recipe-credit-${recipes[0].id}`));
+    for (const recipe of recipes) assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
+    assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
     assert.deepEqual(browser.exceptions, []);
-    console.log("PASS real development API/browser: exactly 20 visible recipes; all 20 detail pages and both planners show portions, preparation and tools; all 8 estimate notices; read-only inputs/save/delete; researched and estimated edit-attempt/reload stability; list/detail consistency; mobile overflow and runtime checks. No API mocks or recipe writes.");
+    console.log("PASS real development API/browser: exactly 20 visible recipes; all 20 detail pages and both planners show portions, preparation, tools and creator/Mine/reference credits; credit editors available; all 8 estimate notices; content input/save/delete protection; researched/estimated content edit-attempt/reload stability; proxy same-origin credit validation; list/detail consistency; mobile overflow and runtime checks. No API mocks or data mutations.");
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

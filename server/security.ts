@@ -47,7 +47,7 @@ export class RequestBudget {
   }
 }
 
-export function installPilotSecurity(app: Express, config: PilotConfig, now = Date.now) {
+export function installPilotSecurity(app: Express, config: PilotConfig, now = Date.now, developmentCredits = false) {
   const budget = new RequestBudget(now);
   const sessions = new Map<string, number>();
   let activeAI = 0;
@@ -146,6 +146,14 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       if (!config.analyticsEnabled || !config.publicCatalog) return res.status(503).json({ error: "Pilot analytics is disabled." });
       if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
       if (!consume(res, "events:minute", 60, 60_000) || !consume(res, "events:hour", 500, 3600_000)) return;
+      return next();
+    }
+    // Deliberately scoped to credit metadata in the approved development preview.
+    // This is not a public-pilot authorization mechanism.
+    if (developmentCredits && !config.production && process.env.NODE_ENV === "development" &&
+      req.method === "PATCH" && /^\/development\/recipe-credits\/[^/]+\/?$/.test(req.path)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (!consume(res, "development-credit-writes", 30, 60_000)) return;
       return next();
     }
     if (!["GET", "HEAD"].includes(req.method) || /^\/analytics(?:\/|$)/i.test(req.path)) {

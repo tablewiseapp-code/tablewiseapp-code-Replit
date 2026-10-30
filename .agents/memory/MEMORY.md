@@ -7,3 +7,4 @@
 - [Development fixture policy](development-fixture-policy.md) — show 20 complete development recipes; hide and preserve the rest; label synthetic estimates honestly.
 - [Meal classification](meal-classification.md) — explicit reviewed tags, honest unknowns, and all meal types within the unchanged three-recipe workflow.
 - [Type-check repairs](typecheck-repairs.md) — keep optional integration models outside recipe migrations; distinguish stale compiler-cache diagnostics from real errors.
+- [Recipe credits](recipe-credit-semantics.md) — Chef / Mine is saved development metadata; Mine names are optional; synthetic references are not authorship or access rights.

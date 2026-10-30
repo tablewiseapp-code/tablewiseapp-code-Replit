@@ -1,6 +1,7 @@
 import type { RecipeToolKey } from "./recipe-tools";
+import type { RecipeCredit } from "@shared/recipe-credit";
 
-export type Recipe = {
+export type Recipe = RecipeCredit & {
   id: string;
   title: string;
   ingredients: string[];
@@ -16,7 +17,17 @@ export type Recipe = {
   equipment?: RecipeToolKey[];
   metadataEstimated?: boolean;
   developmentReadOnly?: boolean;
+  creditEditable?: boolean;
 };
+
+export async function updateRecipeCredit(id: string, credit: RecipeCredit): Promise<Recipe> {
+  const response = await fetch(`/api/development/recipe-credits/${encodeURIComponent(id)}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ creditKind: credit.creditKind, creditName: credit.creditName || null }),
+  });
+  if (!response.ok) throw new Error("Unable to save recipe credit.");
+  return response.json();
+}
 
 export async function fetchRecipes(): Promise<Recipe[]> {
   const res = await fetch("/api/recipes");

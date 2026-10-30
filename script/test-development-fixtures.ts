@@ -73,6 +73,7 @@ async function main() {
     await client.query(`CREATE TABLE recipes (
       id varchar PRIMARY KEY, title text NOT NULL, ingredients text[] NOT NULL,
       steps text[] NOT NULL, image text, source_url text, cook_time integer,
+      credit_kind text, credit_name varchar(120),
       servings text, tags text[], created_at timestamp NOT NULL DEFAULT now(),
       updated_at timestamp NOT NULL DEFAULT now(), owner_note text DEFAULT 'preserve additional columns')`);
     const snap = async (): Promise<RecipeSnapshot> => (await client.query('SELECT to_jsonb(r) AS row FROM recipes r ORDER BY id COLLATE "C"')).rows.map(row => row.row);

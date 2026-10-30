@@ -27,14 +27,22 @@ export const recipes = pgTable("recipes", {
   cookTime: integer("cook_time"),
   prepTime: integer("prep_time"),
   servings: text("servings"),
+  creditKind: text("credit_kind").$type<"chef" | "mine">(),
+  creditName: varchar("credit_name", { length: 120 }),
   tags: text("tags").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, table => [
   check("recipes_prep_time_check", sql`${table.prepTime} IS NULL OR ${table.prepTime} BETWEEN 0 AND 10080`),
+  check("recipes_credit_check", sql`(${table.creditKind} IS NULL AND ${table.creditName} IS NULL) OR
+    (${table.creditKind} IS NOT NULL AND ${table.creditKind} IN ('chef', 'mine') AND
+      (${table.creditName} IS NULL OR (length(btrim(${table.creditName})) BETWEEN 1 AND 120 AND ${table.creditName} = btrim(${table.creditName}))) AND
+      (${table.creditKind} = 'mine' OR ${table.creditName} IS NOT NULL))`),
 ]);
 
-export const insertRecipeSchema = createInsertSchema(recipes).omit({
+export const insertRecipeSchema = createInsertSchema(recipes, {
+  creditKind: z.enum(["chef", "mine"]).nullable().optional(),
+}).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -42,7 +50,9 @@ export const insertRecipeSchema = createInsertSchema(recipes).omit({
 
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 // Optional for compatibility with recipes created before preparation-time metadata.
-export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime"> & { prepTime?: number | null };
+export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName"> & {
+  prepTime?: number | null; creditKind?: "chef" | "mine" | null; creditName?: string | null;
+};
 
 // Telemetry contains no names, email, IP, user agent, referrer, or recipe text.
 export const pilotEvents = pgTable("pilot_events", {

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { type Express } from "express";
 import { developmentCatalogEnabled, developmentRecipeReadOnly, curateDevelopmentCatalog, curateDevelopmentRecipe } from "./seeds/curated-development-catalog";
+import { recipeCreditInput } from "../shared/recipe-credit";
 import { createServer, type Server } from "http";
 import type { IStorage } from "./storage";
 import { isMissingPreparationColumn } from "./storage";
@@ -10,7 +11,7 @@ import { recipeInput, recipePatch, recipeId, parseInput, audioInput } from "./re
 import { analyticsBatchSchema, validEventTimes } from "../shared/pilot-analytics";
 import { pilotEventStore, AnalyticsCapacityError, type PilotEventStore } from "./pilot-analytics";
 
-export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "deleteRecipe">;
+export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "updateRecipeCredit" | "deleteRecipe">;
 export type RouteDependencies = {
   storage?: RecipeStorage;
   config?: PilotConfig;
@@ -69,7 +70,9 @@ export async function registerRoutes(
   app: Express,
   dependencies: RouteDependencies = {},
 ): Promise<Server> {
-  const security = installPilotSecurity(app, dependencies.config ?? pilotConfig(), dependencies.now);
+  const config = dependencies.config ?? pilotConfig();
+  const developmentCredits = developmentCatalogEnabled() && !config.production;
+  const security = installPilotSecurity(app, config, dependencies.now, developmentCredits);
   const storage = dependencies.storage ?? (await import("./storage")).storage;
   let client: OpenAI | undefined;
   const getAI = () => {
@@ -137,6 +140,21 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("api_failure operation=recipe_get");
       res.status(500).json({ error: "Failed to fetch recipe" });
+    }
+  });
+
+  app.patch("/api/development/recipe-credits/:id", async (req, res) => {
+    if (!developmentCredits) return res.status(404).json({ error: "Not found." });
+    const id = recipeId.safeParse(req.params.id);
+    const parsed = recipeCreditInput.safeParse(req.body);
+    if (!id.success || !parsed.success) return res.status(400).json({ error: "Choose Chef with a name, or Mine with an optional name." });
+    try {
+      const updated = await storage.updateRecipeCredit(id.data, parsed.data);
+      if (!updated) return res.status(404).json({ error: "Recipe not found." });
+      res.json(curateDevelopmentRecipe(updated));
+    } catch {
+      console.error("api_failure operation=recipe_credit_update");
+      res.status(503).json({ error: "Unable to save the recipe credit. No recipe contents were changed." });
     }
   });
 

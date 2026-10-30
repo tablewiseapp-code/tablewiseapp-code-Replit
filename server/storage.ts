@@ -1,12 +1,16 @@
 import { type User, type InsertUser, type Recipe, type InsertRecipe, users, recipes } from "@shared/schema";
 import { eq, desc, getTableColumns, sql } from "drizzle-orm";
 import { recipeInput, recipePatch } from "./request-schemas";
+import { recipeCreditInput } from "../shared/recipe-credit";
+import type { z } from "zod";
 
 // JSON row lookup returns NULL if the additive column has not been installed.
 // Public reads stay compatible with the existing production schema.
 const recipeColumns = {
   ...getTableColumns(recipes),
   prepTime: sql<number | null>`(to_jsonb(${recipes})->>'prep_time')::integer`,
+  creditKind: sql<"chef" | "mine" | null>`to_jsonb(${recipes})->>'credit_kind'`,
+  creditName: sql<string | null>`to_jsonb(${recipes})->>'credit_name'`,
 };
 
 export function isMissingPreparationColumn(error: unknown): boolean {
@@ -24,6 +28,7 @@ export interface IStorage {
   getRecipe(id: string): Promise<Recipe | undefined>;
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   updateRecipe(id: string, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
+  updateRecipeCredit(id: string, credit: z.input<typeof recipeCreditInput>): Promise<Recipe | undefined>;
   deleteRecipe(id: string): Promise<boolean>;
 }
 
@@ -85,6 +90,14 @@ export class DatabaseStorage implements IStorage {
     const db = await this.database();
     const result = await db.delete(recipes).where(eq(recipes.id, id)).returning({ id: recipes.id });
     return result.length > 0;
+  }
+
+  async updateRecipeCredit(id: string, input: z.input<typeof recipeCreditInput>): Promise<Recipe | undefined> {
+    const credit = recipeCreditInput.parse(input);
+    const db = await this.database();
+    // Do not rewrite the pinned recipe contents or its original timestamps.
+    const [updated] = await db.update(recipes).set(credit).where(eq(recipes.id, id)).returning(recipeColumns);
+    return updated;
   }
 }
 

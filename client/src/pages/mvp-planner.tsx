@@ -10,6 +10,7 @@ import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recipeStageMinutes, type RecipeTimeMode } from "@/lib/recipe-time";
 import { recipeToolKeys } from "@/lib/recipe-tools";
+import { RecipeCreditLine } from "@/components/recipe-credit";
 import { MvpMealFilters } from "@/components/mvp-meal-filters";
 import { matchesMealFilters, readMealFilterPreference, saveMealFilterPreference, type MealFilters } from "@/lib/meal-filters";
 import { recipeTimePreferenceKey } from "@/lib/recipe-time";
@@ -44,6 +45,7 @@ function RecipeFacts({ recipe, context, timeMode, week }: { recipe: Recipe; cont
       {timeMode === "total" && recipe.prepTime != null &&
         <span>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</span>}
       <span className="basis-full">{t("toolsUsed")}: {tools.length ? tools.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</span>
+      <RecipeCreditLine recipe={recipe} />
       {recipe.metadataEstimated && <span className="basis-full">{t("developmentEstimates")}</span>}
       <Link href={plannerRecipeURL(recipe.id, week)} aria-label={`${t("showRecipe")}: ${recipe.title}`}
         data-testid={`mvp-show-${context}-${recipe.id}`}

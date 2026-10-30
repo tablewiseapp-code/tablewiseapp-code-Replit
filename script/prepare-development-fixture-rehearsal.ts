@@ -14,6 +14,7 @@ async function main() {
       id varchar PRIMARY KEY, title text NOT NULL, ingredients text[] NOT NULL,
       steps text[] NOT NULL, image text, source_url text, cook_time integer,
       prep_time integer, servings text, tags text[],
+      credit_kind text, credit_name varchar(120),
       created_at timestamp NOT NULL DEFAULT now(), updated_at timestamp NOT NULL DEFAULT now())`);
     await pool.query(researchedImportSQL());
     const dry = await importDevelopmentFixtures(pool, { apply: false });

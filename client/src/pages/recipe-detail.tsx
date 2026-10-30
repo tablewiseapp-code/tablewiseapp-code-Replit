@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { recipePlannerURL } from "@/lib/week-plan";
 import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
 import { recipeToolKeys } from "@/lib/recipe-tools";
+import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
@@ -101,6 +102,7 @@ export default function RecipeDetail() {
         <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2" data-testid="text-recipe-title">
           {recipe.title}
         </h1>
+        <div className="mb-3 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mobile-readable-xs text-muted-foreground mb-6">
           {recipe.prepTime != null && (
@@ -188,6 +190,7 @@ export default function RecipeDetail() {
           </form>
         </details>
 
+        <RecipeCreditEditor recipe={recipe} onSaved={setRecipe} />
         {recipe.tags && recipe.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {recipe.tags.map((tag) => (

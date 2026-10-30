@@ -3,6 +3,8 @@ import { Clock3, Users, Wrench } from "lucide-react";
 import { Link } from "wouter";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { recipeStageMinutes, recipeTimePreferenceKey, type RecipeTimeMode, type RecipeTimeData } from "@/lib/recipe-time";
+import { RecipeCreditLine } from "./recipe-credit";
+import type { RecipeCredit } from "@shared/recipe-credit";
 import type { RecipeToolKey } from "@/lib/recipe-tools";
 
 const TimeContext = createContext<{
@@ -47,7 +49,7 @@ export function RecipeTimeToggle() {
 }
 
 export function MealRecipeFacts({ recipe, context, compact = false }: {
-  recipe: RecipeTimeData & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[]; metadataEstimated?: boolean };
+  recipe: RecipeCredit & RecipeTimeData & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[]; metadataEstimated?: boolean };
   context: string;
   compact?: boolean;
 }) {
@@ -76,6 +78,7 @@ export function MealRecipeFacts({ recipe, context, compact = false }: {
       </span>
       {mode === "total" && recipe.prepTime != null &&
         <span>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</span>}
+      <RecipeCreditLine recipe={recipe} />
       {context !== "drag" && (
         <Link href={`/recipe/${recipe.id}`} onPointerDown={event => event.stopPropagation()}
           onKeyDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}

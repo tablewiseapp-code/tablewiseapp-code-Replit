@@ -37,5 +37,8 @@ estimate on reload; clearing mandatory timings could also make the complete
 catalog unavailable.
 
 **How to apply:** A curated read-only presentation must block selected-record
-mutations in the API as well as the page. Re-enable editing only with a
-consistent, tested write model that preserves required metadata.
+ingredient, instruction, timing and deletion mutations in the API as well as
+the page. The owner separately approved saved Chef / Mine credit metadata in
+development; that bounded exception must not rewrite recipe contents or
+timestamps. Re-enable other editing only with a consistent, tested write model
+that preserves required metadata.

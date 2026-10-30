@@ -1,5 +1,6 @@
 import { researchedDinners } from "./researched-import";
 import { recipeToolKeys, type RecipeToolKey } from "../../client/src/lib/recipe-tools";
+import supplied from "./development-fixtures.json";
 
 // Presentation-only fixtures. Do not write these illustrative estimates into
 // the pinned synthetic batch or disguise them as source-verified recipe facts.
@@ -21,6 +22,7 @@ export const curatedDevelopmentIds = [
   ...researchedDinners.map(recipe => recipe.id), ...byId.keys(),
 ];
 const visible = new Set(curatedDevelopmentIds);
+const references = new Map(supplied.entries.map(entry => [entry.recipe.id, entry.referenceChef]));
 type Curatable = {
   id: string; steps: string[]; tags?: string[] | null;
   servings?: string | null; prepTime?: number | null; cookTime?: number | null;
@@ -37,11 +39,12 @@ export function developmentRecipeReadOnly(id: string) {
 
 export function curateDevelopmentRecipe<T extends Curatable>(recipe: T) {
   const estimate = byId.get(recipe.id);
+  const credit = { creditEditable: true, chefReference: references.get(recipe.id) ?? null };
   return estimate ? {
-    ...recipe, ...estimate, equipment: recipeToolKeys(recipe.steps, estimate.equipment), metadataEstimated: true,
+    ...recipe, ...credit, ...estimate, equipment: recipeToolKeys(recipe.steps, estimate.equipment), metadataEstimated: true,
     developmentReadOnly: true,
     tags: [...(recipe.tags ?? []), "Development estimates"],
-  } : { ...recipe, equipment: recipeToolKeys(recipe.steps), developmentReadOnly: visible.has(recipe.id) };
+  } : { ...recipe, ...credit, equipment: recipeToolKeys(recipe.steps), developmentReadOnly: visible.has(recipe.id) };
 }
 
 export function curateDevelopmentCatalog<T extends Curatable>(recipes: T[]) {

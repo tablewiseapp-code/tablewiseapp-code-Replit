@@ -33,6 +33,7 @@ async function main() {
       id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
       title text NOT NULL, ingredients text[] NOT NULL, steps text[] NOT NULL,
       image text, source_url text, cook_time integer, servings text, tags text[],
+      credit_kind text, credit_name varchar(120),
       created_at timestamp NOT NULL DEFAULT now(), updated_at timestamp NOT NULL DEFAULT now()
     )`);
     await client.query("INSERT INTO recipes(id,title,ingredients,steps,cook_time) VALUES($1,$2,$3,$4,$5)",

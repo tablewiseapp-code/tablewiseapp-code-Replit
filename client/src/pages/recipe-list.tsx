@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { fetchRecipes, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
+import { RecipeCreditLine } from "@/components/recipe-credit";
 
 export default function RecipeList() {
   const { t } = useI18n();
@@ -133,6 +134,7 @@ export default function RecipeList() {
                     <h2 className="text-sm font-medium text-foreground truncate" data-testid={`text-recipe-title-${recipe.id}`}>
                       {recipe.title}
                     </h2>
+                    <div className="mt-1 text-xs text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
                     <p className="mobile-readable-xs text-muted-foreground mt-1" data-testid={`text-recipe-info-${recipe.id}`}>
                       {recipe.ingredients.length} {t("recipes.ingredients") || "ingredients"} - {recipe.steps.length} {t("recipes.steps") || "steps"}
                       {recipe.cookTime ? ` - ${recipe.cookTime} min` : ""}

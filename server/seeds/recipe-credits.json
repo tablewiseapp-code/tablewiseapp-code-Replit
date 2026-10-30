@@ -1,0 +1,18 @@
+{
+  "verifiedOn": "2026-10-30",
+  "evidence": "Recipe JSON-LD author fields on each recipe's existing source URL; Budget Bytes author @id resolved to its Person node. Names are recipe creators, not claims of professional chef qualifications.",
+  "creators": {
+    "tablewise:real:v1:chicken-curry": "Esther Clark",
+    "tablewise:real:v1:salmon-egg-fried-rice": "Sophie Godwin – Cookery writer",
+    "tablewise:real:v1:lentil-leek-soup": "Member recipe by bevieevey",
+    "tablewise:real:v1:baked-salmon": "Lulu Grimes",
+    "tablewise:real:v1:coconut-chickpea-curry": "Beth Moncel",
+    "tablewise:real:v1:sundried-tomato-pasta": "Beth Moncel",
+    "tablewise:real:v1:black-bean-quesadillas": "Beth Moncel",
+    "tablewise:real:v1:spanish-omelette": "Caroline Hire – Food writer",
+    "tablewise:real:v1:tuna-pasta-bake": "Good Food team",
+    "tablewise:real:v1:garlic-butter-chicken": "Beth Moncel",
+    "tablewise:real:v1:sichuan-beef-stir-fry": "Liberty Mendez",
+    "tablewise:real:v1:spaghetti-meatballs": "Good Food team"
+  }
+}

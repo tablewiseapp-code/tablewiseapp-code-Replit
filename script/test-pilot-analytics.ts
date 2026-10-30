@@ -24,7 +24,7 @@ async function fixture(analytics: Pick<PilotEventStore, "record" | "summary">, e
   let mutations = 0, aiCalls = 0;
   const forbidden = async () => { mutations++; throw new Error("Unexpected recipe write"); };
   const recipes: RecipeStorage = { getAllRecipes: async () => [], getRecipe: async () => undefined,
-    createRecipe: forbidden, updateRecipe: forbidden, deleteRecipe: forbidden };
+    createRecipe: forbidden, updateRecipe: forbidden, updateRecipeCredit: forbidden, deleteRecipe: forbidden };
   await registerRoutes(server, app, {
     storage: recipes, analytics, now: () => now,
     config: { operatorToken: operator, publicCatalog: true, production: false, aiEnabled: false, analyticsEnabled: enabled },

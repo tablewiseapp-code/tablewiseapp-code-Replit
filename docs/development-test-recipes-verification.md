@@ -10,11 +10,15 @@ See **Main-agent operation — completed** below for the fresh evidence and outp
 
 **Subsequent owner-requested display change:** the current development preview
 shows only 20 complete recipes; the other 92 are hidden, not deleted. All 112
-stored records still exactly match the post-import snapshot. See
+stored recipe contents and original timestamps remain preserved. The display-only
+change originally matched the post-import snapshot exactly; the subsequently
+approved creator-credit feature adds only its two new metadata fields. See
 `docs/curated-development-catalog.md` for the current selection, explicitly
 labelled development estimates, and exhaustive twenty-detail-page verification.
 The 112-card browser results below describe the successfully verified full view
 before that later display change.
+Current creator-credit behavior and the full-original-column preservation check
+are documented in `docs/recipe-credits.md`.
 
 No production access, publication, schema push, destructive reset or inferred
 fixture metadata was part of this operation.

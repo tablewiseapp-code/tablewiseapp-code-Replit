@@ -11,6 +11,7 @@
     "check": "tsc",
     "test:integration-utils": "tsx script/test-integration-utils.ts",
     "test:curated-development": "tsx script/test-curated-development.ts",
+    "test:recipe-credit": "tsx script/test-recipe-credit.ts",
     "test:curated-development-api": "tsx script/test-curated-development-api.ts",
     "test:curated-development-browser": "tsx script/test-curated-development-browser.ts",
     "seed:recipes": "tsx script/seed-recipes.ts",

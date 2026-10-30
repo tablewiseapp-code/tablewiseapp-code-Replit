@@ -30,6 +30,7 @@ async function main() {
       image text, source_url text, cook_time integer,
       prep_time integer CHECK (prep_time IS NULL OR prep_time BETWEEN 0 AND 10080),
       servings text, tags text[],
+      credit_kind text, credit_name varchar(120),
       created_at timestamp NOT NULL DEFAULT now(), updated_at timestamp NOT NULL DEFAULT now()
     )`);
     assert.equal(dinnerCatalog.length, 12);
