@@ -10,6 +10,9 @@ import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recipeStageMinutes, type RecipeTimeMode } from "@/lib/recipe-time";
 import { recipeToolKeys } from "@/lib/recipe-tools";
+import { MvpMealFilters } from "@/components/mvp-meal-filters";
+import { matchesMealFilters, readMealFilterPreference, saveMealFilterPreference, type MealFilters } from "@/lib/meal-filters";
+import { recipeTimePreferenceKey } from "@/lib/recipe-time";
 
 const buttonBase = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] disabled:cursor-not-allowed disabled:opacity-45";
 
@@ -55,13 +58,20 @@ function PlannerForWeek({ week }: { week: string }) {
   const workspace = useWeekPlan(week);
   const catalog = useRecipeCatalog();
   const [replacingId, setReplacingId] = useState<string | null>(null);
+  const [filters, setFilters] = useState(readMealFilterPreference);
+  const [preferenceSaveFailed, setPreferenceSaveFailed] = useState(false);
+  const changeFilters = (next: MealFilters) => {
+    setFilters(next);
+    setPreferenceSaveFailed(!saveMealFilterPreference(next));
+  };
   const [timeMode, setTimeMode] = useState<TimeMode>(() => {
     try {
-      return localStorage.getItem("tablewise:time-display:v1") === "preparation" ? "preparation" : "total";
+      return localStorage.getItem(recipeTimePreferenceKey) === "preparation" ? "preparation" : "total";
     } catch { return "total"; }
   });
   const plan = workspace.plan;
   const recipes = catalog.data ?? [];
+  const matchingRecipes = useMemo(() => recipes.filter(recipe => matchesMealFilters(recipe, filters, timeMode)), [recipes, filters, timeMode]);
   const byId = useMemo(() => new Map(recipes.map(recipe => [recipe.id, recipe])), [recipes]);
   const days = weekDays(week);
   const locale = lang === "he" ? "he-IL" : lang === "ru" ? "ru-RU" : "en";
@@ -173,25 +183,21 @@ function PlannerForWeek({ week }: { week: string }) {
                   </div>
                   {recipes.length > 0 && <span className="text-xs text-[#758077]">{recipes.length}</span>}
                 </div>
-                <div role="group" aria-label={t("timeDisplay")} className="mb-4 flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-[#68756a]">{t("timeDisplay")}:</span>
-                  {(["preparation", "total"] as const).map(mode => (
-                    <button key={mode} type="button" aria-pressed={timeMode === mode}
-                      data-testid={`mvp-time-${mode}`} onClick={() => {
-                        setTimeMode(mode);
-                        try { localStorage.setItem("tablewise:time-display:v1", mode); } catch { /* Optional display preference only. */ }
-                      }}
-                      className={`min-h-11 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${timeMode === mode ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
-                      {t(mode)}
-                    </button>
-                  ))}
-                </div>
+                <MvpMealFilters filters={filters} onChange={changeFilters} timeMode={timeMode}
+                  resultCount={matchingRecipes.length} onTimeModeChange={mode => {
+                    setTimeMode(mode);
+                    try { localStorage.setItem(recipeTimePreferenceKey, mode); }
+                    catch { setPreferenceSaveFailed(true); }
+                  }} />
+                {preferenceSaveFailed && <p role="status" className="mb-3 text-xs text-[#815b49]">{t("filterStorage")}</p>}
                 {recipes.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-5 text-sm leading-6 text-[#68756a]">
                     {catalog.isFetching || catalog.isPending ? t("loading") : catalog.isError ? t("catalogError") : t("noRecipes")}
                   </div>
+                ) : matchingRecipes.length === 0 ? (
+                  <p role="status" data-testid="mvp-no-matches" className="rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-5 text-sm leading-6 text-[#68756a]">{t("noFilterMatches")}</p>
                 ) : <div className="grid gap-3 sm:grid-cols-2">
-                  {recipes.map(recipe => {
+                  {matchingRecipes.map(recipe => {
                     const selected = plan.selectedRecipeIds.includes(recipe.id);
                     const canChoose = !selected && plan.selectedRecipeIds.length < 3 &&
                       !workspace.issue && !catalog.isError && !catalog.isFetching;
@@ -238,7 +244,7 @@ function PlannerForWeek({ week }: { week: string }) {
                       const assignedDay = plan.assignments[id];
                       const unavailable = !recipe && catalog.isSuccess && !catalog.isFetching;
                       const occupiedDays = new Set(Object.entries(plan.assignments).filter(([recipeId]) => recipeId !== id).map(([, day]) => day));
-                      const replaceOptions = recipes.filter(candidate => !plan.selectedRecipeIds.includes(candidate.id));
+                      const replaceOptions = matchingRecipes.filter(candidate => !plan.selectedRecipeIds.includes(candidate.id));
                       return (
                         <li key={id} className="py-4">
                           <div className="flex items-start gap-3">
@@ -284,6 +290,7 @@ function PlannerForWeek({ week }: { week: string }) {
                                     <option value="">{t("replace")}</option>
                                     {replaceOptions.map(option => <option key={option.id} value={option.id}>{option.title}</option>)}
                                   </select>
+                                  {replaceOptions.length === 0 && <span role="status" data-testid={`mvp-no-replacements-${id}`} className="mt-2 block text-xs leading-5 text-[#68756a]">{t("noReplacementMatches")}</span>}
                                 </label>
                               )}
                             </div>

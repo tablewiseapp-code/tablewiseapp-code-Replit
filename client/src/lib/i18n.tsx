@@ -10,7 +10,7 @@ export const LANGUAGES: { code: Language; label: string; nativeLabel: string; di
 
 const translations: Record<Language, Record<string, string>> = {
   en: {
-    "nav.dinnerPlan": "Three dinners",
+    "nav.dinnerPlan": "Three meals",
     "nav.recipeView": "Recipe View",
     "nav.myRecipes": "My Recipes",
     "nav.weeklyMeals": "Weekly Meals",
@@ -212,7 +212,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
 
   ru: {
-    "nav.dinnerPlan": "Три ужина",
+    "nav.dinnerPlan": "Три блюда",
     "nav.recipeView": "Рецепт",
     "nav.myRecipes": "Мои рецепты",
     "nav.weeklyMeals": "Меню недели",

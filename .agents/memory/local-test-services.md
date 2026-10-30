@@ -56,6 +56,17 @@ after reload could also inspect the old document rather than the new one.
 signal before checking the new page, and bound browser-tab cleanup requests so
 failed interaction tests cannot hang indefinitely while closing.
 
+Bring a CDP tab to the foreground before native keyboard tests; Enter activation
+may require its carriage-return text as well as key/code data.
+
+**Why:** Programmatic focus alone did not activate a native button during a
+headless keyboard test, despite the control working when clicked.
+
+**How to apply:** Verify actual focus and native activation rather than
+substituting a synthetic click and claiming keyboard coverage. For React Query
+refetch tests, use a deterministic route remount or explicit retry; synthetic
+focus/visibility events did not trigger refetch reliably in this environment.
+
 Removing a workflow can leave a separately spawned server descendant holding
 its port even after removal reports success.
 

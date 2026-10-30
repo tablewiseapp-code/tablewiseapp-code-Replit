@@ -22,6 +22,8 @@
     "analytics:setup:local": "tsx script/setup-local-analytics.ts",
     "analytics:summary": "tsx script/pilot-summary.ts",
     "test:mvp": "tsx script/test-mvp-grocery.ts",
+    "test:meal-filters": "tsx script/test-meal-filters.ts",
+    "test:meal-filters-browser": "tsx script/test-meal-filters-browser.ts",
     "test:mvp-browser": "tsx script/test-mvp-browser.ts",
     "test:planner-return": "tsx script/test-planner-return.ts",
     "test:planner-return-browser": "tsx script/test-mvp-browser.ts --planner-return-only",

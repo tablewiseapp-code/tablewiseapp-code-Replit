@@ -212,7 +212,7 @@ async function main() {
     const recipeLink = `mvp-show-catalog-${recipes[0].id}`;
     assert.equal(await evaluate(`${element(recipeLink)}.textContent.trim()`), "See full recipe");
     await click(recipeLink);
-    await wait(`location.pathname === ${JSON.stringify(`/recipe/${recipes[0].id}`)} && document.body.textContent.includes(${JSON.stringify(recipes[0].title)})`);
+    await wait(`location.pathname === ${JSON.stringify(`/recipe/${encodeURIComponent(recipes[0].id)}`)} && document.body.textContent.includes(${JSON.stringify(recipes[0].title)})`);
     await click("link-back-to-planner");
     await wait(`${element("mvp-week")}?.getAttribute('datetime')===${JSON.stringify(week)}`);
     await wait(element(`mvp-choose-${recipes[0].id}`));
@@ -230,7 +230,7 @@ async function main() {
     }
     const beforeDetail = await raw(planStorage);
     await click(`mvp-show-selected-${recipes[0].id}`);
-    await wait(`location.pathname === ${JSON.stringify(`/recipe/${recipes[0].id}`)} && document.body.textContent.includes(${JSON.stringify(recipes[0].title)})`);
+    await wait(`location.pathname === ${JSON.stringify(`/recipe/${encodeURIComponent(recipes[0].id)}`)} && document.body.textContent.includes(${JSON.stringify(recipes[0].title)})`);
     await click("link-back-to-planner");
     await wait(`${element("mvp-week")}?.getAttribute('datetime')===${JSON.stringify(week)}`);
     await wait(element(`mvp-show-selected-${recipes[0].id}`));
@@ -238,6 +238,7 @@ async function main() {
     console.log("PASS real API/browser: See full recipe opens the matching detail from catalog and selected dishes; navigation preserves saved selections.");
     console.log("PASS real API/browser: scheduling heading, actual portions and known/unknown total times appear beneath available and selected recipes.");
     const beforeTimeToggle = await raw(planStorage);
+    await click("mvp-filters-toggle");
     await click("mvp-time-preparation");
     assert.equal(await evaluate(`${element("mvp-time-preparation")}.getAttribute('aria-pressed')`), "true");
     for (const recipe of recipes) {
@@ -259,6 +260,7 @@ async function main() {
     assert.equal(await raw(planStorage), beforeTimeToggle);
     await reload();
     await wait(`${element(`mvp-catalog-facts-${chicken.id}`)}`);
+    await click("mvp-filters-toggle");
     assert.equal(await evaluate(`${element("mvp-time-preparation")}.getAttribute('aria-pressed')`), "true");
     assert.equal(await raw(planStorage), beforeTimeToggle);
     await click("mvp-time-total");

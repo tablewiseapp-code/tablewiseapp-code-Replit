@@ -134,6 +134,7 @@ async function main() {
       assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "Calendar must not overflow the page.");
     }
     await navigate("/plan?week=2026-10-19");
+    await click("mvp-filters-toggle");
     await wait(element("mvp-time-preparation"));
     await click("mvp-time-preparation");
     await navigate("/meals");
