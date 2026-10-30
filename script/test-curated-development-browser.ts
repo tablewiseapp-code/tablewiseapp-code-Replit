@@ -40,6 +40,9 @@ async function main() {
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
     for (const recipe of recipes) {
       const facts = await evaluate(`${el(`meals-catalog-facts-${recipe.id}`)}.textContent`);
+      const badges = await evaluate(`Array.from(${el(`recipe-card-${recipe.id}`)}.querySelectorAll('span')).map(span => span.textContent.trim())`);
+      assert.equal(badges.some((text: string) => /^\+\d+$/.test(text)), false,
+        "All tags are visible; ingredient counts must not appear as hidden-tag badges.");
       assert.match(facts, /Portions:/); assert.match(facts, /Preparation:/);
       assert.match(facts, /Tools used:/); assert.doesNotMatch(facts, /not specified/);
       assert.equal(facts.includes("Development estimates"), Boolean(recipe.metadataEstimated));

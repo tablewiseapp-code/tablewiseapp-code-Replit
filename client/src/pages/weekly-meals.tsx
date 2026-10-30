@@ -1381,7 +1381,6 @@ function WeeklyMealsContent() {
                     if (tag === "glutenFree") return t("meals.glutenFree");
                     return tag;
                   });
-                  const extraTagCount = Math.max(0, recipe.ingredients.length - 3);
 
                   return (
                     <div 
@@ -1422,9 +1421,6 @@ function WeeklyMealsContent() {
                         {displayTags.map(tag => (
                           <span key={tag} className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{tag}</span>
                         ))}
-                        {extraTagCount > 0 && (
-                          <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">+{extraTagCount}</span>
-                        )}
                       </div>
 
                       <div className="space-y-1 mb-4">
