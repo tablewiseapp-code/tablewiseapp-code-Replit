@@ -12,3 +12,12 @@ not satisfy the entry-page workflow.
 
 **How to apply:** For recipe navigation changes, check the default planning
 entry flow as well as `/meals`; ensure opening a recipe preserves saved choices.
+
+Keep the legacy app and recipe library as a reference alongside the current
+Three dinners workflow; adding planner navigation is not permission to replace
+or redesign legacy pages.
+
+**Why:** The user explicitly requires the legacy reference to remain available.
+
+**How to apply:** Preserve separate destinations for the current planner and
+legacy recipe library when changing shared recipe-detail navigation.

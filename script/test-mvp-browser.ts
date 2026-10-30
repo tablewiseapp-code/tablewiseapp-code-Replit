@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import WebSocket from "ws";
 import { writeFile } from "node:fs/promises";
 import { buildGroceries } from "../client/src/lib/grocery-engine";
-import { planKey, checkKey, type WeekPlan } from "../client/src/lib/week-plan";
+import { planKey, checkKey, plannerRecipeURL, currentWeek, type WeekPlan } from "../client/src/lib/week-plan";
 import type { Recipe } from "../client/src/lib/storage";
 import { openLocalTestDatabase, testSocketArgument } from "./local-test-database";
 import { pilotJournalKey } from "../client/src/lib/pilot-analytics";
@@ -97,6 +97,93 @@ async function main() {
   try {
     await call("Page.enable"); await call("Runtime.enable");
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    if (process.argv.includes("--planner-return-only")) {
+      // Browser-only API mocks: this branch never sends mutations or analytics
+      // to the application. Run Chromium with a disposable profile.
+      const source = `(() => {
+        const recipes=${JSON.stringify(recipes)};
+        const original=window.fetch;
+        window.fetch=(input,init)=>{
+          const url=new URL(typeof input==='string'?input:input.url,location.origin);
+          if (!url.pathname.startsWith('/api/')) return original(input,init);
+          const method=init?.method || input?.method || 'GET';
+          if (method!=='GET') return Promise.resolve(new Response('{}',{status:200}));
+          const recipe=recipes.find(item=>item.id===decodeURIComponent(url.pathname.slice('/api/recipes/'.length)));
+          const body=url.pathname==='/api/recipes'?recipes:recipe || {error:'Recipe not found'};
+          return Promise.resolve(new Response(JSON.stringify(body),{status:url.pathname==='/api/recipes'||recipe?200:404,headers:{'Content-Type':'application/json'}}));
+        };
+      })();`;
+      await call("Page.addScriptToEvaluateOnNewDocument", { source });
+      const salmon = recipes.find(recipe => recipe.id === "tablewise:real:v1:salmon-egg-fried-rice");
+      assert.ok(salmon, "The researched salmon egg-fried rice recipe must be exercised.");
+      const chosen = [salmon, ...recipes.filter(recipe => recipe.id !== salmon.id)].slice(0, 3);
+      await navigate(`/plan?week=${week}`);
+      await evaluate(`localStorage.setItem('tablewise_language','en'); localStorage.removeItem(${JSON.stringify(planStorage)});`);
+      await reload();
+      for (let index = 0; index < chosen.length; index++) {
+        await click(`mvp-choose-${chosen[index].id}`);
+        await select(`mvp-day-${chosen[index].id}`, `2026-10-${19 + index}`);
+      }
+      await click("mvp-confirm");
+      await wait(element("mvp-view-grocery"));
+      const saved = await raw(planStorage);
+      assert.equal((await plan()).confirmed, true);
+      // Round-trip from available AND selected dishes, retaining confirmation,
+      // all dates and selected IDs byte-for-byte, even after detail reload.
+      for (const context of ["catalog", "selected"]) {
+        const id: string = `mvp-show-${context}-${salmon.id}`;
+        assert.equal(await evaluate(`${element(id)}.getAttribute('href')`), plannerRecipeURL(salmon.id, week));
+        await click(id);
+        await wait(element("text-recipe-title"));
+        assert.equal(await evaluate(`${element("text-recipe-title")}.textContent.trim()`), salmon.title);
+        await reload();
+        await wait(element("link-back-to-planner"));
+        assert.equal(await evaluate(`${element("link-back-to-planner")}.getAttribute('href')`), `/plan?week=${week}`);
+        assert.equal(await evaluate(`${element("link-back")}.getAttribute('href')`), "/recipes");
+        await click("link-back-to-planner");
+        await wait(`${element("mvp-week")}?.getAttribute('datetime')===${JSON.stringify(week)} && ${element("mvp-view-grocery")}`);
+        assert.equal(await raw(planStorage), saved);
+      }
+      const labels = {
+        en: ["← Back to planner", "← Back to recipes"],
+        ru: ["← Назад к плану", "← Назад к рецептам"],
+        he: ["→ חזרה למתכנן", "← חזרה למתכונים"],
+      };
+      for (const lang of ["en", "ru", "he"] as const) {
+        await evaluate(`localStorage.setItem('tablewise_language',${JSON.stringify(lang)})`);
+        for (const width of [320, 390, 1280]) {
+          await call("Emulation.setDeviceMetricsOverride", { width, height: 844, deviceScaleFactor: 1, mobile: width < 600 });
+          for (const missing of [false, true]) {
+            await navigate(plannerRecipeURL(missing ? "missing-recipe-for-test" : salmon.id, week));
+            const legacyId = missing ? "link-back-to-recipes" : "link-back";
+            await wait(element(legacyId));
+            assert.equal(await evaluate("document.documentElement.dir"), lang === "he" ? "rtl" : "ltr");
+            for (const [index, id] of ["link-back-to-planner", legacyId].entries()) {
+              assert.equal(await evaluate(`${element(id)}.textContent.trim()`), labels[lang][index]);
+              assert.ok(await evaluate(`{const r=${element(id)}.getBoundingClientRect(); r.width>0 && r.height>=44 && r.left>=0 && r.right<=innerWidth+1}`), `${lang} ${width}px ${id} visible and touch accessible`);
+            }
+            assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
+            await click(legacyId);
+            await wait(`location.pathname==='/recipes'`);
+            await wait("document.querySelector('[data-testid=\"text-recipes-title\"]') || document.body.textContent.includes(" + JSON.stringify(salmon.title) + ")");
+            assert.equal(await raw(planStorage), saved);
+          }
+        }
+      }
+      for (const query of ["", "?week=2026-10-20", "?week=2026-02-30", "?week=2026-10-19&week=2026-10-26", "?returnTo=https://evil.test"]) {
+        for (const id of [salmon.id, "missing-recipe-for-test"]) {
+          await navigate(`/recipe/${encodeURIComponent(id)}${query}`);
+          await wait(element("link-back-to-planner"));
+          assert.equal(await evaluate(`${element("link-back-to-planner")}.getAttribute('href')`), "/plan");
+          await click("link-back-to-planner");
+          await wait(`${element("mvp-week")}?.getAttribute('datetime')===${JSON.stringify(currentWeek())}`);
+          assert.equal(await raw(planStorage), saved);
+        }
+      }
+      assert.deepEqual(exceptions, []);
+      console.log("PASS mocked browser: available/selected round trips preserve non-default week, three saved dinners, dates and confirmation through reload; direct and missing recipes safely return to /plan; legacy links open /recipes; English/Russian/Hebrew at 320/390/1280px; no runtime exceptions or application database writes.");
+      return;
+    }
     if (process.argv.includes("--rtl-only")) {
       await navigate(`/grocery-list?source=mvp&week=${week}`);
       await evaluate("localStorage.setItem('tablewise_language','he')");
@@ -121,12 +208,13 @@ async function main() {
     }
     await reload();
     await wait(`${element(`mvp-choose-${recipes[0].id}`)} && !${element(`mvp-choose-${recipes[0].id}`)}.disabled`);
-    assert.equal(await evaluate(`${element("mvp-selected-heading")}.textContent`), "Choose when you want to cook these dishes");
+    assert.equal(await evaluate(`${element("mvp-selected-heading")}.textContent`), "Choose when you want to eat each meal");
     const recipeLink = `mvp-show-catalog-${recipes[0].id}`;
     assert.equal(await evaluate(`${element(recipeLink)}.textContent.trim()`), "See full recipe");
     await click(recipeLink);
     await wait(`location.pathname === ${JSON.stringify(`/recipe/${recipes[0].id}`)} && document.body.textContent.includes(${JSON.stringify(recipes[0].title)})`);
-    await navigate("/plan?week=2026-10-19");
+    await click("link-back-to-planner");
+    await wait(`${element("mvp-week")}?.getAttribute('datetime')===${JSON.stringify(week)}`);
     await wait(element(`mvp-choose-${recipes[0].id}`));
     for (const recipe of recipes) {
       const facts = await evaluate(`${element(`mvp-catalog-facts-${recipe.id}`)}.textContent`) as string;
@@ -138,12 +226,13 @@ async function main() {
       const facts = await evaluate(`${element(`mvp-selected-facts-${recipe.id}`)}.textContent`) as string;
       assert.ok(facts.includes(recipe.servings ? `Portions: ${recipe.servings}` : "Portions not specified"));
       assert.ok(facts.includes(recipe.prepTime == null || recipe.cookTime == null ? "Total time not specified" : `Total Time: ${recipe.prepTime + recipe.cookTime} min`));
-      assert.equal(await evaluate(`${element(`mvp-show-selected-${recipe.id}`)}.getAttribute('href')`), `/recipe/${recipe.id}`);
+      assert.equal(await evaluate(`${element(`mvp-show-selected-${recipe.id}`)}.getAttribute('href')`), plannerRecipeURL(recipe.id, week));
     }
     const beforeDetail = await raw(planStorage);
     await click(`mvp-show-selected-${recipes[0].id}`);
     await wait(`location.pathname === ${JSON.stringify(`/recipe/${recipes[0].id}`)} && document.body.textContent.includes(${JSON.stringify(recipes[0].title)})`);
-    await navigate("/plan?week=2026-10-19");
+    await click("link-back-to-planner");
+    await wait(`${element("mvp-week")}?.getAttribute('datetime')===${JSON.stringify(week)}`);
     await wait(element(`mvp-show-selected-${recipes[0].id}`));
     assert.equal(await raw(planStorage), beforeDetail);
     console.log("PASS real API/browser: See full recipe opens the matching detail from catalog and selected dishes; navigation preserves saved selections.");

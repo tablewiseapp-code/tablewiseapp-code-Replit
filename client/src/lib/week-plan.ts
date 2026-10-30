@@ -31,6 +31,12 @@ export function selectedWeek(search: string): string | null {
 export const planKey = (week: string) => `tablewise:mvp:plan:v1:${week}`;
 export const checkKey = (week: string) => `tablewise:mvp:grocery:v1:${week}`;
 export const plannerURL = (week: string) => `/plan?week=${week}`;
+export const plannerRecipeURL = (id: string, week: string) =>
+  `/recipe/${encodeURIComponent(id)}?week=${week}`;
+export function recipePlannerURL(search: string): string {
+  const weeks = new URLSearchParams(search).getAll("week");
+  return weeks.length === 1 && isWeek(weeks[0]) ? plannerURL(weeks[0]) : "/plan";
+}
 export const groceryURL = (week: string) => `/grocery-list?source=mvp&week=${week}`;
 const id = z.string().min(1).max(150);
 export const weekPlanSchema = z.object({

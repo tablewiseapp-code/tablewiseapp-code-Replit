@@ -28,6 +28,7 @@ const translations: Record<Language, Record<string, string>> = {
     "recipes.steps": "steps",
 
     "recipeDetail.backToRecipes": "← Back to recipes",
+    "recipeDetail.backToPlanner": "← Back to planner",
     "recipeDetail.source": "Source",
     "recipeDetail.delete": "Delete",
     "recipeDetail.deleteConfirm": "Delete this recipe?",
@@ -229,6 +230,7 @@ const translations: Record<Language, Record<string, string>> = {
     "recipes.steps": "шагов",
 
     "recipeDetail.backToRecipes": "← Назад к рецептам",
+    "recipeDetail.backToPlanner": "← Назад к плану",
     "recipeDetail.source": "Источник",
     "recipeDetail.delete": "Удалить",
     "recipeDetail.deleteConfirm": "Удалить этот рецепт?",
@@ -430,6 +432,7 @@ const translations: Record<Language, Record<string, string>> = {
     "recipes.steps": "שלבים",
 
     "recipeDetail.backToRecipes": "← חזרה למתכונים",
+    "recipeDetail.backToPlanner": "→ חזרה למתכנן",
     "recipeDetail.source": "מקור",
     "recipeDetail.delete": "מחיקה",
     "recipeDetail.deleteConfirm": "למחוק את המתכון הזה?",

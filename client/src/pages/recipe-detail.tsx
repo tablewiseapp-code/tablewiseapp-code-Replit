@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { useRoute, useLocation, Link } from "wouter";
+import { useRoute, useLocation, useSearch, Link } from "wouter";
 import { fetchRecipe, deleteRecipe, updateRecipe, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { useQueryClient } from "@tanstack/react-query";
+import { recipePlannerURL } from "@/lib/week-plan";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
+  const plannerHref = recipePlannerURL(useSearch());
   const { t: timingCopy } = useMvpCopy();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -44,6 +46,21 @@ export default function RecipeDetail() {
     }
   };
 
+  const returnLinks = (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+      <Link href={plannerHref}
+        className="inline-flex min-h-11 items-center text-sm font-medium text-foreground underline underline-offset-4 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        data-testid="link-back-to-planner">
+        {t("recipeDetail.backToPlanner")}
+      </Link>
+      <Link href="/recipes"
+        className="inline-flex min-h-11 items-center mobile-readable-xs text-muted-foreground hover:text-foreground rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        data-testid={error || !recipe ? "link-back-to-recipes" : "link-back"}>
+        {t("recipeDetail.backToRecipes") || "Back to recipes"}
+      </Link>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -56,9 +73,7 @@ export default function RecipeDetail() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4">
         <p className="text-sm text-muted-foreground">{error || "Recipe not found"}</p>
-        <Link href="/recipes" className="text-sm text-foreground underline" data-testid="link-back-to-recipes">
-          {t("recipeDetail.backToRecipes") || "Back to recipes"}
-        </Link>
+        {returnLinks}
       </div>
     );
   }
@@ -66,13 +81,7 @@ export default function RecipeDetail() {
   return (
     <div className="min-h-screen bg-background">
       <PageContainer size="md" className="py-8 sm:py-10">
-        <Link
-          href="/recipes"
-          className="mobile-readable-xs text-muted-foreground hover:text-foreground mb-6 inline-block"
-          data-testid="link-back"
-        >
-          {t("recipeDetail.backToRecipes") || "Back to recipes"}
-        </Link>
+        <div className="mb-6">{returnLinks}</div>
 
         {recipe.image && (
           <img

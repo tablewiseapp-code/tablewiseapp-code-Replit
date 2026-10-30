@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronDown, CircleHelp, Cl
 import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { useRecipeCatalog, useWeekPlan } from "@/hooks/use-week-workspace";
-import { addDays, assignDinner, canConfirm, confirmPlan, parseCalendarDate, plannerURL, replaceDinner, selectedWeek, toggleDinner, weekDays } from "@/lib/week-plan";
+import { addDays, assignDinner, canConfirm, confirmPlan, parseCalendarDate, plannerURL, plannerRecipeURL, replaceDinner, selectedWeek, toggleDinner, weekDays } from "@/lib/week-plan";
 import type { Recipe } from "@/lib/storage";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePilotPage } from "@/hooks/use-pilot-page";
@@ -20,7 +20,7 @@ function localDate(value: string, locale: string, options: Intl.DateTimeFormatOp
 
 type TimeMode = RecipeTimeMode;
 
-function RecipeFacts({ recipe, context, timeMode }: { recipe: Recipe; context: "catalog" | "selected"; timeMode: TimeMode }) {
+function RecipeFacts({ recipe, context, timeMode, week }: { recipe: Recipe; context: "catalog" | "selected"; timeMode: TimeMode; week: string }) {
   const { t } = useMvpCopy();
   const portions = recipe.servings?.trim();
   const tools = recipeToolKeys(recipe.steps);
@@ -39,7 +39,7 @@ function RecipeFacts({ recipe, context, timeMode }: { recipe: Recipe; context: "
           : t(timeMode === "preparation" ? "preparationTimeUnknown" : "totalTimeUnknown")}
       </span>
       <span className="basis-full">{t("toolsUsed")}: {tools.length ? tools.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</span>
-      <Link href={`/recipe/${recipe.id}`} aria-label={`${t("showRecipe")}: ${recipe.title}`}
+      <Link href={plannerRecipeURL(recipe.id, week)} aria-label={`${t("showRecipe")}: ${recipe.title}`}
         data-testid={`mvp-show-${context}-${recipe.id}`}
         className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d9dfd4] bg-white px-3 font-medium text-[#42624e] hover:bg-[#f2f6ef]">
         {t("showRecipe")}
@@ -202,7 +202,7 @@ function PlannerForWeek({ week }: { week: string }) {
                           {selected && <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#d9e7d8] text-[#42624e]"><Check className="h-4 w-4" aria-hidden="true" /></span>}
                         </div>
                         <div className="mt-3 flex min-h-7 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#798279]">
-                          <RecipeFacts recipe={recipe} context="catalog" timeMode={timeMode} />
+                          <RecipeFacts recipe={recipe} context="catalog" timeMode={timeMode} week={week} />
                           {recipe.tags?.slice(0, 2).map(tag => <span key={tag} className="rounded-full bg-[#eef0e9] px-2 py-1">{tag}</span>)}
                         </div>
                         <button type="button" disabled={!selected && !canChoose} onClick={() => updatePlan(toggleDinner(plan, recipe.id))}
@@ -245,7 +245,7 @@ function PlannerForWeek({ week }: { week: string }) {
                             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e8eee4] text-xs font-semibold text-[#58725d]">{String(index + 1).padStart(2, "0")}</span>
                             <div className="min-w-0 flex-1">
                               <p className={`break-words text-sm font-semibold ${unavailable ? "text-[#815b49]" : "text-[#34443a]"}`}>{recipe?.title ?? id}</p>
-                              {recipe && <div className="mt-2"><RecipeFacts recipe={recipe} context="selected" timeMode={timeMode} /></div>}
+                              {recipe && <div className="mt-2"><RecipeFacts recipe={recipe} context="selected" timeMode={timeMode} week={week} /></div>}
                               {unavailable && <p className="mt-1 text-xs text-[#936e5b]">{t("incomplete")}</p>}
                               <label className="mt-3 block">
                                 <span className="sr-only">{t("chooseDay")}: {recipe?.title ?? id}</span>
