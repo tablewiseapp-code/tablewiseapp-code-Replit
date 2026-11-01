@@ -1,0 +1,35 @@
+:root {
+  --background: 40 23% 96%;
+  --foreground: 0 0% 18%;
+  --card: 40 23% 96%;
+  --card-foreground: 0 0% 18%;
+  --popover: 40 23% 96%;
+  --popover-foreground: 0 0% 18%;
+  --primary: 0 0% 18%;
+  --primary-foreground: 40 23% 96%;
+  --secondary: 40 10% 92%;
+  --secondary-foreground: 0 0% 18%;
+  --muted: 40 10% 92%;
+  --muted-foreground: 0 0% 48%;
+  --accent: 40 10% 92%;
+  --accent-foreground: 0 0% 18%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 40 10% 88%;
+  --input: 40 10% 88%;
+  --ring: 0 0% 18%;
+  --sidebar: 40 15% 94%;
+  --sidebar-foreground: 0 0% 18%;
+  --rail: 40 8% 94%;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius: 0.5rem;
+}
+
+body {font-family:var(--font-sans); background:hsl(var(--background)); color:hsl(var(--foreground));}
+.app-container {width:100%;margin-inline:auto;padding-inline:1rem;}
+@media(min-width:640px){.app-container{padding-inline:1.25rem}}
+@media(min-width:1024px){.app-container{padding-inline:1.5rem}}
+.hairline{border-color:hsl(40 10% 90%)}
+button{min-height:44px}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
