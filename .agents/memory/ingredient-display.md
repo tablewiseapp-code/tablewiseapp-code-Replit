@@ -34,9 +34,11 @@ display preferences must not trigger paid AI or database mutations.
 
 Make individual recipe information blocks reorderable, including each nutrient,
 and retain one shared browser layout rather than changing the stored recipes.
+Use a two-dimensional grid with dragging across rows and columns, not a
+vertical-only list.
 
 **Why:** The user explicitly requested separate draggable elements to exchange
-their positions. A shared layout avoids repeating the same customization on
+their positions, then clarified “I want it to be 2d array.” A shared layout avoids repeating the same customization on
 every recipe and preserves a consistent comparison layout.
 
 **How to apply:** Keep field-order preference separate from planning data and

@@ -248,3 +248,20 @@
     background: hsl(40 10% 88%);
   }
 }
+
+/* Information tiles use their actual card width, not the browser width. */
+.recipe-fact-container {
+  container-type: inline-size;
+}
+
+.recipe-fact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+@container (min-width: 300px) {
+  .recipe-fact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -51,10 +51,18 @@ above portions/tools. Price now stays beside the title instead of in this list.
 Older saved layouts discard only the retired price position, preserving all
 remaining field positions.
 
-Move-up/down buttons provide a touch and keyboard alternative; the grip also
-supports Space, arrow keys and Space to finish a keyboard drag. Reset order
+Move-earlier/later buttons provide a touch and keyboard alternative; the grip also
+supports Space, all four arrow keys and Space to finish a keyboard drag. Reset order
 restores the defaults. The shared browser preference applies to all cards and
 survives reloads and nutrition-toggle changes. It never changes recipe values.
+
+Information blocks now form a two-dimensional, two-column grid when the actual
+card content area is at least 300px wide, and stack in narrower cards. Pointer
+dragging works diagonally/across rows and columns; keyboard Left/Right and
+Up/Down use the actual tile positions. Earlier/later buttons move through the
+row-major order. Tile contents retain full readable width below their controls.
+The underlying ordered field preference is unchanged, so earlier saved layouts
+continue to work without changing recipe or planner records.
 
 Compact sidebar/tray/calendar/drag-overlay facts follow the chosen order without
 their own field-drag controls, keeping whole-recipe calendar dragging separate.

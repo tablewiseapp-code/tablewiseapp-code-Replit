@@ -33,7 +33,8 @@ async function main() {
     await frame();
     // Actual pointer input, not a synthetic drop event or a mocked sortable.
     const box = async (key: string) => evaluate(`(()=>{const r=${el(`fact-drag-${rowContext}-${key}`)}.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);
-    const from = await box("caloriesKcal"), to = await box("portions");
+    const from = await box("caloriesKcal"), to = await box("time");
+    assert.ok(Math.abs(from.x - to.x) > 80 && Math.abs(from.y - to.y) > 80, "Exercise diagonal movement in a two-dimensional grid.");
     await call("Input.dispatchMouseEvent", { type: "mouseMoved", ...from });
     await call("Input.dispatchMouseEvent", { type: "mousePressed", ...from, button: "left", buttons: 1, clickCount: 1 });
     for (let i = 1; i <= 12; i++) {
@@ -42,28 +43,35 @@ async function main() {
       await frame();
     }
     await call("Input.dispatchMouseEvent", { type: "mouseReleased", ...to, button: "left", buttons: 0, clickCount: 1 });
-    await wait(`JSON.parse(localStorage.getItem(${JSON.stringify(recipeFactOrderKey)}))?.[0]==='caloriesKcal'`);
-    assert.equal((await order())[0], "caloriesKcal");
-    assert.equal(await evaluate(`${el(`nutrition-catalog-${recipes[1].id}`)}.querySelector('[data-fact-id]').dataset.factId`), "caloriesKcal");
+    await wait(`JSON.parse(localStorage.getItem(${JSON.stringify(recipeFactOrderKey)}))?.[1]==='caloriesKcal'`);
+    assert.equal((await order())[1], "caloriesKcal");
+    assert.equal(await evaluate(`${el(`nutrition-catalog-${recipes[1].id}`)}.querySelectorAll('[data-fact-id]')[1].dataset.factId`), "caloriesKcal");
     assert.equal(await otherStorage(), preserved, "Dragging must not change a selected recipe or any other saved planning preference.");
     await navigate(`${base}/meals`);
     await wait(el(`fact-drag-${rowContext}-caloriesKcal`));
-    assert.equal((await order())[0], "caloriesKcal", "Order survives reload.");
-    await evaluate(`${el(`fact-down-${rowContext}-caloriesKcal`)}.click()`);
-    await wait(`${el(`nutrition-${rowContext}`)}.querySelector('[data-fact-id]').dataset.factId==='portions'`);
-    assert.equal((await savedOrder())[1], "caloriesKcal");
+    assert.equal((await order())[1], "caloriesKcal", "Order survives reload.");
+    await evaluate(`${el(`fact-up-${rowContext}-caloriesKcal`)}.click()`);
+    await wait(`${el(`nutrition-${rowContext}`)}.querySelector('[data-fact-id]').dataset.factId==='caloriesKcal'`);
+    assert.equal((await savedOrder())[0], "caloriesKcal");
     await evaluate(`${el(`fact-reset-${rowContext}`)}.click()`);
     assert.deepEqual(await savedOrder(), [...defaultFactOrder]);
-    // Native keyboard drag: focus handle, Space, ArrowDown, Space.
+    // Native keyboard drag must move both horizontally and vertically.
+    for (const [arrow, virtualKey, target, position] of [
+      ["ArrowDown", 40, "tools", 2], ["ArrowRight", 39, "time", 1],
+    ] as const) {
+    await evaluate(`${el(`fact-reset-${rowContext}`)}.click()`);
     await evaluate(`${el(`fact-drag-${rowContext}-portions`)}.focus()`);
-    for (const [index, key] of [" ", "ArrowDown", " "].entries()) {
+    for (const [index, key] of [" ", arrow, " "].entries()) {
       const code = key === " " ? "Space" : key;
-      const windowsVirtualKeyCode = key === " " ? 32 : 40;
+      const windowsVirtualKeyCode = key === " " ? 32 : virtualKey;
       await call("Input.dispatchKeyEvent", { type: "keyDown", key, code, windowsVirtualKeyCode });
       await frame();
       await call("Input.dispatchKeyEvent", { type: "keyUp", key, code, windowsVirtualKeyCode });
       if (index === 0) await wait(`${el(`fact-drag-${rowContext}-portions`)}.getAttribute('aria-pressed')==='true'`);
-      if (index === 1) await wait("Array.from(document.querySelectorAll('[aria-live]')).some(e=>e.textContent.includes('moved over droppable area time'))");
+      if (index === 1) await wait(`Array.from(document.querySelectorAll('[aria-live]')).some(e=>e.textContent.includes('moved over droppable area ${target}'))`);
+    }
+    await wait(`JSON.parse(localStorage.getItem(${JSON.stringify(recipeFactOrderKey)}))?.[${position}]==='portions'`);
+    assert.equal((await order())[position], "portions");
     }
     await wait(`JSON.parse(localStorage.getItem(${JSON.stringify(recipeFactOrderKey)}))?.[0]==='time'`);
     assert.equal((await order())[0], "time");
@@ -75,9 +83,14 @@ async function main() {
     await evaluate(`${el(`fact-up-${rowContext}-portions`)}.click()`);
     assert.equal((await savedOrder())[0], "portions");
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
+    await call("Emulation.setDeviceMetricsOverride", { width: 320, height: 874, deviceScaleFactor: 1, mobile: true });
+    await frame();
+    assert.equal(await evaluate("innerWidth"), 320);
+    assert.equal(await evaluate(`getComputedStyle(${el(`nutrition-${rowContext}`)}.querySelector('.recipe-fact-grid')).gridTemplateColumns.split(' ').length`), 1,
+      "Narrow cards should stack without clipped values.");
     assert.equal(await otherStorage(), preserved);
     assert.deepEqual(browser.exceptions, []);
-    console.log("PASS real browser: pointer drag across metadata/nutrition, global card synchronization, reload persistence, keyboard drag, mobile move controls, reset, nutrition toggle and saved selections preserved.");
+    console.log("PASS real browser: diagonal two-dimensional pointer drag, horizontal/vertical keyboard drag, global synchronization, reload persistence, mobile stacking/move controls, reset, nutrition toggle and saved selections preserved.");
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
