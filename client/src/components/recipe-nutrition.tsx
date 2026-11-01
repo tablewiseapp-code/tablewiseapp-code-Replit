@@ -11,24 +11,24 @@ export function useNutritionBlocks({ recipe, compact = false, context = "detail"
   if (!nutrition) return [{ id: "nutrition-status", label: t("nutrition.aiEstimate"), content:
     <div>{t(recipe.nutritionStatus === "unavailable" ? "nutrition.unavailable" : "nutrition.notAnalyzed")}</div> }];
   const portions = nutritionBasis(recipe.servings);
+  const estimateBasis = `${t("nutrition.aiEstimate")} · ${t(!portions ? "nutrition.wholeRecipe"
+    : portions.unit === "portion" ? "nutrition.perPortion" : `nutrition.per.${portions.unit}`)}${
+      portions && portions.min !== portions.max
+        ? ` (${recipe.servings}${portions.unit === "portion" ? ` ${t("nutrition.portions")}` : ""})` : ""}`;
   const number = (value: number, calories: boolean) =>
     value.toLocaleString(lang, { maximumFractionDigits: calories ? 0 : 1 });
   return [
-    { id: "nutrition-heading", label: t("nutrition.aiEstimate"), content:
-      <div className="break-words font-medium text-foreground">{t("nutrition.aiEstimate")} · {t(!portions ? "nutrition.wholeRecipe"
-        : portions.unit === "portion" ? "nutrition.perPortion" : `nutrition.per.${portions.unit}`)}
-        {portions && portions.min !== portions.max ? ` (${recipe.servings}${portions.unit === "portion" ? ` ${t("nutrition.portions")}` : ""})` : ""}
-      </div> },
     ...nutritionAmounts(nutrition, recipe.servings).map(({ key, min, max }): RecipeFactBlock => {
           const calories = key === "caloriesKcal";
           const low = number(min, calories);
           const high = number(max, calories);
-          return { id: key, label: t(`nutrition.${key}`), content: <div className="min-w-0 max-w-full break-words" data-testid={`nutrition-${context}-${recipe.id}-${key}`}>
+          return { id: key, label: t(`nutrition.${key}`), content: <div className="min-w-0 max-w-full break-words" title={estimateBasis} aria-description={estimateBasis} data-testid={`nutrition-${context}-${recipe.id}-${key}`}>
             {t(`nutrition.${key}`)}: {low === high ? low : `${low}–${high}`} {calories ? "kcal" : "g"}
           </div> };
         }),
     ...(!compact ? [{ id: "nutrition-details" as const, label: t("nutrition.details"), content: <details className="break-words">
         <summary className="cursor-pointer">{t("nutrition.details")}</summary>
+        <p>{estimateBasis}</p>
         <p>{t("nutrition.caution")}</p>
         <p>{nutrition.model === "replit-assisted-analysis" ? t("nutrition.assistedAnalysis") : nutrition.model}
           {" · "}<time dateTime={nutrition.analyzedAt}>{new Date(nutrition.analyzedAt).toLocaleDateString(lang)}</time></p>

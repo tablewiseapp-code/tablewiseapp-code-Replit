@@ -88,7 +88,11 @@ the browser test tab.
 
 **Why:** The runtime-error relay stopped the shared preview when a disposable
 test supplied an incomplete saved planner state and navigated back to the planner.
+Hot-refresh invalidation of modules that export contexts/hooks can also produce
+transient missing-provider errors and trigger the same relay.
 
 **How to apply:** Use the complete real saved-state shape in cross-route browser
 fixtures, even when the screen under test only reads assignments. Restore the
 managed preview after a relayed runtime error; do not mistake it for a port issue.
+Confirm the error also occurs on a fresh page load after restart before changing
+provider structure to address an error seen only during hot refresh.

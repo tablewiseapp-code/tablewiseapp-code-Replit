@@ -22,6 +22,10 @@ async function main() {
     await evaluate("localStorage.clear();localStorage.setItem('tablewise_lang','en');localStorage.setItem('tablewise:nutrition-details:v1','true')");
     await navigate(`${base}/meals`);
     await wait(el(`button-arrange-${recipes[0].id}`));
+    assert.equal(await evaluate("document.querySelectorAll('[data-fact-id=\"nutrition-heading\"]').length"), 0,
+      "Nutrition estimates should not render a standalone heading tile.");
+    assert.ok(await evaluate(`${el(`nutrition-${rowContext}-proteinG`)}.getAttribute('title').includes('AI nutrition estimate')`),
+      "The estimate basis remains available without a visible heading.");
     assert.equal(await evaluate(`Boolean(${el(`fact-drag-${rowContext}-caloriesKcal`)})`), false,
       "Available recipes use the plain selected-row presentation until arranging is enabled.");
     await evaluate(`${el(`button-arrange-${recipes[0].id}`)}.click()`);

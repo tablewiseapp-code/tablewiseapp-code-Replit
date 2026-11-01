@@ -102,10 +102,10 @@ async function main() {
     assert.equal(await evaluate(`Boolean(${element(`recipe-card-${chicken.id}`)})`), false);
     await click("filter-time-any");
     await click(`button-add-${chicken.id}`);
-    assert.equal((await text(`meals-selected-title-preparation-${chicken.id}`)).trim(), `Preparation: ${expectedPrep} min`);
+    assert.equal((await text(`meals-selected-title-preparation-${chicken.id}`)).trim(), `${expectedPrep} min`);
     const saved = await evaluate<string>("localStorage.getItem('weeklyMealsState')");
     await click("meals-time-preparation");
-    assert.equal((await text(`meals-selected-title-preparation-${chicken.id}`)).trim(), `Preparation: ${expectedPrep} min`);
+    assert.equal((await text(`meals-selected-title-preparation-${chicken.id}`)).trim(), `${expectedPrep} min`);
     assert.ok((await text(`meals-selected-facts-${chicken.id}`)).includes(`Preparation: ${expectedPrep} min`));
     assert.equal(await evaluate("localStorage.getItem('weeklyMealsState')"), saved);
     await reload();

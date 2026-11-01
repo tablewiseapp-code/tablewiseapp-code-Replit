@@ -1357,11 +1357,12 @@ function WeeklyMealsContent() {
                             <RecipePriceSummary recipe={recipe} context="selected" />
                             <span
                               className="mobile-readable-xs text-muted-foreground"
+                              title={timeCopy("preparation")}
                               data-testid={`meals-selected-title-preparation-${recipe.id}`}
                             >
                               {preparationMinutes === null
                                 ? timeCopy("preparationTimeUnknown")
-                                : `${timeCopy("preparation")}: ${preparationMinutes} ${timeCopy("minutesShort")}`}
+                                : `${preparationMinutes} ${timeCopy("minutesShort")}`}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -1426,10 +1427,10 @@ function WeeklyMealsContent() {
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
                               <RecipePriceSummary recipe={recipe} context="catalog" />
-                              <span className="mobile-readable-xs text-muted-foreground" data-testid={`meals-catalog-title-preparation-${recipe.id}`}>
+                              <span className="mobile-readable-xs text-muted-foreground" title={timeCopy("preparation")} data-testid={`meals-catalog-title-preparation-${recipe.id}`}>
                                 {preparationMinutes === null
                                   ? timeCopy("preparationTimeUnknown")
-                                  : `${timeCopy("preparation")}: ${preparationMinutes} ${timeCopy("minutesShort")}`}
+                                  : `${preparationMinutes} ${timeCopy("minutesShort")}`}
                               </span>
                               {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">{`* ${t("meals.myPicks")}`}</span>}
                             </div>
