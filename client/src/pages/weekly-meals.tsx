@@ -11,6 +11,7 @@ import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
 import { fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
+import { groupIngredients } from "@/lib/ingredient-groups";
 import { MealRecipeFacts, RecipeTimeProvider, RecipeTimeToggle, useRecipeTime } from "@/components/recipe-time-display";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
@@ -1443,11 +1444,18 @@ function WeeklyMealsContent() {
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
                           <p className="text-xs font-medium text-foreground mb-2">{t("import.recipePreview")}</p>
-                          <ul className="space-y-1">
-                            {recipe.ingredients.slice(0, 5).map((ing, i) => (
-                              <li key={i} className="text-xs text-muted-foreground">- {ing}</li>
+                          <div className="space-y-3">
+                            {groupIngredients(recipe.ingredients).map(group => (
+                              <section key={group.category} data-testid={`ingredient-group-${recipe.id}-${group.category}`}>
+                                <h3 className="text-xs font-medium text-foreground mb-1">{t(`ingredients.group.${group.category}`)}</h3>
+                                <ul className="list-disc ps-4 space-y-1">
+                                  {group.ingredients.map((ingredient, index) => (
+                                    <li key={index} className="text-xs text-muted-foreground break-words">{ingredient}</li>
+                                  ))}
+                                </ul>
+                              </section>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       )}
                       </div>

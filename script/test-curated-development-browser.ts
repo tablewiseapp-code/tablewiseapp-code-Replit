@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { openTestTab } from "./cdp-test-tab";
 import { curatedDevelopmentIds } from "../server/seeds/curated-development-catalog";
 import type { Recipe } from "../client/src/lib/storage";
+import { groupIngredients } from "../client/src/lib/ingredient-groups";
 
 async function main() {
   const base = process.argv.find(arg => /^https?:\/\//.test(arg));
@@ -40,6 +41,14 @@ async function main() {
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
     for (const recipe of recipes) {
       const facts = await evaluate(`${el(`meals-catalog-facts-${recipe.id}`)}.textContent`);
+      await evaluate(`${el(`button-ingredients-${recipe.id}`)}.click()`);
+      await wait(el(`recipe-details-${recipe.id}`));
+      const displayedIngredients = await evaluate(`Array.from(${el(`recipe-details-${recipe.id}`)}.querySelectorAll('li')).map(item => item.textContent)`);
+      assert.deepEqual(displayedIngredients, groupIngredients(recipe.ingredients).flatMap(group => group.ingredients));
+      for (const group of groupIngredients(recipe.ingredients)) {
+        assert.ok(await evaluate(`Boolean(${el(`ingredient-group-${recipe.id}-${group.category}`)})`));
+      }
+      await evaluate(`${el(`button-ingredients-${recipe.id}`)}.click()`);
       const badges = await evaluate(`Array.from(${el(`recipe-card-${recipe.id}`)}.querySelectorAll('span')).map(span => span.textContent.trim())`);
       assert.equal(badges.some((text: string) => /^\+\d+$/.test(text)), false,
         "All tags are visible; ingredient counts must not appear as hidden-tag badges.");
