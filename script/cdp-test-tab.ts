@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 
-export async function openTestTab() {
-  const target = await (await fetch("http://127.0.0.1:9222/json/new?about:blank",
+export async function openTestTab(port = 9222) {
+  const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,
     { method: "PUT", signal: AbortSignal.timeout(3000) })).json() as { id: string; webSocketDebuggerUrl: string };
   const ws = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise<void>((resolve, reject) => { ws.once("open", resolve); ws.once("error", reject); });

@@ -32,3 +32,11 @@ destinations or their data.
 
 **How to apply:** Preserve separate destinations for the meals planner and
 legacy recipe library when changing shared recipe-detail navigation.
+
+Keep the DEV navigation panel visible on all screens, including redesigned ones.
+
+**Why:** The user explicitly requested that this panel remain on every screen
+after it was hidden on the redesigned grocery list.
+
+**How to apply:** Preserve the shared navigation independently of a page's own
+header or menu; visual simplification must not hide the panel.

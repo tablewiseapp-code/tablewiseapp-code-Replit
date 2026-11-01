@@ -82,3 +82,13 @@ wrapper's server child survived removal.
 own process. If a replacement fails on a busy port, identify and stop only the
 removed workflow's verified descendants before restarting; do not kill unrelated
 services or create a second server on another port.
+
+Uncaught browser errors can terminate the managed development preview, not just
+the browser test tab.
+
+**Why:** The runtime-error relay stopped the shared preview when a disposable
+test supplied an incomplete saved planner state and navigated back to the planner.
+
+**How to apply:** Use the complete real saved-state shape in cross-route browser
+fixtures, even when the screen under test only reads assignments. Restore the
+managed preview after a relayed runtime error; do not mistake it for a port issue.
