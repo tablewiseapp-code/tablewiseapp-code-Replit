@@ -1,8 +1,9 @@
 import type { Recipe as StoredRecipe } from "@/lib/storage";
 import { recipeToolKeys, type RecipeToolKey } from "./recipe-tools";
 import type { RecipeCredit } from "@shared/recipe-credit";
+import type { NutritionFields } from "@shared/recipe-nutrition";
 
-export type PlannerRecipe = RecipeCredit & {
+export type PlannerRecipe = RecipeCredit & NutritionFields & {
   id: string;
   title: string;
   minutes: number;
@@ -114,6 +115,8 @@ export function toPlannerRecipe(recipe: StoredRecipe): PlannerRecipe {
     tools: inferTools(recipe.steps),
     equipment: recipeToolKeys(recipe.steps, recipe.equipment),
     metadataEstimated: recipe.metadataEstimated,
+    nutrition: recipe.nutrition,
+    nutritionStatus: recipe.nutritionStatus,
     creditKind: recipe.creditKind,
     creditName: recipe.creditName,
     chefReference: recipe.chefReference,

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider, useI18n, LANGUAGES } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
+import { RecipeDisplayProvider } from "@/components/recipe-display";
 import RecipeView from "@/pages/recipe-view";
 import MvpGrocery from "@/pages/mvp-grocery";
 import RecipeList from "@/pages/recipe-list";
@@ -195,9 +196,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nProvider>
+          <RecipeDisplayProvider>
           <Toaster />
           <DevNav />
           <Router />
+          </RecipeDisplayProvider>
         </I18nProvider>
       </TooltipProvider>
     </QueryClientProvider>

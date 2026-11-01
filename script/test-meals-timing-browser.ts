@@ -137,6 +137,11 @@ async function main() {
     }
     await navigate("/");
     await wait("location.pathname === '/meals'");
+    const beforeNutritionToggle = await evaluate("JSON.stringify(Object.entries(localStorage).filter(([key]) => key !== 'tablewise:nutrition-details:v1').sort())");
+    await click("nutrition-details-toggle");
+    await click("nutrition-details-toggle");
+    assert.equal(await evaluate("JSON.stringify(Object.entries(localStorage).filter(([key]) => key !== 'tablewise:nutrition-details:v1').sort())"), beforeNutritionToggle,
+      "Changing display preference must preserve saved plans, dates, filters and recipe metadata.");
     await click("meals-time-preparation");
     await navigate("/meals");
     await wait(element("meals-time-preparation"));

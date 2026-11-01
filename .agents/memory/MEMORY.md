@@ -3,7 +3,8 @@
 - [Pilot measurement](pilot-measurement.md) — primary hypothesis and user-defined later-calendar-week conversion, not pageview or same-week editing.
 - [Recipe timing](recipe-timing-semantics.md) — current toggle is Preparation / Total Time; derive total only from two known, separately stored stage durations.
 - [Planner navigation](planner-ui-coverage.md) — /meals is home; /plan redirects; preserve saved data and recipe-detail links across active planning placements.
-- [Ingredient display](ingredient-display.md) — recipe previews should group ingredients by Protein, Carbs and other food types, not show an ungrouped excerpt.
+- [Recipe display modes](ingredient-display.md) — optional nutrition grouping/details; simple view defaults to full plain ingredients and clearly labelled mock CAD dish prices.
+- [Nutrition estimates](nutrition-estimates.md) — approved development AI estimates; distinguish portions from item yields and assisted analysis from a working app AI connection.
 - [Recipe provenance](recipe-provenance.md) — MVP evaluation needs real, web-researched recipes with proper data, not synthetic regression fixtures.
 - [Development fixture policy](development-fixture-policy.md) — show 20 complete development recipes; hide and preserve the rest; label synthetic estimates honestly.
 - [Meal classification](meal-classification.md) — explicit reviewed tags, honest unknowns, and all meal types within the unchanged three-recipe workflow.

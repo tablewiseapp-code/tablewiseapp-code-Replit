@@ -9,9 +9,14 @@ import { recipePlannerURL } from "@/lib/week-plan";
 import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
 import { recipeToolKeys } from "@/lib/recipe-tools";
 import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit";
+import { RecipeNutritionSummary } from "@/components/recipe-nutrition";
+import { NutritionDetailsToggle, useRecipeDisplay } from "@/components/recipe-display";
+import { RecipePriceSummary } from "@/components/recipe-price";
+import { RecipeIngredients } from "@/components/recipe-ingredients";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
+  const { showNutrition } = useRecipeDisplay();
   const plannerHref = recipePlannerURL(useSearch());
   const { t: timingCopy } = useMvpCopy();
   const queryClient = useQueryClient();
@@ -99,10 +104,17 @@ export default function RecipeDetail() {
           />
         )}
 
-        <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2" data-testid="text-recipe-title">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-medium text-foreground" data-testid="text-recipe-title">
           {recipe.title}
         </h1>
+          <RecipePriceSummary recipe={recipe} />
+        </div>
         <div className="mb-3 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
+        <div className="mb-3 space-y-2 text-sm text-muted-foreground">
+          <NutritionDetailsToggle />
+          {showNutrition && <RecipeNutritionSummary recipe={recipe} />}
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mobile-readable-xs text-muted-foreground mb-6">
           {recipe.prepTime != null && (
@@ -209,14 +221,7 @@ export default function RecipeDetail() {
           <h2 className="mobile-readable-xs uppercase tracking-wide text-muted-foreground mb-3" data-testid="text-ingredients-heading">
             {t("import.ingredientsLabel") || "Ingredients"}
           </h2>
-          <ul className="space-y-2">
-            {recipe.ingredients.map((ing, i) => (
-              <li key={i} className="text-sm text-foreground flex items-start gap-2" data-testid={`text-ingredient-${i}`}>
-                <span className="text-muted-foreground mt-0.5">.</span>
-                <span className="min-w-0">{ing}</span>
-              </li>
-            ))}
-          </ul>
+          <RecipeIngredients recipe={recipe} />
         </div>
 
         <div className="mb-8">

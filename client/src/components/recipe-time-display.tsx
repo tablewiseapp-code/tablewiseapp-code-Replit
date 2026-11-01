@@ -6,6 +6,10 @@ import { recipeStageMinutes, recipeTimePreferenceKey, type RecipeTimeMode, type 
 import { RecipeCreditLine } from "./recipe-credit";
 import type { RecipeCredit } from "@shared/recipe-credit";
 import type { RecipeToolKey } from "@/lib/recipe-tools";
+import type { NutritionFields } from "@shared/recipe-nutrition";
+import { useNutritionBlocks } from "./recipe-nutrition";
+import { RecipeFactLayout, type RecipeFactBlock } from "./recipe-fact-layout";
+import { NutritionDetailsToggle, useRecipeDisplay } from "./recipe-display";
 
 const TimeContext = createContext<{
   mode: RecipeTimeMode;
@@ -35,7 +39,8 @@ export function RecipeTimeToggle() {
   const { mode, setMode } = useRecipeTime();
   const { t } = useMvpCopy();
   return (
-    <div role="group" aria-label={t("timeDisplay")} className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="mb-4 flex flex-wrap items-center gap-3">
+    <div role="group" aria-label={t("timeDisplay")} className="flex flex-wrap items-center gap-2">
       <span className="text-xs text-muted-foreground">{t("timeDisplay")}:</span>
       {(["preparation", "total"] as const).map(value => (
         <button key={value} type="button" onClick={() => setMode(value)} aria-pressed={mode === value}
@@ -45,40 +50,44 @@ export function RecipeTimeToggle() {
         </button>
       ))}
     </div>
+      <NutritionDetailsToggle />
+    </div>
   );
 }
 
 export function MealRecipeFacts({ recipe, context, compact = false }: {
-  recipe: RecipeCredit & RecipeTimeData & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[]; metadataEstimated?: boolean };
+  recipe: RecipeCredit & RecipeTimeData & NutritionFields & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[]; metadataEstimated?: boolean };
   context: string;
   compact?: boolean;
 }) {
   const { mode } = useRecipeTime();
+  const { showNutrition } = useRecipeDisplay();
   const { t } = useMvpCopy();
   const minutes = recipeStageMinutes(recipe, mode);
   const portions = recipe.servings?.trim();
+  const nutritionBlocks = useNutritionBlocks({ recipe, compact, context });
+  const blocks: RecipeFactBlock[] = [
+    { id: "portions", label: t("portions", { count: portions ?? "?" }), content:
+      <div className="flex items-start gap-1"><Users className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+        <div>{portions ? t("portions", { count: portions }) : t("portionsUnknown")}</div></div> },
+    { id: "time", label: t(mode), content: <div className="flex items-start gap-1">
+      <Clock3 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+      <div>{minutes === null ? t(mode === "preparation" ? "preparationTimeUnknown" : "totalTimeUnknown")
+        : `${t(mode)}: ${minutes} ${t("minutesShort")}`}</div></div> },
+    { id: "tools", label: t("toolsUsed"), content: <div className="flex items-start gap-1">
+      <Wrench className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+      <div data-testid={`meals-${context}-tools-${recipe.id}`}>{t("toolsUsed")}: {recipe.equipment?.length
+        ? recipe.equipment.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</div></div> },
+    ...(mode === "total" && recipe.prepTime != null ? [{ id: "preparation" as const, label: t("preparation"), content:
+      <div>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</div> }] : []),
+    { id: "credit", label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> },
+    ...(showNutrition ? nutritionBlocks : []),
+  ];
   return (
     <div className={`flex min-w-0 basis-full flex-wrap items-start gap-x-3 gap-y-1 text-muted-foreground ${compact ? "text-[10px]" : "text-xs"}`}
       data-testid={`meals-${context}-facts-${recipe.id}`}>
-      <span className="inline-flex min-w-0 items-start gap-1">
-        <Users className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 break-words">{portions ? t("portions", { count: portions }) : t("portionsUnknown")}</span>
-      </span>
-      <span className="inline-flex min-w-0 items-start gap-1">
-        <Clock3 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 break-words">{minutes === null
-          ? t(mode === "preparation" ? "preparationTimeUnknown" : "totalTimeUnknown")
-          : `${t(mode)}: ${minutes} ${t("minutesShort")}`}</span>
-      </span>
-      <span className="inline-flex min-w-0 basis-full items-start gap-1">
-        <Wrench className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 break-words" data-testid={`meals-${context}-tools-${recipe.id}`}>
-          {t("toolsUsed")}: {recipe.equipment?.length ? recipe.equipment.map(tool => t(tool)).join(", ") : t("toolsUnknown")}
-        </span>
-      </span>
-      {mode === "total" && recipe.prepTime != null &&
-        <span>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</span>}
-      <RecipeCreditLine recipe={recipe} />
+      <RecipeFactLayout blocks={blocks} context={`${context}-${recipe.id}`} interactive={!compact && context === "catalog"}
+        testId={showNutrition ? `nutrition-${context}-${recipe.id}` : undefined} />
       {context !== "drag" && (
         <Link href={`/recipe/${recipe.id}`} onPointerDown={event => event.stopPropagation()}
           onKeyDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}

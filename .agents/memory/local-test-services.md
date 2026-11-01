@@ -61,9 +61,14 @@ may require its carriage-return text as well as key/code data.
 
 **Why:** Programmatic focus alone did not activate a native button during a
 headless keyboard test, despite the control working when clicked.
+Rapid Space/Arrow sortable sequences also failed until platform key codes and
+explicit sensor-state waits were included; actual native keyboard dragging works.
 
 **How to apply:** Verify actual focus and native activation rather than
-substituting a synthetic click and claiming keyboard coverage. For React Query
+substituting a synthetic click and claiming keyboard coverage. For sortable
+Space/Arrow tests, provide virtual key codes and wait for active/live-announcement
+updates before dropping; a couple of animation frames is not always sufficient.
+For React Query
 refetch tests, use a deterministic route remount or explicit retry; synthetic
 focus/visibility events did not trigger refetch reliably in this environment.
 

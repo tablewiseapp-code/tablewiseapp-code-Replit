@@ -1,14 +1,45 @@
 ---
-name: Ingredient display
-description: User-requested food-type grouping in recipe ingredient previews.
+name: Recipe display modes
+description: Optional nutrition grouping and mock CAD pricing for different recipe audiences.
 ---
 
-Show recipe preview ingredients grouped by Protein, Carbs and other food types.
+Provide a Nutrition details toggle. When enabled, show ingredients grouped by
+Protein, Carbs and other food types together with nutrition estimates. When
+disabled, show the complete plain ingredient list and hide nutrition details.
 
-**Why:** The user explicitly requested “Make sure that the recipe ingredients
-are shown by: Protein, carbs...” after seeing an ungrouped five-item excerpt.
+**Why:** The user first requested food-type grouping, then explicitly requested
+a toggle because a mother of five may prioritize price rather than nutrition.
+This describes a product audience, not a personal fact about the user.
 
-**How to apply:** Preserve original ingredient wording and quantities, include
-the complete list so later protein ingredients are not omitted, and do not
-present food-type grouping as a calculated nutritional breakdown. Keep an
-honest Other/unclassified group for ingredients that cannot be recognized.
+**How to apply:** Default to the simpler view, remember the browser preference
+and keep the switch available near expanded previews as well as the main
+toolbar. Preserve original wording, quantities and every ingredient in either
+mode; keep an honest Other/unclassified group when grouping is enabled.
+
+Show a $/$$/$$$ price control beside the recipe name in either mode. A click
+reveals the whole-dish CAD amount. Keep explanatory text out of the visible UI;
+use bold for estimated/mock prices and regular weight for verified prices.
+
+**Why:** The user chose CAD for mock prices, then explicitly requested price
+beside the name, dollar-symbol tiers, click-to-reveal and bold rather than
+explanatory text to distinguish estimated values from real numbers.
+
+**How to apply:** Preserve truthful mock/AI/verified provenance in accessible
+labels/tooltips, even when visible labels are omitted. Never call hardcoded
+mock prices AI-generated or verified. Use whole-dish tiers, not per-person
+prices presented as dish totals. Price is fixed by the title, outside the
+reorderable facts; preserve other saved field positions when migrating.
+Do not imply currency conversion. Preserve saved nutrition/planner data;
+display preferences must not trigger paid AI or database mutations.
+
+Make individual recipe information blocks reorderable, including each nutrient,
+and retain one shared browser layout rather than changing the stored recipes.
+
+**Why:** The user explicitly requested separate draggable elements to exchange
+their positions. A shared layout avoids repeating the same customization on
+every recipe and preserves a consistent comparison layout.
+
+**How to apply:** Keep field-order preference separate from planning data and
+nutrition visibility. Use field handles and keyboard/touch alternatives on
+cards; compact calendar facts inherit the order without interfering with
+whole-recipe calendar dragging. Retain reset and hidden-field positions.

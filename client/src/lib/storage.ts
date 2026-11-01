@@ -1,7 +1,8 @@
 import type { RecipeToolKey } from "./recipe-tools";
 import type { RecipeCredit } from "@shared/recipe-credit";
+import type { NutritionFields } from "@shared/recipe-nutrition";
 
-export type Recipe = RecipeCredit & {
+export type Recipe = RecipeCredit & NutritionFields & {
   id: string;
   title: string;
   ingredients: string[];

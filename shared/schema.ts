@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, uuid, date, unique, index, check } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, uuid, date, unique, index, check, jsonb } from "drizzle-orm/pg-core";
+import type { RecipeNutrition } from "./recipe-nutrition";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -49,6 +50,15 @@ export const insertRecipeSchema = createInsertSchema(recipes, {
 });
 
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
+export const recipeNutrition = pgTable("recipe_nutrition", {
+  recipeId: varchar("recipe_id").primaryKey().references(() => recipes.id, { onDelete: "cascade" }),
+  inputHash: varchar("input_hash", { length: 64 }).notNull(),
+  data: jsonb("data").$type<RecipeNutrition>().notNull(),
+  analyzedAt: timestamp("analyzed_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  check("recipe_nutrition_input_hash_check", sql`${table.inputHash} ~ '^[a-f0-9]{64}$'`),
+  check("recipe_nutrition_data_check", sql`jsonb_typeof(${table.data}) = 'object'`),
+]);
 // Optional for compatibility with recipes created before preparation-time metadata.
 export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName"> & {
   prepTime?: number | null; creditKind?: "chef" | "mine" | null; creditName?: string | null;

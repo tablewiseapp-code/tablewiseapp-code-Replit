@@ -10,10 +10,13 @@ import { installPilotSecurity, pilotConfig, type PilotConfig } from "./security"
 import { recipeInput, recipePatch, recipeId, parseInput, audioInput } from "./request-schemas";
 import { analyticsBatchSchema, validEventTimes } from "../shared/pilot-analytics";
 import { pilotEventStore, AnalyticsCapacityError, type PilotEventStore } from "./pilot-analytics";
+import type { NutritionEnricher } from "./recipe-nutrition";
+import type { NutritionInput } from "../shared/recipe-nutrition";
 
 export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "updateRecipeCredit" | "deleteRecipe">;
 export type RouteDependencies = {
   storage?: RecipeStorage;
+  nutrition?: NutritionEnricher;
   config?: PilotConfig;
   ai?: () => OpenAI;
   now?: () => number;
@@ -74,6 +77,13 @@ export async function registerRoutes(
   const developmentCredits = developmentCatalogEnabled() && !config.production;
   const security = installPilotSecurity(app, config, dependencies.now, developmentCredits);
   const storage = dependencies.storage ?? (await import("./storage")).storage;
+  // Development-only saved reads. No model calls, migrations or public paid endpoint.
+  // Custom storage adapters must supply their own corresponding nutrition reader.
+  const nutrition = developmentCredits
+    ? dependencies.nutrition ?? (!dependencies.storage
+      ? await (await import("./recipe-nutrition")).databaseNutritionEnricher() : undefined)
+    : undefined;
+  const withNutrition = async <T extends NutritionInput>(rows: T[]) => nutrition ? nutrition(rows) : rows;
   let client: OpenAI | undefined;
   const getAI = () => {
     if (dependencies.ai) return dependencies.ai();
@@ -123,7 +133,7 @@ export async function registerRoutes(
   app.get("/api/recipes", async (_req, res) => {
     try {
       const recipes = await storage.getAllRecipes();
-      res.json(developmentCatalogEnabled() ? curateDevelopmentCatalog(recipes) : recipes);
+      res.json(await withNutrition(developmentCatalogEnabled() ? curateDevelopmentCatalog(recipes) : recipes));
     } catch (error: any) {
       console.error("api_failure operation=recipe_list");
       res.status(500).json({ error: "Failed to fetch recipes" });
@@ -136,7 +146,7 @@ export async function registerRoutes(
       if (!recipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
-      res.json(developmentCatalogEnabled() ? curateDevelopmentRecipe(recipe) : recipe);
+      res.json((await withNutrition([developmentCatalogEnabled() ? curateDevelopmentRecipe(recipe) : recipe]))[0]);
     } catch (error: any) {
       console.error("api_failure operation=recipe_get");
       res.status(500).json({ error: "Failed to fetch recipe" });
@@ -151,7 +161,7 @@ export async function registerRoutes(
     try {
       const updated = await storage.updateRecipeCredit(id.data, parsed.data);
       if (!updated) return res.status(404).json({ error: "Recipe not found." });
-      res.json(curateDevelopmentRecipe(updated));
+      res.json((await withNutrition([curateDevelopmentRecipe(updated)]))[0]);
     } catch {
       console.error("api_failure operation=recipe_credit_update");
       res.status(503).json({ error: "Unable to save the recipe credit. No recipe contents were changed." });

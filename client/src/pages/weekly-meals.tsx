@@ -11,7 +11,9 @@ import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
 import { fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
-import { groupIngredients } from "@/lib/ingredient-groups";
+import { RecipeIngredients } from "@/components/recipe-ingredients";
+import { NutritionDetailsToggle } from "@/components/recipe-display";
+import { RecipePriceSummary } from "@/components/recipe-price";
 import { MealRecipeFacts, RecipeTimeProvider, RecipeTimeToggle, useRecipeTime } from "@/components/recipe-time-display";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
@@ -120,7 +122,10 @@ function DraggableRecipe({ recipe, meta, isInPlan, disabled }: { recipe: Recipe;
       data-testid={`draggable-recipe-${recipe.id}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-medium text-foreground truncate">{recipe.title}</p>
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
+          <p className="max-w-full truncate text-xs font-medium text-foreground">{recipe.title}</p>
+          <RecipePriceSummary recipe={recipe} context="suggestion" />
+        </div>
         {meta.isMyPick && <span className="text-[10px] text-yellow-500">*</span>}
       </div>
       <div className="flex items-center justify-between mt-1">
@@ -152,7 +157,10 @@ function DraggableRecipeSmall({ recipe, meta, disabled }: { recipe: Recipe; meta
       data-testid={`tray-recipe-${recipe.id}`}
     >
       <div className="min-w-0">
-        <span className="block max-w-[180px] truncate text-xs font-medium text-foreground">{recipe.title}</span>
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="block max-w-[180px] truncate text-xs font-medium text-foreground">{recipe.title}</span>
+          <RecipePriceSummary recipe={recipe} context="tray" />
+        </div>
         <MealRecipeFacts recipe={recipe} context="tray" compact />
       </div>
       {meta.isMyPick && <span className="text-[10px] text-yellow-500">★</span>}
@@ -216,8 +224,9 @@ function DroppableCell({
         <div ref={setDraggableRef} {...listeners} {...attributes} className="h-full flex flex-col cursor-grab">
           <div className="flex items-start justify-between gap-1">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 <p className="text-xs font-medium text-foreground leading-tight truncate">{recipe.title}</p>
+                <RecipePriceSummary recipe={recipe} context={`plan-${meal}-${day}`} />
                 {recipeMeta?.isMyPick && <span className="text-[10px] text-yellow-500 flex-shrink-0">★</span>}
               </div>
             </div>
@@ -917,7 +926,10 @@ function WeeklyMealsContent() {
           <DragOverlay>
             {activeRecipe && (
               <div className="p-3 bg-[#FAFAF8] rounded-lg border border-[#7A9E7E] shadow-lg">
-                <p className="text-xs font-medium text-foreground">{activeRecipe.title}</p>
+                <div className="mb-1 flex flex-wrap items-center gap-1">
+                  <p className="text-xs font-medium text-foreground">{activeRecipe.title}</p>
+                  <RecipePriceSummary recipe={activeRecipe} context="drag" />
+                </div>
                 <MealRecipeFacts recipe={activeRecipe} context="drag" compact />
               </div>
             )}
@@ -1338,7 +1350,10 @@ function WeeklyMealsContent() {
                           <span className="text-xs font-medium text-muted-foreground/50">{getMonogram(recipe.title)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
+                            <RecipePriceSummary recipe={recipe} context="selected" />
+                          </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <MealRecipeFacts recipe={recipe} context="selected" />
                             {displayTags.slice(0, 3).map(tag => (
@@ -1396,8 +1411,9 @@ function WeeklyMealsContent() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3 mb-2">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
+                              <RecipePriceSummary recipe={recipe} context="catalog" />
                               {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">{`* ${t("meals.myPicks")}`}</span>}
                             </div>
                             {meta.rating && (
@@ -1443,19 +1459,11 @@ function WeeklyMealsContent() {
 
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
-                          <p className="text-xs font-medium text-foreground mb-2">{t("import.recipePreview")}</p>
-                          <div className="space-y-3">
-                            {groupIngredients(recipe.ingredients).map(group => (
-                              <section key={group.category} data-testid={`ingredient-group-${recipe.id}-${group.category}`}>
-                                <h3 className="text-xs font-medium text-foreground mb-1">{t(`ingredients.group.${group.category}`)}</h3>
-                                <ul className="list-disc ps-4 space-y-1">
-                                  {group.ingredients.map((ingredient, index) => (
-                                    <li key={index} className="text-xs text-muted-foreground break-words">{ingredient}</li>
-                                  ))}
-                                </ul>
-                              </section>
-                            ))}
+                          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-xs font-medium text-foreground">{t("import.recipePreview")}</p>
+                            <NutritionDetailsToggle context={recipe.id} />
                           </div>
+                          <RecipeIngredients recipe={recipe} compact />
                         </div>
                       )}
                       </div>
