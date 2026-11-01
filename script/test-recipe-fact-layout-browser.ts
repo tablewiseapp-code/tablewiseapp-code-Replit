@@ -21,12 +21,23 @@ async function main() {
     await navigate(`${base}/meals`);
     await evaluate("localStorage.clear();localStorage.setItem('tablewise_lang','en');localStorage.setItem('tablewise:nutrition-details:v1','true')");
     await navigate(`${base}/meals`);
+    await wait(el(`button-arrange-${recipes[0].id}`));
+    assert.equal(await evaluate(`Boolean(${el(`fact-drag-${rowContext}-caloriesKcal`)})`), false,
+      "Available recipes use the plain selected-row presentation until arranging is enabled.");
+    await evaluate(`${el(`button-arrange-${recipes[0].id}`)}.click()`);
     await wait(el(`fact-drag-${rowContext}-caloriesKcal`));
     const selectedId = recipes[recipes.length - 1].id;
     const add = el(`button-add-${selectedId}`);
+    const availableRowStyle = await evaluate(`${el(`recipe-card-${selectedId}`)}.className`);
+    const availablePreparation = await evaluate(`${el(`meals-catalog-title-preparation-${selectedId}`)}.textContent.trim()`);
     assert.equal(await evaluate(`${add}.textContent.trim()`), "Add");
     await evaluate(`${add}.click()`);
     await wait(`Object.values(localStorage).some(v=>v.includes(${JSON.stringify(selectedId)}))`);
+    await wait(el(`selected-recipe-${selectedId}`));
+    assert.equal(availableRowStyle,
+      await evaluate(`${el(`selected-recipe-${selectedId}`)}.className`), "Available and selected recipes share the same row styling.");
+    assert.equal(availablePreparation,
+      await evaluate(`${el(`meals-selected-title-preparation-${selectedId}`)}.textContent.trim()`));
     const preserved = await otherStorage();
     await wait(el(`fact-drag-${rowContext}-caloriesKcal`));
     await evaluate(`${el(`nutrition-${rowContext}`)}.scrollIntoView({block:'start'})`);
@@ -48,6 +59,8 @@ async function main() {
     assert.equal(await evaluate(`${el(`nutrition-catalog-${recipes[1].id}`)}.querySelectorAll('[data-fact-id]')[1].dataset.factId`), "caloriesKcal");
     assert.equal(await otherStorage(), preserved, "Dragging must not change a selected recipe or any other saved planning preference.");
     await navigate(`${base}/meals`);
+    await wait(el(`button-arrange-${recipes[0].id}`));
+    await evaluate(`${el(`button-arrange-${recipes[0].id}`)}.click()`);
     await wait(el(`fact-drag-${rowContext}-caloriesKcal`));
     assert.equal((await order())[1], "caloriesKcal", "Order survives reload.");
     await evaluate(`${el(`fact-up-${rowContext}-caloriesKcal`)}.click()`);

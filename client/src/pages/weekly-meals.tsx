@@ -310,6 +310,7 @@ function WeeklyMealsContent() {
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
+  const [arrangingRecipe, setArrangingRecipe] = useState<string | null>(null);
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
@@ -1333,6 +1334,7 @@ function WeeklyMealsContent() {
                 </div>
                 <div className="space-y-2">
                   {selectedRecipes.map(recipe => {
+                    const preparationMinutes = recipeStageMinutes(recipe, "preparation");
                     const displayTags: string[] = [];
                     if (recipe.mealType) displayTags.push(recipe.mealType);
                     recipe.tags.forEach(tag => {
@@ -1353,6 +1355,14 @@ function WeeklyMealsContent() {
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
                             <RecipePriceSummary recipe={recipe} context="selected" />
+                            <span
+                              className="mobile-readable-xs text-muted-foreground"
+                              data-testid={`meals-selected-title-preparation-${recipe.id}`}
+                            >
+                              {preparationMinutes === null
+                                ? timeCopy("preparationTimeUnknown")
+                                : `${timeCopy("preparation")}: ${preparationMinutes} ${timeCopy("minutesShort")}`}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <MealRecipeFacts recipe={recipe} context="selected" />
@@ -1382,7 +1392,7 @@ function WeeklyMealsContent() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="space-y-2">
               {visibleFilteredRecipes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">{t("meals.noRecipesMatch")}</p>
               ) : (
@@ -1390,6 +1400,8 @@ function WeeklyMealsContent() {
                   const meta = getMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
+                  const isArranging = arrangingRecipe === recipe.id;
+                  const preparationMinutes = recipeStageMinutes(recipe, "preparation");
                   const monogram = getMonogram(recipe.title);
                   const displayTags = recipe.tags.map(tag => {
                     if (tag === "vegetarian") return t("meals.vegetarian");
@@ -1401,19 +1413,24 @@ function WeeklyMealsContent() {
                   return (
                     <div 
                       key={recipe.id} 
-                      className="bg-[#FAFAF8] rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row gap-4"
+                      className="flex items-center gap-2 sm:gap-3 p-3 bg-white rounded-lg border hairline"
                       data-testid={`recipe-card-${recipe.id}`}
                     >
-                      <div className="w-20 h-20 rounded-xl bg-foreground/5 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                        <span className="text-2xl font-medium text-muted-foreground/50">{monogram}</span>
+                      <div className="w-8 h-8 rounded-lg bg-foreground/5 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium text-muted-foreground/50">{monogram}</span>
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-3 mb-2">
+                        <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-sm font-medium text-foreground leading-snug">{recipe.title}</p>
+                              <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
                               <RecipePriceSummary recipe={recipe} context="catalog" />
+                              <span className="mobile-readable-xs text-muted-foreground" data-testid={`meals-catalog-title-preparation-${recipe.id}`}>
+                                {preparationMinutes === null
+                                  ? timeCopy("preparationTimeUnknown")
+                                  : `${timeCopy("preparation")}: ${preparationMinutes} ${timeCopy("minutesShort")}`}
+                              </span>
                               {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">{`* ${t("meals.myPicks")}`}</span>}
                             </div>
                             {meta.rating && (
@@ -1423,42 +1440,36 @@ function WeeklyMealsContent() {
                               </div>
                             )}
                           </div>
+                        </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                        <MealRecipeFacts recipe={recipe} context="catalog" interactive={isArranging} actions={<>
                           <button
-                            onClick={() => toggleSelection(recipe.id)}
-                            className={`px-3 py-2 mobile-readable-xs rounded-full border flex-shrink-0 min-h-11 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
-                            data-testid={`button-add-${recipe.id}`}
+                            onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
+                            aria-expanded={isExpanded}
+                            className="px-3 py-2 text-xs min-h-11 rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
+                            data-testid={`button-ingredients-${recipe.id}`}
                           >
-                            {isSelected ? t("meals.added") : t("meals.add")}
+                            Ingredients
                           </button>
-                        </div>
-
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        <MealRecipeFacts recipe={recipe} context="catalog" />
-                        <span className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{recipe.mealType}</span>
+                          <button
+                            onClick={() => setArrangingRecipe(isArranging ? null : recipe.id)}
+                            aria-pressed={isArranging}
+                            className="px-2 py-1 text-xs min-h-11 rounded text-muted-foreground hover:text-foreground"
+                            data-testid={`button-arrange-${recipe.id}`}
+                          >
+                            {isArranging ? t("layout.done") : t("layout.arrange")}
+                          </button>
+                        </>} />
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground">{recipe.mealType}</span>
                         {displayTags.map(tag => (
-                          <span key={tag} className="px-2.5 py-1 text-xs bg-foreground/5 rounded-full text-muted-foreground">{tag}</span>
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground">{tag}</span>
                         ))}
-                      </div>
-
-                      <div className="space-y-1 mb-4">
-                        <p className="text-xs text-muted-foreground">Source: {recipe.sourceType}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 text-[10px] bg-foreground/5 rounded text-muted-foreground">{recipe.proteinType.toLowerCase()}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
-                          className="px-4 py-2 mobile-readable-xs min-h-11 rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
-                          data-testid={`button-ingredients-${recipe.id}`}
-                        >
-                          Ingredients
-                        </button>
                       </div>
 
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
+                          <p className="text-xs text-muted-foreground mb-2">Source: {recipe.sourceType} · {recipe.proteinType.toLowerCase()}</p>
                           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <p className="text-xs font-medium text-foreground">{t("import.recipePreview")}</p>
                             <NutritionDetailsToggle context={recipe.id} />
@@ -1467,6 +1478,13 @@ function WeeklyMealsContent() {
                         </div>
                       )}
                       </div>
+                      <button
+                        onClick={() => toggleSelection(recipe.id)}
+                        className={`px-2 py-1 text-xs rounded border flex-shrink-0 min-h-11 ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
+                        data-testid={`button-add-${recipe.id}`}
+                      >
+                        {isSelected ? t("meals.added") : t("meals.add")}
+                      </button>
                     </div>
                   );
                 })

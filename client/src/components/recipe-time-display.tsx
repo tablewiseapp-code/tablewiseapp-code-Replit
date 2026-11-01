@@ -55,10 +55,12 @@ export function RecipeTimeToggle() {
   );
 }
 
-export function MealRecipeFacts({ recipe, context, compact = false }: {
+export function MealRecipeFacts({ recipe, context, compact = false, interactive, actions }: {
   recipe: RecipeCredit & RecipeTimeData & NutritionFields & { id: string; title?: string; servings?: string | null; equipment?: RecipeToolKey[]; metadataEstimated?: boolean };
   context: string;
   compact?: boolean;
+  interactive?: boolean;
+  actions?: ReactNode;
 }) {
   const { mode } = useRecipeTime();
   const { showNutrition } = useRecipeDisplay();
@@ -86,7 +88,7 @@ export function MealRecipeFacts({ recipe, context, compact = false }: {
   return (
     <div className={`flex min-w-0 basis-full flex-wrap items-start gap-x-3 gap-y-1 text-muted-foreground ${compact ? "text-[10px]" : "text-xs"}`}
       data-testid={`meals-${context}-facts-${recipe.id}`}>
-      <RecipeFactLayout blocks={blocks} context={`${context}-${recipe.id}`} interactive={!compact && context === "catalog"}
+      <RecipeFactLayout blocks={blocks} context={`${context}-${recipe.id}`} interactive={interactive ?? (!compact && context === "catalog")}
         testId={showNutrition ? `nutrition-${context}-${recipe.id}` : undefined} />
       {context !== "drag" && (
         <Link href={`/recipe/${recipe.id}`} onPointerDown={event => event.stopPropagation()}
@@ -97,6 +99,7 @@ export function MealRecipeFacts({ recipe, context, compact = false }: {
           {t("showRecipe")}
         </Link>
       )}
+      {actions}
       {recipe.metadataEstimated && <span className="basis-full">{t("developmentEstimates")}</span>}
     </div>
   );

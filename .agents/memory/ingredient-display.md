@@ -45,3 +45,12 @@ every recipe and preserves a consistent comparison layout.
 nutrition visibility. Use field handles and keyboard/touch alternatives on
 cards; compact calendar facts inherit the order without interfering with
 whole-recipe calendar dragging. Retain reset and hidden-field positions.
+
+Available recipes should visually match the Selected Recipes rows.
+
+**Why:** The user explicitly chose Selected Recipes as the visual reference
+instead of the larger catalog-card presentation.
+
+**How to apply:** Keep the normal view compact and consistent between available
+and selected recipes. Make field-arrangement controls opt-in without removing
+dragging, reset, saved ordering, ingredients, or recipe navigation.
