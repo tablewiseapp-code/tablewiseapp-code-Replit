@@ -1,12 +1,14 @@
 import type { RecipeToolKey } from "./recipe-tools";
 import type { RecipeCredit } from "@shared/recipe-credit";
 import type { NutritionFields } from "@shared/recipe-nutrition";
+import type { StepAnalysis } from "@shared/step-timing";
 
 export type Recipe = RecipeCredit & NutritionFields & {
   id: string;
   title: string;
   ingredients: string[];
   steps: string[];
+  stepAnalysis?: StepAnalysis | null;
   createdAt: string;
   updatedAt: string;
   image?: string | null;
@@ -42,8 +44,8 @@ export async function fetchRecipe(id: string): Promise<Recipe> {
   return res.json();
 }
 
-export async function createRecipe(data: Omit<Recipe, "id" | "createdAt" | "updatedAt">): Promise<Recipe> {
-  const res = await fetch("/api/recipes", {
+export async function createRecipe(data: Omit<Recipe, "id" | "createdAt" | "updatedAt">, timedImport = false): Promise<Recipe> {
+  const res = await fetch(timedImport ? "/api/import-recipe" : "/api/recipes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

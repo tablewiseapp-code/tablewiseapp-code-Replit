@@ -214,12 +214,12 @@ async function main() {
       assert.equal(response.status, 429); assert.ok(Number(response.headers.get("retry-after")) > 0);
     });
     await check("AI daily/minute budgets and concurrent work are capped", async f => {
-      for (let i = 0; i < 5; i++) await status(f.request("/api/parse-recipe", "POST", { transcript: "Rice" }, auth), 200);
+      for (let i = 0; i < 5; i++) await status(f.request("/api/parse-recipe", "POST", { transcript: `Rice ${i}` }, auth), 200);
       await status(f.request("/api/parse-recipe", "POST", { transcript: "Rice" }, auth), 429);
       assert.equal(f.aiCalls, 5);
       f.advance(61_000); f.holdAI();
-      const one = f.request("/api/parse-recipe", "POST", { transcript: "Rice" }, auth);
-      const two = f.request("/api/parse-recipe", "POST", { transcript: "Rice" }, auth);
+      const one = f.request("/api/parse-recipe", "POST", { transcript: "Held rice one" }, auth);
+      const two = f.request("/api/parse-recipe", "POST", { transcript: "Held rice two" }, auth);
       for (let i = 0; i < 100 && f.aiCalls < 7; i++) await new Promise(resolve => setTimeout(resolve, 10));
       assert.equal(f.aiCalls, 7);
       await status(f.request("/api/parse-recipe", "POST", { transcript: "Rice" }, auth), 429);

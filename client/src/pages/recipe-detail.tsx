@@ -13,6 +13,7 @@ import { RecipeNutritionSummary } from "@/components/recipe-nutrition";
 import { NutritionDetailsToggle, useRecipeDisplay } from "@/components/recipe-display";
 import { RecipePriceSummary } from "@/components/recipe-price";
 import { RecipeIngredients } from "@/components/recipe-ingredients";
+import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step-timing";
 
 export default function RecipeDetail() {
   const { t } = useI18n();
@@ -86,6 +87,7 @@ export default function RecipeDetail() {
     );
   }
 
+  const analysis = currentAnalysis(recipe, recipe.stepAnalysis);
   return (
     <div className="min-h-screen bg-background">
       <PageContainer size="md" className="py-8 sm:py-10">
@@ -234,10 +236,12 @@ export default function RecipeDetail() {
                 <span className="mobile-readable-xs text-muted-foreground font-medium mt-0.5 w-5 flex-shrink-0">
                   {i + 1}.
                 </span>
-                <p className="text-sm text-foreground">{step}</p>
+                <div className="space-y-2"><p className="text-sm text-foreground">{step}</p>
+                  <StepTiming duration={analysis?.steps[i]} /></div>
               </li>
             ))}
           </ol>
+          {analysis && <div className="mt-4"><AnalysisWarnings analysis={analysis} /></div>}
         </div>
 
         <div className="flex flex-wrap gap-3 pt-4 border-t hairline">

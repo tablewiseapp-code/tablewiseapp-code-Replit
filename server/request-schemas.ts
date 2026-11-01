@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { creditKind, creditName, recipeCreditInput } from "../shared/recipe-credit";
+import { analysisMatches, stepAnalysisSchema } from "../shared/step-timing";
 
 const line = z.string().trim().min(1).max(1000);
 const safeURL = z.string().max(2048).url().refine(value => {
@@ -13,6 +14,7 @@ const recipeBase = z.object({
   title: z.string().trim().min(1).max(200),
   ingredients: z.array(line).min(1).max(100),
   steps: z.array(z.string().trim().min(1).max(2000)).min(1).max(100),
+  stepAnalysis: stepAnalysisSchema.nullable().optional(),
   image: safeURL.nullable().optional(),
   sourceUrl: safeURL.nullable().optional(),
   cookTime: z.number().int().min(0).max(10080).nullable().optional(),
@@ -23,6 +25,9 @@ const recipeBase = z.object({
 export const recipeInput = recipeBase.extend({
   creditKind: creditKind.nullable().optional(), creditName,
 }).superRefine((value, ctx) => {
+  if (value.stepAnalysis && !analysisMatches(value, value.stepAnalysis)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["stepAnalysis"], message: "Timing analysis is stale or incomplete." });
+  }
   if (value.creditKind) {
     const parsed = recipeCreditInput.safeParse({ creditKind: value.creditKind, creditName: value.creditName });
     if (!parsed.success) parsed.error.issues.forEach(issue => ctx.addIssue(issue));

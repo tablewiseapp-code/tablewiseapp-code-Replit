@@ -1,3 +1,11 @@
+# Imported step timing
+
+The new `/api/analyze-recipe` route uses the existing operator/AI authorization,
+request budgets and concurrency gate. Paid AI is still disabled by default.
+Interactive saving uses `/api/import-recipe` and requires current validated
+analysis. See [import-step-analysis.md](import-step-analysis.md).
+No migration, paid-AI enablement, deployment or public pilot approval is implied.
+
 # TableWise server safeguards
 
 ## Scope and approval

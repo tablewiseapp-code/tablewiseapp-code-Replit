@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, timestamp, uuid, date, unique, index, check, jsonb } from "drizzle-orm/pg-core";
 import type { RecipeNutrition } from "./recipe-nutrition";
+import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -23,6 +24,7 @@ export const recipes = pgTable("recipes", {
   title: text("title").notNull(),
   ingredients: text("ingredients").array().notNull(),
   steps: text("steps").array().notNull(),
+  stepAnalysis: jsonb("step_analysis").$type<StepAnalysis>(),
   image: text("image"),
   sourceUrl: text("source_url"),
   cookTime: integer("cook_time"),
@@ -42,6 +44,7 @@ export const recipes = pgTable("recipes", {
 ]);
 
 export const insertRecipeSchema = createInsertSchema(recipes, {
+  stepAnalysis: stepAnalysisSchema.nullable().optional(),
   creditKind: z.enum(["chef", "mine"]).nullable().optional(),
 }).omit({
   id: true,
@@ -60,7 +63,8 @@ export const recipeNutrition = pgTable("recipe_nutrition", {
   check("recipe_nutrition_data_check", sql`jsonb_typeof(${table.data}) = 'object'`),
 ]);
 // Optional for compatibility with recipes created before preparation-time metadata.
-export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName"> & {
+export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName" | "stepAnalysis"> & {
+  stepAnalysis?: StepAnalysis | null;
   prepTime?: number | null; creditKind?: "chef" | "mine" | null; creditName?: string | null;
 };
 

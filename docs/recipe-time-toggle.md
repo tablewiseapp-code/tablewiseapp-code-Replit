@@ -1,3 +1,11 @@
+# Imported instruction times
+
+Interactive imports now have a separate step timing review. Source-stated
+durations and AI estimates are labeled individually and may be ranges.
+They do not change the preparation/cooking/total semantics described below.
+See [import-step-analysis.md](import-step-analysis.md) for boundaries,
+operator prerequisites, retry behavior and the unapplied additive migration.
+
 # Preparation / total time, equipment, and recipe links
 
 ## Behavior

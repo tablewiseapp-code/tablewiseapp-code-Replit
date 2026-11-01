@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { createRecipe } from "@/lib/storage";
 import { useI18n, type Language } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
+import { timingContext, timingContextSchema, stepAnalysisSchema, type StepAnalysis, type TimingContext } from "@shared/step-timing";
+import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step-timing";
 
 function isValidUrl(str: string): boolean {
   try {
@@ -13,7 +15,8 @@ function isValidUrl(str: string): boolean {
   }
 }
 
-async function parseRecipeWithAI(text: string): Promise<{ title: string; ingredients: string[]; steps: string[]; cookTime?: number; servings?: string; tags?: string[] }> {
+type ParsedRecipe = TimingContext & { tags?: string[] | null };
+async function parseRecipeWithAI(text: string): Promise<ParsedRecipe> {
   const response = await fetch("/api/parse-recipe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -128,6 +131,42 @@ export default function ImportRecipe() {
   const [steps, setSteps] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [sourceUrl, setSourceUrl] = useState("");
+  const [metadata, setMetadata] = useState<Pick<ParsedRecipe, "prepTime" | "cookTime" | "servings" | "tags">>({});
+  const [analysis, setAnalysis] = useState<StepAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const busy = useRef(false);
+  const voiceBusy = useRef(false);
+  const parsedVoice = useRef<{ text: string; value: ParsedRecipe } | null>(null);
+  const transcribedBlob = useRef<{ blob: Blob; text: string } | null>(null);
+  const lines = (text: string) => text.split("\n").map(line => line.trim()).filter(Boolean);
+  const context: TimingContext = {
+    title: title.trim(), ingredients: lines(ingredients), steps: lines(steps),
+    prepTime: metadata.prepTime, cookTime: metadata.cookTime, servings: metadata.servings,
+  };
+  const contextRef = useRef(timingContext(context));
+  contextRef.current = timingContext(context);
+  const validAnalysis = currentAnalysis(context, analysis);
+
+  const runAnalysis = async (recipe: TimingContext) => {
+    setAnalyzing(true);
+    setAnalysisError(null);
+    try {
+      const parsed = timingContextSchema.safeParse(recipe);
+      if (!parsed.success) throw new Error(t("timing.invalid"));
+      const response = await fetch("/api/analyze-recipe", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || t("timing.failed"));
+      const result = stepAnalysisSchema.parse(payload);
+      if (!currentAnalysis(recipe, result)) throw new Error(t("timing.failed"));
+      if (contextRef.current === timingContext(recipe)) setAnalysis(result);
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : t("timing.failed"));
+    } finally { setAnalyzing(false); }
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -262,7 +301,9 @@ export default function ImportRecipe() {
   };
 
   const handleTranscribeAndFill = async () => {
-    if (!recordedAudioBlob && !transcript.trim()) return;
+    if (voiceBusy.current || busy.current || (!recordedAudioBlob && !transcript.trim())) return;
+    voiceBusy.current = true;
+    const originalContext = contextRef.current;
 
     setIsProcessing(true);
     setAiError(null);
@@ -272,7 +313,9 @@ export default function ImportRecipe() {
       let transcriptToParse = transcript.trim();
 
       if (recordedAudioBlob) {
-        transcriptToParse = await transcribeAudio(recordedAudioBlob, lang);
+        transcriptToParse = transcribedBlob.current?.blob === recordedAudioBlob
+          ? transcribedBlob.current.text : await transcribeAudio(recordedAudioBlob, lang);
+        transcribedBlob.current = { blob: recordedAudioBlob, text: transcriptToParse };
         setTranscript(transcriptToParse);
       }
 
@@ -280,7 +323,10 @@ export default function ImportRecipe() {
         throw new Error("Couldn't transcribe your audio. Please try again.");
       }
 
-      const parsed = await parseRecipeWithAI(transcriptToParse);
+      const parsed = parsedVoice.current?.text === transcriptToParse
+        ? parsedVoice.current.value : await parseRecipeWithAI(transcriptToParse);
+      parsedVoice.current = { text: transcriptToParse, value: parsed };
+      if (contextRef.current !== originalContext) throw new Error(t("timing.changed"));
 
       const hasExisting = title.trim() || ingredients.trim() || steps.trim();
       if (hasExisting) {
@@ -294,12 +340,19 @@ export default function ImportRecipe() {
       setTitle(parsed.title || "");
       setIngredients((parsed.ingredients || []).join("\n"));
       setSteps((parsed.steps || []).join("\n"));
+      setMetadata({ prepTime: parsed.prepTime, cookTime: parsed.cookTime, servings: parsed.servings, tags: parsed.tags });
+      setAnalysis(null);
+      const nextContext = { title: parsed.title, ingredients: parsed.ingredients, steps: parsed.steps,
+        prepTime: parsed.prepTime, cookTime: parsed.cookTime, servings: parsed.servings };
+      contextRef.current = timingContext(nextContext);
+      await runAnalysis(nextContext);
     } catch (error: any) {
       console.error("AI parse error:", error);
       const message = error.message || t("import.error");
       setAiError(message);
       showErrorPopup(message);
     } finally {
+      voiceBusy.current = false;
       setIsProcessing(false);
     }
   };
@@ -328,7 +381,13 @@ export default function ImportRecipe() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (busy.current || voiceBusy.current || isRecording) return;
+    busy.current = true;
+    if (!validAnalysis) {
+      await runAnalysis(context);
+      busy.current = false;
+      return;
+    }
     setIsSaving(true);
 
     const parsedIngredients = ingredients
@@ -346,15 +405,20 @@ export default function ImportRecipe() {
         title: title.trim() || "Untitled Recipe",
         ingredients: parsedIngredients,
         steps: parsedSteps,
+        ...metadata,
+        stepAnalysis: validAnalysis,
         image: image || null,
         sourceUrl: sourceUrl.trim() && isValidUrl(sourceUrl.trim()) ? sourceUrl.trim() : null,
-      });
+      }, true);
       setLocation(`/recipe/${saved.id}`);
     } catch (error: any) {
       console.error("Failed to save recipe:", error);
       const message = error.message || "Failed to save recipe";
+      setAnalysis(null);
+      setAnalysisError(message);
       showErrorPopup(message);
     } finally {
+      busy.current = false;
       setIsSaving(false);
     }
   };
@@ -368,7 +432,7 @@ export default function ImportRecipe() {
           {t("import.subtitle")}
         </p>
 
-        <div className="space-y-6">
+        <fieldset disabled={isSaving} className="space-y-6">
           <div>
             <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
               {t("import.photo")}
@@ -570,14 +634,25 @@ Sauté onions until golden brown"
             />
           </div>
 
+          <section className="rounded-xl border hairline p-4 space-y-4" aria-live="polite" data-testid="timing-review">
+            <h2 className="text-sm font-medium">{t("timing.review")}</h2>
+            {analyzing ? <p role="status">{t("timing.analyzing")}</p> : !validAnalysis && <p className="text-sm">{t("timing.required")}</p>}
+            {analysisError && <p role="alert" className="text-sm text-red-600">{analysisError} {t("timing.retry")}</p>}
+            {validAnalysis && <>
+              <ol className="space-y-3">{validAnalysis.steps.map((step, i) => <li key={i} className="space-y-1 text-sm">
+                <p>{i + 1}. {step.text}</p><StepTiming duration={step} />
+              </li>)}</ol>
+              <AnalysisWarnings analysis={validAnalysis} />
+            </>}
+          </section>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-4">
             <button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || analyzing || isProcessing || isRecording}
               className="w-full sm:w-auto px-6 py-2.5 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
               data-testid="button-save"
             >
-              {isSaving ? t("import.saving") || "Saving..." : t("import.saveAndOpen")}
+              {isSaving ? t("import.saving") : validAnalysis ? t("import.saveAndOpen") : t("timing.analyze")}
             </button>
             <button
               onClick={() => setLocation("/recipe-view")}
@@ -587,7 +662,7 @@ Sauté onions until golden brown"
               {t("import.back")}
             </button>
           </div>
-        </div>
+        </fieldset>
 
         <div className="mt-12 p-5 bg-[#FAFAF8] rounded-xl">
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">{t("import.howItWorks")}</p>

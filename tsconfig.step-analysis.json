@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["script/test-step-analysis.ts", "script/test-step-analysis-browser.ts", "script/test-step-analysis-postgres.ts", "shared/step-timing.ts", "server/recipe-analysis.ts", "server/recipe-parse-cache.ts"],
+  "compilerOptions": { "incremental": false }
+}
