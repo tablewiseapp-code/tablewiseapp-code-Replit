@@ -1,5 +1,6 @@
 import { useI18n } from "@/lib/i18n";
-import { nutritionAmounts, nutritionBasis, type NutritionFields } from "@shared/recipe-nutrition";
+import { nutritionAmounts, nutritionBasis, usableNutrition, type NutritionFields } from "@shared/recipe-nutrition";
+import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { RecipeFactLayout, type RecipeFactBlock } from "./recipe-fact-layout";
 
 export function useNutritionBlocks({ recipe, compact = false, context = "detail" }: {
@@ -7,7 +8,7 @@ export function useNutritionBlocks({ recipe, compact = false, context = "detail"
   compact?: boolean; context?: string;
 }): RecipeFactBlock[] {
   const { t, lang } = useI18n();
-  const nutrition = recipe.nutrition;
+  const nutrition = usableNutrition(recipe.nutrition);
   if (!nutrition) return [{ id: "nutrition-status", label: t("nutrition.aiEstimate"), content:
     <div>{t(recipe.nutritionStatus === "unavailable" ? "nutrition.unavailable" : "nutrition.notAnalyzed")}</div> }];
   const portions = nutritionBasis(recipe.servings);
@@ -46,4 +47,16 @@ export function RecipeNutritionSummary(props: {
     <RecipeFactLayout blocks={blocks} context={`${context}-${props.recipe.id}`} interactive={!props.compact}
       testId={`nutrition-${context}-${props.recipe.id}`} />
   </div>;
+}
+
+/** Cooking-view nutrition: real AI estimates only, collapsed, not draggable; mock/missing data is never shown as numbers. */
+export function RecipeNutritionPanel({ recipe }: { recipe: NutritionFields & { id: string; servings?: string | null } }) {
+  const { t } = useI18n();
+  const view = useRecipeViewCopy();
+  const blocks = useNutritionBlocks({ recipe, context: "detail" });
+  if (!usableNutrition(recipe.nutrition)) return <p className="text-xs text-muted-foreground" data-testid="nutrition-unavailable">{view.t("nutritionNone")}</p>;
+  return <details className="rounded-lg border hairline bg-white p-3 text-xs text-muted-foreground" data-testid="nutrition-panel">
+    <summary className="cursor-pointer text-sm font-medium text-foreground">{t("nutrition.aiEstimate")}</summary>
+    <div className="mt-3"><RecipeFactLayout blocks={blocks} context={`detail-${recipe.id}`} interactive={false} testId={`nutrition-detail-${recipe.id}`} /></div>
+  </details>;
 }

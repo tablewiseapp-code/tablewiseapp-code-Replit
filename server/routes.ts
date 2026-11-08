@@ -15,6 +15,9 @@ import type { NutritionInput } from "../shared/recipe-nutrition";
 import { timingContextSchema } from "../shared/step-timing";
 import { createRecipeAnalyzer } from "./recipe-analysis";
 import { recipeParseCache } from "./recipe-parse-cache";
+import { generationRequest, buildRecipeGenerationContext, generateRecipe, GenerationError, generationMessages, generationEvent, GENERATION_MODEL } from "./recipe-generation";
+import { analyzePreferences, PROMPT_VERSION } from "./recipe-personalization";
+import { randomUUID } from "crypto";
 import type { z } from "zod";
 
 export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "updateRecipeCredit" | "deleteRecipe">;
@@ -126,6 +129,36 @@ export async function registerRoutes(
       console.error("api_failure operation=pilot_summary");
       res.status(503).json({ error: "Pilot analytics is unavailable." });
     }
+  });
+  // Nothing is saved server-side: the browser keeps the idea (My Ideas). Accepting goes through the normal POST /api/recipes.
+  app.post("/api/recipes/generate", security.aiPermit, async (req, res) => {
+    try {
+      const input = generationRequest.safeParse(req.body);
+      if (!input.success) return res.status(400).json({ error: "Invalid recipe filters." });
+      const context = buildRecipeGenerationContext(input.data.filters, input.data.timeMode);
+      const guidance = await analyzePreferences(input.data.personalization, context);
+      const { style = "surprise_me", budget = "everyday" } = input.data;
+      const cancel = new AbortController(); // the browser closed the panel or navigated away: stop paying for the call
+      res.on("close", () => { if (!res.writableEnded) cancel.abort(); });
+      const generated = await generateRecipe(context, getAI, cancel.signal, guidance, style, budget);
+      res.json({ ...generated, meta: { generationRequestId: randomUUID(), model: GENERATION_MODEL, promptVersion: PROMPT_VERSION, style, budget } });
+      console.log("ai_event name=recipe_generated"); // no filters, recipe text or identifiers
+    } catch (error) {
+      const kind = error instanceof GenerationError ? error.kind : "unavailable";
+      console.error(`api_failure operation=recipe_generate kind=${kind}`);
+      const { status, error: message } = generationMessages[kind];
+      res.status(status).json({ error: message, retryable: true });
+    } finally {
+      res.locals.releaseAI();
+    }
+  });
+  // Privacy-conscious learning signals: event name only (no recipe text, filters or identifiers), same log convention as recipe_generated.
+  // Adding a recipe to a plan is recorded as exactly that, never as "cooked".
+  app.post("/api/recipes/generate/events", (req, res) => {
+    const parsed = generationEvent.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "Invalid event." });
+    console.log(`ai_event name=${parsed.data.name}`);
+    res.status(204).end();
   });
   app.use("/api/recipes/:id", (req, res, next) => {
     if (!recipeId.safeParse(req.params.id).success) {

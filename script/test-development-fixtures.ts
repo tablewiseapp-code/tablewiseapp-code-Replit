@@ -14,16 +14,19 @@ import { importDevelopmentFixtures, readIdentity, snapshotHash, type RecipeSnaps
 async function main() {
   const sourceText = readFixtureSource();
   assert.equal(createHash("sha256").update(sourceText).digest("hex"), fixtureSourceSHA256);
-  assert.deepEqual(parseFixtureSource(sourceText), developmentFixtureManifest.entries);
-  assert.equal(developmentFixtures.length, 100);
-  assert.equal(new Set(developmentFixtures.map(row => row.id)).size, 100);
-  assert.ok(new Set(developmentFixtures.map(row => row.sourceUrl)).size < 100);
+  const parsed = parseFixtureSource(sourceText);
+  // Manifest is a curated 20-recipe subset; text must match the source, metadata is filled in.
+  assert.deepEqual(developmentFixtureManifest.entries.map(e => ({ ...e, recipe: { ...e.recipe, servings: null, prepTime: null, cookTime: null } })),
+    developmentFixtureManifest.entries.map(e => parsed.find(p => p.number === e.number)));
+  assert.equal(developmentFixtures.length, 20);
+  assert.equal(new Set(developmentFixtures.map(row => row.id)).size, 20);
+  
   // Independent extraction from the numbered Markdown, not the importer's own
   // representation: check every ordered line, title, URL and reference label.
   const sections = [...sourceText.matchAll(/^## (\d{3}) — ([^\n]+)\n([\s\S]*?)(?=^## \d{3} — |$(?![\s\S]))/gm)];
   assert.equal(sections.length, 100);
-  sections.forEach((section, i) => {
-    const entry = developmentFixtureManifest.entries[i];
+  developmentFixtureManifest.entries.forEach(entry => {
+    const section = sections.find(s => s[1] === entry.number)!;
     const blocks = [...section[3].matchAll(/```text\n([\s\S]*?)\n```/g)].map(block => block[1].split("\n"));
     assert.equal(entry.number, section[1]);
     assert.equal(entry.recipe.title, section[2]);
@@ -32,7 +35,8 @@ async function main() {
     assert.equal(entry.sourceType, section[3].match(/\*\*Source type:\*\* (.+)/)![1]);
     assert.deepEqual(entry.recipe.ingredients, blocks[0]);
     assert.deepEqual(entry.recipe.steps, blocks[1]);
-    for (const field of ["prepTime", "cookTime", "servings", "image"] as const) assert.equal(entry.recipe[field], null);
+    assert.equal(entry.recipe.image, null);
+    for (const field of ["prepTime", "cookTime", "servings"] as const) assert.notEqual(entry.recipe[field], null);
     assert.ok(entry.recipe.tags?.includes("Synthetic test data"));
     assert.ok(entry.recipe.tags?.every(tag => !/^(Dinner|Lunch|Breakfast|meal:|suitability:)/i.test(tag)));
   });
@@ -48,7 +52,7 @@ async function main() {
 
   assert.deepEqual(verifyPreviewCatalog(researchedDinners), { total: 12, researched: 12, synthetic: 0, other: 0 });
   assert.deepEqual(verifyPreviewCatalog([...researchedDinners, ...developmentFixtures, { id: "unrelated" }]),
-    { total: 113, researched: 12, synthetic: 100, other: 1 });
+    { total: 33, researched: 12, synthetic: 20, other: 1 });
   assert.throws(() => verifyPreviewCatalog([...researchedDinners, ...developmentFixtures.slice(1)]), /Incomplete/);
   assert.throws(() => verifyPreviewCatalog([...researchedDinners.slice(1), ...developmentFixtures]), /differs/);
   assert.throws(() => verifyPreviewCatalog([...researchedDinners, ...developmentFixtures.map((r, i) => i ? r : { ...r, title: "edited" })]), /differs/);
@@ -90,7 +94,7 @@ async function main() {
     }
     baseline = await snap();
     const dry = await importDevelopmentFixtures(scopedPool, { apply: false });
-    assert.equal(dry.before, 12); assert.equal(dry.after, 12); assert.equal(dry.wouldInsert, 100);
+    assert.equal(dry.before, 12); assert.equal(dry.after, 12); assert.equal(dry.wouldInsert, 20);
     assert.deepEqual(dry.baseline, baseline);
     assert.deepEqual(await snap(), baseline, "Dry-run is read-only.");
     await assert.rejects(importDevelopmentFixtures(scopedPool, { apply: true }), /requires/);
@@ -104,7 +108,7 @@ async function main() {
     const applied = await importDevelopmentFixtures(scopedPool, {
       apply: true, verifiedDevelopmentTarget: identity, reviewedSnapshot: dry.snapshot,
     });
-    assert.equal(applied.before, 12); assert.equal(applied.after, 112); assert.equal(applied.inserted, 100);
+    assert.equal(applied.before, 12); assert.equal(applied.after, 32); assert.equal(applied.inserted, 20);
     const imported = await snap();
     assert.deepEqual(imported.filter(row => researchedDinners.some(r => r.id === row.id)), baseline);
     for (const recipe of developmentFixtures) {
@@ -117,7 +121,7 @@ async function main() {
     const repeat = await importDevelopmentFixtures(scopedPool, {
       apply: true, verifiedDevelopmentTarget: identity, reviewedSnapshot: snapshotHash(imported),
     });
-    assert.equal(repeat.inserted, 0); assert.equal(repeat.matched, 100);
+    assert.equal(repeat.inserted, 0); assert.equal(repeat.matched, 20);
     assert.equal(repeat.snapshot, repeat.afterSnapshot);
     assert.deepEqual(await snap(), imported, "Repeat preserves every timestamp, including microseconds.");
     await client.query("UPDATE recipes SET title='Owner edit' WHERE id=$1", [developmentFixtures[99].id]);
@@ -128,7 +132,7 @@ async function main() {
     }), /Conflicting batch content/);
     assert.deepEqual(await snap(), conflict, "Conflict commits no partial repair or insert.");
     // Make a database-side mutation during INSERT: preservation check must
-    // reject it and roll back all 100 inserts, not merely detect input conflicts.
+    // reject it and roll back all 20 inserts, not merely detect input conflicts.
     await client.query("DELETE FROM recipes WHERE id LIKE 'tablewise:synthetic:v1:%'");
     await client.query(`INSERT INTO recipes(id,title,ingredients,steps,tags)
       VALUES ('unrelated','Unrelated preserved recipe',ARRAY['original'],ARRAY['original'],ARRAY['Lunch'])`);
@@ -144,7 +148,7 @@ async function main() {
     const extra = await importDevelopmentFixtures(scopedPool, {
       apply: true, verifiedDevelopmentTarget: identity, reviewedSnapshot: snapshotHash(beforeTrigger),
     });
-    assert.equal(extra.before, 13); assert.equal(extra.after, 113);
+    assert.equal(extra.before, 13); assert.equal(extra.after, 33);
     assert.deepEqual((await snap()).filter(row => beforeTrigger.some(r => r.id === row.id)), beforeTrigger);
     // Exercise the public CLI itself against this same verified disposable
     // schema, overriding only the child process's connection with a
@@ -171,7 +175,7 @@ async function main() {
     await assert.rejects(cli(["--dry-run", "--baseline-file", baselineFile]), /EEXIST/);
     await assert.rejects(cli(["--dry-run", "--baseline-file", "baseline-outside-generated.json"]), /under generated-artifacts/);
     assert.deepEqual(await snap(), beforeCLI, "CLI no-op and rejected invocations change nothing.");
-    console.log("PASS isolated rehearsal ONLY: all 100 exact entries and provenance; malformed input; missing schema; identity/snapshot guards; read-only dry-run; 12→112 and 13→113; preservation of all fields and microsecond timestamps; repeat no-op; conflict and post-insert rollback; expanded catalog validation. No application database writes.");
+    console.log("PASS isolated rehearsal ONLY: all 20 exact entries and provenance; malformed input; missing schema; identity/snapshot guards; read-only dry-run; 12→32 and 13→33; preservation of all fields and microsecond timestamps; repeat no-op; conflict and post-insert rollback; expanded catalog validation. No application database writes.");
   } finally {
     await client.query("ROLLBACK").catch(() => {});
     await client.query("SET search_path TO public");

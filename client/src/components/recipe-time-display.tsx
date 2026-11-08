@@ -82,7 +82,8 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
         ? recipe.equipment.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</div></div> },
     ...(mode === "total" && recipe.prepTime != null ? [{ id: "preparation" as const, label: t("preparation"), content:
       <div>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</div> }] : []),
-    { id: "credit", label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> },
+    // catalog cards show the credit in their top-right corner instead
+    ...(context === "catalog" ? [] : [{ id: "credit" as const, label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> }]),
     ...(showNutrition ? nutritionBlocks : []),
   ];
   return (

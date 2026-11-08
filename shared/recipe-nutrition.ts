@@ -56,3 +56,8 @@ export function nutritionBasis(servings?: string | null) {
   const count = match ? servingRange(match[1]) : null;
   return match && count ? { ...count, unit: match[2].toLowerCase().replace(/s$/, "") } : null;
 }
+
+// Seeded placeholder values are labelled "mock-data"/"MOCK DATA"; they must never read as an estimate.
+export const isMockNutrition = (nutrition?: RecipeNutrition | null) =>
+  Boolean(nutrition && (/mock/i.test(nutrition.model) || nutrition.assumptions.some(item => /\bmock\b|placeholder/i.test(item))));
+export const usableNutrition = (nutrition?: RecipeNutrition | null) => nutrition && !isMockNutrition(nutrition) ? nutrition : null;
