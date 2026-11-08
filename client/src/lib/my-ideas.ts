@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { toPlannerRecipe } from "./planner-recipes";
-import type { GeneratedRecipe, NewRecipe } from "./recipe-generation";
+import { budgetPreferences, type BudgetPreference, type GeneratedRecipe, type IdeaFilters, type NewRecipe } from "./recipe-generation";
 import type { PlanState } from "./meal-plan";
+import { matchesPlannerFilters, noPersonalFilters } from "./planner-filters";
 
 // My Ideas: AI-generated recipes kept per browser (no accounts yet), like the weekly plan.
 // Everything goes through these functions, so a server-backed store can replace localStorage later.
@@ -11,9 +12,13 @@ export type Idea = {
   createdAt: string;
   generationRequestId: string | null;
   generationModel: string | null;
+  /** Missing on ideas saved before styles existed. */
+  style?: string | null;
+  promptVersion?: string | null;
   filtersSnapshot: unknown;
   recipe: NewRecipe;
   description: string;
+  tip?: string;
   isFavorite: boolean;
   /** Set once the idea was saved as a regular recipe (the planner and grocery list work with saved recipes). */
   recipeId: string | null;
@@ -22,6 +27,7 @@ export type Idea = {
 export const ideasKey = "tablewise:my-ideas:v1";
 export const activityKey = "tablewise:recipe-activity:v1";
 export const personalizationKey = "tablewise:personalization:v1";
+export const budgetKey = "tablewise:budget:v1";
 const changed = "tablewise:ideas-changed";
 const maxIdeas = 200; // ponytail: localStorage quota; move to server storage when accounts exist
 
@@ -45,7 +51,8 @@ export function saveIdea(result: GeneratedRecipe, filtersSnapshot: unknown): Ide
   const idea: Idea = {
     id: uuid(), origin: "ai_generated", createdAt: new Date().toISOString(),
     generationRequestId: result.meta?.generationRequestId ?? null, generationModel: result.meta?.model ?? null,
-    filtersSnapshot, recipe: result.recipe, description: result.description, isFavorite: false, recipeId: null,
+    style: result.meta?.style ?? null, promptVersion: result.meta?.promptVersion ?? null,
+    filtersSnapshot, recipe: result.recipe, description: result.description, tip: result.tip ?? "", isFavorite: false, recipeId: null,
   };
   const ideas = [idea, ...listIdeas()];
   while (ideas.length > maxIdeas) {
@@ -78,8 +85,30 @@ export function useIdeas(): Idea[] {
   return ideas;
 }
 
-export const cookingMethods = (idea: Idea) =>
-  toPlannerRecipe({ ...idea.recipe, id: idea.id, createdAt: idea.createdAt, updatedAt: idea.createdAt }).tools;
+const asPlanner = (idea: Idea) => toPlannerRecipe({ ...idea.recipe, id: idea.id, createdAt: idea.createdAt, updatedAt: idea.createdAt });
+export const cookingMethods = (idea: Idea) => asPlanner(idea).tools;
+
+export type IdeaSort = "newest" | "oldest";
+/** Searches saved ideas only (never generates). Same filter semantics as the Meals page, time = preparation. */
+export function filterIdeas(ideas: Idea[], text: string, filters: IdeaFilters, sort: IdeaSort): Idea[] {
+  const q = text.trim().toLowerCase();
+  const planner = noPersonalFilters({ ...filters, proteinType: [], servings: null, mustInclude: [], mustExclude: [] });
+  const shown = ideas.filter(idea =>
+    (!q || [idea.recipe.title, ...idea.recipe.ingredients].some(line => line.toLowerCase().includes(q))) &&
+    matchesPlannerFilters(asPlanner(idea), planner, "preparation", { isMyPick: false, rating: null }));
+  const time = (idea: Idea) => Date.parse(idea.createdAt) || 0;
+  shown.sort((a, b) => time(b) - time(a)); // stable: same-millisecond ideas keep their newest-first storage order
+  return sort === "oldest" ? shown.reverse() : shown;
+}
+
+/** Standing cooking preference applied to every generation. Default Everyday. */
+export function getBudget(): BudgetPreference {
+  try {
+    const value = store().getItem(budgetKey);
+    return (budgetPreferences as readonly string[]).includes(value ?? "") ? value as BudgetPreference : "everyday";
+  } catch { return "everyday"; }
+}
+export function setBudget(value: BudgetPreference) { store().setItem(budgetKey, value); }
 export const isInPlan = (idea: Idea, plan: PlanState) => Boolean(idea.recipeId &&
   (plan.selectedIds.includes(idea.recipeId) || plan.planAssignments.some(a => a.recipeId === idea.recipeId)));
 

@@ -161,6 +161,7 @@ export function GeneratedRecipeBody({ recipe }: { recipe: Pick<NewRecipe, "servi
       {recipe.servings && `${t("servings")}: ${recipe.servings} · `}
       {recipe.prepTime != null && `${t("prep")}: ${recipe.prepTime} ${t("min")} · `}
       {recipe.cookTime != null && `${t("cook")}: ${recipe.cookTime} ${t("min")}`}
+      {recipe.prepTime != null && recipe.cookTime != null && ` · ${t("total")}: ${recipe.prepTime + recipe.cookTime} ${t("min")}`}
     </p>
     <h3 className="mb-2 mt-4 text-sm font-semibold text-[#34443a]">{t("ingredients")}</h3>
     <RecipeIngredients recipe={{ id: "generated", ingredients: recipe.ingredients }} />

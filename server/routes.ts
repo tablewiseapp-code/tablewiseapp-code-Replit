@@ -137,8 +137,11 @@ export async function registerRoutes(
       if (!input.success) return res.status(400).json({ error: "Invalid recipe filters." });
       const context = buildRecipeGenerationContext(input.data.filters, input.data.timeMode);
       const guidance = await analyzePreferences(input.data.personalization, context);
-      const generated = await generateRecipe(context, getAI, undefined, guidance);
-      res.json({ ...generated, meta: { generationRequestId: randomUUID(), model: GENERATION_MODEL, promptVersion: PROMPT_VERSION } });
+      const { style = "surprise_me", budget = "everyday" } = input.data;
+      const cancel = new AbortController(); // the browser closed the panel or navigated away: stop paying for the call
+      res.on("close", () => { if (!res.writableEnded) cancel.abort(); });
+      const generated = await generateRecipe(context, getAI, cancel.signal, guidance, style, budget);
+      res.json({ ...generated, meta: { generationRequestId: randomUUID(), model: GENERATION_MODEL, promptVersion: PROMPT_VERSION, style, budget } });
       console.log("ai_event name=recipe_generated"); // no filters, recipe text or identifiers
     } catch (error) {
       const kind = error instanceof GenerationError ? error.kind : "unavailable";

@@ -45,6 +45,7 @@
     "test:mvp": "tsx script/test-mvp-grocery.ts",
     "test:recipe-generation": "tsx script/test-recipe-generation.ts",
     "test:my-ideas": "tsx script/test-my-ideas.ts",
+    "test:my-ideas-browser": "node script/test-my-ideas-browser.mjs",
     "test:meals-recipe-generation": "tsx script/test-meals-recipe-generation.ts",
     "test:meals-recipe-generation-browser": "node script/test-meals-recipe-generation-browser.mjs",
     "test:meal-filters": "tsx script/test-meal-filters.ts",

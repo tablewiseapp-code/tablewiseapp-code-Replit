@@ -77,7 +77,9 @@ assert.equal((await analyzePreferences({ recentTitles: [], favoriteMethods: [{ m
 assert.ok(generationRequest.safeParse({ filterSet: "meals", filters: empty, timeMode: "total", personalization: signals }).success);
 assert.ok(generationRequest.safeParse({ filterSet: "meals", filters: empty, timeMode: "total" }).success, "works without history");
 const brief = buildGenerationBrief(ctx, strong);
-assert.deepEqual(Object.keys(brief), ["hardConstraints", "explicitPreferences", "learnedPreferences", "mealContext", "recommendationStrategy"]);
+assert.deepEqual(Object.keys(brief), ["hardConstraints", "explicitPreferences", "learnedPreferences", "mealContext", "generationStyle", "budgetPreference", "recommendationStrategy"]);
+assert.equal(brief.generationStyle, "surprise_me", "default style");
+assert.equal(brief.budgetPreference, "everyday", "default budget");
 const calls: any[] = [];
 const ai = { chat: { completions: { async create(input: unknown) {
   calls.push(input);
@@ -90,5 +92,56 @@ const sent = JSON.parse(calls[0].messages[1].content);
 assert.deepEqual(sent.hardConstraints, ctx);
 assert.deepEqual(sent.recommendationStrategy.avoidTitles, ["Cheese bake"]);
 assert.match(calls[0].messages[0].content, /hardConstraints > explicitPreferences > learnedPreferences/);
+
+
+// 8. Style and budget reach the model as soft guidance; hard constraints are untouched by them.
+calls.length = 0;
+const out = await generateRecipe(ctx, () => ai, undefined, undefined, "chefs_touch", "flexible");
+const styledBrief = JSON.parse(calls[0].messages[1].content);
+assert.equal(styledBrief.generationStyle, "chefs_touch"); assert.equal(styledBrief.budgetPreference, "flexible");
+assert.match(styledBrief.recommendationStrategy.style, /refined/); assert.match(styledBrief.recommendationStrategy.budget, /Premium/);
+assert.deepEqual(styledBrief.hardConstraints, ctx);
+assert.match(calls[0].messages[0].content, /Never state prices/);
+assert.match(calls[0].messages[0].content, /°C/);
+assert.equal(calls[0].response_format.json_schema.schema.required.includes("tip"), true);
+assert.equal(out.tip, "", "tip defaults to empty");
+const quick = buildGenerationBrief(ctx, undefined, "quick_easy");
+assert.match(quick.recommendationStrategy.style, /fewer steps/); assert.equal(quick.budgetPreference, "everyday");
+
+// 9. Budget preference: Everyday by default and for unknown stored values; persisted when changed.
+const { ideaGenerationBody, noIdeaFilters } = await import("../client/src/lib/recipe-generation");
+data.delete(ideas.budgetKey);
+assert.equal(ideas.getBudget(), "everyday");
+ideas.setBudget("save_more"); assert.equal(ideas.getBudget(), "save_more");
+data.set(ideas.budgetKey, "luxury"); assert.equal(ideas.getBudget(), "everyday");
+
+// 10. Serialization: Meals filter names, preparation time, one style; the server accepts it.
+const reqBody = ideaGenerationBody({ ...noIdeaFilters, maxMinutes: 30, cookingMethod: ["Oven"], dietary: ["Gluten-free"], mealType: ["Dinner"] }, "quick_easy", "everyday");
+assert.deepEqual(reqBody, { filterSet: "meals", timeMode: "preparation", style: "quick_easy", budget: "everyday",
+  filters: { maxMinutes: 30, dietary: ["Gluten-free"], mealType: ["Dinner"], cookingMethod: ["Oven"], proteinType: [], servings: null, mustInclude: [], mustExclude: [] } });
+assert.ok(generationRequest.safeParse(reqBody).success);
+assert.equal(generationRequest.safeParse({ ...reqBody, style: ["quick_easy", "chefs_touch"] }).success, false, "one style only");
+
+// 11. Provenance metadata is stored with the idea; search/filter/sort run over saved ideas only.
+ideas.clearIdeas();
+const meta = (style: string) => ({ generationRequestId: `r-${style}`, model: "m", promptVersion: "recipe-generation/3", style });
+const stew = ideas.saveIdea({ recipe: { ...recipe("Lentil stew", "Simmer on the stovetop for 25 minutes."), prepTime: 15, ingredients: ["200 g lentils", "1 onion"], tags: ["ai-generated", "vegetarian", "meal:dinner"] }, description: "d", tip: "Salt at the end.", meta: meta("family_favorite") }, reqBody);
+const toast = ideas.saveIdea({ recipe: { ...recipe("Air fryer toast", "Air fryer at 180°C for 5 minutes."), prepTime: 5, tags: ["ai-generated", "meal:breakfast"] }, description: "d", meta: meta("quick_easy") }, reqBody);
+const stored = ideas.listIdeas().find(i => i.id === stew.id)!;
+assert.deepEqual([stored.style, stored.promptVersion, stored.tip, stored.origin], ["family_favorite", "recipe-generation/3", "Salt at the end.", "ai_generated"]);
+const all = ideas.listIdeas();
+const ids = (list: { id: string }[]) => list.map(i => i.id);
+assert.deepEqual(ids(ideas.filterIdeas(all, "", noIdeaFilters, "newest")), [toast.id, stew.id]);
+assert.deepEqual(ids(ideas.filterIdeas(all, "", noIdeaFilters, "oldest")), [stew.id, toast.id]);
+assert.deepEqual(ids(ideas.filterIdeas(all, "LENTIL", noIdeaFilters, "newest")), [stew.id], "title search");
+assert.deepEqual(ids(ideas.filterIdeas(all, "onion", noIdeaFilters, "newest")), [stew.id], "ingredient search");
+assert.deepEqual(ids(ideas.filterIdeas(all, "", { ...noIdeaFilters, cookingMethod: ["Air fryer"] }, "newest")), [toast.id]);
+assert.deepEqual(ids(ideas.filterIdeas(all, "", { ...noIdeaFilters, maxMinutes: 10 }, "newest")), [toast.id], "max prep time");
+assert.deepEqual(ids(ideas.filterIdeas(all, "", { ...noIdeaFilters, dietary: ["Vegetarian"] }, "newest")), [stew.id]);
+assert.deepEqual(ids(ideas.filterIdeas(all, "", { ...noIdeaFilters, mealType: ["Breakfast"] }, "newest")), [toast.id]);
+assert.deepEqual(ids(ideas.filterIdeas(all, "pizza", noIdeaFilters, "newest")), [], "no matches");
+// Older ideas saved before styles existed still load.
+data.set(ideas.ideasKey, JSON.stringify([{ ...stored, style: undefined, promptVersion: undefined, tip: undefined }]));
+assert.equal(ideas.filterIdeas(ideas.listIdeas(), "stew", noIdeaFilters, "newest").length, 1);
 
 console.log("my-ideas: ok");

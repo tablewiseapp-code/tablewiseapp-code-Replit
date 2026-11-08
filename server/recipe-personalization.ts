@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { plannerCookingMethods } from "../client/src/lib/planner-filters";
 import type { RecipeGenerationContext } from "./recipe-generation";
+import type { BudgetPreference, GenerationStyle } from "../client/src/lib/recipe-generation";
 
 // Compact, derived signals the browser may send. Never raw activity logs, never personal details.
 export const personalizationSignals = z.object({
@@ -36,14 +37,33 @@ export const analyzePreferences: PreferenceAnalyzer = async (signals, context) =
   return guidance;
 };
 
-export const PROMPT_VERSION = "recipe-generation/2";
+export const PROMPT_VERSION = "recipe-generation/3";
 
-export function buildGenerationBrief(context: RecipeGenerationContext, guidance?: PreferenceGuidance) {
+const styleGuidance: Record<GenerationStyle, string> = {
+  surprise_me: "Something fresh and different: an approachable new combination, clearly unlike avoidTitles, still practical for a home cook.",
+  quick_easy: "Less effort, fewer steps: simple methods, minimal active prep, common ingredients, no tricky techniques, little cleanup.",
+  chefs_touch: "A little more special: more refined flavour pairings and one or two thoughtful techniques for seasoning, texture and presentation, with instructions a home cook can follow.",
+  family_favorite: "Comforting and crowd-pleasing: familiar flavours, easy to share at the table, no unnecessary complexity.",
+  try_something_new: "Explore new flavours: draw on a cuisine or flavour combination the cook may not know, using ingredients found in a regular supermarket; clearly unlike avoidTitles.",
+};
+const budgetGuidance: Record<BudgetPreference, string> = {
+  everyday: "Reasonably priced, widely available ingredients; at most one modest special ingredient.",
+  save_more: "Affordable staples, few ingredients, use whole packages and leftovers to minimise waste.",
+  flexible: "Premium ingredients are fine when they clearly improve the dish.",
+};
+
+/** The generation context the model receives. Hard constraints always win; style and budget only shape soft choices. */
+export function buildGenerationBrief(
+  context: RecipeGenerationContext, guidance?: PreferenceGuidance,
+  style: GenerationStyle = "surprise_me", budget: BudgetPreference = "everyday",
+) {
   return {
     hardConstraints: context,
     explicitPreferences: {}, // no explicit preference settings exist yet; dietary/allergy needs stay in hard filters
     learnedPreferences: guidance?.learnedPreferences ?? {},
     mealContext: {},
-    recommendationStrategy: guidance?.recommendationStrategy ?? {},
+    generationStyle: style,
+    budgetPreference: budget,
+    recommendationStrategy: { ...guidance?.recommendationStrategy, style: styleGuidance[style], budget: budgetGuidance[budget] },
   };
 }

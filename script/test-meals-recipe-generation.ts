@@ -163,6 +163,14 @@ async function main() {
     const preview = await generated.json();
     assert.equal(preview.recipe.title, good.title);
     assert.equal(writes, 0, "generation never saves");
+    // Style defaults to Surprise me and budget to Everyday; both are echoed as provenance metadata.
+    assert.deepEqual([preview.meta.style, preview.meta.budget, preview.meta.promptVersion], ["surprise_me", "everyday", "recipe-generation/3"]);
+    const styled = await (await post("/api/recipes/generate", { ...body, style: "quick_easy", budget: "save_more" })).json();
+    assert.deepEqual([styled.meta.style, styled.meta.budget], ["quick_easy", "save_more"]);
+    assert.notEqual(styled.meta.generationRequestId, preview.meta.generationRequestId, "regeneration is a new request");
+    // Checked at schema level: each HTTP call here spends the 5-per-minute AI permit.
+    assert.equal(generationRequest.safeParse({ ...body, style: "budget_friendly" }).success, false, "budget is not a style");
+    assert.equal(generationRequest.safeParse({ ...body, notes: "anything in mind" }).success, false, "no free text");
     mode = "timeout";
     const timedOut = await post("/api/recipes/generate", body);
     assert.equal(timedOut.status, 504); assert.equal((await timedOut.json()).retryable, true);
