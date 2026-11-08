@@ -15,15 +15,23 @@ import WeeklyMeals from "@/pages/weekly-meals";
 import ImportRecipe from "@/pages/import-recipe";
 import GroceryList from "@/pages/grocery-list";
 import NotFound from "@/pages/not-found";
+import MyIdeas from "@/pages/my-ideas";
+import { Sparkles } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 const NAV_KEYS = [
   { path: "/meals", key: "nav.weeklyMeals" },
   { path: "/recipe-view", key: "nav.recipeView" },
   { path: "/recipes", key: "nav.myRecipes" },
+  { path: "/my-ideas", key: "nav.myIdeas", icon: true },
   { path: "/import", key: "nav.importRecipe" },
   { path: "/grocery-list", key: "nav.groceryList" },
 ];
+
+function NavLabel({ link }: { link: { key: string; icon?: boolean } }) {
+  const { t } = useI18n();
+  return link.icon ? <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3 opacity-70" aria-hidden="true" />{t(link.key)}</span> : <>{t(link.key)}</>;
+}
 
 function GroceryEntry() {
   return new URLSearchParams(useSearch()).get("source") === "mvp" ? <MvpGrocery /> : <GroceryList />;
@@ -121,7 +129,7 @@ function DevNav() {
                   }`}
                   data-testid={`dev-nav-mobile-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
                 >
-                  {t(link.key)}
+                  <NavLabel link={link} />
                 </Link>
               ))}
             </div>
@@ -161,7 +169,7 @@ function DevNav() {
             }`}
             data-testid={`dev-nav-link-${link.path === "/" ? "home" : link.path.slice(1)}`}
           >
-            {t(link.key)}
+            <NavLabel link={link} />
           </Link>
         ))}
         <div className="flex-1" />
@@ -182,6 +190,7 @@ function Router() {
       <Route path="/plan" component={MealsHome}/>
       <Route path="/recipe-view" component={RecipeView}/>
       <Route path="/recipes" component={RecipeList}/>
+      <Route path="/my-ideas" component={MyIdeas}/>
       <Route path="/recipe/:id" component={RecipeDetail}/>
       <Route path="/meals" component={WeeklyMeals}/>
       <Route path="/import" component={ImportRecipe}/>

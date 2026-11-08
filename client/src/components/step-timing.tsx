@@ -8,8 +8,9 @@ export function currentAnalysis(recipe: TimingContext, value?: StepAnalysis | nu
 
 export function StepTiming({ duration }: { duration?: StepDuration }) {
   const { t } = useI18n();
+  if (!duration) return null; // no stated or analysed duration: show nothing rather than "Time unspecified"
   return <span className="inline-block rounded-full bg-foreground/5 px-3 py-1 text-xs text-muted-foreground" data-testid="step-duration">
-    {duration ? `${duration.min}${duration.max !== duration.min ? `–${duration.max}` : ""} ${t(`timing.${duration.unit}`)} · ${t(`timing.${duration.provenance}`)}` : t("timing.unknown")}
+    {`${duration.min}${duration.max !== duration.min ? `–${duration.max}` : ""} ${t(`timing.${duration.unit}`)} · ${t(`timing.${duration.provenance}`)}`}
   </span>;
 }
 

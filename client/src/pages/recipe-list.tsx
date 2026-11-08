@@ -114,9 +114,10 @@ export default function RecipeList() {
               <Link
                 key={recipe.id}
                 href={`/recipe/${recipe.id}`}
-                className="block p-4 rounded-xl border hairline hover:bg-[#FAFAF8] transition-colors"
+                className="relative block p-4 rounded-xl border hairline hover:bg-[#FAFAF8] transition-colors"
                 data-testid={`card-recipe-${recipe.id}`}
               >
+                <div className="absolute right-3 top-3 max-w-[45%] text-right text-[10px] text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
                 <div className="flex items-start gap-3 sm:gap-4">
                   {recipe.image && (
                     <img
@@ -131,10 +132,9 @@ export default function RecipeList() {
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-medium text-foreground truncate" data-testid={`text-recipe-title-${recipe.id}`}>
+                    <h2 className="text-sm font-medium text-foreground truncate pr-28" data-testid={`text-recipe-title-${recipe.id}`}>
                       {recipe.title}
                     </h2>
-                    <div className="mt-1 text-xs text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
                     <p className="mobile-readable-xs text-muted-foreground mt-1" data-testid={`text-recipe-info-${recipe.id}`}>
                       {recipe.ingredients.length} {t("recipes.ingredients") || "ingredients"} - {recipe.steps.length} {t("recipes.steps") || "steps"}
                       {recipe.cookTime ? ` - ${recipe.cookTime} min` : ""}

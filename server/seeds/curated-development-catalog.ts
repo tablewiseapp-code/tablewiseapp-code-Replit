@@ -58,5 +58,7 @@ export function curateDevelopmentCatalog<T extends Curatable>(recipes: T[]) {
     !Number.isInteger(r.cookTime) || r.cookTime! < 0 || r.equipment.length === 0)) {
     throw new Error("Every visible development recipe requires portions, preparation/cooking time and tools.");
   }
-  return result;
+  // Recipes the user accepted from AI generation stay visible alongside the curated twenty (they are not read-only).
+  const generated = recipes.filter(recipe => !visible.has(recipe.id) && recipe.tags?.includes("ai-generated")).map(curateDevelopmentRecipe);
+  return [...result, ...generated];
 }
