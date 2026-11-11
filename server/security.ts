@@ -8,6 +8,8 @@ export type PilotConfig = {
   aiEnabled: boolean;
   production: boolean;
   analyticsEnabled?: boolean;
+  /** Visitors without operator sign-in may generate AI recipes and save accepted ones. Off unless explicitly enabled. */
+  publicAI?: boolean;
 };
 
 export function pilotConfig(): PilotConfig {
@@ -18,6 +20,7 @@ export function pilotConfig(): PilotConfig {
     aiEnabled: process.env.TABLEWISE_AI_ENABLED === "true",
     production: process.env.NODE_ENV === "production",
     analyticsEnabled: process.env.TABLEWISE_ANALYTICS_ENABLED === "true",
+    publicAI: process.env.TABLEWISE_PUBLIC_AI === "true",
   };
 }
 
@@ -148,6 +151,19 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       if (!consume(res, "events:minute", 60, 60_000) || !consume(res, "events:hour", 500, 3600_000)) return;
       return next();
     }
+    // Public AI recipes (opt-in): only generation, its learning events and saving an accepted AI recipe.
+    // Same-origin only and budgeted; POST /recipes is further limited to "ai-generated" recipes by the route.
+    if (config.publicAI && req.method === "POST" && !authorized(req) &&
+        /^\/recipes(?:\/generate(?:\/events)?)?\/?$/.test(req.path)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (/^\/recipes\/?$/.test(req.path)) {
+        if (!consume(res, "public-recipe-saves:minute", 10, 60_000) || !consume(res, "public-recipe-saves:day", 100, 86400_000)) return;
+        res.locals.publicAIWrite = true;
+      }
+      if (/events\/?$/.test(req.path) && !consume(res, "public-generation-events", 60, 60_000)) return;
+      res.locals.publicAI = true;
+      return next();
+    }
     // Deliberately scoped to credit metadata in the approved development preview.
     // This is not a public-pilot authorization mechanism.
     if (developmentCredits && !config.production && process.env.NODE_ENV === "development" &&
@@ -176,7 +192,10 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     if (!config.aiEnabled) return res.status(503).json({ error: "Paid AI is disabled." });
     next();
   };
-  const aiPermit = (req: Request, res: Response, next: NextFunction) => requireOperator(req, res, () => requireAIEnabled(req, res, () => {
+  // Public AI keeps every AI budget below (shared by all visitors), so spend stays capped.
+  const operatorOrPublicAI = (req: Request, res: Response, next: NextFunction) =>
+    res.locals.publicAI ? next() : requireOperator(req, res, next);
+  const aiPermit = (req: Request, res: Response, next: NextFunction) => operatorOrPublicAI(req, res, () => requireAIEnabled(req, res, () => {
     if (!consume(res, "ai:minute", 5, 60_000) ||
         !consume(res, "ai:hour", 20, 3600_000) ||
         !consume(res, "ai:day", 40, 86400_000)) return;

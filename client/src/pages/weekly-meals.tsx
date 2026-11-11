@@ -13,7 +13,7 @@ import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { matchesPlannerFilters } from "@/lib/planner-filters";
 import { GenerateRecipe } from "@/components/generate-recipe";
-import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type NewRecipe } from "@/lib/recipe-generation";
+import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type FilterViolation, type NewRecipe } from "@/lib/recipe-generation";
 import { RecipeIngredients } from "@/components/recipe-ingredients";
 import { NutritionDetailsToggle } from "@/components/recipe-display";
 import { RecipePriceSummary } from "@/components/recipe-price";
@@ -372,7 +372,12 @@ function WeeklyMealsContent() {
     source: t("meals.source"), withNotes: t("meals.withMyNotes"), modifiedByMe: t("meals.modifiedByMe"),
     myPicks: t("meals.showOnlyMyPicks"), minRating: t("meals.minimumRating"),
   };
-  const generationRequest = { body: generation.body, chips: generationChips, notApplied: generation.notApplied.map(key => notAppliedLabel[key]) };
+  const violationLabel = (v: FilterViolation) =>
+    v.filter === "maxMinutes" ? `${timeCopy(timeMode)} ≤ ${v.value} ${timeCopy("minutesShort")}` :
+    v.filter === "mustInclude" ? `${t("meals.mustInclude")}: ${v.value}` :
+    v.filter === "mustExclude" ? `${t("meals.mustExclude")}: ${v.value}` :
+    v.value.split(" / ").map(value => filterLabel[value] ?? value).join(" / ");
+  const generationRequest = { body: generation.body, chips: generationChips, notApplied: generation.notApplied.map(key => notAppliedLabel[key]), violationLabel };
   const acceptGenerated = async (recipe: NewRecipe) => {
     const saved = await createRecipe(recipe); // throws on failure: the preview stays open with an error
     setRecipes(prev => [...prev, toPlannerRecipe(saved)]);

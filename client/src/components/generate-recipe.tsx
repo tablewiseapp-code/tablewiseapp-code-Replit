@@ -5,7 +5,7 @@ import { RecipeIngredients } from "@/components/recipe-ingredients";
 import { useI18n } from "@/lib/i18n";
 import { mealFilterCopy } from "@/lib/meal-filter-copy";
 import { generateCopy, type GenerateCopyKey } from "@/lib/generate-recipe-copy";
-import { generationBody, reportGenerationEvent, requestGeneratedRecipe, type GeneratedRecipe, type NewRecipe } from "@/lib/recipe-generation";
+import { generationBody, reportGenerationEvent, requestGeneratedRecipe, type FilterViolation, type GeneratedRecipe, type NewRecipe } from "@/lib/recipe-generation";
 import { personalizationSignals, saveIdea, trackRecipeEvent, updateIdea } from "@/lib/my-ideas";
 import { Link } from "wouter";
 import type { MealFilters } from "@/lib/meal-filters";
@@ -17,7 +17,7 @@ type Props = ({
   request?: undefined;
 } | {
   /** A prepared request from another filter set (the Meals page): body sent as-is, chips and not-applied labels shown. */
-  request: { body: unknown; chips: string[]; notApplied: string[] };
+  request: { body: unknown; chips: string[]; notApplied: string[]; violationLabel?: (violation: FilterViolation) => string };
   filters?: undefined; timeMode?: undefined;
 }) & {
   variant: "button" | "empty";
@@ -133,6 +133,15 @@ export function GenerateRecipe({ filters, timeMode, request, variant, disabled, 
           {recipe && state.kind === "preview" && <div data-testid="generate-recipe-preview">
             <DialogTitle className="pe-6 text-xl font-semibold text-[#27342e]">{recipe.title}</DialogTitle>
             <DialogDescription className="mt-1 text-sm text-[#68756a]">{state.result.description}</DialogDescription>
+            {state.result.violations?.length ? (
+              <div role="status" className="mt-3 rounded-lg border border-[#e7d2bf] bg-[#fbf3ea] p-3 text-sm text-[#6e4f3a]" data-testid="generate-recipe-violations">
+                <p className="font-medium">{t("violationsTitle")}</p>
+                <ul className="mt-1 list-disc ps-5 text-xs leading-5">
+                  {state.result.violations.map((v, i) => <li key={i}>{request?.violationLabel?.(v) ?? `${v.filter}: ${v.value}`}</li>)}
+                </ul>
+                <p className="mt-1 text-xs">{t("violationsBody")}</p>
+              </div>
+            ) : null}
             <GeneratedRecipeBody recipe={recipe} />
             {state.ideaId && <p className="mt-2 text-xs text-[#68756a]" data-testid="generate-recipe-saved-idea">
               {t("savedToIdeas")} <Link href="/my-ideas" className="underline underline-offset-2">{t("openIdeas")}</Link>
@@ -140,7 +149,7 @@ export function GenerateRecipe({ filters, timeMode, request, variant, disabled, 
             {state.saveError && <p role="alert" className="mt-3 text-xs text-[#815b49]">{t("saveFailed")}</p>}
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" className={primary} disabled={state.saving} onClick={accept} data-testid="generate-recipe-accept">
-                {state.saving ? t("saving") : t("add")}
+                {state.saving ? t("saving") : state.result.violations?.length ? t("addAnyway") : t("add")}
               </button>
               <button type="button" className={secondary} disabled={state.saving} onClick={another} data-testid="generate-recipe-another">{t("another")}</button>
               <button type="button" className={secondary} disabled={state.saving} onClick={close} data-testid="generate-recipe-cancel">{t("cancel")}</button>

@@ -4,7 +4,8 @@ import type { Recipe } from "./storage";
 import { mealsGenerationFilters, type PlannerFilters } from "./planner-filters";
 
 export type NewRecipe = Omit<Recipe, "id" | "createdAt" | "updatedAt">;
-export type GeneratedRecipe = { recipe: NewRecipe; description: string; tip?: string;
+export type FilterViolation = { filter: "maxMinutes" | "dietary" | "mealType" | "cookingMethod" | "proteinType" | "servings" | "mustInclude" | "mustExclude"; value: string };
+export type GeneratedRecipe = { recipe: NewRecipe; description: string; tip?: string; violations?: FilterViolation[];
   meta?: { generationRequestId: string; model: string; promptVersion: string; style?: string; budget?: string } };
 
 // Only canonical filter fields are sent; nothing else from the page leaves the browser.

@@ -3,6 +3,9 @@ import type { Language } from "@/lib/i18n";
 const copy = {
   en: {
     action: "Generate recipe with AI",
+    violationsTitle: "This recipe doesn't meet all your filters:",
+    violationsBody: "You can still add it, or generate another.",
+    addAnyway: "Add anyway",
     notApplied: "Not used for AI recipes",
     emptyTitle: "Can't find the right meal?",
     emptyBody: "Generate a recipe based on your selected filters.",
@@ -28,6 +31,9 @@ const copy = {
   },
   ru: {
     action: "Создать рецепт с ИИ",
+    violationsTitle: "Рецепт не соответствует некоторым фильтрам:",
+    violationsBody: "Его всё равно можно добавить или создать другой.",
+    addAnyway: "Всё равно добавить",
     notApplied: "Не учитывается для рецептов ИИ",
     emptyTitle: "Не нашли подходящее блюдо?",
     emptyBody: "Создайте рецепт по выбранным фильтрам.",
@@ -53,6 +59,9 @@ const copy = {
   },
   he: {
     action: "יצירת מתכון עם AI",
+    violationsTitle: "המתכון לא עומד בכל המסננים:",
+    violationsBody: "אפשר להוסיף אותו בכל זאת, או ליצור אחר.",
+    addAnyway: "להוסיף בכל זאת",
     notApplied: "לא בשימוש עבור מתכוני AI",
     emptyTitle: "לא מוצאים את הארוחה הנכונה?",
     emptyBody: "צרו מתכון לפי המסננים שבחרתם.",

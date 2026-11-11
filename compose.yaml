@@ -15,6 +15,9 @@ services:
   app:
     image: node:20
     working_dir: /app
+    env_file:
+      - path: .env.local # git-ignored: OPENAI_API_KEY, TABLEWISE_AI_ENABLED, TABLEWISE_OPERATOR_TOKEN
+        required: false
     command: sh -c "cp package-lock.json /tmp/lock.bak && sed -i 's|http://package-firewall.replit.internal/npm/|https://registry.npmjs.org/|g' package-lock.json && npm ci --no-audit --no-fund; cp /tmp/lock.bak package-lock.json; npx drizzle-kit push --force && npm run dev"
     environment:
       DATABASE_URL: postgresql://tablewise:tablewise@db:5432/tablewise
