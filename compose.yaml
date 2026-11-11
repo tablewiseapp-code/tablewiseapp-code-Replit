@@ -7,8 +7,11 @@ services:
       POSTGRES_DB: tablewise
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Loaded automatically only when the pgdata volume is empty (first start / after a reset).
+      # Refresh with ./script/db-dump.sh
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: pg_isready -U tablewise
+      test: pg_isready -U tablewise -h 127.0.0.1 # TCP: only ready after the init dump has loaded
       interval: 2s
       retries: 20
 
