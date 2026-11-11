@@ -207,6 +207,10 @@ export async function registerRoutes(
   app.post("/api/recipes", async (req, res) => {
     try {
       const parsed = recipeInput.parse(req.body);
+      // Signed-out visitors (public AI mode) may only save recipes accepted from AI generation.
+      if (res.locals.publicAIWrite && !parsed.tags?.includes("ai-generated")) {
+        return res.status(403).json({ error: "Operator access required." });
+      }
       const recipe = await storage.createRecipe(parsed);
       res.status(201).json(recipe);
     } catch (error: any) {

@@ -123,11 +123,30 @@ async function main() {
   assert.equal((await generateRecipe(context, retry.ai)).recipe.title, good.title);
   assert.equal(retry.calls.length, 2);
   assert.equal(retry.calls[0].response_format.json_schema.strict, true);
+  assert.equal(retry.calls[0].model, "gpt-5-nano", "cheapest structured-output model by default");
+  assert.equal(retry.calls[0].temperature, undefined, "reasoning models reject a custom temperature");
+  assert.equal(retry.calls[0].reasoning_effort, "minimal");
   assert.match(retry.calls[0].messages[0].content, /Gluten-free/);
   assert.equal(JSON.parse(retry.calls[0].messages[1].content).hardConstraints.filters.cookingMethod[0], "Air fryer");
+  // If both attempts miss filters, the recipe is still returned, with every miss listed and no unverified labels.
   const bad = fake({ ...good, dietary: [] });
-  await assert.rejects(generateRecipe(context, bad.ai), (e: unknown) => e instanceof GenerationError && e.kind === "filters");
-  assert.equal(bad.calls.length, 2, "a violating recipe is never returned, even after the retry");
+  const missed = await generateRecipe(context, bad.ai);
+  assert.equal(bad.calls.length, 2, "retried once first");
+  assert.deepEqual(missed.violations, [{ filter: "dietary", value: "Gluten-free" }]);
+  assert.ok(!missed.recipe.tags!.includes("glutenFree"), "an unconfirmed dietary label is never attached");
+  assert.equal((await generateRecipe(context, fake(good).ai)).violations, undefined, "compliant recipes carry no violations");
+  const many = fake({ ...good, prepTime: 45, ingredients: ing("chicken thighs", "soy sauce"), steps: ["Fry in a pan for 10 minutes."], mealTypes: ["lunch"] },
+    { ...good, prepTime: 45 });
+  const closer = await generateRecipe(context, many.ai);
+  assert.deepEqual(closer.violations, [{ filter: "maxMinutes", value: "30" }], "the closer of the two attempts is returned");
+  const first = await generateRecipe(context, fake({ ...good, prepTime: 45 }, Object.assign(new Error("private"), { name: "APIConnectionTimeoutError" })).ai);
+  assert.deepEqual(first.violations, [{ filter: "maxMinutes", value: "30" }], "a failed retry still returns the first recipe");
+  const { mealsCandidate } = await import("../server/recipe-generation");
+  const listed = mealsCandidate({ ...good, prepTime: 45, ingredients: ing("chicken thighs", "soy sauce"), steps: ["Fry in a pan with lemon."], mealTypes: ["lunch"] },
+    buildRecipeGenerationContext({ ...body.filters, mustInclude: ["rice"], mustExclude: ["lemon"] }, "preparation"));
+  assert.deepEqual(listed.violations!.map(v => `${v.filter}:${v.value}`).sort(),
+    ["cookingMethod:Air fryer", "dietary:Gluten-free", "maxMinutes:30", "mealType:Dinner", "mustExclude:lemon", "mustInclude:rice"].sort());
+  assert.ok(listed.recipe.tags!.includes("meal:lunch") && !listed.recipe.tags!.includes("meal:dinner"), "the model's own meal label is kept");
   const slow = fake(Object.assign(new Error("private"), { name: "APIConnectionTimeoutError" }));
   await assert.rejects(generateRecipe(context, slow.ai), (e: unknown) => e instanceof GenerationError && e.kind === "timeout");
   assert.equal(slow.calls.length, 1);
@@ -189,6 +208,48 @@ async function main() {
     server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve()));
   }
 
+  // 7b. Public AI mode (TABLEWISE_PUBLIC_AI): signed-out visitors may generate and save AI recipes only.
+  for (const publicAI of [true, false]) {
+    const rows2 = new Map<string, any>();
+    const store2: RecipeStorage = { ...storage,
+      async getAllRecipes() { return [...rows2.values()]; },
+      async createRecipe(input) { const row = { ...structuredClone(input), id: `p-${rows2.size + 1}`, createdAt: new Date(), updatedAt: new Date() }; rows2.set(row.id, row); return row as any; } };
+    const app2 = express(), server2 = createServer(app2);
+    await registerRoutes(server2, app2, { storage: store2, ai: () => ai, nutrition: async r => r as any,
+      config: { aiEnabled: true, operatorToken: token, production: false, publicCatalog: true, publicAI } });
+    app2.use(apiErrorHandler);
+    server2.listen(0, "127.0.0.1"); await once(server2, "listening");
+    const base2 = `http://127.0.0.1:${(server2.address() as { port: number }).port}`;
+    const visitor = (path: string, payload: unknown, origin: string | null = base2) => fetch(`${base2}${path}`, {
+      method: "POST", headers: { "Content-Type": "application/json", ...(origin ? { Origin: origin } : {}) }, body: JSON.stringify(payload) });
+    const quiet = console.log; console.log = () => {};
+    try {
+      const gen = await visitor("/api/recipes/generate", body);
+      if (!publicAI) {
+        assert.equal(gen.status, 403, "off by default: operator sign-in still required");
+        assert.equal((await visitor("/api/recipes", out.recipe)).status, 403);
+        continue;
+      }
+      assert.equal(gen.status, 200, "public visitors can generate");
+      const recipe = (await gen.json()).recipe;
+      assert.equal((await visitor("/api/recipes/generate", body, null)).status, 403, "same-origin only");
+      assert.equal((await visitor("/api/recipes/generate", body, "http://evil.test")).status, 403, "cross-site blocked");
+      assert.equal((await visitor("/api/recipes/generate/events", { name: "generated_recipe_accepted" })).status, 204);
+      assert.equal((await visitor("/api/recipes", recipe)).status, 201, "accepted AI recipe can be saved");
+      assert.equal((await visitor("/api/recipes", { ...recipe, tags: ["meal:dinner"] })).status, 403, "only AI-generated recipes");
+      assert.equal(rows2.size, 1);
+      assert.equal((await fetch(`${base2}/api/recipes/p-1`, { method: "DELETE", headers: { Origin: base2 } })).status, 403, "other writes still need sign-in");
+      assert.equal((await visitor("/api/analyze-recipe", { title: "x" })).status, 403, "other AI tools still need sign-in");
+      // The shared AI budget still caps spend for everyone (5 per minute).
+      const statuses: number[] = [];
+      for (let i = 0; i < 6; i++) statuses.push((await visitor("/api/recipes/generate", body)).status);
+      assert.ok(statuses.includes(429), `AI budget enforced: ${statuses}`);
+    } finally {
+      console.log = quiet;
+      server2.closeAllConnections(); await new Promise<void>(resolve => server2.close(() => resolve()));
+    }
+  }
+
   // 8. Curated development catalog keeps accepted AI recipes visible after reload; other extra rows stay hidden.
   process.env.NODE_ENV = "development"; process.env.TABLEWISE_DEV_CURATED_CATALOG = "true";
   const { curatedDevelopmentIds, curateDevelopmentCatalog } = await import("../server/seeds/curated-development-catalog");
@@ -200,6 +261,6 @@ async function main() {
   assert.equal(catalog.at(-1)!.id, "ai-1"); assert.equal((catalog.at(-1) as { developmentReadOnly?: boolean }).developmentReadOnly, false);
   assert.ok(!catalog.some(r => r.id === "other-1"));
 
-  console.log("PASS meals AI generation: shared filter unchanged, serialization with personal filters reported, strict validation, context builder, compliant output + dietary/method/meal/time/protein/exclude violations, structured output and retry/timeout, HTTP auth/400/504/429/preview-only/save/list, events without personal data, curated catalog keeps accepted AI recipes. OpenAI mocked.");
+  console.log("PASS meals AI generation: shared filter unchanged, serialization with personal filters reported, strict validation, context builder, compliant output + dietary/method/meal/time/protein/exclude violations, structured output and retry/timeout, HTTP auth/400/504/429/preview-only/save/list, events without personal data, public AI mode (opt-in, same-origin, AI-only saves, budget), curated catalog keeps accepted AI recipes. OpenAI mocked.");
 }
 main().catch(error => { console.error(error); process.exit(1); });

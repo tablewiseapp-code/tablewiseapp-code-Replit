@@ -117,16 +117,19 @@ export default function MyIdeas() {
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
           </div>
-          {ideas.length > 0 && <GenerateRecipe request={anyRecipe} variant="button" label={t("generate")} onAccept={acceptGenerated} />}
         </div>
 
-        {ideas.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-8 text-center" data-testid="my-ideas-empty">
+        {/* One generator instance at a fixed tree position: saving the first idea must not unmount its open preview. */}
+        <div className={ideas.length === 0 ? "mt-8 rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-8 text-center" : ""}
+          data-testid={ideas.length === 0 ? "my-ideas-empty" : undefined}>
+          {ideas.length === 0 && <>
             <h2 className="text-base font-semibold text-[#34443a]">{t("emptyTitle")}</h2>
             <p className="mt-1 text-sm text-[#68756a]">{t("emptyBody")}</p>
-            <GenerateRecipe request={anyRecipe} variant="button" label={t("generateFirst")} onAccept={acceptGenerated} />
-          </div>
-        ) : <>
+          </>}
+          <GenerateRecipe request={anyRecipe} variant="button" label={ideas.length === 0 ? t("generateFirst") : t("generate")} onAccept={acceptGenerated} />
+        </div>
+
+        {ideas.length > 0 && <>
           <div role="tablist" className="mt-6 flex flex-wrap gap-2">
             {(["all", "favorites", "inPlan"] as const).map(key => (
               <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => setView(key)} data-testid={`my-ideas-filter-${key}`}

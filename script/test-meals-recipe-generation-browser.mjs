@@ -103,18 +103,28 @@ try {
   assert.equal(saves.length, 0); assert.deepEqual(events, ["generated_recipe_rejected"]);
   assert.ok((await text("generate-recipe-chips")).includes("Air fryer"), "filters kept after cancelling");
 
+  // A recipe that misses filters is still shown, with each miss named, and can be added anyway.
+  generateReplies = [[200, { ...generated("Pan lemon chicken"), violations: [{ filter: "cookingMethod", value: "Air fryer" }, { filter: "maxMinutes", value: "30" }] }]];
+  await click("generate-recipe-empty"); await until(el("generate-recipe-violations"), "violations shown");
+  const missText = await text("generate-recipe-violations");
+  assert.match(missText, /doesn't meet all your filters/); assert.ok(missText.includes("Air fryer") && missText.includes("≤ 30"), missText);
+  assert.ok((await text("generate-recipe-preview")).includes("Pan lemon chicken"), "the generated recipe is shown");
+  assert.equal((await text("generate-recipe-accept")).trim(), "Add anyway");
+  await click("generate-recipe-cancel"); await until(`!${el("generate-recipe-dialog")}`, "closed");
+  events.length = 0; generateBodies.length = 0;
+
   // Generate another, then accept: saved through POST /api/recipes and added to the selection.
   generateReplies = [[200, generated("First idea")], [200, generated("Air fryer lemon chicken")]];
   await click("generate-recipe-empty"); await until(el("generate-recipe-preview"), "first preview");
   assert.ok((await text("generate-recipe-preview")).includes("First idea"));
   await click("generate-recipe-another"); await sleep(300); await until(`${el("generate-recipe-preview")}?.textContent.includes("Air fryer lemon chicken")`, "second preview");
-  assert.equal(generateBodies.length, 4);
+  assert.equal(generateBodies.length, 2);
   await click("generate-recipe-accept");
   await until(`!${el("generate-recipe-dialog")}`, "accepted");
   assert.equal(saves.length, 1); assert.equal(saves[0].title, "Air fryer lemon chicken");
   assert.deepEqual(saves[0].ingredients, generated("x").recipe.ingredients);
   assert.ok(saves[0].tags.includes("ai-generated") && !("sourceUrl" in saves[0]), "provenance kept, no source URL");
-  assert.deepEqual(events, ["generated_recipe_rejected", "generated_recipe_rejected", "generated_recipe_accepted"]);
+  assert.deepEqual(events, ["generated_recipe_rejected", "generated_recipe_accepted"]);
   await until(el("selected-recipe-ai-test-1"), "added to the selection");
   assert.deepEqual(JSON.parse(await ev("localStorage.getItem('weeklyMealsState')")).selectedIds, ["ai-test-1"]);
 
@@ -139,7 +149,7 @@ try {
   await until(`document.body.innerText.includes("600 g chicken thighs")`, "grocery list shows generated ingredients");
   assert.ok(await ev(`document.body.innerText.includes("2 tbsp tamari")`));
   assert.ok(await ev(`document.body.innerText.includes("Air fryer lemon chicken")`), "grocery item credits the recipe");
-  console.log("PASS meals AI generation browser: empty state + chips + not-applied note, one request on double click, retry after failure with filters kept, preview, cancel saves nothing, generate another, accept saves via the recipe API and joins the selection, catalog still works, planner assignment + added-to-plan signal, grocery list shows the ingredients, no horizontal scroll at 390px. OpenAI mocked; no writes.");
+  console.log("PASS meals AI generation browser: empty state + chips + not-applied note, one request on double click, retry after failure with filters kept, preview, cancel saves nothing, filter misses shown with Add anyway, generate another, accept saves via the recipe API and joins the selection, catalog still works, planner assignment + added-to-plan signal, grocery list shows the ingredients, no horizontal scroll at 390px. OpenAI mocked; no writes.");
 } finally {
   chrome.kill(); await sleep(300); rmSync(profile, { recursive: true, force: true });
 }

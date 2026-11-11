@@ -112,7 +112,13 @@ const output = z.object({
   steps: z.array(z.string().trim().min(1).max(2000)).min(1).max(40),
 }).strict();
 
-export const GENERATION_MODEL = "gpt-4o";
+// Cheapest OpenAI model with strict structured outputs; override with TABLEWISE_RECIPE_MODEL (e.g. gpt-4o-mini).
+export const GENERATION_MODEL = process.env.TABLEWISE_RECIPE_MODEL?.trim() || "gpt-5-nano";
+// Reasoning models (gpt-5*, o*) reject a custom temperature and count reasoning in the token budget.
+const reasoningModel = /^(gpt-5|o\d)/.test(GENERATION_MODEL);
+export const generationParams = reasoningModel
+  ? { reasoning_effort: "minimal" as const, max_completion_tokens: 4000 }
+  : { temperature: 0.7, max_completion_tokens: 2500 };
 const briefRules = `The user message is a generation brief. The rules above apply to hardConstraints, which are never relaxed.
 Priority: hardConstraints > explicitPreferences > learnedPreferences > recommendationStrategy.
 learnedPreferences are soft hints with evidence and confidence; follow low-confidence ones only when nothing else applies.
@@ -154,9 +160,15 @@ export function dietaryViolations(recipe: { title: string; ingredients: string[]
     d === "Kid friendly" ? recipe.ingredients.some(line => notKidFriendly.test(line)) : false);
 }
 
+export type FilterViolation = {
+  filter: "maxMinutes" | "dietary" | "mealType" | "cookingMethod" | "proteinType" | "servings" | "mustInclude" | "mustExclude";
+  value: string;
+};
 export type GeneratedRecipe = {
   recipe: z.infer<typeof recipeInput>;
   description: string;
+  /** Filters this recipe does not meet. Shown to the user before saving; never hidden. */
+  violations?: FilterViolation[];
 };
 
 export function generatedRecipeFromOutput(raw: unknown, context: RecipeGenerationContext): GeneratedRecipe {
@@ -181,35 +193,50 @@ export function generatedRecipeFromOutput(raw: unknown, context: RecipeGeneratio
   return { recipe: recipe.data, description: o.description };
 }
 
-function mealsRecipeFromOutput(raw: unknown, { filters, timeMode }: Extract<RecipeGenerationContext, { filterSet: "meals" }>): GeneratedRecipe {
+function mealsRecipeFromOutput(raw: unknown, context: Extract<RecipeGenerationContext, { filterSet: "meals" }>): GeneratedRecipe {
+  const candidate = mealsCandidate(raw, context);
+  if (candidate.violations?.length) throw new GenerationError("filters");
+  return candidate;
+}
+
+/** Builds the recipe and lists every filter it misses. Labels are only attached when verified, so a miss is never saved as a match. */
+export function mealsCandidate(raw: unknown, { filters, timeMode }: Extract<RecipeGenerationContext, { filterSet: "meals" }>): GeneratedRecipe {
   const parsed = output.safeParse(raw);
   if (!parsed.success) throw new GenerationError("invalid");
   const o = parsed.data;
-  // Tags follow the planner's own classification so the saved recipe lands in the requested meal type.
+  // Tags follow the planner's own classification; when the model's meal label doesn't match, its own label is kept.
   const wanted = filters.mealType.filter(type => type !== "Lunch box").map(type => type.toLowerCase());
   const meal = filters.mealType.length ? o.mealTypes.find(type => wanted.includes(type)) : undefined;
   const lunchbox = (filters.mealType.length === 0 || filters.mealType.includes("Lunch box")) && o.lunchbox !== "none" && !meal;
-  // The model's own meal label must match: untagged recipes default to Dinner on this page, so never rely on that.
-  if (filters.mealType.length && !meal && !lunchbox) throw new GenerationError("filters");
-  const declared = new Set<string>(o.dietary);
-  // Only requested dietary labels are attached, and only when the model declared them; the checks below verify them.
-  if (filters.dietary.some(d => !declared.has(dietaryTag[d as keyof typeof dietaryTag]))) throw new GenerationError("filters");
-  const tags = ["ai-generated",
-    ...(meal ? [`meal:${meal}`] : filters.mealType.length ? [] : o.mealTypes.map(type => `meal:${type}`)),
-    ...(lunchbox ? ["suitability:lunchbox"] : []),
-    ...filters.dietary.map(d => dietaryTag[d as keyof typeof dietaryTag])];
-  const recipe = recipeInput.safeParse({
-    title: o.title, servings: o.servings, prepTime: o.prepTime, cookTime: o.cookTime, tags,
+  const draft = recipeInput.safeParse({
+    title: o.title, servings: o.servings, prepTime: o.prepTime, cookTime: o.cookTime, tags: ["ai-generated"],
     ingredients: o.ingredients.map(item => [item.quantity, item.unit, item.name].filter(Boolean).join(" ")),
     steps: o.steps,
   });
-  if (!recipe.success) throw new GenerationError("invalid");
-  if (dietaryViolations(recipe.data, filters.dietary).length) throw new GenerationError("filters");
-  const planner = toPlannerRecipe({ ...recipe.data, id: "generated", createdAt: "", updatedAt: "" } as Parameters<typeof toPlannerRecipe>[0]);
-  if (!matchesPlannerFilters(planner, noPersonalFilters(filters), timeMode, { isMyPick: false, rating: null })) throw new GenerationError("filters");
-  const prose = [recipe.data.title, ...recipe.data.steps].map(text => text.toLowerCase());
-  if (filters.mustExclude.some(term => prose.some(text => text.includes(term)))) throw new GenerationError("filters");
-  return { recipe: recipe.data, description: o.description };
+  if (!draft.success) throw new GenerationError("invalid");
+  const declared = new Set<string>(o.dietary);
+  const failedDiet = new Set(dietaryViolations(draft.data, filters.dietary));
+  const verifiedDiet = filters.dietary.filter(d => declared.has(dietaryTag[d as keyof typeof dietaryTag]) && !failedDiet.has(d));
+  const recipe = { ...draft.data, tags: ["ai-generated",
+    ...(meal ? [`meal:${meal}`] : o.mealTypes.map(type => `meal:${type}`)),
+    ...(lunchbox ? ["suitability:lunchbox"] : []),
+    ...verifiedDiet.map(d => dietaryTag[d as keyof typeof dietaryTag])] };
+
+  const violations: FilterViolation[] = filters.dietary.filter(d => !verifiedDiet.includes(d)).map(value => ({ filter: "dietary", value }));
+  const planner = toPlannerRecipe({ ...recipe, id: "generated", createdAt: "", updatedAt: "" } as Parameters<typeof toPlannerRecipe>[0]);
+  const only = (patch: Partial<MealsGenerationFilters>) => matchesPlannerFilters(planner, noPersonalFilters({
+    maxMinutes: null, dietary: [], mealType: [], cookingMethod: [], proteinType: [], servings: null, mustInclude: [], mustExclude: [], ...patch,
+  }), timeMode, { isMyPick: false, rating: null });
+  if (filters.maxMinutes !== null && !only({ maxMinutes: filters.maxMinutes })) violations.push({ filter: "maxMinutes", value: String(filters.maxMinutes) });
+  if (filters.mealType.length && (!(meal || lunchbox) || !only({ mealType: filters.mealType }))) violations.push({ filter: "mealType", value: filters.mealType.join(" / ") });
+  if (filters.cookingMethod.length && !only({ cookingMethod: filters.cookingMethod })) violations.push({ filter: "cookingMethod", value: filters.cookingMethod.join(" / ") });
+  if (filters.proteinType.length && !only({ proteinType: filters.proteinType })) violations.push({ filter: "proteinType", value: filters.proteinType.join(" / ") });
+  if (filters.servings && !only({ servings: filters.servings })) violations.push({ filter: "servings", value: filters.servings });
+  const lines = recipe.ingredients.map(line => line.toLowerCase());
+  const prose = [recipe.title, ...recipe.steps].map(text => text.toLowerCase());
+  for (const term of filters.mustInclude) if (!lines.some(line => line.includes(term))) violations.push({ filter: "mustInclude", value: term });
+  for (const term of filters.mustExclude) if ([...lines, ...prose].some(text => text.includes(term))) violations.push({ filter: "mustExclude", value: term });
+  return violations.length ? { recipe, description: o.description, violations } : { recipe, description: o.description };
 }
 
 function providerFailure(error: unknown): GenerationError {
@@ -226,10 +253,12 @@ export async function generateRecipe(
   let client: OpenAI;
   try { client = ai(); } catch { throw new GenerationError("unavailable"); }
   // One retry only for unusable or rule-breaking output; timeouts and rate limits are not retried.
+  // Meals filter set: if both attempts miss filters, the closer one is returned with its misses listed for the user.
+  let fallback: GeneratedRecipe | undefined;
   for (let attempt = 1; ; attempt++) {
     try {
       const response = await client.chat.completions.create({
-        model: GENERATION_MODEL, temperature: 0.7, max_completion_tokens: 2500,
+        model: GENERATION_MODEL, ...generationParams,
         response_format: { type: "json_schema", json_schema: { name: "recipe", strict: true, schema: jsonSchema } },
         messages: [{ role: "system", content: context.filterSet === "meals" ? mealsSystem : system }, { role: "user", content: JSON.stringify(buildGenerationBrief(context, guidance)) }],
       }, { timeout: 30_000, maxRetries: 0, signal });
@@ -237,9 +266,14 @@ export async function generateRecipe(
       if (!choice?.message.content || choice.message.refusal || choice.finish_reason === "length") throw new GenerationError("invalid");
       let raw: unknown;
       try { raw = JSON.parse(choice.message.content); } catch { throw new GenerationError("invalid"); }
-      return generatedRecipeFromOutput(raw, context);
+      if (context.filterSet !== "meals") return generatedRecipeFromOutput(raw, context);
+      const candidate = mealsCandidate(raw, context);
+      if (!candidate.violations) return candidate;
+      if (!fallback || candidate.violations.length < fallback.violations!.length) fallback = candidate;
+      if (attempt >= 2) return fallback;
     } catch (error) {
       const failure = providerFailure(error);
+      if (fallback && attempt >= 2) return fallback; // the retry failed: still show the first recipe, with its misses
       if (attempt >= 2 || (failure.kind !== "invalid" && failure.kind !== "filters")) throw failure;
     }
   }
