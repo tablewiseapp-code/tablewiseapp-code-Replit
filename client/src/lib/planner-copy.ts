@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 const en = {
   title: "Plan your week", subtitle: "Choose when you'll enjoy your selected recipes.", back: "← Back to selection",
   summary: "{recipes} selected · {planned} of {total} meals planned", recipeOne: "1 recipe", recipeMany: "{count} recipes",
-  selected: "Selected recipes", hint: "Choose a recipe and add it to any day.", dragHint: "Drag a recipe onto a day, or use Plan.",
+  selected: "Selected recipes", hint: "Choose a recipe and add it to any day.", dragHint: "Drag a recipe onto a day, or use Plan.", allPlanned: "Every selected recipe is on the calendar. Use Add meal to plan one again.",
   plan: "Plan", view: "View recipe", prep: "{count} min prep", servings: "{count} servings",
   addMeal: "Add meal", more: "Actions for {title}", replace: "Replace recipe", repeat: "Repeat on other days", changeServings: "Change servings", remove: "Remove from slot",
   slotEmpty: "{day} {meal}: empty. Add a meal.", slotFilled: "{day} {meal}: {title}", linked: "{count} days",
@@ -23,7 +23,7 @@ const en = {
 const ru: typeof en = {
   title: "Планируйте неделю", subtitle: "Выберите, когда приготовить выбранные рецепты.", back: "← Назад к выбору",
   summary: "Выбрано: {recipes} · запланировано {planned} из {total} приёмов пищи", recipeOne: "1 рецепт", recipeMany: "{count} рецептов",
-  selected: "Выбранные рецепты", hint: "Выберите рецепт и добавьте его в любой день.", dragHint: "Перетащите рецепт на день или нажмите «В план».",
+  selected: "Выбранные рецепты", hint: "Выберите рецепт и добавьте его в любой день.", dragHint: "Перетащите рецепт на день или нажмите «В план».", allPlanned: "Все выбранные рецепты уже в календаре. Нажмите «Добавить», чтобы запланировать снова.",
   plan: "В план", view: "Открыть рецепт", prep: "{count} мин подготовки", servings: "{count} порц.",
   addMeal: "Добавить", more: "Действия: {title}", replace: "Заменить рецепт", repeat: "Повторить в другие дни", changeServings: "Изменить порции", remove: "Убрать",
   slotEmpty: "{day}, {meal}: пусто. Добавить блюдо.", slotFilled: "{day}, {meal}: {title}", linked: "{count} дн.",
@@ -43,7 +43,7 @@ const ru: typeof en = {
 const he: typeof en = {
   title: "תכננו את השבוע", subtitle: "בחרו מתי תיהנו מהמתכונים שבחרתם.", back: "→ חזרה לבחירה",
   summary: "נבחרו {recipes} · {planned} מתוך {total} ארוחות מתוכננות", recipeOne: "מתכון אחד", recipeMany: "{count} מתכונים",
-  selected: "מתכונים שנבחרו", hint: "בחרו מתכון והוסיפו אותו לכל יום.", dragHint: "גררו מתכון ליום, או השתמשו ב״לתוכנית״.",
+  selected: "מתכונים שנבחרו", hint: "בחרו מתכון והוסיפו אותו לכל יום.", dragHint: "גררו מתכון ליום, או השתמשו ב״לתוכנית״.", allPlanned: "כל המתכונים שנבחרו כבר בלוח. השתמשו ב״הוספת ארוחה״ כדי לתכנן שוב.",
   plan: "לתוכנית", view: "צפייה במתכון", prep: "{count} דק׳ הכנה", servings: "{count} מנות",
   addMeal: "הוספת ארוחה", more: "פעולות עבור {title}", replace: "החלפת מתכון", repeat: "חזרה בימים נוספים", changeServings: "שינוי מספר מנות", remove: "הסרה מהמשבצת",
   slotEmpty: "{day} {meal}: ריק. הוסיפו ארוחה.", slotFilled: "{day} {meal}: {title}", linked: "{count} ימים",
