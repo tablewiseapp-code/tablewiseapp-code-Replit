@@ -38,7 +38,14 @@ try {
   const until = async (e, what) => { for (let i = 0; i < 150; i++) { if (await ev(`Boolean(${e})`).catch(() => false)) return; await sleep(120); } throw new Error(`timeout: ${what}; page: ${String(await ev("document.body.innerText")).slice(0, 300).replace(/\n/g, " | ")}`); };
   const go = async path => { await call("Page.navigate", { url: BASE + path }); await sleep(400); };
   const q = id => `document.querySelector('[data-testid="${id}"]')`;
-  const cards = () => ev(`[...document.querySelectorAll('[data-testid^="recipe-card-"]')].map(c => c.dataset.testid.slice(12))`);
+  const pageCards = () => ev(`[...document.querySelectorAll('[data-testid^="recipe-card-"]')].map(c => c.dataset.testid.slice(12))`);
+  // Results are paginated (12 per page): walk every page so set comparisons see the full list.
+  const cards = async () => {
+    if (await ev(`!!${q("page-1")}`)) { await ev(`${q("page-1")}.click()`); await sleep(150); }
+    const all = [...await pageCards()];
+    while (await ev(`!!${q("page-next")} && !${q("page-next")}.disabled`)) { await ev(`${q("page-next")}.click()`); await sleep(150); all.push(...await pageCards()); }
+    return all;
+  };
   const titles = () => ev(`[...document.querySelectorAll('[data-testid^="recipe-card-"]')].map(c => c.querySelector("h3,h4,p,span")?.textContent ?? c.textContent).join(" | ")`);
   const openMeals = async () => { await go("/meals"); await until(`${q("active-preferences")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "meals loaded"); };
   const setSettings = value => ev(`localStorage.setItem("tablewise_basic_settings", ${JSON.stringify(value)})`);

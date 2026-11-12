@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
 import { Search, X } from "lucide-react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { StarRating } from "@/components/ui/star-rating";
@@ -12,7 +12,9 @@ import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
 import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
-import { matchesPlannerFilters, recipeNameMatches } from "@/lib/planner-filters";
+import { matchesPlannerFilters, pageNumbers, paginate, recipeNameMatches } from "@/lib/planner-filters";
+
+const SELECTED_PREVIEW = 5; // more selections collapse behind "Show all"
 import { availableDevices, methodChoices, useSavedSettings } from "@/lib/basic-settings";
 import { cuisines, recipeCuisine } from "@shared/food-rules";
 import { ActivePreferences } from "@/components/active-preferences";
@@ -178,6 +180,10 @@ function WeeklyMealsContent() {
   // Recipe name search; works together with the filters. Deferred so typing stays responsive on long lists.
   const [search, setSearch] = useState("");
   const query = useDeferredValue(search).trim();
+  const [page, setPage] = useState(1);
+  const [showAllSelected, setShowAllSelected] = useState(false);
+  const filtersKey = JSON.stringify(state.filters);
+  useEffect(() => setPage(1), [query, filtersKey]); // new search or filters → back to page 1
   const planCopy = usePlannerCopy();
   const { toast } = useToast();
 
@@ -405,6 +411,12 @@ function WeeklyMealsContent() {
 
   const filteredRecipes = filterRecipes();
   const visibleFilteredRecipes = filteredRecipes.filter(recipe => !state.selectedIds.includes(recipe.id));
+  // Paginate last: after restrictions, filters, search and ranking. Selections are global, not per page.
+  const results = paginate(visibleFilteredRecipes, page);
+  const goToPage = (n: number) => {
+    setPage(n);
+    document.getElementById("meal-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // AI generation from the current filters. Saving uses the normal recipe API; the recipe then joins the selection.
   const generation = mealsGenerationBody(state.filters, timeMode);
@@ -490,6 +502,8 @@ function WeeklyMealsContent() {
   };
 
   const selectedRecipes = getSelectedRecipes();
+  // Warnings never hide behind "Show all": incompatible picks always stay in the collapsed list.
+  const selectedFits = selectedRecipes.map(recipe => ({ recipe, fit: checkEligibility(recipe, settings, undefined, mealSlots.find(m => m === recipe.mealType)) }));
 
   if (isLoadingRecipes) {
     return (
@@ -656,21 +670,23 @@ function WeeklyMealsContent() {
       />
 
       <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <button
-              onClick={generatePlan}
-              disabled={!canGenerate}
-              className={`px-6 py-2.5 min-h-11 text-sm rounded-full ${canGenerate ? "bg-foreground text-background hover:bg-foreground/90" : "bg-foreground/20 text-muted-foreground cursor-not-allowed"}`}
-              data-testid="button-generate-plan"
-            >
-              {t("meals.generateWeeklyPlan")}
-            </button>
-            {!canGenerate && (
-              <p className="mobile-readable-xs text-muted-foreground mt-2">{t("meals.minimum_meals_selection")}</p>
-            )}
+        {/* Sticky: the next step stays in reach while browsing. The app header is not sticky, so nothing overlaps. */}
+        <div className="sticky top-0 z-20 -mt-4 sm:-mt-6 mb-4 flex items-center gap-3 border-b hairline bg-background/95 py-2 sm:py-3 backdrop-blur" data-testid="weekly-meals-header">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-base sm:text-xl md:text-2xl font-medium text-foreground">{t("meals.step2Title")}</h1>
+            <p id="continue-hint" className="mobile-readable-xs text-muted-foreground" aria-live="polite" data-testid="selected-count">
+              {canGenerate ? t("meals.selectedShort", { count: state.selectedIds.length }) : t("meals.minimum_meals_selection")}
+            </p>
           </div>
-          <p className="mobile-readable-xs text-muted-foreground">{t("meals.adjustLater")}</p>
+          <button
+            onClick={generatePlan}
+            disabled={!canGenerate}
+            aria-describedby="continue-hint"
+            className={`flex-shrink-0 px-4 sm:px-6 py-2 min-h-11 text-sm rounded-full ${canGenerate ? "bg-foreground text-background hover:bg-foreground/90" : "bg-foreground/20 text-muted-foreground cursor-not-allowed"}`}
+            data-testid="button-generate-plan"
+          >
+            {t("meals.generateWeeklyPlan")} <span aria-hidden="true">→</span>
+          </button>
         </div>
         {/* Counts come from the exact lists rendered below: all → saved restrictions → page filters/search. */}
         <ActivePreferences settings={settings} counts={recipes.length ? matchCounts(personalized, filteredRecipes) : null}
@@ -1094,79 +1110,49 @@ function WeeklyMealsContent() {
           </aside>
 
           <main className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-medium text-foreground">{t("meals.step2Title")}</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("meals.step2Desc")}
-                </p>
-              </div>
-              <div className="sm:text-right">
-                <span className="text-sm text-muted-foreground">{t("meals.selected", { count: state.selectedIds.length })}</span>
-                {maxSelectionsHit && (
-                  <p className="mobile-readable-xs text-muted-foreground mt-1">{t("meals.max12")}</p>
-                )}
-              </div>
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">{t("meals.step2Desc")}</p>
+              {maxSelectionsHit && <p className="mobile-readable-xs text-muted-foreground mt-1">{t("meals.max12")}</p>}
             </div>
 
             {state.selectedIds.length > 0 ? (
-              <div className="mb-6 p-5 bg-[#FAFAF8] rounded-xl border hairline" data-testid="panel-selected-recipes">
-                <div className="flex items-center justify-between mb-3">
+              <div className="mb-6 p-3 bg-[#FAFAF8] rounded-xl border hairline" data-testid="panel-selected-recipes">
+                <div className="flex items-center justify-between mb-2 px-1">
                     <h3 className="mobile-readable-xs uppercase tracking-wide text-muted-foreground">
-                      {t("meals.selectedRecipesPanel") || "Selected recipes"}
+                      {t("meals.selectedRecipesPanel")}
                     </h3>
-                  <span className="mobile-readable-xs text-muted-foreground">{state.selectedIds.length} / 12</span>
+                  <span className="mobile-readable-xs text-muted-foreground" data-testid="selected-counter">{state.selectedIds.length} / 12</span>
                 </div>
-                <div className="space-y-2">
-                  {selectedRecipes.map(recipe => {
-                    const preparationMinutes = recipeStageMinutes(recipe, "preparation");
-                    const displayTags: string[] = [];
-                    if (recipe.mealType) displayTags.push(tagLabel(lang, recipe.mealType));
-                    recipe.tags.forEach(tag => {
-                      if (tag === "vegetarian") displayTags.push(t("meals.vegetarian"));
-                      else if (tag === "kidFriendly") displayTags.push(t("meals.kidFriendly"));
-                      else if (tag === "glutenFree") displayTags.push(t("meals.glutenFree"));
-                    });
-                    const fit = checkEligibility(recipe, settings, undefined, mealSlots.find(m => m === recipe.mealType));
+                <ul className="divide-y divide-foreground/5">
+                  {selectedFits.filter(({ fit }, i) => showAllSelected || i < SELECTED_PREVIEW || !fit.eligible).map(({ recipe, fit }) => {
+                    const totalMinutes = recipeStageMinutes(recipe, "total");
+                    const diet = recipe.tags.includes("vegetarian") ? t("meals.vegetarian") : recipe.tags.includes("glutenFree") ? t("meals.glutenFree") : null;
                     const replacement = fit.eligible ? null : suggestReplacement(recipe, recipes, state.selectedIds, settings, { meta: getMeta });
                     return (
-                      <div key={recipe.id}>
+                      <li key={recipe.id}>
                       <div
-                        className={`flex items-center gap-2 sm:gap-3 p-3 bg-white rounded-lg border ${fit.eligible ? "hairline" : "border-amber-300"}`}
+                        className={`flex items-center gap-2 px-1 py-1 ${fit.eligible ? "" : "rounded-lg bg-amber-50/60"}`}
                         data-testid={`selected-recipe-${recipe.id}`}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-foreground/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-7 h-7 rounded-md bg-foreground/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {recipe.image ? <img src={recipe.image} alt="" loading="lazy" className="w-full h-full object-cover" /> :
-                          <span className="text-xs font-medium text-muted-foreground/50">{getMonogram(recipe.title)}</span>}
+                          <span className="text-[10px] font-medium text-muted-foreground/60">{getMonogram(recipe.title)}</span>}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
-                            <RecipePriceSummary recipe={recipe} context="selected" />
-                            <span
-                              className="mobile-readable-xs text-muted-foreground"
-                              title={timeCopy("preparation")}
-                              data-testid={`meals-selected-title-preparation-${recipe.id}`}
-                            >
-                              {preparationMinutes === null
-                                ? timeCopy("preparationTimeUnknown")
-                                : `${preparationMinutes} ${timeCopy("minutesShort")}`}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <MealRecipeFacts recipe={recipe} context="selected" />
-                            {displayTags.slice(0, 3).map(tag => (
-                              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground">{tag}</span>
-                            ))}
-                          </div>
-                        </div>
+                        <Link href={`/recipe/${recipe.id}`} className="min-w-0 flex-1 truncate text-sm text-foreground hover:underline" data-testid={`selected-recipe-link-${recipe.id}`}>
+                          {recipe.title}
+                        </Link>
+                        {diet && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground flex-shrink-0">{diet}</span>}
+                        <span className="mobile-readable-xs text-muted-foreground flex-shrink-0 tabular-nums" title={timeCopy("total")} data-testid={`meals-selected-total-${recipe.id}`}>
+                          {totalMinutes === null ? "—" : `${totalMinutes} ${timeCopy("minutesShort")}`}
+                        </span>
                         <button
+                          type="button"
                           onClick={() => toggleSelection(recipe.id)}
-                          aria-label={`Remove ${recipe.title} from selected recipes`}
-                          className="text-xs min-h-11 text-muted-foreground hover:text-foreground flex-shrink-0 px-2 py-1 rounded hover:bg-foreground/5"
+                          aria-label={t("meals.removeSelected", { title: recipe.title })}
+                          className="min-h-11 min-w-11 flex items-center justify-center flex-shrink-0 rounded text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                           data-testid={`remove-selected-${recipe.id}`}
                         >
-                          ×
+                          <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
                       {!fit.eligible && (
@@ -1178,10 +1164,16 @@ function WeeklyMealsContent() {
                             : <span className="text-amber-700">{sText("noReplacement")}</span>}
                         </div>
                       )}
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
+                {selectedRecipes.length > SELECTED_PREVIEW && (
+                  <button type="button" onClick={() => setShowAllSelected(v => !v)} aria-expanded={showAllSelected} data-testid="button-toggle-selected"
+                    className="mt-1 min-h-11 px-1 text-sm text-[#42624e] hover:underline">
+                    {showAllSelected ? t("meals.showFewer") : t("meals.showAllSelected", { count: selectedRecipes.length })}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="mb-6 p-5 bg-[#FAFAF8] rounded-xl border hairline text-center" data-testid="panel-selected-recipes-empty">
@@ -1192,7 +1184,12 @@ function WeeklyMealsContent() {
             )}
 
             {!query && visibleFilteredRecipes.length > 0 && <div className="mb-3 flex justify-end"><GenerateRecipe request={generationRequest} variant="button" onAccept={acceptGenerated} /></div>}
-            <div id="meal-results" className="space-y-2 scroll-mt-4">
+            {results.total > 0 && (
+              <h2 className="mb-2 text-sm text-muted-foreground" aria-live="polite" data-testid="results-range" data-total={results.total}>
+                {t("meals.showingRange", { from: results.from, to: results.to, total: results.total })}
+              </h2>
+            )}
+            <div id="meal-results" className="space-y-2 scroll-mt-24">
               {recipes.length > 0 && eligibleRecipes.length === 0 ? (
                 // Every recipe breaks a hard restriction: say which ones, never fall back to incompatible suggestions.
                 <div className="rounded-xl border hairline bg-white p-5" role="status" data-testid="no-match-settings">
@@ -1212,7 +1209,7 @@ function WeeklyMealsContent() {
               ) : query && visibleFilteredRecipes.length === 0 ? null : visibleFilteredRecipes.length === 0 ? (
                 <GenerateRecipe request={generationRequest} variant="empty" onAccept={acceptGenerated} />
               ) : (
-                visibleFilteredRecipes.map(recipe => {
+                results.items.map(recipe => {
                   const meta = getMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
@@ -1309,6 +1306,24 @@ function WeeklyMealsContent() {
               )}
             </div>
 
+            {results.pageCount > 1 && (
+              <nav aria-label={t("meals.pagination")} className="mt-4 flex flex-wrap items-center justify-center gap-1" data-testid="results-pagination">
+                <button type="button" onClick={() => goToPage(results.page - 1)} disabled={results.page === 1} data-testid="page-prev"
+                  className="min-h-11 rounded-full px-3 text-sm text-foreground hover:bg-foreground/5 disabled:opacity-40 disabled:hover:bg-transparent">
+                  <span aria-hidden="true">←</span> {t("meals.previous")}
+                </button>
+                {pageNumbers(results.page, results.pageCount).map((n, i) => n === null
+                  ? <span key={`gap-${i}`} className="px-1 text-sm text-muted-foreground" aria-hidden="true">…</span>
+                  : <button key={n} type="button" onClick={() => goToPage(n)} aria-current={n === results.page ? "page" : undefined}
+                      aria-label={t("meals.pageN", { n })} data-testid={`page-${n}`}
+                      className={`min-h-11 min-w-11 rounded-full text-sm tabular-nums ${n === results.page ? "bg-foreground text-background" : "text-foreground hover:bg-foreground/5"}`}>{n}</button>)}
+                <button type="button" onClick={() => goToPage(results.page + 1)} disabled={results.page === results.pageCount} data-testid="page-next"
+                  className="min-h-11 rounded-full px-3 text-sm text-foreground hover:bg-foreground/5 disabled:opacity-40 disabled:hover:bg-transparent">
+                  {t("meals.next")} <span aria-hidden="true">→</span>
+                </button>
+              </nav>
+            )}
+
             <footer className="mt-12 pt-6 border-t hairline text-center">
               <p className="text-readable-xs text-muted-foreground">{t("meals.footerFamilies")}</p>
               <p className="text-readable-xs text-muted-foreground mt-1">{t("meals.footerVersion")}</p>
@@ -1316,16 +1331,6 @@ function WeeklyMealsContent() {
             </footer>
           </main>
         </div>
-        {/* The top button scrolls away while picking recipes; keep the next step in reach. */}
-        {canGenerate && (
-          <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex items-center justify-end gap-3 border-t border-[#d9dfd4] bg-background/95 px-4 py-3 backdrop-blur" data-testid="selection-next-bar">
-            <p className="me-auto text-sm text-muted-foreground">{t("meals.selected", { count: state.selectedIds.length })}</p>
-            <button type="button" onClick={generatePlan} data-testid="button-generate-plan-sticky"
-              className="min-h-11 rounded-full bg-foreground px-5 text-sm font-medium text-background hover:bg-foreground/90">
-              {t("meals.generateWeeklyPlan")}
-            </button>
-          </div>
-        )}
       </PageContainer>
     </div>
   );

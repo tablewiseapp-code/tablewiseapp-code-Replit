@@ -48,4 +48,21 @@ assert.equal(moveTo(blocked, { day: 1, meal: "Dinner" }, { day: 5, meal: "Dinner
 assert.equal(plannedSlotCount(plan), 1);
 const frozen = JSON.stringify(plan); repeatOn(plan, "a", [{ day: 6, meal: "Lunch" }]); removeAt(plan, "Dinner", 1);
 assert.equal(JSON.stringify(plan), frozen, "helpers never mutate their input");
+
+// Recipe pagination: 12 per page, no duplicates or gaps, clamped page.
+{
+  const { paginate, pageNumbers } = await import("../client/src/lib/planner-filters");
+  const list = (n: number) => Array.from({ length: n }, (_, i) => i);
+  assert.deepEqual(paginate([], 1), { items: [], page: 1, pageCount: 1, from: 0, to: 0, total: 0 });
+  assert.deepEqual([paginate(list(1), 1).items, paginate(list(1), 1).pageCount], [[0], 1]);
+  assert.equal(paginate(list(12), 1).pageCount, 1);
+  assert.deepEqual([paginate(list(13), 2).items, paginate(list(13), 2).from, paginate(list(13), 2).to], [[12], 13, 13]);
+  const many = list(84), seen = [];
+  for (let p = 1; p <= paginate(many, 1).pageCount; p++) seen.push(...paginate(many, p).items);
+  assert.deepEqual(seen, many);
+  assert.deepEqual([paginate(many, 2).from, paginate(many, 2).to, paginate(many, 2).total], [13, 24, 84]);
+  assert.equal(paginate(list(13), 9).page, 2, "page clamps when results shrink");
+  assert.deepEqual(pageNumbers(5, 9), [1, null, 4, 5, 6, null, 9]);
+  assert.deepEqual(pageNumbers(1, 2), [1, 2]);
+}
 console.log("weekly planner checks passed");
