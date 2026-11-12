@@ -102,3 +102,19 @@ export function mealsGenerationFilters(filters: PlannerFilters): { filters: Meal
 /** The same check without personal filters: what a generated recipe must satisfy. */
 export const noPersonalFilters = (filters: MealsGenerationFilters): PlannerFilters =>
   ({ ...filters, source: [], withNotes: false, modifiedByMe: false, myPicks: false, minRating: null });
+
+export const RECIPES_PER_PAGE = 12;
+
+// Runs after filtering and sorting. The page is clamped, so a shrinking result list never leaves you on an empty page.
+export function paginate<T>(items: T[], page: number, size = RECIPES_PER_PAGE) {
+  const pageCount = Math.max(1, Math.ceil(items.length / size));
+  const current = Math.min(Math.max(1, page), pageCount);
+  const start = (current - 1) * size;
+  return { items: items.slice(start, start + size), page: current, pageCount, from: items.length ? start + 1 : 0, to: Math.min(start + size, items.length), total: items.length };
+}
+
+// 1 … 4 5 6 … 9 — first, last and the neighbours of the current page; null marks a gap.
+export function pageNumbers(page: number, pageCount: number): (number | null)[] {
+  const keep = [...new Set([1, page - 1, page, page + 1, pageCount])].filter(n => n >= 1 && n <= pageCount).sort((a, b) => a - b);
+  return keep.flatMap((n, i) => (i > 0 && n - keep[i - 1] > 1 ? [null, n] : [n]));
+}
