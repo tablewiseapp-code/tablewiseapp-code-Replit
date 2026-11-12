@@ -20,6 +20,7 @@
     "test:recipe-nutrition": "tsx script/test-recipe-nutrition.ts",
     "test:recipe-view": "tsx script/test-recipe-view.ts",
     "test:grocery-progress": "tsx script/test-grocery-progress.ts",
+    "test:grocery-share": "tsx script/test-grocery-share.ts",
     "test:grocery-completion-browser": "node script/test-grocery-completion-browser.mjs",
     "test:weekly-planner": "tsx script/test-weekly-planner.ts",
     "test:cooking-mode-browser": "node script/test-cooking-mode-browser.mjs",
