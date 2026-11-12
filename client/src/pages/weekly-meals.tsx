@@ -34,7 +34,7 @@ import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { PlannerBoard } from "@/components/planner-board";
 import { usePlannerCopy } from "@/lib/planner-copy";
-import { plannedSlotCount, totalSlots, writePlan, type PlanState } from "@/lib/meal-plan";
+import { mealSlots, plannedSlotCount, totalSlots, writePlan, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -383,13 +383,18 @@ function WeeklyMealsContent() {
 
   // My Basic Settings always apply: hard restrictions (devices, diets, allergies, hard time limit) hide recipes;
   // soft preferences only change the order (preference-engine.ts). My Recipes is not affected.
+  // Meal-specific rules apply only to the meal types filtered for; the full list keeps the global restrictions only.
+  const filteredMeals = useMemo(() => mealSlots.filter(m => state.filters.mealType.includes(m)), [state.filters.mealType]);
   const personalized = useMemo(() => personalize(recipes, settings, {
-    selected: recipes.filter(r => state.selectedIds.includes(r.id)), meta: getMeta,
-  }), [recipes, settings, state.selectedIds, getMeta]);
+    selected: recipes.filter(r => state.selectedIds.includes(r.id)), meta: getMeta, meals: filteredMeals,
+  }), [recipes, settings, state.selectedIds, getMeta, filteredMeals]);
   const eligibleRecipes = useMemo(() => personalized.eligible.map(e => e.recipe), [personalized]);
-  const filterRecipes = (): Recipe[] =>
-    eligibleRecipes.filter(recipe => (!query || recipeNameMatches(recipe.title, query)) &&
-      matchesPlannerFilters(recipe, state.filters, timeMode, getMeta(recipe.id)));
+  const matchesPage = (recipe: Recipe, filters = state.filters) => (!query || recipeNameMatches(recipe.title, query)) &&
+    matchesPlannerFilters(recipe, filters, timeMode, getMeta(recipe.id));
+  const filterRecipes = (): Recipe[] => eligibleRecipes.filter(recipe => matchesPage(recipe));
+  // Per-meal counts: the same rules and filters the list uses when that meal type is the one selected.
+  const mealEligible = useMemo(() => personalize(recipes, settings, { meals: mealSlots }).eligible.map(e => e.recipe), [recipes, settings]);
+  const mealCount = (meal: MealSlot) => mealEligible.filter(r => r.mealType === meal && matchesPage(r, { ...state.filters, mealType: [meal] })).length;
   const memberName = (id: string) => settings.household.members.find(m => m.id === id)?.name ?? null;
   const replaceSelected = (oldId: string, newId: string) => {
     if (weekLocked) { notify(planCopy("locked"), true); return; }
@@ -588,7 +593,8 @@ function WeeklyMealsContent() {
                   <button type="button" onClick={() => setLocation("/settings")} className="font-medium text-[#42624e] underline" data-testid="link-settings-plan">{sText("changeSettings")}</button></p>
               </div>
               <PlannerBoard recipes={shortlist} plan={plan} locked={weekLocked} commit={commit} notify={notify} dayNames={dayNames} mealNames={Object.values(mealNames)}
-                onView={id => setLocation(`/recipe/${encodeURIComponent(id)}`)} />
+                onView={id => setLocation(`/recipe/${encodeURIComponent(id)}`)}
+                fitsMeal={(r, meal) => r.mealType === meal && checkEligibility(r, settings, undefined, meal).eligible} othersLabel={sText("pickOthers")} />
             </>
           )}
 
@@ -746,6 +752,9 @@ function WeeklyMealsContent() {
                           data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
                         >
                           {mealTypeTranslations[type] || type}
+                          {(mealSlots as readonly string[]).includes(type) && recipes.length > 0 && (
+                            <span className="ms-1 text-muted-foreground" data-testid={`meal-count-${type.toLowerCase()}`}>· {sText("mealCount", { count: mealCount(type as MealSlot) })}</span>
+                          )}
                         </button>
                       );
                     })}
@@ -1118,7 +1127,7 @@ function WeeklyMealsContent() {
                       else if (tag === "kidFriendly") displayTags.push(t("meals.kidFriendly"));
                       else if (tag === "glutenFree") displayTags.push(t("meals.glutenFree"));
                     });
-                    const fit = checkEligibility(recipe, settings);
+                    const fit = checkEligibility(recipe, settings, undefined, mealSlots.find(m => m === recipe.mealType));
                     const replacement = fit.eligible ? null : suggestReplacement(recipe, recipes, state.selectedIds, settings, { meta: getMeta });
                     return (
                       <div key={recipe.id}>

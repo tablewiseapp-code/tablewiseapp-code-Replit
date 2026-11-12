@@ -73,6 +73,15 @@ const en = {
   statFilters: "{count} excluded by additional filters", whyExcluded: "Why excluded?", hideBreakdown: "Hide details",
   bd_dietary: "Dietary restrictions", bd_allergies: "Allergies", bd_devices: "Cooking devices", bd_uncertain: "Missing or uncertain safety information",
   bd_time: "Cooking-time limit", bd_filters: "Additional filters and search", bdNote: "A recipe can fail several rules; the total counts it once.",
+  meal_Breakfast: "Breakfast", meal_Lunch: "Lunch", meal_Dinner: "Dinner", mealRulesTitle: "Recipes for each meal",
+  mealRulesHint: "Used for that meal only: “Fill my week”, replacements, and the Weekly Meals list when you filter by that meal. Allergies and diets always apply too.",
+  recipeType: "Recipe type", mealType_both: "Both", mealType_meatless: "Meatless", mealType_meat: "Meat",
+  mealTypeHint: "Meatless: no meat, poultry or seafood (eggs and dairy are fine). Checked against every ingredient; unclear ingredients such as stock don't count as meatless.",
+  mealMaxTime: "Maximum cooking time (prep + cook)", mealTimeDefault: "Same as Cooking Preferences", mealTimeDefaultShort: "usual time",
+  mealTimeHint: "Recipes without a known total time are not used for a meal with a time limit.",
+  reasonMeal_meatless: "contains meat, poultry or seafood ({meal})", reasonMeal_meat: "no meat, poultry or seafood ({meal})",
+  reasonMealUncertain: "meat content unclear ({meal})", reasonMealTime: "{minutes} min ({meal}: up to {max})", reasonMealTimeUnknown: "total time unknown ({meal}: up to {max})",
+  bd_meal: "Meal settings (type and time)", mealCount: "{count} matching", chipMealRule: "{meal}: {rule}", pickOthers: "Don't match the settings for this meal",
   activeSubtitle: "Always active from My Basic Settings",
   noMatchTitle: "No recipes match your current settings.", noMatchBody: "Most often excluded by:", reasonCount: "{reason} — {count} recipes",
 };
@@ -149,6 +158,15 @@ const ru: Copy = {
   statFilters: "Исключено доп. фильтрами: {count}", whyExcluded: "Почему исключены?", hideBreakdown: "Скрыть",
   bd_dietary: "Ограничения в питании", bd_allergies: "Аллергии", bd_devices: "Кухонные приборы", bd_uncertain: "Нет или неточные данные о безопасности",
   bd_time: "Лимит времени готовки", bd_filters: "Доп. фильтры и поиск", bdNote: "Рецепт может нарушать несколько правил; в итоге он считается один раз.",
+  meal_Breakfast: "Завтрак", meal_Lunch: "Обед", meal_Dinner: "Ужин", mealRulesTitle: "Рецепты для каждого приёма пищи",
+  mealRulesHint: "Только для этого приёма пищи: «Заполнить неделю», замены и список «Меню на неделю» при фильтре по нему. Аллергии и диеты учитываются всегда.",
+  recipeType: "Тип рецептов", mealType_both: "Любые", mealType_meatless: "Без мяса", mealType_meat: "С мясом",
+  mealTypeHint: "Без мяса: без мяса, птицы и морепродуктов (яйца и молочное можно). Проверяется каждый ингредиент; неясные, например бульон, не считаются «без мяса».",
+  mealMaxTime: "Максимальное время (подготовка + готовка)", mealTimeDefault: "Как в «Предпочтениях готовки»", mealTimeDefaultShort: "обычное время",
+  mealTimeHint: "Рецепты без известного общего времени не используются для приёма пищи с ограничением времени.",
+  reasonMeal_meatless: "есть мясо, птица или морепродукты ({meal})", reasonMeal_meat: "нет мяса, птицы или морепродуктов ({meal})",
+  reasonMealUncertain: "неясно, есть ли мясо ({meal})", reasonMealTime: "{minutes} мин ({meal}: до {max})", reasonMealTimeUnknown: "общее время неизвестно ({meal}: до {max})",
+  bd_meal: "Настройки приёма пищи (тип и время)", mealCount: "подходит: {count}", chipMealRule: "{meal}: {rule}", pickOthers: "Не подходят под настройки этого приёма пищи",
   activeSubtitle: "Всегда действуют из основных настроек",
   noMatchTitle: "Нет рецептов, подходящих под ваши настройки.", noMatchBody: "Чаще всего исключено по причине:", reasonCount: "{reason} — рецептов: {count}",
 };
@@ -224,6 +242,15 @@ const he: Copy = {
   statFilters: "{count} הוצאו לפי מסננים נוספים", whyExcluded: "למה הוצאו?", hideBreakdown: "הסתרת פרטים",
   bd_dietary: "הגבלות תזונה", bd_allergies: "אלרגיות", bd_devices: "מכשירי בישול", bd_uncertain: "מידע בטיחות חסר או לא ודאי",
   bd_time: "מגבלת זמן בישול", bd_filters: "מסננים נוספים וחיפוש", bdNote: "מתכון יכול להפר כמה כללים; בסך הכול הוא נספר פעם אחת.",
+  meal_Breakfast: "ארוחת בוקר", meal_Lunch: "ארוחת צהריים", meal_Dinner: "ארוחת ערב", mealRulesTitle: "מתכונים לכל ארוחה",
+  mealRulesHint: "רק עבור אותה ארוחה: „מלא את השבוע שלי”, החלפות, ורשימת ארוחות השבוע כשמסננים לפיה. אלרגיות ותזונה חלות תמיד.",
+  recipeType: "סוג מתכון", mealType_both: "שניהם", mealType_meatless: "ללא בשר", mealType_meat: "בשרי",
+  mealTypeHint: "ללא בשר: בלי בשר, עוף או פירות ים (ביצים ומוצרי חלב מותרים). כל מרכיב נבדק; מרכיבים לא ברורים כמו ציר לא נחשבים ללא בשר.",
+  mealMaxTime: "זמן בישול מרבי (הכנה + בישול)", mealTimeDefault: "כמו בהעדפות הבישול", mealTimeDefaultShort: "הזמן הרגיל",
+  mealTimeHint: "מתכונים בלי זמן כולל ידוע לא ישמשו לארוחה עם מגבלת זמן.",
+  reasonMeal_meatless: "מכיל בשר, עוף או פירות ים ({meal})", reasonMeal_meat: "ללא בשר, עוף או פירות ים ({meal})",
+  reasonMealUncertain: "לא ברור אם יש בשר ({meal})", reasonMealTime: "{minutes} דק׳ ({meal}: עד {max})", reasonMealTimeUnknown: "זמן כולל לא ידוע ({meal}: עד {max})",
+  bd_meal: "הגדרות ארוחה (סוג וזמן)", mealCount: "{count} מתאימים", chipMealRule: "{meal}: {rule}", pickOthers: "לא מתאימים להגדרות של ארוחה זו",
   activeSubtitle: "פעיל תמיד מתוך ההגדרות הבסיסיות",
   noMatchTitle: "אין מתכונים שמתאימים להגדרות הנוכחיות שלך.", noMatchBody: "הסיבות הנפוצות ביותר:", reasonCount: "{reason} — {count} מתכונים",
 };
@@ -251,5 +278,8 @@ export function restrictionText(lang: string, r: Restriction, nameOf: (memberId:
     case "allergy": return t(r.status === "uncertain" ? "reasonAllergyUncertain" : "reasonAllergy", { allergen: t(`allergen_${r.allergen}`).toLowerCase() }) + suffix;
     case "customAllergy": return t("reasonCustom", { term: r.term }) + suffix;
     case "time": return t("reasonTime", { minutes: r.minutes, max: r.max });
+    case "mealType": return t(r.status === "uncertain" ? "reasonMealUncertain" : `reasonMeal_${r.type}`, { meal: t(`meal_${r.meal}`) });
+    case "mealTime": return r.minutes == null ? t("reasonMealTimeUnknown", { meal: t(`meal_${r.meal}`), max: r.max })
+      : t("reasonMealTime", { minutes: r.minutes, meal: t(`meal_${r.meal}`), max: r.max });
   }
 }

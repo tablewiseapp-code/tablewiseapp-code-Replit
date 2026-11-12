@@ -34,6 +34,10 @@ type Props = {
   dayNames: string[];
   mealNames: string[];
   onView: (recipeId: string) => void;
+  /** Whether a recipe meets a meal's own settings; the slot picker lists those first. */
+  fitsMeal?: (recipe: PlannerRecipe, meal: MealSlot) => boolean;
+  /** Label above the recipes that don't meet the meal's settings. */
+  othersLabel?: string;
 };
 
 /** addToPlan drops a replaced recipe from the shortlist; the planner keeps it so it can be planned again. */
@@ -127,7 +131,7 @@ function SlotCell({ day, meal, plan, recipes, locked, dayName, mealName, onOpen,
   );
 }
 
-export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, mealNames, onView }: Props) {
+export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, mealNames, onView, fitsMeal, othersLabel }: Props) {
   const t = usePlannerCopy();
   const [modal, setModal] = useState<Modal | null>(null);
   const [dragging, setDragging] = useState<PlannerRecipe | null>(null);
@@ -201,8 +205,12 @@ export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, 
               </DialogHeader>
               <ul className="max-h-[50vh] space-y-2 overflow-y-auto">
                 {recipes.length === 0 && <li className="text-sm text-muted-foreground">{t("pickEmpty")}</li>}
-                {recipes.map(recipe => (
+                {(() => {
+                  const fits = recipes.filter(r => !fitsMeal || fitsMeal(r, modal.meal));
+                  const others = recipes.filter(r => !fits.includes(r));
+                  return [...fits, ...others].map(recipe => (
                   <li key={recipe.id}>
+                    {recipe === others[0] && <p className="mb-2 mt-3 text-xs text-muted-foreground" data-testid="pick-others">{othersLabel}</p>}
                     <button type="button" disabled={occupant(plan, modal.meal, modal.day)?.recipeId === recipe.id} data-testid={`pick-${recipe.id}`}
                       onClick={() => add(recipe.id, modal, baseServings(recipe.servings), modal.replace) && close()}
                       className={`flex min-h-11 w-full items-center gap-3 rounded-lg border border-[#d9dfd4] bg-white p-2 text-start text-sm hover:bg-[#f2f6ef] disabled:opacity-40 ${focus}`}>
@@ -210,7 +218,8 @@ export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, 
                       <span className="min-w-0 flex-1 truncate font-medium">{recipe.title}</span>
                     </button>
                   </li>
-                ))}
+                  ));
+                })()}
               </ul>
               <DialogFooter><button type="button" className={secondary} onClick={close}>{t("cancel")}</button></DialogFooter>
             </>

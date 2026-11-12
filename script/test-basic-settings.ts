@@ -5,7 +5,9 @@ import { readFileSync } from "node:fs";
 import { defaultSettings, emptyMember, householdServings, loadSettings, methodChoices, availableDevices, sanitizeSettings, settingsKey, updateSettings,
   type BasicSettings } from "../client/src/lib/basic-settings";
 import { inferDeviceRequirements, satisfiesDevices, deviceRequirementsOf } from "../client/src/lib/device-requirements";
-import { checkEligibility, fillWeek, personalize, rankRecipe, suggestReplacement, type EngineRecipe } from "../client/src/lib/preference-engine";
+import { checkEligibility, fillWeek, mealReasons, personalize, rankRecipe, suggestReplacement, type EngineRecipe } from "../client/src/lib/preference-engine";
+import { restrictionText, settingsText } from "../client/src/lib/settings-copy";
+import { evaluateMeat } from "../shared/food-rules";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
 import { matchesPlannerFilters } from "../client/src/lib/planner-filters";
 import { evaluateAllergen } from "../shared/food-rules";
@@ -350,5 +352,159 @@ test("Fill my week uses cooking days, meals, servings and leftovers, and never r
   const blocked = fillWeek(plan, dinners, { ...settings, kitchen: { devices: ["Oven"] } });
   assert.equal(blocked.added, 0);
   assert.equal(blocked.skippedIneligible.length, 4);
+});
+
+// ---------- Meal-specific recipe type and cooking time ----------
+type Rules = BasicSettings["planning"]["mealRules"];
+const withRules = (rules: Partial<Rules>, patch: (s: BasicSettings) => BasicSettings = s => s) =>
+  withSettings(s => patch({ ...s, planning: { ...s.planning, mealRules: { ...s.planning.mealRules, ...rules } } }));
+const acceptance = { Breakfast: { type: "meatless", max: 15 }, Lunch: { type: "meat", max: 30 }, Dinner: { type: "both", max: 45 } } as const;
+const fits = (r: EngineRecipe, s: BasicSettings, meal: "Breakfast" | "Lunch" | "Dinner") => checkEligibility(r, s, undefined, meal).eligible;
+
+test("Breakfast, Lunch and Dinner rules are independent, persist, and sanitize field by field", () => {
+  const store = memory();
+  updateSettings(s => ({ ...s, planning: { ...s.planning, mealRules: acceptance } }), store);
+  assert.deepEqual(loadSettings(store).planning.mealRules, acceptance);
+  updateSettings(s => ({ ...s, planning: { ...s.planning, mealRules: { ...s.planning.mealRules, Lunch: { type: "both", max: "none" } } } }), store);
+  const after = loadSettings(store).planning.mealRules;
+  assert.deepEqual([after.Breakfast, after.Dinner], [acceptance.Breakfast, acceptance.Dinner], "changing Lunch leaves the others alone");
+  assert.deepEqual(after.Lunch, { type: "both", max: "none" });
+  const bad = sanitizeSettings({ version: 2, planning: { mealRules: { Breakfast: { type: "vegan", max: 17 }, Lunch: "x", Snack: { type: "meat" } } } });
+  assert.deepEqual(bad.planning.mealRules, defaultSettings().planning.mealRules);
+  assert.ok(!("Snack" in bad.planning.mealRules));
+});
+test("existing users keep their settings: no meal rules = Both and their weekday/weekend times", () => {
+  const old = sanitizeSettings({ version: 2, cooking: { weekdayMax: 30, weekendMax: 60 }, planning: { cookingDays: 5 } });
+  assert.deepEqual(old.planning.mealRules, { Breakfast: { type: "both", max: null }, Lunch: { type: "both", max: null }, Dinner: { type: "both", max: null } });
+  assert.equal(old.cooking.weekdayMax, 30); assert.equal(old.cooking.weekendMax, 60); assert.equal(old.planning.cookingDays, 5);
+  assert.deepEqual(loadSettings(memory({ [settingsKey]: JSON.stringify({ devices: ["Oven"] }) })).planning.mealRules, defaultSettings().planning.mealRules);
+  // Weekday limit still steers Fill my week: a 50-minute dinner is not used on a weekday when a 25-minute one fits.
+  const slow = recipe({ id: "slow", prepTime: 20, cookTime: 30 }), quick = recipe({ id: "quick", prepTime: 5, cookTime: 20 });
+  const s = { ...old, planning: { ...old.planning, meals: ["Dinner" as const], cookingDays: 1 } };
+  assert.equal(fillWeek({ selectedIds: [], planAssignments: [] }, [slow, quick], s).plan.planAssignments[0].recipeId, "quick");
+});
+test("meatless excludes meat, poultry and seafood; meat includes them; both accepts either; eggs and dairy are meatless", () => {
+  const meats = [["2 chicken breasts"], ["400 g beef mince"], ["4 rashers bacon"], ["2 salmon fillets"], ["200 g prawns"], ["1 tin tuna"], ["300 g mussels"]];
+  const meatless = [["3 eggs", "50 g cheddar", "100 ml milk"], ["400 g potatoes", "1 onion"], ["200 g Greek yogurt", "honey"]];
+  const s = withRules({ Breakfast: { type: "meatless", max: null }, Lunch: { type: "meat", max: null }, Dinner: { type: "both", max: null } });
+  for (const ingredients of meats) {
+    const r = recipe({ ingredients });
+    assert.equal(evaluateMeat(ingredients), "violates", ingredients[0]);
+    assert.equal(fits(r, s, "Breakfast"), false, `meatless rejects ${ingredients[0]}`);
+    assert.equal(fits(r, s, "Lunch"), true, `meat accepts ${ingredients[0]}`);
+    assert.equal(fits(r, s, "Dinner"), true);
+  }
+  for (const ingredients of meatless) {
+    const r = recipe({ ingredients });
+    assert.equal(fits(r, s, "Breakfast"), true, `meatless accepts ${ingredients.join(", ")}`);
+    assert.equal(fits(r, s, "Lunch"), false, `meat rejects ${ingredients.join(", ")}`);
+    assert.equal(fits(r, s, "Dinner"), true);
+  }
+  // Classification reads ingredients, not titles or tags.
+  assert.equal(fits(recipe({ title: "Chicken-style vegetable pie", tags: ["vegetarian"], ingredients: ["2 carrots", "1 sheet puff pastry"] }), s, "Breakfast"), true);
+  assert.equal(fits(recipe({ title: "Garden salad", tags: ["vegetarian"], ingredients: ["1 lettuce", "100 g anchovies"] }), s, "Breakfast"), false);
+});
+test("time limits use total time (prep + cook); unknown time or ingredients never pass a meal rule", () => {
+  const s = withRules({ Breakfast: { type: "both", max: 15 }, Dinner: { type: "both", max: "none" } });
+  assert.equal(fits(recipe({ prepTime: 5, cookTime: 10 }), s, "Breakfast"), true);
+  assert.equal(fits(recipe({ prepTime: 10, cookTime: 10 }), s, "Breakfast"), false, "20 min total is over 15 even though cook time alone is 10");
+  assert.equal(fits(recipe({ prepTime: 20, cookTime: 0 }), s, "Breakfast"), false, "prep-only time counts");
+  const unknown: EngineRecipe = { ...recipe({}), prepTime: null, cookTime: null, minutes: undefined };
+  assert.deepEqual(mealReasons(unknown, s, "Breakfast"), [{ kind: "mealTime", meal: "Breakfast", minutes: null, max: 15 }], "missing time is not 0");
+  assert.equal(fits(unknown, s, "Dinner"), true, "No limit accepts unknown time");
+  assert.equal(fits(unknown, s, "Lunch"), true, "Lunch (not set) is unaffected");
+  const typed = withRules({ Breakfast: { type: "meatless", max: null }, Lunch: { type: "meat", max: null } });
+  for (const ingredients of [[], ["500 ml stock", "2 leeks"]]) {
+    assert.equal(fits(recipe({ ingredients }), typed, "Breakfast"), false, `unverifiable is not meatless: ${ingredients}`);
+    assert.equal(fits(recipe({ ingredients }), typed, "Lunch"), false, `unverifiable is not meat: ${ingredients}`);
+  }
+  assert.equal(mealReasons(recipe({ ingredients: [] }), typed, "Breakfast")[0].kind, "mealType");
+});
+test("global restrictions still apply: a meal setting never overrides allergies, diets or devices", () => {
+  const s = withRules({ Lunch: { type: "meat", max: 60 }, Dinner: { type: "both", max: "none" } }, s => ({ ...s, dietary: { ...s.dietary, allergies: ["shellfish"], diets: ["porkFree"] } }));
+  assert.equal(fits(recipe({ ingredients: ["200 g prawns"] }), s, "Lunch"), false);
+  assert.equal(fits(recipe({ ingredients: ["4 rashers bacon"] }), s, "Lunch"), false);
+  assert.equal(fits(recipe({ ingredients: ["2 chicken thighs"] }), s, "Lunch"), true);
+  const hard = withRules({ Dinner: { type: "both", max: "none" } }, s => ({ ...s, cooking: { ...s.cooking, weekdayMax: 30, hardMax: true } }));
+  assert.equal(fits(recipe({ prepTime: 30, cookTime: 30 }), hard, "Dinner"), false, "the global hard time limit still applies");
+  const oven = withRules({ Breakfast: { type: "both", max: 60 } }, s => ({ ...s, kitchen: { devices: [] } }));
+  assert.equal(fits(recipe({ steps: ["Bake in the oven for 20 minutes."] }), oven, "Breakfast"), false);
+});
+test("the general list keeps global rules only; a meal's rules apply to that meal's recipes when it is selected", () => {
+  const s = withRules(acceptance);
+  const bacon = recipe({ id: "bacon-bkf", mealType: "Breakfast", ingredients: ["4 rashers bacon", "2 eggs"] });
+  const steak = recipe({ id: "steak", mealType: "Dinner", ingredients: ["2 steaks"], prepTime: 10, cookTime: 20 });
+  const oats = recipe({ id: "oats", mealType: "Breakfast", ingredients: ["80 g oats", "200 ml milk"], prepTime: 2, cookTime: 5 });
+  const all = [bacon, steak, oats];
+  const ids = (ctx = {}) => personalize(all, s, ctx).eligible.map(e => e.recipe.id).sort();
+  assert.deepEqual(ids(), ["bacon-bkf", "oats", "steak"], "no meal selected: nothing hidden by meal rules");
+  assert.deepEqual(ids({ meals: ["Breakfast"] }), ["oats", "steak"], "Breakfast rules only touch Breakfast recipes");
+  assert.deepEqual(ids({ meals: ["Dinner"] }), ["bacon-bkf", "oats", "steak"]);
+  // A Breakfast recipe that fails Breakfast is still eligible as Dinner.
+  assert.equal(fits(bacon, s, "Dinner"), true);
+});
+test("per-meal recipe counts equal the rendered results for that meal (settings + meal rules + manual filters)", () => {
+  const s = withRules(acceptance, s => ({ ...s, dietary: { ...s.dietary, allergies: ["fish"] } }));
+  const pool = [
+    recipe({ id: "b1", mealType: "Breakfast", ingredients: ["2 eggs", "toast"], prepTime: 5, cookTime: 5 }),
+    recipe({ id: "b2", mealType: "Breakfast", ingredients: ["2 eggs", "bacon"], prepTime: 5, cookTime: 5 }),
+    recipe({ id: "b3", mealType: "Breakfast", ingredients: ["oats", "milk"], prepTime: 10, cookTime: 10 }),
+    recipe({ id: "b4", mealType: "Breakfast", ingredients: ["2 eggs", "smoked salmon"], prepTime: 5, cookTime: 0 }),
+    recipe({ id: "l1", mealType: "Lunch", ingredients: ["chicken", "bread"], prepTime: 10, cookTime: 15 }),
+    recipe({ id: "l2", mealType: "Lunch", ingredients: ["chickpeas", "bread"], prepTime: 10, cookTime: 0 }),
+    recipe({ id: "l3", mealType: "Lunch", ingredients: ["tuna", "bread"], prepTime: 5, cookTime: 0 }),
+    recipe({ id: "d1", mealType: "Dinner", ingredients: ["beef"], prepTime: 15, cookTime: 30 }),
+    recipe({ id: "d2", mealType: "Dinner", ingredients: ["lentils"], prepTime: 15, cookTime: 40 }),
+  ];
+  const filters = { maxMinutes: null, dietary: [], mealType: [] as string[], cookingMethod: [], source: [], proteinType: [], withNotes: false, modifiedByMe: false,
+    myPicks: false, minRating: null, servings: null, mustInclude: [] as string[], mustExclude: [] as string[] };
+  const meta = { isMyPick: false, rating: null };
+  const mealEligible = personalize(pool, s, { meals: ["Breakfast", "Lunch", "Dinner"] }).eligible.map(e => e.recipe);
+  const count = (meal: string, f = filters) => mealEligible.filter(r => r.mealType === meal && matchesPlannerFilters({ ...r, tools: [], sourceType: "", proteinType: "",
+    hasNotes: false, modifiedByMe: false, servingsRange: "" }, { ...f, mealType: [meal] }, "total", meta)).length;
+  const shown = (meal: string, f = filters) => personalize(pool, s, { meals: [meal as "Breakfast"] }).eligible.map(e => e.recipe).filter(r => matchesPlannerFilters({ ...r, tools: [],
+    sourceType: "", proteinType: "", hasNotes: false, modifiedByMe: false, servingsRange: "" }, { ...f, mealType: [meal] }, "total", meta));
+  for (const meal of ["Breakfast", "Lunch", "Dinner"]) assert.equal(count(meal), shown(meal).length, meal);
+  assert.deepEqual(shown("Breakfast").map(r => r.id), ["b1"], "meatless, 15 min, no fish");
+  assert.deepEqual(shown("Lunch").map(r => r.id), ["l1"], "meat, 30 min; tuna excluded by the fish allergy");
+  assert.deepEqual(shown("Dinner").map(r => r.id), ["d1"], "both, 45 min");
+  const withExclude = { ...filters, mustExclude: ["toast"] };
+  assert.equal(count("Breakfast", withExclude), 0); assert.equal(shown("Breakfast", withExclude).length, 0);
+  const c = matchCounts(personalize(pool, s, { meals: ["Breakfast"] }), shown("Breakfast"));
+  assert.equal(c.matching, 1); assert.equal(c.breakdown.meal, 3, "b2 (meat), b3 (20 min), b4 (salmon) fail Breakfast settings"); assert.equal(c.breakdown.allergies, 2, "b4 and l3 (fish)");
+});
+test("Fill my week uses each meal's own rules for each slot; replacements respect the meal's rules", () => {
+  const s = withRules(acceptance, s => ({ ...s, planning: { ...s.planning, cookingDays: 1 }, cooking: { ...s.cooking, weekdayMax: 10 } }));
+  const selected = [
+    recipe({ id: "bacon", mealType: "Breakfast", ingredients: ["bacon", "eggs"], prepTime: 5, cookTime: 5 }),
+    recipe({ id: "porridge", mealType: "Breakfast", ingredients: ["oats", "milk"], prepTime: 2, cookTime: 8 }),
+    recipe({ id: "salad", mealType: "Lunch", ingredients: ["lettuce", "feta"], prepTime: 10, cookTime: 0 }),
+    recipe({ id: "wrap", mealType: "Lunch", ingredients: ["chicken", "tortilla"], prepTime: 10, cookTime: 15 }),
+    recipe({ id: "stew", mealType: "Dinner", ingredients: ["beans", "tomatoes"], prepTime: 10, cookTime: 30 }),
+    recipe({ id: "roast", mealType: "Dinner", ingredients: ["lamb"], prepTime: 20, cookTime: 60 }),
+  ];
+  const { plan } = fillWeek({ selectedIds: selected.map(r => r.id), planAssignments: [] }, selected, s);
+  const at = (meal: string) => plan.planAssignments.find(a => a.mealType === meal)?.recipeId;
+  assert.equal(at("Breakfast"), "porridge"); assert.equal(at("Lunch"), "wrap");
+  assert.equal(at("Dinner"), "stew", "Dinner's own 45 min replaces the 10 min weekday time; the 80 min roast never fits");
+  const pool = [selected[0], recipe({ id: "yogurt", mealType: "Breakfast", ingredients: ["yogurt", "berries"], prepTime: 5, cookTime: 0 }),
+    recipe({ id: "ham", mealType: "Breakfast", ingredients: ["ham", "bread"], prepTime: 5, cookTime: 0 })];
+  assert.equal(suggestReplacement(pool[0], pool, ["bacon"], s)?.id, "yogurt");
+});
+test("meal settings read correctly in English, Russian and Hebrew", () => {
+  for (const lang of ["en", "ru", "he"]) {
+    for (const key of ["mealRulesTitle", "recipeType", "mealType_both", "mealType_meatless", "mealType_meat", "mealMaxTime", "mealTimeDefault", "bd_meal", "mealCount", "pickOthers", "meal_Breakfast"]) {
+      const text = settingsText(lang, key);
+      assert.ok(text && text !== key, `${lang}.${key}`);
+      if (lang !== "en") assert.notEqual(text, settingsText("en", key), `${lang}.${key} is translated`);
+    }
+    const reasons = mealReasons(recipe({ ingredients: ["bacon"], prepTime: 10, cookTime: 10 }), withRules({ Breakfast: { type: "meatless", max: 15 } }), "Breakfast");
+    for (const r of reasons) assert.ok(!/[{}]/.test(restrictionText(lang, r, () => null)), `${lang} ${r.kind}`);
+  }
+  assert.equal(restrictionText("en", { kind: "mealTime", meal: "Breakfast", minutes: null, max: 15 }, () => null), "total time unknown (Breakfast: up to 15)");
+  assert.equal(restrictionText("ru", { kind: "mealType", meal: "Lunch", type: "meat", status: "violates" }, () => null), "нет мяса, птицы или морепродуктов (Обед)");
+  assert.equal(restrictionText("he", { kind: "mealType", meal: "Dinner", type: "meatless", status: "violates" }, () => null), "מכיל בשר, עוף או פירות ים (ארוחת ערב)");
+  const chips = activePreferenceChips(withRules(acceptance), "en", m => m);
+  assert.deepEqual(chips.filter(c => c.id.startsWith("meal-")).map(c => c.text), ["Breakfast: Meatless · 15 min", "Lunch: Meat · 30 min", "Dinner: 45 min"]);
 });
 console.log(`All ${passed} My Basic Settings tests passed.`);

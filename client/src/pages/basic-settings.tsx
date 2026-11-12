@@ -6,10 +6,10 @@ import { useI18n } from "@/lib/i18n";
 import { useSettingsCopy } from "@/lib/settings-copy";
 import { allergens, cuisines, dietPatterns, ingredientPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
-import { mealSlots } from "@/lib/meal-plan";
+import { mealSlots, type MealSlot } from "@/lib/meal-plan";
 import {
-  cookingPrefKeys, emptyMember, householdServings, leftoverOptions, noveltyOptions, portionSizes, servingLimits, useBasicSettings, varietyOptions,
-  type BasicSettings, type IngredientChoice, type Member,
+  cookingPrefKeys, emptyMember, householdServings, leftoverOptions, mealRecipeTypes, mealTimeLimits, noveltyOptions, portionSizes, servingLimits,
+  useBasicSettings, varietyOptions, type BasicSettings, type IngredientChoice, type MealRule, type Member,
 } from "@/lib/basic-settings";
 
 const chip = (on: boolean) => `inline-flex items-center gap-1.5 px-3 py-2 min-h-11 text-xs rounded-full border hairline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#42624e] ${on ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`;
@@ -124,6 +124,35 @@ function Badge({ hard }: { hard: boolean }) {
   return <span className={`ms-2 rounded px-1.5 py-0.5 text-[11px] font-medium ${hard ? "bg-[#42624e]/10 text-[#42624e]" : "bg-foreground/5 text-muted-foreground"}`}>{t(hard ? "always" : "preference")}</span>;
 }
 const Note = ({ children, testid }: { children: ReactNode; testid?: string }) => <p className="mt-4 rounded-lg bg-foreground/5 p-3 text-xs text-muted-foreground" data-testid={testid}>{children}</p>;
+
+/** "Breakfast · Meatless · 15 min" */
+const mealRuleSummary = (t: ReturnType<typeof useSettingsCopy>, meal: MealSlot, rule: MealRule) =>
+  [t(`meal_${meal}`), t(`mealType_${rule.type}`), rule.max === null ? t("mealTimeDefaultShort") : rule.max === "none" ? t("noLimit") : t("minutes", { n: rule.max })].join(" · ");
+
+function MealRuleCard({ meal, rule, onChange }: { meal: MealSlot; rule: MealRule; onChange: (patch: Partial<MealRule>) => void }) {
+  const t = useSettingsCopy();
+  const id = `meal-rule-${meal.toLowerCase()}`;
+  return (
+    <details className="rounded-xl border hairline bg-white px-3" data-testid={id}>
+      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#42624e]" data-testid={`${id}-summary`}>
+        {mealRuleSummary(t, meal, rule)}
+      </summary>
+      <div className="pb-3">
+        <Choice label={t("recipeType")} options={mealRecipeTypes} value={rule.type} labelOf={v => t(`mealType_${v}`)} onChange={type => onChange({ type })} testid={`${id}-type`} />
+        <div className="mt-4">
+          <label className="text-sm font-medium text-foreground" htmlFor={`${id}-time`}>{t("mealMaxTime")}</label>
+          <select id={`${id}-time`} value={rule.max ?? ""} data-testid={`${id}-time`}
+            onChange={e => onChange({ max: e.target.value === "" ? null : e.target.value === "none" ? "none" : Number(e.target.value) as MealRule["max"] })}
+            className="mt-2 block min-h-11 rounded-full border hairline bg-white px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#42624e]">
+            <option value="">{t("mealTimeDefault")}</option>
+            {mealTimeLimits.map(m => <option key={m} value={m}>{t("minutes", { n: m })}</option>)}
+            <option value="none">{t("noLimit")}</option>
+          </select>
+        </div>
+      </div>
+    </details>
+  );
+}
 
 function MemberCard({ member, index, onChange, onRemove }: { member: Member; index: number; onChange: (m: Member) => void; onRemove: () => void }) {
   const t = useSettingsCopy();
@@ -282,6 +311,13 @@ export default function BasicSettingsPage() {
             <p className="mt-2 text-xs text-muted-foreground">{t("planningHint")}</p>
             <Chips label={t("mealsToPlan")} options={mealSlots} selected={s.planning.meals} labelOf={m => app(`meals.${m.toLowerCase()}`)} onToggle={m => edit("planning", { meals: toggle(s.planning.meals, m) })} testid="plan-meal" />
             <Note>{t("snacksDeferred")}</Note>
+            <h3 className="mt-6 text-sm font-medium">{t("mealRulesTitle")}<Badge hard /></h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t("mealRulesHint")}</p>
+            <div className="mt-3 space-y-2" data-testid="meal-rules">
+              {mealSlots.map(meal => <MealRuleCard key={meal} meal={meal} rule={s.planning.mealRules[meal]}
+                onChange={patch => save(c => ({ ...c, planning: { ...c.planning, mealRules: { ...c.planning.mealRules, [meal]: { ...c.planning.mealRules[meal], ...patch } } } }))} />)}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{t("mealTypeHint")} {t("mealTimeHint")}</p>
             <Stepper label={t("cookingDays")} value={s.planning.cookingDays} min={1} max={7} display={t("days", { n: s.planning.cookingDays })}
               onChange={cookingDays => edit("planning", { cookingDays })} testid="cooking-days" fewer="−" more="+" />
             <Choice label={t("leftovers")} options={leftoverOptions} value={s.planning.leftovers} labelOf={o => t(`leftovers_${o}`)} onChange={leftovers => edit("planning", { leftovers })} testid="leftovers" />

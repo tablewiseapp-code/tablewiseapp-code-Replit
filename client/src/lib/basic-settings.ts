@@ -14,6 +14,12 @@ export const leftoverOptions = ["none", "sometimes", "often"] as const;
 export const varietyOptions = ["low", "balanced", "high"] as const;
 export const noveltyOptions = ["familiar", "balanced", "new"] as const;
 export const servingLimits = { min: 1, max: 20 } as const;
+export const mealRecipeTypes = ["both", "meatless", "meat"] as const;
+export type MealRecipeType = typeof mealRecipeTypes[number];
+export const mealTimeLimits = [15, 20, 30, 45, 60] as const;
+/** Per meal. max: minutes, "none" = explicitly no limit, null = not set (the weekday/weekend cooking time applies). */
+export type MealRule = { type: MealRecipeType; max: typeof mealTimeLimits[number] | "none" | null };
+const noRule = (): MealRule => ({ type: "both", max: null });
 
 /** Ingredient preferences: a structured id from shared/food-rules, or "custom:<text>". */
 export type IngredientChoice = string;
@@ -35,7 +41,7 @@ export type BasicSettings = {
   /** Weekday and weekend each have their own soft preferences; hardMax is one shared rule. */
   cooking: { weekdayMax: number | null; weekendMax: number | null; hardMax: boolean; weekday: CookingPrefs; weekend: CookingPrefs };
   planning: { meals: MealSlot[]; cookingDays: number; leftovers: typeof leftoverOptions[number]; repeatFavorites: boolean;
-    variety: typeof varietyOptions[number]; novelty: typeof noveltyOptions[number] };
+    variety: typeof varietyOptions[number]; novelty: typeof noveltyOptions[number]; mealRules: Record<MealSlot, MealRule> };
   shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[] };
 };
 
@@ -45,7 +51,8 @@ export const defaultSettings = (): BasicSettings => ({
   dietary: { diets: [], allergies: [], customAllergies: [], dislikes: [], favorites: [], preferredCuisines: [], avoidCuisines: [] },
   kitchen: { devices: null },
   cooking: { weekdayMax: null, weekendMax: null, hardMax: false, weekday: noPrefs(), weekend: noPrefs() },
-  planning: { meals: ["Breakfast", "Lunch", "Dinner"], cookingDays: 7, leftovers: "none", repeatFavorites: false, variety: "balanced", novelty: "balanced" },
+  planning: { meals: ["Breakfast", "Lunch", "Dinner"], cookingDays: 7, leftovers: "none", repeatFavorites: false, variety: "balanced", novelty: "balanced",
+    mealRules: { Breakfast: noRule(), Lunch: noRule(), Dinner: noRule() } },
   shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [] },
 });
 
@@ -66,6 +73,12 @@ const prefs = (raw: unknown, shared: Record<string, unknown>): CookingPrefs => {
   const own = obj(raw), source = raw === undefined ? shared : own;
   return { quick: bool(source.quick), minimalCleanup: bool(source.minimalCleanup), onePot: bool(source.onePot), batch: bool(source.batch) };
 };
+
+function mealRule(raw: unknown): MealRule {
+  const r = obj(raw);
+  return { type: oneOf(mealRecipeTypes, r.type, "both"),
+    max: r.max === "none" ? "none" : (mealTimeLimits as readonly unknown[]).includes(r.max) ? r.max as MealRule["max"] : null };
+}
 
 function member(raw: unknown, index: number): Member | null {
   const m = obj(raw);
@@ -100,7 +113,8 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
     cooking: { weekdayMax: minutes(c.weekdayMax), weekendMax: minutes(c.weekendMax), hardMax: bool(c.hardMax),
       weekday: prefs(c.weekday, c), weekend: prefs(c.weekend, c) },
     planning: { meals: subset(mealSlots, p.meals), cookingDays: int(p.cookingDays, 1, 7, 7), leftovers: oneOf(leftoverOptions, p.leftovers, "none"),
-      repeatFavorites: bool(p.repeatFavorites), variety: oneOf(varietyOptions, p.variety, "balanced"), novelty: oneOf(noveltyOptions, p.novelty, "balanced") },
+      repeatFavorites: bool(p.repeatFavorites), variety: oneOf(varietyOptions, p.variety, "balanced"), novelty: oneOf(noveltyOptions, p.novelty, "balanced"),
+      mealRules: Object.fromEntries(mealSlots.map(m => [m, mealRule(obj(p.mealRules)[m])])) as Record<MealSlot, MealRule> },
     shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry) },
   };
 }

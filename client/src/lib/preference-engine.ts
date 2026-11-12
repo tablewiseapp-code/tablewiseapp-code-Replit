@@ -1,6 +1,6 @@
 // Household preference engine. Pure and deterministic: no network, no AI, no storage.
 // Eligibility (hard restrictions) is separate from ranking (soft preferences).
-import { evaluateAllergen, evaluateDiet, mentionsIngredientPref, mentionsTerm, recipeCuisine,
+import { evaluateAllergen, evaluateDiet, evaluateMeat, mentionsIngredientPref, mentionsTerm, recipeCuisine,
   type Allergen, type DietPattern, type IngredientPref, type RuleStatus } from "@shared/food-rules";
 import { satisfiesDevices, unmetGroups, type DeviceId, type DeviceRequirements } from "./device-requirements";
 import { availableDevices, householdServings, type BasicSettings, type IngredientChoice, type Member } from "./basic-settings";
@@ -17,7 +17,10 @@ export type Restriction =
   | { kind: "diet"; diet: DietPattern; status: Exclude<RuleStatus, "ok">; members: string[]; lines: string[] }
   | { kind: "allergy"; allergen: Allergen; status: Exclude<RuleStatus, "ok">; members: string[]; lines: string[] }
   | { kind: "customAllergy"; term: string; members: string[] }
-  | { kind: "time"; minutes: number; max: number };
+  | { kind: "time"; minutes: number; max: number }
+  /** Meal-specific rules (My Basic Settings → Weekly Meal Planning); only when a meal is being evaluated. */
+  | { kind: "mealType"; meal: MealSlot; type: "meatless" | "meat"; status: Exclude<RuleStatus, "ok"> }
+  | { kind: "mealTime"; meal: MealSlot; minutes: number | null; max: number };
 export type Eligibility = {
   eligible: boolean;
   /** Hard restrictions that failed. Status "uncertain" means the wording could not be verified: still ineligible. */
@@ -36,8 +39,25 @@ export function diners(settings: BasicSettings, memberIds?: readonly string[]): 
   return memberIds ? all.filter(m => memberIds.includes(m.id)) : all;
 }
 
-/** Hard restrictions: devices, every diner's dietary patterns, allergies and custom allergies, and an explicit hard time limit. */
-export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, memberIds?: readonly string[]): Eligibility {
+const isMealSlot = (meal: string): meal is MealSlot => (mealSlots as readonly string[]).includes(meal);
+
+/** A meal's own recipe-type and time rules. Unknown time or unverifiable ingredients never pass a rule (not treated as 0 / meatless). */
+export function mealReasons(recipe: EngineRecipe, settings: BasicSettings, meal: MealSlot): Restriction[] {
+  const rule = settings.planning.mealRules[meal];
+  const reasons: Restriction[] = [];
+  if (rule.type !== "both") {
+    const meat = evaluateMeat(recipe.ingredients);
+    const status = meat === "uncertain" ? "uncertain" : (meat === "violates") === (rule.type === "meatless") ? "violates" : null;
+    if (status) reasons.push({ kind: "mealType", meal, type: rule.type, status });
+  }
+  const minutes = total(recipe);
+  if (typeof rule.max === "number" && (minutes == null || minutes > rule.max)) reasons.push({ kind: "mealTime", meal, minutes, max: rule.max });
+  return reasons;
+}
+
+/** Hard restrictions: devices, every diner's dietary patterns, allergies and custom allergies, and an explicit hard time limit.
+ * With `meal`, that meal's recipe-type and time rules too (global restrictions always apply first and are never relaxed). */
+export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, memberIds?: readonly string[], meal?: MealSlot): Eligibility {
   const reasons: Restriction[] = [];
   const people = diners(settings, memberIds);
   const missing = unmetGroups(recipe.deviceRequirements, availableDevices(settings));
@@ -64,6 +84,7 @@ export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, 
   const limit = Math.max(weekdayMax ?? 0, weekendMax ?? 0);
   const minutes = total(recipe);
   if (hardMax && limit > 0 && minutes != null && minutes > limit) reasons.push({ kind: "time", minutes, max: limit });
+  if (meal) reasons.push(...mealReasons(recipe, settings, meal));
   return { eligible: reasons.length === 0, reasons, members: [HOUSEHOLD, ...people.map(m => m.id)] };
 }
 
@@ -79,7 +100,11 @@ export type RankContext = {
   selected?: readonly EngineRecipe[];
   meta?: (id: string) => { isMyPick: boolean; rating: number | null };
   day?: "weekday" | "weekend";
+  /** Meals being evaluated: a recipe whose meal type is listed must also pass that meal's own rules. Others are unaffected,
+   * so a recipe that fails the Breakfast rule is not hidden when Dinner (or no meal) is being looked at. */
+  meals?: readonly MealSlot[];
 };
+const mealFor = (recipe: EngineRecipe, ctx: RankContext) => (isMealSlot(recipe.mealType) && ctx.meals?.includes(recipe.mealType) ? recipe.mealType : undefined);
 
 /** Soft preferences only. Never hides a recipe; returns a score and the reasons behind it. */
 export function rankRecipe(recipe: EngineRecipe, settings: BasicSettings, ctx: RankContext = {}): Ranking {
@@ -134,16 +159,16 @@ export function rankRecipe(recipe: EngineRecipe, settings: BasicSettings, ctx: R
 
 /** Eligible recipes, best match first (stable for ties, so the original order is kept when nothing is set). */
 export function personalize<T extends EngineRecipe>(recipes: readonly T[], settings: BasicSettings, ctx: RankContext = {}) {
-  const evaluated = recipes.map((recipe, index) => ({ recipe, index, eligibility: checkEligibility(recipe, settings, ctx.memberIds) }));
+  const evaluated = recipes.map((recipe, index) => ({ recipe, index, eligibility: checkEligibility(recipe, settings, ctx.memberIds, mealFor(recipe, ctx)) }));
   const eligible = evaluated.filter(e => e.eligibility.eligible).map(e => ({ ...e, ranking: rankRecipe(e.recipe, settings, ctx) }))
     .sort((a, b) => b.ranking.score - a.ranking.score || a.index - b.index);
   return { eligible, excluded: evaluated.filter(e => !e.eligibility.eligible) };
 }
 
-/** Best eligible replacement for an incompatible selected recipe: same meal type, not already selected. */
+/** Best eligible replacement for an incompatible selected recipe: same meal type and that meal's rules, not already selected. */
 export function suggestReplacement<T extends EngineRecipe>(target: T, recipes: readonly T[], selectedIds: readonly string[], settings: BasicSettings, ctx: RankContext = {}): T | null {
   const candidates = recipes.filter(r => r.id !== target.id && !selectedIds.includes(r.id) && r.mealType === target.mealType);
-  return personalize(candidates, settings, ctx).eligible[0]?.recipe ?? null;
+  return personalize(candidates, settings, { ...ctx, meals: mealSlots }).eligible[0]?.recipe ?? null;
 }
 
 // ---- Automatic week filling from the selected recipes (never removes or moves anything already planned) ----
@@ -158,7 +183,8 @@ export function fillWeek<T extends EngineRecipe>(plan: PlanState, selected: read
   const cookingDays = (settings.planning.leftovers === "none" ? DAY_ORDER : LEFTOVER_DAY_ORDER).slice(0, settings.planning.cookingDays).sort((a, b) => a - b);
   const meals = settings.planning.meals.length ? settings.planning.meals : (["Dinner"] as MealSlot[]);
   const servings = householdServings(settings);
-  const { eligible, excluded } = personalize(selected, settings, ctx);
+  // Every recipe is checked against its own meal's rules; a recipe only ever fills a slot of its own meal type.
+  const { eligible, excluded } = personalize(selected, settings, { ...ctx, meals: mealSlots });
   const planned = new Set(plan.planAssignments.map(a => a.recipeId));
   const pool = eligible.map(e => e.recipe).filter(r => !planned.has(r.id));
   const assignments: PlanAssignment[] = [...plan.planAssignments];
@@ -168,7 +194,9 @@ export function fillWeek<T extends EngineRecipe>(plan: PlanState, selected: read
   for (const meal of [...meals].sort((a, b) => mealSlots.indexOf(b) - mealSlots.indexOf(a))) { // dinner first
     for (const day of cookingDays) {
       if (!free(meal, day)) continue;
-      const max = isWeekend(day) ? settings.cooking.weekendMax ?? settings.cooking.weekdayMax : settings.cooking.weekdayMax ?? settings.cooking.weekendMax;
+      // A meal's own time limit (already enforced above) replaces the weekday/weekend time for that meal.
+      const own = settings.planning.mealRules[meal].max;
+      const max = own !== null ? null : isWeekend(day) ? settings.cooking.weekendMax ?? settings.cooking.weekdayMax : settings.cooking.weekdayMax ?? settings.cooking.weekendMax;
       const fits = (r: T) => r.mealType === meal && (max == null || total(r) == null || total(r)! <= max);
       // Prefer recipes within that day's time; with a soft limit, fall back to the best remaining one.
       // Order the remaining recipes by that day's own preferences (weekday or weekend).

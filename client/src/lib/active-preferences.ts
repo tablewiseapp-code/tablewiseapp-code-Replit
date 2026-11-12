@@ -36,6 +36,11 @@ export function activePreferenceChips(s: BasicSettings, lang: string, mealLabel:
   if (servings) add("planning", "servings", servings === 1 ? t("chipServingsOne") : t("chipServings", { n: servings }));
   if (s.planning.meals.length && s.planning.meals.length < d.planning.meals.length) add("planning", "meals", t("chipMeals", { list: list(s.planning.meals.map(mealLabel)) }));
   if (s.planning.cookingDays !== d.planning.cookingDays) add("planning", "days", t("chipDays", { n: s.planning.cookingDays }));
+  for (const [meal, rule] of Object.entries(s.planning.mealRules)) {
+    const parts = [...(rule.type !== "both" ? [t(`mealType_${rule.type}`)] : []),
+      ...(rule.max === "none" ? [t("noLimit")] : rule.max ? [t("minutes", { n: rule.max })] : [])];
+    if (parts.length) add("planning", `meal-${meal.toLowerCase()}`, t("chipMealRule", { meal: mealLabel(meal), rule: parts.join(" · ") }));
+  }
   if (s.planning.leftovers !== d.planning.leftovers) add("planning", "leftovers", t("chipLeftovers", { value: lower(`leftovers_${s.planning.leftovers}`) }));
 
   // Preferences: change the order only.
@@ -68,7 +73,7 @@ export function limitingReasons(excluded: { eligibility: Eligibility }[], lang: 
   return [...counts].sort((a, b) => b[1] - a[1]).slice(0, top).map(([reason, count]) => settingsText(lang, "reasonCount", { reason, count }));
 }
 
-export const breakdownKeys = ["dietary", "allergies", "devices", "uncertain", "time"] as const;
+export const breakdownKeys = ["dietary", "allergies", "devices", "uncertain", "time", "meal"] as const;
 export type MatchCounts = {
   total: number; matching: number; bySettings: number; byFilters: number;
   /** Per reason; a recipe failing several rules appears under each, but `bySettings` counts it once. */
@@ -82,10 +87,10 @@ export function matchCounts(
   const eligible = new Set(personalized.eligible.map(e => e.recipe.id));
   const excluded = new Map(personalized.excluded.map(e => [e.recipe.id, e.eligibility]));
   const matching = new Set(shown.map(r => r.id).filter(id => eligible.has(id)));
-  const breakdown = { dietary: 0, allergies: 0, devices: 0, uncertain: 0, time: 0 };
+  const breakdown = { dietary: 0, allergies: 0, devices: 0, uncertain: 0, time: 0, meal: 0 };
   for (const eligibility of excluded.values()) {
     const kinds = new Set(eligibility.reasons.map(r =>
-      "status" in r && r.status === "uncertain" ? "uncertain"
+      r.kind === "mealType" || r.kind === "mealTime" ? "meal" : "status" in r && r.status === "uncertain" ? "uncertain"
         : r.kind === "diet" ? "dietary" : r.kind === "allergy" || r.kind === "customAllergy" ? "allergies" : r.kind === "device" ? "devices" : "time"));
     kinds.forEach(kind => breakdown[kind]++);
   }

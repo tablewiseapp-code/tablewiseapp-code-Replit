@@ -73,6 +73,14 @@ const allergenRules: Record<Allergen, Rule> = {
 };
 export const evaluateAllergen = (allergen: Allergen, ingredients: readonly string[]) => evaluate(allergenRules[allergen], ingredients);
 
+/** Meat, poultry or seafood, from every ingredient line (eggs and dairy don't count). "violates" = contains it;
+ * "uncertain" = can't tell (e.g. stock, curry paste, no ingredient lines); "ok" = meatless.
+ * ponytail: gelatine/lard/worcestershire count as meat, add a separate "animal by-product" status if that matters. */
+export function evaluateMeat(ingredients: readonly string[]): RuleStatus {
+  return [evaluateDiet("pescatarian", ingredients), evaluateAllergen("fish", ingredients), evaluateAllergen("shellfish", ingredients)]
+    .reduce<RuleStatus>((a, b) => worst(a, b.status), "ok");
+}
+
 /** A person's own ingredient term (custom allergy/dislike/favourite). Name match only: absence is not proof. */
 export function termPattern(term: string): RegExp | null {
   const words = term.toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}\s'-]/gu, " ").trim().split(/\s+/).filter(Boolean);

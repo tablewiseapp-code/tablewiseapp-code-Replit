@@ -46,6 +46,18 @@ longest time” is on. Diets and allergens are checked against every ingredient 
 *contains* and *may contain* (e.g. pesto, chocolate, stock, curry paste unless labelled free-from) both exclude,
 and a recipe with no ingredient lines is never treated as safe. Custom allergies match by ingredient name only.
 
+**Per meal (Weekly Meal Planning → Recipes for each meal):** Breakfast, Lunch and Dinner each have a recipe type
+(Both / Meatless / Meat) and a maximum total time (prep + cook: 15, 20, 30, 45, 60 min, No limit, or — the default —
+“Same as Cooking Preferences”). Meat means meat, poultry or seafood, read from every ingredient line
+(`evaluateMeat` in `shared/food-rules.ts`); eggs and dairy are meatless. Unclear lines (stock, curry paste) or no ingredient
+lines pass neither Meatless nor Meat, and an unknown total time never passes a time limit. These rules apply only when a
+meal is evaluated: Fill my week (each slot uses its own meal; an explicit meal limit replaces the weekday/weekend time for
+that meal), replacements, the slot picker (matching recipes first), and the Weekly Meals list when that meal type is
+filtered (the meal-type chips show each meal's live match count from the same rules and filters). Without a meal filter the
+list uses only the global rules, so a recipe that fails Breakfast still shows for Dinner. Global hard rules (allergies,
+diets, devices, hard time limit) always apply first; a meal rule never relaxes them. Older settings without meal rules
+read as Both / Same as Cooking Preferences.
+
 **Soft (order only):** favourite/disliked ingredients (household and per member), preferred/avoided cuisines,
 weekday/weekend time, quick, minimal clean-up, one-pot and batch cooking (set separately for weekdays and the weekend; Fill my week uses each day's set, the list uses the weekday set), meals to plan, repeat favourites,
 familiar vs new, variety against already-selected recipes, ingredient reuse, budget-friendly (catalog
