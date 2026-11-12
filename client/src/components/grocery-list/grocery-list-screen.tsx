@@ -7,6 +7,8 @@ import { plannedServingsFactor } from "@/lib/meal-plan";
 import { baseServings, scaleIngredient } from "@/lib/ingredient-scale";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryNavigation } from "./grocery-navigation";
+import { GroceryShareDialog } from "./grocery-share-dialog";
+import { Share2 } from "lucide-react";
 import { loadSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
@@ -86,6 +88,7 @@ export default function GroceryListScreen() {
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ category: string; edge: "before" | "after" } | null>(null);
   const [reorderAnnouncement, setReorderAnnouncement] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
   const categoryPointerDrag = useRef<CategoryPointerDrag | null>(null);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
@@ -312,6 +315,14 @@ export default function GroceryListScreen() {
   const completed = countChecked(allKeys, checkedItems);
   const listComplete = isListComplete(allKeys, checkedItems);
   const progress = groceryData.totalItems ? (completed / groceryData.totalItems) * 100 : 0;
+  const isPantry = (ingredient: string) => pantry.some(term => mentionsTerm(term, [ingredient]));
+  const shareCategories = categoryOrder.flatMap(category => {
+    const items = groceryData.categorized[category];
+    return items?.length ? [{
+      name: categoryTranslations[category] || category,
+      items: items.map(item => ({ text: item.ingredient, checked: checkedItems.has(item.key), pantry: isPantry(item.ingredient) })),
+    }] : [];
+  });
 
   return (
     <main className="grocery-page">
@@ -336,6 +347,12 @@ export default function GroceryListScreen() {
           <div className="grocery-progress" role="progressbar" aria-label="Shopping progress" aria-valuemin={0} aria-valuemax={groceryData.totalItems} aria-valuenow={completed}>
             <span style={{ transform: `scaleX(${progress / 100})` }} />
           </div>
+          <div className="grocery-heading-foot">
+            <button type="button" className="grocery-share-button" onClick={() => setShareOpen(true)} data-testid="button-share-export">
+              <Share2 aria-hidden="true" />{t("grocery.shareExportTitle")}
+            </button>
+          </div>
+          <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} pantryLabel={settingsText(lang, "pantryBadge")} />
         </header>
 
         {listComplete && (
@@ -435,7 +452,7 @@ export default function GroceryListScreen() {
                             <svg viewBox="0 0 16 16"><path d="m3.5 8.2 3 3 6-6.3" /></svg>
                           </span>
                           <span className="grocery-ingredient">{item.ingredient}</span>
-                          {pantry.some(term => mentionsTerm(term, [item.ingredient])) &&
+                          {isPantry(item.ingredient) &&
                             <span className="ms-2 rounded bg-[#42624e]/10 px-1.5 py-0.5 text-[11px] font-medium text-[#42624e]" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
                         </label>
                         {item.recipes.length > 0 && (

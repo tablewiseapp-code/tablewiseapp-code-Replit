@@ -157,3 +157,27 @@
 .grocery-category-title { flex: 1; }
 .grocery-category.is-complete .grocery-category-head { min-height: 56px; }
 @media (max-width: 420px) { .grocery-complete-badge { font-size: 10px; letter-spacing: .04em; } }
+
+/* Share / Export */
+.grocery-heading-foot:has(.grocery-share-button) { justify-content: flex-end; }
+.grocery-share-button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px; border: 1px solid var(--ml-line); border-radius: 999px; background: #fff; color: var(--ml-ink); font: inherit; font-size: 13px; font-weight: 550; cursor: pointer; transition: border-color .16s ease, background .16s ease; }
+.grocery-share-button:hover { border-color: var(--ml-leaf); background: #f1f6f0; }
+.grocery-share-button svg { width: 15px; height: 15px; }
+.grocery-share-scopes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grocery-share-scope { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #e6e8e2; border-radius: 10px; font-size: 13px; cursor: pointer; }
+.grocery-share-scope input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.grocery-share-scope.is-active { border-color: #59745d; background: #f1f6f0; font-weight: 600; }
+.grocery-share-scope:has(input:focus-visible) { outline: 3px solid #79967b; outline-offset: 2px; }
+.grocery-share-count { color: #62695f; font-variant-numeric: tabular-nums; font-weight: 500; }
+.grocery-share-empty { margin: 0; color: #62695f; font-size: 13px; }
+.grocery-share-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.grocery-share-action { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 72px; padding: 10px 4px; border: 1px solid #e6e8e2; border-radius: 12px; background: #fff; color: #242923; font: inherit; font-size: 12px; cursor: pointer; transition: border-color .16s ease, background .16s ease; }
+.grocery-share-action:hover:not(:disabled) { border-color: #59745d; background: #f1f6f0; }
+.grocery-share-action:disabled { opacity: .45; cursor: not-allowed; }
+.grocery-share-action svg { width: 20px; height: 20px; color: #59745d; }
+.grocery-share-action[aria-expanded="true"] { border-color: #59745d; background: #f1f6f0; }
+.grocery-share-exports { display: flex; gap: 8px; }
+.grocery-share-exports button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border: 1px solid #e6e8e2; border-radius: 10px; background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.grocery-share-exports button:hover { border-color: #59745d; background: #f1f6f0; }
+.grocery-share-exports svg { width: 15px; height: 15px; color: #59745d; }
+.grocery-share-action:focus-visible, .grocery-share-exports button:focus-visible { outline: 3px solid #79967b; outline-offset: 2px; }
