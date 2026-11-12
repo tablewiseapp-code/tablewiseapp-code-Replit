@@ -4,7 +4,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useI18n } from "@/lib/i18n";
 import { useSettingsCopy } from "@/lib/settings-copy";
-import { allergens, cuisines, dietPatterns, ingredientPrefIds } from "@shared/food-rules";
+import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
 import { mealSlots, type MealSlot } from "@/lib/meal-plan";
 import {
@@ -105,14 +105,14 @@ function Terms({ label, hint, placeholder, values, onChange, testid }: { label: 
   );
 }
 
-/** Structured ingredient chips plus free-text extras (stored as "custom:<text>"). */
+/** Suggested dish and ingredient chips plus free-text extras (stored as "custom:<text>", the person's own words). */
 function Ingredients({ label, hint, values, onChange, testid }: { label: string; hint: string; values: IngredientChoice[]; onChange: (v: IngredientChoice[]) => void; testid: string }) {
   const t = useSettingsCopy();
   const custom = values.filter(v => v.startsWith("custom:")).map(v => v.slice(7));
   const known = values.filter(v => !v.startsWith("custom:"));
   return (
     <div>
-      <Chips label={label} hint={hint} options={ingredientPrefIds} selected={known as typeof ingredientPrefIds} labelOf={v => t(`ing_${v}`)}
+      <Chips label={label} hint={hint} options={foodPrefIds} selected={known as typeof foodPrefIds} labelOf={v => t(`ing_${v}`)}
         onToggle={v => onChange([...toggle(known, v), ...custom.map(c => `custom:${c}`)])} testid={testid} />
       <Terms label="" placeholder={t("customIngredientPlaceholder")} values={custom} onChange={list => onChange([...known, ...list.map(c => `custom:${c}`)])} testid={`${testid}-custom`} />
     </div>
@@ -182,12 +182,18 @@ function MemberCard({ member, index, onChange, onRemove }: { member: Member; ind
           <Chips label={t("diets")} options={dietPatterns} selected={member.diets} labelOf={d => t(`diet_${d}`)} onToggle={d => set({ diets: toggle(member.diets, d) })} testid={`member-${index}-diet`} />
           <Chips label={t("allergies")} options={allergens} selected={member.allergies} labelOf={a => t(`allergen_${a}`)} onToggle={a => set({ allergies: toggle(member.allergies, a) })} testid={`member-${index}-allergy`} />
           <Terms label={t("customAllergies")} hint={t("customAllergyHint")} placeholder={t("customAllergyPlaceholder")} values={member.customAllergies} onChange={customAllergies => set({ customAllergies })} testid={`member-${index}-custom-allergy`} />
-          <Ingredients label={t("dislikes")} hint={t("dislikesHint")} values={member.dislikes} onChange={dislikes => set({ dislikes })} testid={`member-${index}-dislike`} />
-          <Ingredients label={t("favorites")} hint={t("favoritesHint")} values={member.favorites} onChange={favorites => set({ favorites })} testid={`member-${index}-favorite`} />
           <Choice label={t("memberPortion")} options={["household", ...portionSizes] as const} value={member.portion ?? "household"}
             labelOf={p => (p === "household" ? t("sameAsHousehold") : t(`portion_${p}`))} onChange={p => set({ portion: p === "household" ? null : p })} testid={`member-${index}-portion`} />
         </div>
       )}
+      <details className="mt-2 border-t hairline pt-1" data-testid={`member-${index}-food`}>
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#42624e]" data-testid={`member-${index}-food-summary`}>
+          {t("foodPrefs")}{member.favorites.length + member.dislikes.length ? ` · ${member.favorites.length + member.dislikes.length}` : ""}
+        </summary>
+        <p className="text-xs text-muted-foreground">{t("foodPrefsHint")}</p>
+        <Ingredients label={t("memberLikes")} hint={t("favoritesHint")} values={member.favorites} onChange={favorites => set({ favorites })} testid={`member-${index}-favorite`} />
+        <Ingredients label={t("memberDislikes")} hint={t("dislikesHint")} values={member.dislikes} onChange={dislikes => set({ dislikes })} testid={`member-${index}-dislike`} />
+      </details>
     </li>
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { allergens, cuisines, dietPatterns, ingredientPrefIds, type Allergen, type Cuisine, type DietPattern } from "@shared/food-rules";
+import { allergens, cuisines, dietPatterns, foodPrefIds, type Allergen, type Cuisine, type DietPattern } from "@shared/food-rules";
 import { selectableDevices, type DeviceId } from "./device-requirements";
 import { plannerCookingMethods } from "./planner-filters";
 import { mealSlots, type MealSlot } from "./meal-plan";
@@ -21,7 +21,7 @@ export const mealTimeLimits = [15, 20, 30, 45, 60] as const;
 export type MealRule = { type: MealRecipeType; max: typeof mealTimeLimits[number] | "none" | null };
 const noRule = (): MealRule => ({ type: "both", max: null });
 
-/** Ingredient preferences: a structured id from shared/food-rules, or "custom:<text>". */
+/** Food likes/dislikes: a structured dish or ingredient id from shared/food-rules, or "custom:<the person's own words>". */
 export type IngredientChoice = string;
 export type CookingPrefs = { quick: boolean; minimalCleanup: boolean; onePot: boolean; batch: boolean };
 export const cookingPrefKeys = ["quick", "minimalCleanup", "onePot", "batch"] as const;
@@ -66,7 +66,7 @@ const minutes = (v: unknown) => (Number.isInteger(v) && (v as number) >= 5 && (v
 const text = (v: unknown, max = 60) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
 const terms = (v: unknown) => (Array.isArray(v) ? [...new Set(v.map(x => text(x, 40).toLowerCase()).filter(Boolean))].slice(0, 30) : []);
 const choices = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === "string").filter(x =>
-  (ingredientPrefIds as string[]).includes(x) || (/^custom:.{1,40}$/.test(x) && !!text(x.slice(7), 40))))].slice(0, 30) : []);
+  (foodPrefIds as string[]).includes(x) || (/^custom:.{1,40}$/.test(x) && !!text(x.slice(7), 40))))].slice(0, 30) : []);
 
 /** Earlier saves kept one shared set ({ quick, … } on `cooking`): it becomes the starting point for both day types. */
 const prefs = (raw: unknown, shared: Record<string, unknown>): CookingPrefs => {

@@ -389,6 +389,16 @@ function WeeklyMealsContent() {
     selected: recipes.filter(r => state.selectedIds.includes(r.id)), meta: getMeta, meals: filteredMeals,
   }), [recipes, settings, state.selectedIds, getMeta, filteredMeals]);
   const eligibleRecipes = useMemo(() => personalized.eligible.map(e => e.recipe), [personalized]);
+  // "Matches Mia's favourites" / "Liked by 2 family members": only from a real saved like matching this recipe.
+  const likedNote = useMemo(() => {
+    const notes = new Map<string, string>();
+    for (const e of personalized.eligible) {
+      const names = e.ranking.matches.filter(m => m.startsWith("likedBy:"))
+        .map(m => settings.household.members.find(x => x.id === m.slice(8))?.name).filter(Boolean);
+      if (names.length) notes.set(e.recipe.id, names.length === 1 ? sText("likedByMember", { name: names[0]! }) : sText("likedByMany", { count: names.length }));
+    }
+    return notes;
+  }, [personalized, settings, lang]);
   const matchesPage = (recipe: Recipe, filters = state.filters) => (!query || recipeNameMatches(recipe.title, query)) &&
     matchesPlannerFilters(recipe, filters, timeMode, getMeta(recipe.id));
   const filterRecipes = (): Recipe[] => eligibleRecipes.filter(recipe => matchesPage(recipe));
@@ -1251,6 +1261,7 @@ function WeeklyMealsContent() {
                               </span>
                               {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">{`* ${t("meals.myPicks")}`}</span>}
                             </div>
+                            {likedNote.has(recipe.id) && <p className="mt-0.5 text-[11px] text-[#42624e]" data-testid={`recipe-liked-${recipe.id}`}>{likedNote.get(recipe.id)}</p>}
                             {meta.rating && (
                               <div className="mt-1 flex items-center gap-1">
                                 <StarRating value={meta.rating} onChange={() => {}} readOnly size="sm" />
