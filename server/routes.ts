@@ -21,7 +21,8 @@ import {
 } from "./recipe-generation";
 import { recipeGenerationRequest, type RecipeGenerationRequest } from "../shared/recipe-generation-request";
 import { databaseDraftStore, draftView, type RecipeDraftStore } from "./recipe-drafts";
-import { draftEdit } from "./request-schemas";
+import { draftEdit, cookingSessionId, cookingSessionCreate, cookingSessionPatch, cookingPhotoInput } from "./request-schemas";
+import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cooking-history";
 import { RequestBudget } from "./security";
 import { matchesPlannerFilters, noPersonalFilters, recipeNameMatches } from "../client/src/lib/planner-filters";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
@@ -39,6 +40,7 @@ export type RouteDependencies = {
   now?: () => number;
   analytics?: Pick<PilotEventStore, "record" | "summary">;
   drafts?: RecipeDraftStore;
+  cooking?: CookingStore;
 };
 // Per-owner AI generation quota (first generation + regenerations), on top of the shared AI budget.
 export const OWNER_DAILY_GENERATIONS = 10;
@@ -117,7 +119,7 @@ export async function registerRoutes(
     if (["POST", "PATCH", "PUT"].includes(req.method) && !req.is("application/json")) {
       return res.status(415).json({ error: "Use application/json." });
     }
-    if (/^\/transcribe-audio\/?$/i.test(req.path)) return next();
+    if (/^\/transcribe-audio\/?$/i.test(req.path) || /^\/cooking-sessions\/[^/]+\/photos\/?$/.test(req.path)) return next();
     if (/^\/analytics\/events\/?$/i.test(req.path)) return express.json({ limit: "16kb", inflate: false })(req, res, next);
     express.json({ limit: "64kb", inflate: false })(req, res, next);
   });
@@ -550,6 +552,88 @@ Rules:
       if (isMissingPreparationColumn(error)) return res.status(503).json({ error: "Recipe storage needs setup. Nothing was published." });
       res.status(500).json({ error: "Unable to publish the recipe. Your draft is unchanged." });
     }
+  });
+
+  // My Cooking Experience. Private to the owner (anonymous browser cookie or operator); recipes are never modified.
+  const cooking = dependencies.cooking ?? databaseCookingStore();
+  const sessionNotFound = (res: express.Response) => res.status(404).json({ error: "Cooking session not found." });
+  const cookingFailed = (res: express.Response, operation: string) => {
+    console.error(`api_failure operation=${operation}`);
+    res.status(500).json({ error: "Something went wrong. Please try again." });
+  };
+  app.get("/api/cooking-sessions", async (req, res) => {
+    const recipe = recipeId.safeParse(req.query.recipeId);
+    if (!recipe.success) return res.status(400).json({ error: "Invalid recipe identifier." });
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await cooking.list(owner, recipe.data) : []); }
+    catch { cookingFailed(res, "cooking_list"); }
+  });
+  app.post("/api/cooking-sessions", async (req, res) => {
+    const input = cookingSessionCreate.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid cooking session." });
+    const owner = security.owner(req, res, true)!;
+    try {
+      const session = await cooking.create(owner, input.data.id, input.data.recipeId);
+      if (!session) return res.status(409).json({ error: "Please try again." });
+      res.status(201).json(session);
+    } catch (error) {
+      if (isUnknownRecipe(error)) return res.status(404).json({ error: "Recipe not found" });
+      cookingFailed(res, "cooking_create");
+    }
+  });
+  app.patch("/api/cooking-sessions/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    const patch = cookingSessionPatch.safeParse(req.body);
+    if (!id.success || !patch.success) return res.status(400).json({ error: "Invalid change." });
+    const owner = security.owner(req, res, false);
+    try {
+      const session = owner ? await cooking.update(owner, id.data, patch.data) : undefined;
+      if (!session) return sessionNotFound(res);
+      res.json(session);
+    } catch { cookingFailed(res, "cooking_update"); }
+  });
+  app.delete("/api/cooking-sessions/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid cooking session." });
+    const owner = security.owner(req, res, false);
+    try {
+      if (!owner || !await cooking.remove(owner, id.data)) return sessionNotFound(res);
+      res.status(204).end();
+    } catch { cookingFailed(res, "cooking_delete"); }
+  });
+  app.post("/api/cooking-sessions/:id/photos", express.json({ limit: "3mb", inflate: false }), async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    const photo = cookingPhotoInput.safeParse(req.body);
+    if (!id.success) return res.status(400).json({ error: "Invalid cooking session." });
+    if (!photo.success) return res.status(400).json({ error: "This photo couldn't be used. Try a different one." });
+    const owner = security.owner(req, res, false);
+    try {
+      const result = owner ? await cooking.addPhoto(owner, id.data, photo.data.image, photo.data.thumbnail) : { kind: "not_found" as const };
+      if (result.kind === "not_found") return sessionNotFound(res);
+      if (result.kind === "full") return res.status(409).json({ error: "You've reached the photo limit." });
+      res.status(201).json({ id: result.id });
+    } catch { cookingFailed(res, "cooking_photo_add"); }
+  });
+  app.get("/api/cooking-photos/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid photo." });
+    const owner = security.owner(req, res, false);
+    try {
+      const bytes = owner ? await cooking.photo(owner, id.data, req.query.size === "thumb") : undefined;
+      if (!bytes) return res.status(404).json({ error: "Photo not found." });
+      // Photo ids are never reused, so the private browser cache can keep them.
+      res.set({ "Content-Type": "image/jpeg", "Cache-Control": "private, max-age=31536000, immutable", "Content-Security-Policy": "default-src 'none'" });
+      res.send(bytes);
+    } catch { cookingFailed(res, "cooking_photo_get"); }
+  });
+  app.delete("/api/cooking-photos/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid photo." });
+    const owner = security.owner(req, res, false);
+    try {
+      if (!owner || !await cooking.removePhoto(owner, id.data)) return res.status(404).json({ error: "Photo not found." });
+      res.status(204).end();
+    } catch { cookingFailed(res, "cooking_photo_delete"); }
   });
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "API route not found." }));

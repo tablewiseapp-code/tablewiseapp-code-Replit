@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, uuid, date, unique, index, check, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, unique, index, check, jsonb, customType } from "drizzle-orm/pg-core";
 import type { RecipeNutrition } from "./recipe-nutrition";
 import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
 import type { RecipeGenerationRequest, RecipeGenerationStatus } from "./recipe-generation-request";
@@ -119,4 +119,37 @@ export const pilotEvents = pgTable("pilot_events", {
   check("pilot_events_name", sql`${table.eventName} IN ('planner_opened','meal_selected','plan_completed','grocery_list_opened','next_week_plan_created')`),
   check("pilot_events_week", sql`extract(isodow FROM ${table.weekStart}) = 1 AND ${table.weekStart} BETWEEN '2000-01-01' AND '2100-12-31'`),
   check("pilot_events_recipe", sql`(${table.eventName} = 'meal_selected' AND ${table.recipeId} ~ '^[a-zA-Z0-9:_-]{1,150}$') OR (${table.eventName} <> 'meal_selected' AND ${table.recipeId} = '')`),
+]);
+
+// My Cooking Experience: one row per time an owner cooked a recipe. Private to the owner (same anonymous owner
+// identity as recipe drafts) and never changes the recipe itself.
+export const cookingSessions = pgTable("cooking_sessions", {
+  /** Client-generated, so a retried "I made it!" is idempotent instead of a duplicate. */
+  id: uuid("id").primaryKey(),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  recipeId: varchar("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
+  cookedAt: timestamp("cooked_at", { withTimezone: true }).defaultNow().notNull(),
+  rating: smallint("rating"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  index("cooking_sessions_owner_recipe").on(table.ownerId, table.recipeId, table.cookedAt),
+  check("cooking_sessions_rating", sql`${table.rating} IS NULL OR ${table.rating} BETWEEN 1 AND 5`),
+  check("cooking_sessions_notes", sql`${table.notes} IS NULL OR length(${table.notes}) <= 4000`),
+]);
+export type CookingSession = typeof cookingSessions.$inferSelect;
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
+// ponytail: JPEG bytes in Postgres (no object storage in this project); move to object storage if volume grows.
+export const cookingPhotos = pgTable("cooking_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => cookingSessions.id, { onDelete: "cascade" }),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  image: bytea("image").notNull(),
+  thumbnail: bytea("thumbnail").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  index("cooking_photos_session").on(table.sessionId, table.createdAt),
+  index("cooking_photos_owner").on(table.ownerId),
 ]);
