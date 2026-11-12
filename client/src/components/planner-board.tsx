@@ -132,6 +132,9 @@ export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, 
   const [modal, setModal] = useState<Modal | null>(null);
   const [dragging, setDragging] = useState<PlannerRecipe | null>(null);
   const byId = new Map(recipes.map(recipe => [recipe.id, recipe]));
+  // Planned recipes leave the drag list; "Add meal" and Repeat still offer them.
+  const plannedIds = new Set(plan.planAssignments.map(a => a.recipeId));
+  const unplanned = recipes.filter(recipe => !plannedIds.has(recipe.id));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
   const name = (day: number, meal: MealSlot) => ({ day: dayNames[day], meal: mealNames[mealSlots.indexOf(meal)].toLowerCase() });
   const close = () => setModal(null);
@@ -161,9 +164,9 @@ export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, 
     <DndContext sensors={sensors} onDragStart={e => setDragging(byId.get(e.active.data.current?.recipeId) ?? null)} onDragCancel={() => setDragging(null)} onDragEnd={onDragEnd}>
       <section aria-labelledby="selected-heading" className="mb-6">
         <h2 id="selected-heading" className="mb-1 text-sm font-medium">{t("selected")}</h2>
-        <p className="mb-3 text-xs text-muted-foreground">{locked ? t("locked") : plan.planAssignments.length === 0 ? t("hint") : t("dragHint")}</p>
+        <p className="mb-3 text-xs text-muted-foreground">{locked ? t("locked") : unplanned.length === 0 ? t("allPlanned") : plan.planAssignments.length === 0 ? t("hint") : t("dragHint")}</p>
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {recipes.map(recipe => (
+          {unplanned.map(recipe => (
             <RecipeCard key={recipe.id} recipe={recipe} locked={locked} onView={() => onView(recipe.id)} onPlan={() => setModal({ kind: "plan", recipeId: recipe.id })} />
           ))}
         </ul>
