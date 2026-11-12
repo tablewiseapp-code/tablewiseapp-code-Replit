@@ -58,6 +58,8 @@
     "test:meal-filters": "tsx script/test-meal-filters.ts",
     "test:recipe-search": "tsx script/test-recipe-search.ts",
     "test:recipe-drafts": "tsx script/test-recipe-drafts.ts",
+    "test:cooking-experience": "tsx script/test-cooking-experience.ts",
+    "test:cooking-experience-browser": "node script/test-cooking-experience-browser.mjs",
     "test:meal-filters-browser": "tsx script/test-meal-filters-browser.ts",
     "test:mvp-browser": "tsx script/test-mvp-browser.ts",
     "test:planner-return": "tsx script/test-planner-return.ts",

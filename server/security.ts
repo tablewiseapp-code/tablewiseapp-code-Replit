@@ -157,7 +157,9 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   };
   const isDraftWrite = (req: Request) => ["POST", "PATCH"].includes(req.method) &&
     /^\/(?:recipe-generations|recipe-drafts\/[^/]+(?:\/(?:regenerate|approve))?)\/?$/.test(req.path);
-  const isEventIngest = (req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
+  const isCookingWrite = (req: Request) => ["POST", "PATCH", "DELETE"].includes(req.method) &&
+    /^\/(?:cooking-sessions(?:\/[^/]+(?:\/photos)?)?|cooking-photos\/[^/]+)\/?$/.test(req.path);
+  const isEventIngest =(req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
   // Only this exact anonymous write is exempt; all other mutations and ALL
   // analytics inspection remain fail-closed. No IPs are retained for budgets.
   app.use("/api", (req, res, next) => {
@@ -185,6 +187,14 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
       if (!consume(res, "public-draft-writes", 30, 60_000)) return;
       res.locals.publicAI = true;
+      return next();
+    }
+    // My Cooking Experience: private, owner-scoped history (ownership is checked by each route). It never
+    // changes a recipe. Same-origin only and budgeted; photo uploads have their own daily budget.
+    if (isCookingWrite(req)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (!consume(res, "cooking-writes", 300, 60_000)) return;
+      if (req.method === "POST" && /\/photos\/?$/.test(req.path) && !consume(res, "cooking-photos:day", 1000, 86400_000)) return;
       return next();
     }
     // Deliberately scoped to credit metadata in the approved development preview.

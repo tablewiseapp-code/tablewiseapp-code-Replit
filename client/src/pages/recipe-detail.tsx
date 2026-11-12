@@ -18,6 +18,7 @@ import { RecipeNutritionPanel } from "@/components/recipe-nutrition";
 import { CookingMode } from "@/components/cooking-mode";
 import { hasCookingProgress } from "@/lib/cooking-session";
 import { AddToMealPlanDialog } from "@/components/add-to-meal-plan";
+import { CookedBadge, MyCookingExperience } from "@/components/my-cooking-experience";
 import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step-timing";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -232,7 +233,7 @@ export default function RecipeDetail() {
         </div>
 
         <h1 className="text-xl font-medium text-foreground sm:text-2xl" data-testid="text-recipe-title">{recipe.title}</h1>
-        <div className="mt-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /><CookedBadge recipeId={recipe.id} /></div>
 
         {(tags.length > 0 || verified) && (
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -292,6 +293,8 @@ export default function RecipeDetail() {
           </ol>
           {analysis && <div className="mt-4"><AnalysisWarnings analysis={analysis} /></div>}
         </section>
+
+        <MyCookingExperience key={recipe.id} recipeId={recipe.id} />
 
         <div className="mt-4"><RecipeNutritionPanel recipe={recipe} /></div>
 
