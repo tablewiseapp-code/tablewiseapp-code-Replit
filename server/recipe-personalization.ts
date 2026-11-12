@@ -6,7 +6,7 @@ import type { BudgetPreference, GenerationStyle } from "../client/src/lib/recipe
 // Compact, derived signals the browser may send. Never raw activity logs, never personal details.
 export const personalizationSignals = z.object({
   recentTitles: z.array(z.string().trim().min(1).max(200)).max(8),
-  favoriteMethods: z.array(z.object({ method: z.enum(plannerCookingMethods), count: z.number().int().min(1).max(1000) }).strict()).max(4),
+  favoriteMethods: z.array(z.object({ method: z.enum(plannerCookingMethods), count: z.number().int().min(1).max(1000) }).strict()).max(plannerCookingMethods.length),
 }).strict();
 export type PersonalizationSignals = z.infer<typeof personalizationSignals>;
 

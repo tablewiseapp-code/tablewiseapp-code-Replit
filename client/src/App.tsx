@@ -16,6 +16,7 @@ import ImportRecipe from "@/pages/import-recipe";
 import GroceryList from "@/pages/grocery-list";
 import NotFound from "@/pages/not-found";
 import MyIdeas from "@/pages/my-ideas";
+import BasicSettings from "@/pages/basic-settings";
 import { Sparkles } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
@@ -26,6 +27,7 @@ const NAV_KEYS = [
   { path: "/my-ideas", key: "nav.myIdeas", icon: true },
   { path: "/import", key: "nav.importRecipe" },
   { path: "/grocery-list", key: "nav.groceryList" },
+  { path: "/settings", key: "nav.basicSettings" },
 ];
 
 function NavLabel({ link }: { link: { key: string; icon?: boolean } }) {
@@ -195,6 +197,7 @@ function Router() {
       <Route path="/meals" component={WeeklyMeals}/>
       <Route path="/import" component={ImportRecipe}/>
       <Route path="/grocery-list" component={GroceryEntry}/>
+      <Route path="/settings" component={BasicSettings}/>
       <Route component={NotFound} />
     </Switch>
   );

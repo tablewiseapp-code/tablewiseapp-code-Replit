@@ -1,5 +1,6 @@
 import type { Recipe as StoredRecipe } from "@/lib/storage";
 import { recipeToolKeys, type RecipeToolKey } from "./recipe-tools";
+import { deviceRequirementsOf, type DeviceRequirements } from "./device-requirements";
 import type { RecipeCredit } from "@shared/recipe-credit";
 import type { NutritionFields } from "@shared/recipe-nutrition";
 
@@ -13,6 +14,8 @@ export type PlannerRecipe = RecipeCredit & NutritionFields & {
   mealType: string;
   tags: string[];
   tools: string[];
+  /** Structured AND-of-OR device needs (device-requirements.ts); computed once per load. */
+  deviceRequirements: DeviceRequirements;
   equipment?: RecipeToolKey[];
   metadataEstimated?: boolean;
   sourceType: string;
@@ -56,6 +59,7 @@ function inferTools(steps: string[]): string[] {
   if (/\bair ?fry|airfryer\b/.test(text)) tools.push("Air fryer");
   if (/\boven|bake|roast\b/.test(text)) tools.push("Oven");
   if (/\bstove|stovetop|boil|simmer|fry|saute|sautee|skillet|pan\b/.test(text)) tools.push("Stovetop");
+  if (/\bmicrowave\b/.test(text)) tools.push("Microwave");
   if (/\bno cook|no-cook|assemble|chill|mix and serve\b/.test(text)) tools.push("No-cook");
 
   if (tools.length === 0) {
@@ -113,6 +117,7 @@ export function toPlannerRecipe(recipe: StoredRecipe): PlannerRecipe {
     mealType: inferMealType(recipe),
     tags: (recipe.tags ?? []).map(normalizeTag),
     tools: inferTools(recipe.steps),
+    deviceRequirements: deviceRequirementsOf(recipe as typeof recipe & { deviceRequirements?: DeviceRequirements | null }),
     equipment: recipeToolKeys(recipe.steps, recipe.equipment),
     metadataEstimated: recipe.metadataEstimated,
     nutrition: recipe.nutrition,

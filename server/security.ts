@@ -27,6 +27,7 @@ export function pilotConfig(): PilotConfig {
 const digest = (text: string) => createHash("sha256").update(text).digest();
 const equal = (left: string, right: string) => timingSafeEqual(digest(left), digest(right));
 const cookieName = "tablewise_operator";
+const ownerCookie = "tablewise_owner";
 const loginSchema = z.object({ token: z.string().min(32).max(256) }).strict();
 
 // Bounded, fixed-window, per-process counters. Keys never contain IP addresses.
@@ -141,6 +142,21 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     res.setHeader("Set-Cookie", sessionCookie("", 0));
     res.redirect(303, "/operator");
   });
+  // Draft ownership. There are no customer accounts yet: a browser gets a random HttpOnly owner cookie and the
+  // server only ever stores its SHA-256. The signed-in operator is the single owner "operator".
+  const readCookie = (req: Request, name: string) => req.get("cookie")?.split(";").map(v => v.trim())
+    .find(v => v.startsWith(`${name}=`))?.slice(name.length + 1);
+  const owner = (req: Request, res: Response, mint: boolean): string | undefined => {
+    if (authorized(req)) return "operator";
+    const cookie = readCookie(req, ownerCookie);
+    if (cookie && /^[a-f0-9]{64}$/.test(cookie)) return digest(cookie).toString("hex");
+    if (!mint) return undefined;
+    const fresh = randomBytes(32).toString("hex");
+    res.append("Set-Cookie", `${ownerCookie}=${fresh}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=31536000${config.production ? "; Secure" : ""}`);
+    return digest(fresh).toString("hex");
+  };
+  const isDraftWrite = (req: Request) => ["POST", "PATCH"].includes(req.method) &&
+    /^\/(?:recipe-generations|recipe-drafts\/[^/]+(?:\/(?:regenerate|approve))?)\/?$/.test(req.path);
   const isEventIngest = (req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
   // Only this exact anonymous write is exempt; all other mutations and ALL
   // analytics inspection remain fail-closed. No IPs are retained for budgets.
@@ -161,6 +177,13 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
         res.locals.publicAIWrite = true;
       }
       if (/events\/?$/.test(req.path) && !consume(res, "public-generation-events", 60, 60_000)) return;
+      res.locals.publicAI = true;
+      return next();
+    }
+    // Public AI: create, edit, regenerate and approve one's own drafts (ownership is checked by each route).
+    if (config.publicAI && !authorized(req) && isDraftWrite(req)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (!consume(res, "public-draft-writes", 30, 60_000)) return;
       res.locals.publicAI = true;
       return next();
     }
@@ -206,7 +229,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     res.locals.releaseAI = () => { if (!released) { activeAI--; released = true; } };
     next();
   }));
-  return { aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, config };
+  return { aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, owner, config };
 }
 
 export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {

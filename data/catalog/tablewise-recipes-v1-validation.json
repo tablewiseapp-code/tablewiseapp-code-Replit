@@ -1,0 +1,301 @@
+{
+  "catalog": "tablewise-recipes-v1",
+  "contentSha256": "2a4f43c60c7d237b43f39bafd35217001890defb07a0e6b95663d267efd3f664",
+  "schemaValidation": "Every recipe passed server/request-schemas.ts recipeInput (the recipe API contract) and the recipes table constraints.",
+  "licenseVerification": {
+    "allRecipesHaveSource": true,
+    "thirdPartyContent": 0,
+    "images": 0
+  },
+  "dietaryVerification": "Vegetarian/Vegan/Gluten-free/Dairy-free tags are machine-checked against every ingredient line (script/build-recipe-catalog.ts DIET_CHECKS); packaged items must be named gluten-free/plant-based explicitly. Not a substitute for allergen labelling on purchased products.",
+  "plannerCompatibility": "Planner meal slot computed with the app's own toPlannerRecipe() for every recipe: Breakfast→Breakfast, Lunch/Soup→Lunch, Snack→Lunch box, Dinner/Dessert→Dinner.",
+  "totalRecipes": 200,
+  "categoryCounts": {
+    "Dinner": 70,
+    "Lunch": 40,
+    "Breakfast": 35,
+    "Dessert": 25,
+    "Snack": 20,
+    "Soup": 10
+  },
+  "expectedDistribution": {
+    "Dinner": 70,
+    "Lunch": 40,
+    "Breakfast": 35,
+    "Dessert": 25,
+    "Snack": 20,
+    "Soup": 10
+  },
+  "duplicateChecks": {
+    "uniqueIds": 200,
+    "uniqueTitles": 200,
+    "collisionsWithExistingSeeds": 0,
+    "similarPairsReported": [
+      {
+        "a": "beef-and-broccoli",
+        "b": "teriyaki-chicken-rice",
+        "ingredientSimilarity": 0.63,
+        "methodSimilarity": 0.63
+      },
+      {
+        "a": "beef-lasagne",
+        "b": "vegetable-lasagne",
+        "ingredientSimilarity": 0.6,
+        "methodSimilarity": 0.52
+      },
+      {
+        "a": "butter-chicken",
+        "b": "chicken-tikka-masala",
+        "ingredientSimilarity": 0.63,
+        "methodSimilarity": 0.57
+      },
+      {
+        "a": "chicken-enchiladas",
+        "b": "chicken-fajitas",
+        "ingredientSimilarity": 0.6,
+        "methodSimilarity": 0.33
+      },
+      {
+        "a": "chicken-sweet-potato-traybake",
+        "b": "sweet-potato-wedges",
+        "ingredientSimilarity": 0.6,
+        "methodSimilarity": 0.33
+      },
+      {
+        "a": "chilli-con-carne",
+        "b": "three-bean-vegetable-chilli",
+        "ingredientSimilarity": 0.76,
+        "methodSimilarity": 0.49
+      },
+      {
+        "a": "chilli-con-carne",
+        "b": "turkey-chilli",
+        "ingredientSimilarity": 0.77,
+        "methodSimilarity": 0.61
+      },
+      {
+        "a": "chilli-con-carne",
+        "b": "beef-bean-burritos",
+        "ingredientSimilarity": 0.64,
+        "methodSimilarity": 0.47
+      },
+      {
+        "a": "chilli-con-carne",
+        "b": "black-bean-soup",
+        "ingredientSimilarity": 0.66,
+        "methodSimilarity": 0.35
+      },
+      {
+        "a": "greek-chicken-souvlaki",
+        "b": "chicken-pitta-tzatziki",
+        "ingredientSimilarity": 0.63,
+        "methodSimilarity": 0.39
+      },
+      {
+        "a": "three-bean-vegetable-chilli",
+        "b": "turkey-chilli",
+        "ingredientSimilarity": 0.67,
+        "methodSimilarity": 0.48
+      },
+      {
+        "a": "three-bean-vegetable-chilli",
+        "b": "black-bean-soup",
+        "ingredientSimilarity": 0.69,
+        "methodSimilarity": 0.37
+      },
+      {
+        "a": "tofu-vegetable-stir-fry",
+        "b": "teriyaki-tofu-rice-bowl",
+        "ingredientSimilarity": 0.72,
+        "methodSimilarity": 0.46
+      },
+      {
+        "a": "turkey-chilli",
+        "b": "black-bean-soup",
+        "ingredientSimilarity": 0.7,
+        "methodSimilarity": 0.4
+      },
+      {
+        "a": "blt-sandwich",
+        "b": "turkey-club-sandwich",
+        "ingredientSimilarity": 0.65,
+        "methodSimilarity": 0.61
+      },
+      {
+        "a": "chicken-avocado-wrap",
+        "b": "chicken-pepper-quesadillas",
+        "ingredientSimilarity": 0.6,
+        "methodSimilarity": 0.4
+      },
+      {
+        "a": "sweet-potatoes-black-beans",
+        "b": "sweet-potato-breakfast-hash",
+        "ingredientSimilarity": 0.6,
+        "methodSimilarity": 0.21
+      },
+      {
+        "a": "blueberry-muffins",
+        "b": "fluffy-pancakes",
+        "ingredientSimilarity": 0.65,
+        "methodSimilarity": 0.3
+      },
+      {
+        "a": "blueberry-muffins",
+        "b": "waffles",
+        "ingredientSimilarity": 0.76,
+        "methodSimilarity": 0.36
+      },
+      {
+        "a": "breakfast-burritos",
+        "b": "breakfast-quesadillas",
+        "ingredientSimilarity": 0.62,
+        "methodSimilarity": 0.35
+      },
+      {
+        "a": "cottage-cheese-pancakes",
+        "b": "waffles",
+        "ingredientSimilarity": 0.63,
+        "methodSimilarity": 0.22
+      },
+      {
+        "a": "crepes",
+        "b": "fluffy-pancakes",
+        "ingredientSimilarity": 0.67,
+        "methodSimilarity": 0.36
+      },
+      {
+        "a": "crepes",
+        "b": "shortbread",
+        "ingredientSimilarity": 0.6,
+        "methodSimilarity": 0.18
+      },
+      {
+        "a": "fluffy-pancakes",
+        "b": "waffles",
+        "ingredientSimilarity": 0.86,
+        "methodSimilarity": 0.41
+      },
+      {
+        "a": "fluffy-pancakes",
+        "b": "cherry-clafoutis",
+        "ingredientSimilarity": 0.63,
+        "methodSimilarity": 0.28
+      },
+      {
+        "a": "greek-yogurt-parfait",
+        "b": "frozen-yogurt-bark",
+        "ingredientSimilarity": 0.64,
+        "methodSimilarity": 0.25
+      },
+      {
+        "a": "sweet-potato-breakfast-hash",
+        "b": "sweet-potato-wedges",
+        "ingredientSimilarity": 0.61,
+        "methodSimilarity": 0.21
+      },
+      {
+        "a": "lemon-drizzle-cake",
+        "b": "victoria-sponge",
+        "ingredientSimilarity": 0.61,
+        "methodSimilarity": 0.41
+      },
+      {
+        "a": "carrot-coriander-soup",
+        "b": "pea-mint-soup",
+        "ingredientSimilarity": 0.68,
+        "methodSimilarity": 0.57
+      }
+    ]
+  },
+  "coverage": {
+    "Chicken": 29,
+    "Turkey": 3,
+    "Beef": 13,
+    "Pork": 16,
+    "Lamb": 2,
+    "Fish": 12,
+    "Seafood": 6,
+    "Vegetarian": 123,
+    "Vegan": 50,
+    "Gluten-free": 106,
+    "Dairy-free": 93,
+    "Kid friendly": 98,
+    "Budget": 62,
+    "Batch cooking": 44,
+    "Pasta": 13,
+    "Rice": 35,
+    "Potatoes": 19,
+    "Noodles": 7,
+    "Eggs": 32,
+    "Baking": 28,
+    "Quick": 74
+  },
+  "cuisines": {
+    "American": 22,
+    "British": 46,
+    "Chinese": 8,
+    "French": 8,
+    "Greek": 8,
+    "Indian": 5,
+    "Italian": 22,
+    "Japanese": 5,
+    "Korean": 2,
+    "Mediterranean": 10,
+    "Mexican": 19,
+    "Middle Eastern": 8,
+    "North African": 2,
+    "Scandinavian": 2,
+    "Spanish": 2,
+    "Thai": 4,
+    "Vietnamese": 1,
+    "Eastern European": 3,
+    "International": 23
+  },
+  "ingredientQuality": {
+    "totalLines": 2214,
+    "allQuantifiedAndScalable": true
+  },
+  "cookingSteps": {
+    "totalSteps": 1109,
+    "minPerRecipe": 4,
+    "maxPerRecipe": 7
+  },
+  "errors": [],
+  "missingFields": [],
+  "restoreVerification": {
+    "passed": true,
+    "postgresServer": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "pgDumpClient": "pg_dump (PostgreSQL) 16.15 (Debian 16.15-1.pgdg13+2)",
+    "generationDatabase": {
+      "storedCatalogRows": 200,
+      "otherRows": 0,
+      "identicalToCanonical": true,
+      "storedContentSha256": "2a4f43c60c7d237b43f39bafd35217001890defb07a0e6b95663d267efd3f664",
+      "problems": []
+    },
+    "restoredDatabase": {
+      "storedCatalogRows": 200,
+      "otherRows": 0,
+      "identicalToCanonical": true,
+      "storedContentSha256": "2a4f43c60c7d237b43f39bafd35217001890defb07a0e6b95663d267efd3f664",
+      "problems": []
+    },
+    "sqlImportAgainstRestore": "inserted 0, already present 200 (identical content)",
+    "dumpContents": "TABLE DATA public recipes only",
+    "api": {
+      "listed": 200,
+      "catalogMatches": true,
+      "detailOk": true
+    },
+    "browser": "PASS browser: 144 checks; desktop+mobile; /recipes (200 cards), 6 detail pages (one per category), servings scaling, /meals; 0 page errors, 0 failed requests, 0 broken images",
+    "safetyTests": [
+      "idempotent re-run",
+      "timestamps preserved",
+      "dry run writes nothing",
+      "conflict aborts whole import",
+      "user rows unchanged",
+      "edited catalog row never overwritten",
+      "dump restore over existing rows rolls back"
+    ]
+  }
+}

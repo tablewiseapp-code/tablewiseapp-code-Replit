@@ -37,6 +37,10 @@ export const recipeInput = recipeBase.extend({
 }).transform(value => value.creditKind ? {
   ...value, ...recipeCreditInput.parse({ creditKind: value.creditKind, creditName: value.creditName }),
 } : value);
+// Customer edits of an AI draft: content only. Tags, provenance and status are server-controlled.
+export const draftEdit = recipeBase.pick({ title: true, ingredients: true, steps: true, prepTime: true, cookTime: true, servings: true })
+  .extend({ description: z.string().trim().max(400).optional() }).partial().strict()
+  .refine(value => Object.keys(value).length > 0);
 // Attribution is changed atomically through its bounded, separate endpoint.
 export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0);
 export const recipeId = z.string().min(1).max(150).regex(/^[a-zA-Z0-9:_-]+$/);

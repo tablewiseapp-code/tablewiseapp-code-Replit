@@ -1,0 +1,688 @@
+[
+  {
+    "slug": "apple-crumble",
+    "title": "Apple crumble",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Kid friendly", "Budget", "Baking"],
+    "prepTime": 20,
+    "cookTime": 40,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 4, "unit": "", "name": "large cooking apples", "note": "peeled, cored and sliced" },
+      { "quantity": 50, "unit": "g", "name": "caster sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "ground cinnamon" },
+      { "quantity": 1, "unit": "tbsp", "name": "lemon juice" },
+      { "quantity": 175, "unit": "g", "name": "plain flour" },
+      { "quantity": 100, "unit": "g", "name": "cold unsalted butter", "note": "diced" },
+      { "quantity": 75, "unit": "g", "name": "demerara sugar" },
+      { "quantity": 300, "unit": "ml", "name": "custard", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "Heat the oven to 190°C (fan 170°C).",
+      "Toss the apple slices with the caster sugar, cinnamon and lemon juice, then spread them over the base of a medium ovenproof dish.",
+      "Put the flour in a mixing bowl and rub in the butter with your fingertips until it looks like coarse breadcrumbs. Stir in the demerara sugar.",
+      "Scatter the crumble evenly over the apples without pressing it down.",
+      "Bake for 35–40 minutes until the top is golden and the fruit is bubbling up at the edges and soft when pierced with a knife.",
+      "Leave to stand for 5 minutes, then serve warm with custard if you like. Leftovers keep covered in the fridge for up to 2 days."
+    ]
+  },
+  {
+    "slug": "chocolate-brownies",
+    "title": "Chocolate brownies",
+    "category": "Dessert",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Kid friendly", "Baking"],
+    "prepTime": 15,
+    "cookTime": 30,
+    "servings": "16",
+    "ingredients": [
+      { "quantity": 200, "unit": "g", "name": "dark chocolate", "note": "broken into pieces" },
+      { "quantity": 175, "unit": "g", "name": "unsalted butter", "note": "cubed" },
+      { "quantity": 250, "unit": "g", "name": "caster sugar" },
+      { "quantity": 3, "unit": "", "name": "large eggs" },
+      { "quantity": 75, "unit": "g", "name": "plain flour" },
+      { "quantity": 40, "unit": "g", "name": "cocoa powder" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C). Grease and line a 20 cm square baking tin with baking paper.",
+      "Melt the chocolate and butter together in a saucepan over a very low heat, stirring until smooth. Take off the heat and leave to cool for 5 minutes.",
+      "In a mixing bowl, whisk the sugar and eggs for 2–3 minutes until pale and slightly thickened, then stir in the melted chocolate mixture.",
+      "Sift in the flour, cocoa and salt and fold gently until no dry streaks remain.",
+      "Pour into the tin, level the top and bake for 25–30 minutes until the top is shiny and crackly and the centre is just set; a skewer should come out with a few moist crumbs but no wet batter.",
+      "Cool completely in the tin before cutting into 16 squares. Store in an airtight container for up to 4 days."
+    ]
+  },
+  {
+    "slug": "chocolate-chip-cookies",
+    "title": "Chocolate chip cookies",
+    "category": "Dessert",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Kid friendly", "Baking"],
+    "prepTime": 15,
+    "cookTime": 12,
+    "servings": "16",
+    "ingredients": [
+      { "quantity": 125, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 100, "unit": "g", "name": "light brown soft sugar" },
+      { "quantity": 50, "unit": "g", "name": "caster sugar" },
+      { "quantity": 1, "unit": "", "name": "egg" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 200, "unit": "g", "name": "plain flour" },
+      { "quantity": 0.5, "unit": "tsp", "name": "bicarbonate of soda" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" },
+      { "quantity": 150, "unit": "g", "name": "milk or dark chocolate chips" }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C) and line two baking trays with baking paper.",
+      "Beat the butter and both sugars together in a mixing bowl until light and creamy, then beat in the egg and vanilla.",
+      "Stir in the flour, bicarbonate of soda and salt until just combined, then mix in the chocolate chips.",
+      "Roll the dough into 16 balls and space them well apart on the trays, flattening each one slightly.",
+      "Bake for 10–12 minutes until golden at the edges but still soft in the middle.",
+      "Leave on the trays for 5 minutes to firm up, then move to a wire rack to cool. Keep in an airtight tin for up to 4 days."
+    ]
+  },
+  {
+    "slug": "lemon-drizzle-cake",
+    "title": "Lemon drizzle cake",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Baking"],
+    "prepTime": 20,
+    "cookTime": 50,
+    "servings": "8",
+    "ingredients": [
+      { "quantity": 175, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 175, "unit": "g", "name": "caster sugar" },
+      { "quantity": 3, "unit": "", "name": "eggs" },
+      { "quantity": 175, "unit": "g", "name": "self-raising flour" },
+      { "quantity": 1, "unit": "tsp", "name": "baking powder" },
+      { "quantity": 2, "unit": "tbsp", "name": "milk" },
+      { "quantity": 2, "unit": "", "name": "lemons", "note": "finely zested and juiced" },
+      { "quantity": 100, "unit": "g", "name": "granulated sugar" }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C). Grease and line a 900 g loaf tin with baking paper.",
+      "In a mixing bowl, beat the butter and caster sugar until pale and fluffy. Beat in the eggs one at a time, adding a spoonful of the flour with each to stop the mixture curdling.",
+      "Fold in the remaining flour, the baking powder, milk and lemon zest until smooth, then spoon into the tin and level the top.",
+      "Bake for 45–50 minutes until risen, golden and a skewer pushed into the centre comes out clean.",
+      "While the cake bakes, stir the lemon juice and granulated sugar together in a small bowl.",
+      "As soon as the cake comes out of the oven, prick it all over with a skewer and spoon the lemon sugar evenly over the top. Leave to cool completely in the tin so the drizzle soaks in and sets into a crisp crust, then slice."
+    ]
+  },
+  {
+    "slug": "rice-pudding",
+    "title": "Rice pudding",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Gluten-free", "Kid friendly", "Budget", "Rice"],
+    "prepTime": 5,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 100, "unit": "g", "name": "pudding rice" },
+      { "quantity": 1, "unit": "l", "name": "whole milk" },
+      { "quantity": 50, "unit": "g", "name": "caster sugar" },
+      { "quantity": 15, "unit": "g", "name": "unsalted butter" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "pinch", "name": "ground nutmeg" },
+      { "quantity": 4, "unit": "tbsp", "name": "strawberry jam", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "Put the rice, milk, sugar and butter in a heavy-based saucepan and bring slowly to a gentle simmer, stirring often.",
+      "Turn the heat down low and cook for 35–45 minutes, stirring every few minutes so the rice does not stick to the bottom of the pan.",
+      "The pudding is ready when the rice is completely soft and the milk has thickened to a creamy, spoonable consistency. Add a splash more milk if it gets too thick.",
+      "Stir in the vanilla and nutmeg, then serve warm with a spoonful of jam if you like.",
+      "Cool any leftovers within 1 hour, refrigerate and eat within 24 hours; reheat with a splash of milk until steaming hot."
+    ]
+  },
+  {
+    "slug": "bread-butter-pudding",
+    "title": "Bread and butter pudding",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Kid friendly", "Budget", "Eggs", "Baking"],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 8, "unit": "slices", "name": "white bread", "note": "slightly stale" },
+      { "quantity": 50, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 50, "unit": "g", "name": "sultanas" },
+      { "quantity": 300, "unit": "ml", "name": "whole milk" },
+      { "quantity": 200, "unit": "ml", "name": "double cream" },
+      { "quantity": 3, "unit": "", "name": "eggs" },
+      { "quantity": 75, "unit": "g", "name": "caster sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "pinch", "name": "ground nutmeg" },
+      { "quantity": 1, "unit": "tbsp", "name": "demerara sugar" }
+    ],
+    "steps": [
+      "Heat the oven to 170°C (fan 150°C). Use a little of the butter to grease a medium ovenproof dish.",
+      "Butter the bread on one side, cut each slice into triangles and arrange them, buttered side up and overlapping, in the dish, scattering the sultanas between the layers.",
+      "In a mixing bowl, whisk the milk, cream, eggs, caster sugar and vanilla until smooth. Pour evenly over the bread and leave to soak for 15 minutes.",
+      "Grate the nutmeg over the top and sprinkle with the demerara sugar.",
+      "Bake for 35–40 minutes until puffed and golden and the custard is set in the centre (71°C); it should not wobble like liquid when you shake the dish gently.",
+      "Rest for 5 minutes before serving. Refrigerate leftovers and eat within 2 days, reheating until piping hot."
+    ]
+  },
+  {
+    "slug": "fruit-salad-honey-lime",
+    "title": "Fresh fruit bowl with honey and lime",
+    "category": "Dessert",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "prepTime": 15,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 250, "unit": "g", "name": "strawberries", "note": "hulled and halved" },
+      { "quantity": 150, "unit": "g", "name": "blueberries" },
+      { "quantity": 200, "unit": "g", "name": "seedless red grapes", "note": "halved" },
+      { "quantity": 1, "unit": "", "name": "ripe mango", "note": "peeled and diced" },
+      { "quantity": 2, "unit": "", "name": "kiwi fruits", "note": "peeled and sliced" },
+      { "quantity": 1, "unit": "", "name": "lime", "note": "zested and juiced" },
+      { "quantity": 2, "unit": "tbsp", "name": "runny honey" },
+      { "quantity": 1, "unit": "tbsp", "name": "fresh mint leaves", "note": "shredded", "optional": true }
+    ],
+    "steps": [
+      "Wash all the fruit and pat dry. Use a sharp knife to prepare the strawberries, grapes, mango and kiwi as listed.",
+      "In a small bowl, whisk the lime zest, lime juice and honey together until the honey dissolves.",
+      "Put all the fruit in a large mixing bowl, pour over the dressing and toss gently so the softer fruit does not break up.",
+      "Leave to stand for 10 minutes so the juices mingle, then scatter with mint if using and serve. Keep leftovers covered in the fridge and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "baked-apples",
+    "title": "Baked apples",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Gluten-free", "Kid friendly", "Budget", "Baking"],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 4, "unit": "", "name": "large apples", "note": "such as Bramley or Braeburn" },
+      { "quantity": 40, "unit": "g", "name": "sultanas" },
+      { "quantity": 40, "unit": "g", "name": "light brown soft sugar" },
+      { "quantity": 0.5, "unit": "tsp", "name": "ground cinnamon" },
+      { "quantity": 25, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 4, "unit": "tbsp", "name": "water" },
+      { "quantity": 150, "unit": "g", "name": "natural yogurt", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C).",
+      "Core the apples with an apple corer or small knife, leaving them whole. Score a thin line around the middle of each apple so the skin does not burst.",
+      "Mix the sultanas, sugar, cinnamon and butter together in a small bowl, then pack the mixture firmly into the hollow centre of each apple.",
+      "Stand the apples in a small ovenproof dish and pour the water around them.",
+      "Bake for 35–40 minutes, spooning the juices over halfway through, until the apples are soft right through when tested with a knife.",
+      "Serve warm with the syrupy juices and a spoonful of yogurt if you like."
+    ]
+  },
+  {
+    "slug": "chocolate-mousse",
+    "title": "Chocolate mousse",
+    "category": "Dessert",
+    "cuisine": "French",
+    "tags": ["Vegetarian", "Gluten-free"],
+    "prepTime": 20,
+    "cookTime": 5,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 150, "unit": "g", "name": "dark chocolate", "note": "finely chopped" },
+      { "quantity": 300, "unit": "ml", "name": "double cream", "note": "divided" },
+      { "quantity": 1, "unit": "tbsp", "name": "caster sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" },
+      { "quantity": 100, "unit": "g", "name": "raspberries", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "This mousse is made with whipped cream instead of eggs, so there is no raw egg. Put the chocolate in a heatproof mixing bowl.",
+      "Heat 100 ml of the cream in a small saucepan until it just starts to steam, then pour it over the chocolate. Leave for 2 minutes, then stir until smooth and glossy. Stir in the vanilla and salt and leave to cool to room temperature, about 15 minutes.",
+      "In a separate bowl, whip the remaining cream with the sugar until it holds soft peaks.",
+      "Fold a large spoonful of whipped cream into the chocolate to loosen it, then gently fold in the rest until evenly combined with no white streaks.",
+      "Spoon into four small glasses or ramekins, cover and chill in the fridge for at least 2 hours until set.",
+      "Serve topped with raspberries if you like. Keep covered in the fridge and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "victoria-sponge",
+    "title": "Victoria sponge",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Kid friendly", "Baking"],
+    "prepTime": 25,
+    "cookTime": 25,
+    "servings": "8",
+    "ingredients": [
+      { "quantity": 200, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 200, "unit": "g", "name": "caster sugar" },
+      { "quantity": 4, "unit": "", "name": "eggs" },
+      { "quantity": 200, "unit": "g", "name": "self-raising flour" },
+      { "quantity": 1, "unit": "tsp", "name": "baking powder" },
+      { "quantity": 2, "unit": "tbsp", "name": "milk" },
+      { "quantity": 150, "unit": "ml", "name": "double cream" },
+      { "quantity": 100, "unit": "g", "name": "strawberry or raspberry jam" },
+      { "quantity": 1, "unit": "tsp", "name": "icing sugar", "note": "for dusting", "optional": true }
+    ],
+    "steps": [
+      "Heat the oven to 190°C (fan 170°C). Grease two 20 cm round sandwich tins and line the bases with baking paper.",
+      "In a large mixing bowl, beat the butter and caster sugar until very pale and fluffy, then beat in the eggs one at a time.",
+      "Sift in the flour and baking powder and fold in with the milk until smooth. Divide evenly between the tins and level the tops.",
+      "Bake for 20–25 minutes until golden, springy to the touch and a skewer pushed into the centre comes out clean.",
+      "Cool in the tins for 5 minutes, then turn out onto a wire rack and leave to cool completely.",
+      "Whip the cream until it just holds soft peaks. Spread the jam over one sponge, top with the cream and sandwich with the second sponge. Dust with icing sugar if you like. Keep in the fridge because of the cream and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "carrot-cake",
+    "title": "Carrot cake",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Baking"],
+    "prepTime": 30,
+    "cookTime": 35,
+    "servings": "8",
+    "ingredients": [
+      { "quantity": 200, "unit": "ml", "name": "vegetable oil" },
+      { "quantity": 200, "unit": "g", "name": "light brown soft sugar" },
+      { "quantity": 3, "unit": "", "name": "eggs" },
+      { "quantity": 225, "unit": "g", "name": "self-raising flour" },
+      { "quantity": 1, "unit": "tsp", "name": "bicarbonate of soda" },
+      { "quantity": 2, "unit": "tsp", "name": "ground cinnamon" },
+      { "quantity": 0.5, "unit": "tsp", "name": "ground ginger" },
+      { "quantity": 250, "unit": "g", "name": "carrots", "note": "peeled and coarsely grated" },
+      { "quantity": 75, "unit": "g", "name": "sultanas" },
+      { "quantity": 75, "unit": "g", "name": "walnuts", "note": "roughly chopped" },
+      { "quantity": 200, "unit": "g", "name": "full-fat cream cheese", "note": "chilled" },
+      { "quantity": 50, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 150, "unit": "g", "name": "icing sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C). Grease two 20 cm round sandwich tins and line the bases with baking paper.",
+      "In a large mixing bowl, whisk the oil, brown sugar and eggs until smooth. Add the flour, bicarbonate of soda, cinnamon and ginger and stir until just combined.",
+      "Fold in the grated carrots, sultanas and most of the walnuts, keeping a small handful back for the top.",
+      "Divide between the tins and bake for 30–35 minutes until risen and a skewer pushed into the centre comes out clean. Cool in the tins for 10 minutes, then turn out onto a wire rack and cool completely.",
+      "For the frosting, beat the butter and icing sugar together until smooth, then beat in the cream cheese and vanilla briefly until thick and creamy; do not overbeat or it will turn runny.",
+      "Sandwich the cakes with half the frosting, spread the rest over the top and scatter with the reserved walnuts. Store in the fridge and eat within 3 days."
+    ]
+  },
+  {
+    "slug": "pavlova",
+    "title": "Pavlova with summer berries",
+    "category": "Dessert",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Gluten-free", "Baking"],
+    "prepTime": 25,
+    "cookTime": 75,
+    "servings": "8",
+    "ingredients": [
+      { "quantity": 4, "unit": "", "name": "egg whites", "note": "at room temperature" },
+      { "quantity": 225, "unit": "g", "name": "caster sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "cornflour" },
+      { "quantity": 1, "unit": "tsp", "name": "white wine vinegar" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 300, "unit": "ml", "name": "double cream" },
+      { "quantity": 250, "unit": "g", "name": "strawberries", "note": "hulled and halved" },
+      { "quantity": 150, "unit": "g", "name": "raspberries" },
+      { "quantity": 100, "unit": "g", "name": "blueberries" }
+    ],
+    "steps": [
+      "Heat the oven to 140°C (fan 120°C). Draw a 22 cm circle on a sheet of baking paper, flip it over and put it on a baking tray.",
+      "In a spotlessly clean, grease-free mixing bowl, whisk the egg whites with an electric whisk until they form stiff peaks.",
+      "Add the sugar a spoonful at a time, whisking well after each addition, until the meringue is thick, glossy and the sugar has dissolved. Whisk in the cornflour, vinegar and vanilla.",
+      "Spoon the meringue onto the circle, making a slight hollow in the middle and higher sides.",
+      "Bake for 1 hour 15 minutes until crisp and dry on the outside, then turn the oven off and leave the pavlova inside with the door ajar to cool completely, at least 1 hour. The meringue is fully baked, so there is no raw egg.",
+      "Just before serving, whip the cream to soft peaks, spread it over the pavlova and pile the berries on top. Serve straight away, as the meringue softens once topped."
+    ]
+  },
+  {
+    "slug": "no-bake-cheesecake",
+    "title": "No-bake strawberry cheesecake",
+    "category": "Dessert",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Kid friendly"],
+    "prepTime": 30,
+    "cookTime": 5,
+    "servings": "8",
+    "ingredients": [
+      { "quantity": 200, "unit": "g", "name": "digestive biscuits" },
+      { "quantity": 75, "unit": "g", "name": "unsalted butter", "note": "melted" },
+      { "quantity": 500, "unit": "g", "name": "full-fat cream cheese", "note": "at room temperature" },
+      { "quantity": 100, "unit": "g", "name": "icing sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "", "name": "lemon", "note": "finely zested" },
+      { "quantity": 300, "unit": "ml", "name": "double cream" },
+      { "quantity": 300, "unit": "g", "name": "strawberries", "note": "hulled and halved" },
+      { "quantity": 2, "unit": "tbsp", "name": "strawberry jam" }
+    ],
+    "steps": [
+      "Line the base of a 20 cm springform tin with baking paper.",
+      "Crush the biscuits to fine crumbs in a food bag with a rolling pin, or in a blender. Melt the butter in a small saucepan, stir in the crumbs, then press firmly into the base of the tin. Chill while you make the filling.",
+      "In a large mixing bowl, beat the cream cheese, icing sugar, vanilla and lemon zest until smooth.",
+      "In another bowl, whip the double cream to soft peaks, then fold it into the cream cheese mixture until evenly combined.",
+      "Spread the filling over the biscuit base and smooth the top. Cover and chill in the fridge for at least 6 hours, or overnight, until firm.",
+      "Warm the jam with a teaspoon of water until runny, toss with the strawberries and arrange on top of the cheesecake. Release from the tin and slice with a knife dipped in hot water. Keep in the fridge and eat within 3 days."
+    ]
+  },
+  {
+    "slug": "panna-cotta",
+    "title": "Vanilla panna cotta",
+    "category": "Dessert",
+    "cuisine": "Italian",
+    "tags": ["Gluten-free"],
+    "prepTime": 15,
+    "cookTime": 5,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 3, "unit": "sheets", "name": "gelatine leaves" },
+      { "quantity": 400, "unit": "ml", "name": "double cream" },
+      { "quantity": 200, "unit": "ml", "name": "whole milk" },
+      { "quantity": 60, "unit": "g", "name": "caster sugar" },
+      { "quantity": 2, "unit": "tsp", "name": "vanilla bean paste or vanilla extract" },
+      { "quantity": 200, "unit": "g", "name": "raspberries", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "Soak the gelatine leaves in a bowl of cold water for 5 minutes until floppy.",
+      "Put the cream, milk and sugar in a saucepan and heat gently, stirring, until the sugar dissolves and the mixture is steaming but not boiling. Take off the heat and stir in the vanilla.",
+      "Squeeze the excess water from the gelatine, add it to the warm cream and stir until completely dissolved.",
+      "Strain into a jug, then pour into six small moulds, ramekins or glasses.",
+      "Leave to cool, then cover and chill in the fridge for at least 4 hours, or overnight, until set with a gentle wobble.",
+      "To turn out, dip each mould briefly in hot water and invert onto a plate. Serve with raspberries if you like. This dessert contains gelatine, so it is not suitable for vegetarians."
+    ]
+  },
+  {
+    "slug": "sticky-toffee-pudding",
+    "title": "Sticky toffee pudding",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Baking"],
+    "prepTime": 25,
+    "cookTime": 35,
+    "servings": "8",
+    "ingredients": [
+      { "quantity": 200, "unit": "g", "name": "pitted dates", "note": "chopped" },
+      { "quantity": 250, "unit": "ml", "name": "boiling water" },
+      { "quantity": 1, "unit": "tsp", "name": "bicarbonate of soda" },
+      { "quantity": 75, "unit": "g", "name": "unsalted butter", "note": "softened, for the sponge" },
+      { "quantity": 150, "unit": "g", "name": "light muscovado sugar" },
+      { "quantity": 2, "unit": "", "name": "eggs" },
+      { "quantity": 175, "unit": "g", "name": "self-raising flour" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 75, "unit": "g", "name": "unsalted butter", "note": "for the sauce" },
+      { "quantity": 150, "unit": "g", "name": "dark muscovado sugar" },
+      { "quantity": 250, "unit": "ml", "name": "double cream" }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C) and grease a 20 cm square baking dish.",
+      "Put the dates in a heatproof bowl, pour over the boiling water, stir in the bicarbonate of soda and leave to soak for 10 minutes.",
+      "In a mixing bowl, beat the softened butter and light muscovado sugar until creamy, then beat in the eggs one at a time. Fold in the flour, then stir in the dates with their soaking liquid and the vanilla to make a loose batter.",
+      "Pour into the dish and bake for 30–35 minutes until risen, firm to the touch and a skewer pushed into the centre comes out clean.",
+      "Meanwhile, make the sauce: put the butter for the sauce, dark muscovado sugar and cream in a saucepan and heat gently, stirring, until the sugar dissolves. Simmer for 3–4 minutes until glossy and slightly thickened.",
+      "Prick the warm pudding all over with a skewer, pour over a third of the sauce and leave for a few minutes to soak in. Cut into squares and serve with the remaining sauce. Refrigerate leftovers and reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "peach-cobbler",
+    "title": "Peach cobbler",
+    "category": "Dessert",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Kid friendly", "Budget", "Baking"],
+    "prepTime": 20,
+    "cookTime": 35,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 500, "unit": "g", "name": "canned sliced peaches in juice", "note": "drained" },
+      { "quantity": 2, "unit": "tbsp", "name": "caster sugar", "note": "for the fruit" },
+      { "quantity": 1, "unit": "tbsp", "name": "cornflour" },
+      { "quantity": 0.5, "unit": "tsp", "name": "ground cinnamon" },
+      { "quantity": 1, "unit": "tbsp", "name": "lemon juice" },
+      { "quantity": 200, "unit": "g", "name": "self-raising flour" },
+      { "quantity": 50, "unit": "g", "name": "caster sugar", "note": "for the topping" },
+      { "quantity": 1, "unit": "tsp", "name": "baking powder" },
+      { "quantity": 75, "unit": "g", "name": "cold unsalted butter", "note": "diced" },
+      { "quantity": 125, "unit": "ml", "name": "milk" },
+      { "quantity": 1, "unit": "tbsp", "name": "demerara sugar" }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C).",
+      "Toss the peaches with the sugar for the fruit, cornflour, cinnamon and lemon juice, then spread them over the base of a medium ovenproof dish.",
+      "For the topping, mix the flour, sugar for the topping and baking powder in a mixing bowl. Rub in the butter until it looks like breadcrumbs, then stir in the milk with a knife to make a soft, sticky dough.",
+      "Drop spoonfuls of the dough over the peaches, leaving small gaps between them, and sprinkle with the demerara sugar.",
+      "Bake for 30–35 minutes until the topping is risen and golden, cooked through underneath, and the fruit is bubbling.",
+      "Leave to stand for 5 minutes before serving warm. Refrigerate leftovers and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "eggless-tiramisu",
+    "title": "Eggless tiramisu",
+    "category": "Dessert",
+    "cuisine": "Italian",
+    "tags": ["Vegetarian"],
+    "prepTime": 25,
+    "cookTime": 0,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 250, "unit": "ml", "name": "strong coffee", "note": "freshly brewed and cooled" },
+      { "quantity": 2, "unit": "tbsp", "name": "coffee liqueur", "optional": true },
+      { "quantity": 250, "unit": "g", "name": "mascarpone" },
+      { "quantity": 300, "unit": "ml", "name": "double cream" },
+      { "quantity": 75, "unit": "g", "name": "icing sugar" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 200, "unit": "g", "name": "sponge fingers" },
+      { "quantity": 2, "unit": "tbsp", "name": "cocoa powder" }
+    ],
+    "steps": [
+      "This tiramisu uses whipped cream and mascarpone instead of raw eggs. Shop-bought sponge fingers usually contain baked egg, so check the pack if you need to avoid egg completely. It contains coffee, so it is not suitable for young children.",
+      "Pour the cooled coffee into a shallow dish and stir in the coffee liqueur if using; leave it out for an alcohol-free version.",
+      "In a large mixing bowl, whisk the mascarpone, cream, icing sugar and vanilla together until thick and holding soft peaks. Do not overwhip.",
+      "Dip half the sponge fingers into the coffee, one at a time, for a second on each side, and lay them in a single layer in a dish about 20 cm square. Spread half the cream over the top.",
+      "Repeat with the remaining sponge fingers and cream, smoothing the top.",
+      "Cover and chill in the fridge for at least 4 hours, or overnight, so it firms up and the flavours develop. Dust generously with cocoa powder through a sieve just before serving. Eat within 2 days."
+    ]
+  },
+  {
+    "slug": "shortbread",
+    "title": "Shortbread",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Kid friendly", "Baking"],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "16",
+    "ingredients": [
+      { "quantity": 225, "unit": "g", "name": "unsalted butter", "note": "softened" },
+      { "quantity": 100, "unit": "g", "name": "caster sugar", "note": "plus extra for sprinkling" },
+      { "quantity": 275, "unit": "g", "name": "plain flour" },
+      { "quantity": 50, "unit": "g", "name": "cornflour" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" }
+    ],
+    "steps": [
+      "Heat the oven to 160°C (fan 140°C). Grease and line a 20 cm square baking tin with baking paper.",
+      "In a mixing bowl, beat the butter and sugar together until smooth and pale.",
+      "Add the flour, cornflour and salt and work everything together with a wooden spoon, then your hands, until it just comes together into a smooth dough. Do not overwork it.",
+      "Press the dough evenly into the tin, smooth the top and prick all over with a fork. Mark into 16 pieces with a knife.",
+      "Bake for 35–40 minutes until pale golden all over and firm at the edges.",
+      "Sprinkle with a little caster sugar while hot, re-cut along the marks, then leave to cool completely in the tin before lifting out. Store in an airtight tin for up to a week."
+    ]
+  },
+  {
+    "slug": "poached-pears",
+    "title": "Poached pears",
+    "category": "Dessert",
+    "cuisine": "French",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 4, "unit": "", "name": "firm pears", "note": "peeled, stalks left on" },
+      { "quantity": 750, "unit": "ml", "name": "water" },
+      { "quantity": 150, "unit": "g", "name": "caster sugar" },
+      { "quantity": 1, "unit": "", "name": "cinnamon stick" },
+      { "quantity": 2, "unit": "", "name": "star anise" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "", "name": "lemon", "note": "zest pared into strips and juiced" }
+    ],
+    "steps": [
+      "Put the water, sugar, cinnamon stick, star anise, vanilla, lemon zest and lemon juice in a saucepan just big enough to hold the pears. Heat gently, stirring, until the sugar dissolves.",
+      "Slice a thin piece off the base of each pear so it can stand up later, then lower the pears into the syrup.",
+      "Cover with a circle of baking paper to keep them submerged and simmer gently for 20–30 minutes, turning occasionally, until a knife slides easily into the thickest part.",
+      "Lift the pears out with a slotted spoon. Boil the syrup for 5–8 minutes until reduced by about half and slightly syrupy, then strain out the spices.",
+      "Serve the pears warm or chilled, standing upright in shallow bowls with the syrup spooned over. They keep in their syrup in the fridge for up to 3 days."
+    ]
+  },
+  {
+    "slug": "banana-nice-cream",
+    "title": "Banana nice cream",
+    "category": "Dessert",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly", "Budget"],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 4, "unit": "", "name": "ripe bananas", "note": "peeled and sliced" },
+      { "quantity": 3, "unit": "tbsp", "name": "coconut milk" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "tbsp", "name": "maple syrup", "optional": true },
+      { "quantity": 30, "unit": "g", "name": "dairy-free dark chocolate", "note": "grated, to serve", "optional": true }
+    ],
+    "steps": [
+      "Spread the banana slices in a single layer on a lined baking tray and freeze for at least 4 hours, or overnight, until solid.",
+      "Put the frozen banana in a blender or food processor with the coconut milk and vanilla. Leave for 2–3 minutes to soften slightly.",
+      "Blend, stopping to scrape down the sides often, until the banana breaks down from crumbs into a thick, smooth soft-serve. Add the maple syrup if you want it sweeter.",
+      "Serve straight away topped with grated chocolate if you like, or spoon into a container and freeze for 1 hour for a firmer scoop. Eat within a week; let it soften for 10 minutes before scooping."
+    ]
+  },
+  {
+    "slug": "creme-caramel",
+    "title": "Crème caramel",
+    "category": "Dessert",
+    "cuisine": "French",
+    "tags": ["Vegetarian", "Gluten-free", "Eggs", "Baking"],
+    "prepTime": 25,
+    "cookTime": 45,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 150, "unit": "g", "name": "caster sugar", "note": "for the caramel" },
+      { "quantity": 4, "unit": "tbsp", "name": "water" },
+      { "quantity": 500, "unit": "ml", "name": "whole milk" },
+      { "quantity": 3, "unit": "", "name": "eggs" },
+      { "quantity": 2, "unit": "", "name": "egg yolks" },
+      { "quantity": 50, "unit": "g", "name": "caster sugar", "note": "for the custard" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" }
+    ],
+    "steps": [
+      "Heat the oven to 150°C (fan 130°C). Stand six ramekins in a deep roasting tin.",
+      "Put the sugar for the caramel and the water in a small saucepan and heat gently without stirring until the sugar dissolves, then boil, swirling the pan, until it turns a deep amber. Quickly pour into the ramekins and tilt to coat the bases. Take care, as hot caramel burns badly.",
+      "Warm the milk in a saucepan until steaming. In a mixing bowl, whisk the eggs, yolks, sugar for the custard and vanilla, then slowly whisk in the warm milk. Strain into a jug and pour into the ramekins.",
+      "Pour hot water from the kettle into the roasting tin to come halfway up the sides of the ramekins.",
+      "Bake for 40–45 minutes until the custards are set in the centre (71°C) with just a slight wobble. Lift out of the water and cool.",
+      "Cover and chill in the fridge for at least 4 hours, or overnight. To serve, run a knife around each custard and turn out onto a plate so the caramel pools around it. Eat within 2 days."
+    ]
+  },
+  {
+    "slug": "lemon-posset",
+    "title": "Lemon posset",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Gluten-free"],
+    "prepTime": 10,
+    "cookTime": 5,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 600, "unit": "ml", "name": "double cream" },
+      { "quantity": 150, "unit": "g", "name": "caster sugar" },
+      { "quantity": 2, "unit": "", "name": "large lemons", "note": "finely zested and juiced" },
+      { "quantity": 100, "unit": "g", "name": "raspberries", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "Put the cream and sugar in a saucepan and heat gently, stirring, until the sugar dissolves.",
+      "Bring to the boil and let it bubble for exactly 3 minutes, stirring so it does not catch or boil over.",
+      "Take off the heat and stir in the lemon zest and juice; you need about 75 ml juice. The mixture will thicken slightly. Leave to cool for 10 minutes.",
+      "Pour through a sieve into a jug, then divide between four small glasses or ramekins.",
+      "Cool, then cover and chill in the fridge for at least 3 hours until set. Top with raspberries if you like. Keep in the fridge and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "gingerbread",
+    "title": "Sticky gingerbread",
+    "category": "Dessert",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Kid friendly", "Baking"],
+    "prepTime": 20,
+    "cookTime": 45,
+    "servings": "16",
+    "ingredients": [
+      { "quantity": 125, "unit": "g", "name": "unsalted butter" },
+      { "quantity": 100, "unit": "g", "name": "dark muscovado sugar" },
+      { "quantity": 100, "unit": "g", "name": "golden syrup" },
+      { "quantity": 100, "unit": "g", "name": "black treacle" },
+      { "quantity": 250, "unit": "g", "name": "self-raising flour" },
+      { "quantity": 2, "unit": "tsp", "name": "ground ginger" },
+      { "quantity": 1, "unit": "tsp", "name": "ground cinnamon" },
+      { "quantity": 0.5, "unit": "tsp", "name": "bicarbonate of soda" },
+      { "quantity": 200, "unit": "ml", "name": "milk" },
+      { "quantity": 2, "unit": "", "name": "eggs", "note": "beaten" }
+    ],
+    "steps": [
+      "Heat the oven to 160°C (fan 140°C). Grease and line a 20 cm square baking tin with baking paper.",
+      "Put the butter, sugar, golden syrup and treacle in a saucepan and heat gently, stirring, until melted and smooth. Take off the heat and leave to cool for 5 minutes.",
+      "In a large mixing bowl, mix the flour, ginger, cinnamon and bicarbonate of soda. Pour in the melted mixture, milk and eggs and whisk until you have a smooth, runny batter.",
+      "Pour into the tin and bake for 40–45 minutes until risen, firm to the touch and a skewer pushed into the centre comes out clean.",
+      "Cool completely in the tin, then cut into 16 squares. It gets stickier if wrapped and kept for a day; store in an airtight tin for up to a week."
+    ]
+  },
+  {
+    "slug": "chocolate-dipped-strawberries",
+    "title": "Chocolate-dipped strawberries",
+    "category": "Dessert",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "prepTime": 15,
+    "cookTime": 5,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 400, "unit": "g", "name": "strawberries", "note": "stalks left on" },
+      { "quantity": 150, "unit": "g", "name": "dairy-free dark chocolate", "note": "broken into pieces" }
+    ],
+    "steps": [
+      "Wash the strawberries and dry them thoroughly with kitchen paper; any water will stop the chocolate sticking. Line a baking tray with baking paper.",
+      "Put the chocolate in a heatproof bowl set over a saucepan of barely simmering water, making sure the bowl does not touch the water. Stir until just melted and smooth, then take off the heat.",
+      "Holding each strawberry by the stalk, dip it about two-thirds of the way into the chocolate, let the excess drip off and lay it on the tray.",
+      "Chill in the fridge for about 30 minutes until the chocolate has set.",
+      "Serve the same day for the best texture, keeping them in the fridge until needed."
+    ]
+  },
+  {
+    "slug": "cherry-clafoutis",
+    "title": "Cherry clafoutis",
+    "category": "Dessert",
+    "cuisine": "French",
+    "tags": ["Vegetarian", "Eggs", "Baking"],
+    "prepTime": 20,
+    "cookTime": 40,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 15, "unit": "g", "name": "unsalted butter", "note": "softened, for greasing" },
+      { "quantity": 500, "unit": "g", "name": "fresh cherries", "note": "stoned" },
+      { "quantity": 3, "unit": "", "name": "eggs" },
+      { "quantity": 75, "unit": "g", "name": "caster sugar" },
+      { "quantity": 60, "unit": "g", "name": "plain flour" },
+      { "quantity": 250, "unit": "ml", "name": "whole milk" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" },
+      { "quantity": 1, "unit": "tsp", "name": "icing sugar", "note": "for dusting", "optional": true }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C). Butter a medium ovenproof dish generously and spread the cherries over the base.",
+      "In a mixing bowl, whisk the eggs and sugar until frothy, then whisk in the flour until smooth.",
+      "Gradually whisk in the milk, vanilla and salt to make a thin, smooth batter.",
+      "Pour the batter over the cherries and bake for 35–40 minutes until puffed, golden and set in the centre (71°C); a knife pushed into the middle should come out clean.",
+      "Leave to cool for 10 minutes; it will sink a little, which is normal. Dust with icing sugar if you like and serve warm. Refrigerate leftovers and eat within 2 days."
+    ]
+  }
+]

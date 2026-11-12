@@ -1,0 +1,3504 @@
+[
+  {
+    "slug": "lemon-herb-roast-chicken-thighs",
+    "title": "Lemon herb roast chicken thighs",
+    "category": "Dinner",
+    "cuisine": "Mediterranean",
+    "tags": [
+      "Chicken",
+      "Potatoes",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "bone-in chicken thighs",
+        "note": "skin on"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "new potatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon"
+      },
+      {
+        "quantity": 4,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "lightly crushed"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 4,
+        "unit": "sprigs",
+        "name": "fresh thyme"
+      },
+      {
+        "quantity": 2,
+        "unit": "sprigs",
+        "name": "fresh rosemary"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Zest the lemon into a large mixing bowl, then squeeze in the juice and add the olive oil, oregano, salt and pepper.",
+      "Add the chicken thighs and halved potatoes to the bowl and toss until everything is well coated. Wash your hands and board after handling the raw chicken.",
+      "Tip everything into a large roasting tin or baking tray, arranging the chicken skin side up in a single layer with the potatoes around it. Tuck in the garlic, thyme, rosemary and the squeezed lemon halves.",
+      "Roast for 40–45 minutes, turning the potatoes once halfway, until the skin is golden and crisp and the potatoes are tender.",
+      "Check the chicken is cooked: the thickest part should reach 74°C and the juices should run clear. Return to the oven for a few more minutes if needed.",
+      "Spoon the pan juices over the chicken, scatter with parsley if using and serve straight from the tray."
+    ]
+  },
+  {
+    "slug": "chicken-fajitas",
+    "title": "Chicken fajitas",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Chicken",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "chicken breasts",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "bell peppers",
+        "note": "deseeded and sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red onion",
+        "note": "sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "garlic granules"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "juiced"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "small flour tortillas"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "soured cream",
+        "optional": true
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "ripe avocado",
+        "note": "sliced",
+        "optional": true
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the paprika, cumin, chilli powder, garlic granules and salt in a mixing bowl. Add the sliced chicken and half the oil and toss to coat. Wash your hands and board after handling the raw chicken.",
+      "Heat the remaining oil in a large frying pan over a high heat. Add the peppers and onion and stir-fry for 4–5 minutes until softened and slightly charred, then tip onto a plate.",
+      "Add the chicken to the hot pan in a single layer and cook for 6–8 minutes, stirring now and then, until golden and cooked through to 74°C with no pink remaining.",
+      "Return the vegetables to the pan, squeeze over the lime juice and toss together for a minute.",
+      "Warm the tortillas in a dry frying pan or the microwave for a few seconds each.",
+      "Serve the filling at the table with the warm tortillas so everyone can fill and roll their own, with soured cream, avocado and coriander if you like."
+    ]
+  },
+  {
+    "slug": "honey-garlic-chicken-drumsticks",
+    "title": "Honey garlic chicken drumsticks",
+    "category": "Dinner",
+    "cuisine": "International",
+    "tags": [
+      "Chicken",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "chicken drumsticks"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 4,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "rice vinegar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sesame seeds",
+        "optional": true
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "spring onions",
+        "note": "thinly sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Line a baking tray with foil or baking paper.",
+      "Whisk the honey, tamari, garlic, rice vinegar, oil and pepper in a mixing bowl. Add the drumsticks and turn to coat, then arrange them on the tray. Keep the leftover sauce in the bowl. Wash your hands after handling the raw chicken.",
+      "Bake for 20 minutes, then turn the drumsticks and brush with a little of the reserved sauce.",
+      "Bake for another 20–25 minutes until sticky and dark golden and the thickest part reaches 74°C with juices running clear.",
+      "Meanwhile, pour the rest of the sauce into a small saucepan. Mix the cornflour with a tablespoon of cold water, stir it in and simmer for 1–2 minutes until glossy and thickened.",
+      "Toss the cooked drumsticks in the glaze and sprinkle with sesame seeds and spring onions if using. Serve with rice or steamed vegetables."
+    ]
+  },
+  {
+    "slug": "chicken-tikka-masala",
+    "title": "Chicken tikka masala",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 20,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 650,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "plain yogurt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "garam masala"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "large onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "chilli powder"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "double cream"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the yogurt with half the garam masala, half the cumin, half the paprika, the turmeric and half the salt in a mixing bowl. Stir in the chicken and leave for at least 15 minutes (or up to a day in the fridge). Wash your hands and board after handling the raw chicken.",
+      "Heat the grill to high. Spread the chicken on a lined baking tray and grill for 10–12 minutes, turning once, until charred at the edges. It will finish cooking in the sauce.",
+      "Meanwhile, heat the oil in a large saucepan over a medium heat and fry the onion for 8 minutes until soft and golden. Add the garlic, ginger, chilli powder and the remaining spices and cook for 1 minute.",
+      "Add the tomatoes and the remaining salt and simmer for 10 minutes. Blitz with a stick blender until smooth if you like.",
+      "Rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender, then drain.",
+      "Stir the cream and grilled chicken into the sauce and simmer gently for 8–10 minutes until the chicken reaches 74°C and the juices run clear.",
+      "Serve the curry over the rice, scattered with coriander if using. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours, reheating until steaming hot."
+    ]
+  },
+  {
+    "slug": "teriyaki-chicken-rice",
+    "title": "Teriyaki chicken with rice",
+    "category": "Dinner",
+    "cuisine": "Japanese",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into bite-sized pieces"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "rice vinegar"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "tenderstem broccoli"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sesame seeds",
+        "optional": true
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Rinse the rice and cook in a saucepan with 450 ml water: bring to the boil, cover, turn the heat to low and cook for 12 minutes, then leave covered off the heat for 5 minutes.",
+      "Whisk the tamari, honey, rice vinegar, garlic, ginger and cornflour with 3 tbsp water in a small bowl to make the sauce.",
+      "Heat the oil in a large frying pan over a medium-high heat. Add the chicken and fry for 7–8 minutes, turning, until golden. Wash your hands and board after handling the raw chicken.",
+      "Pour in the sauce and bubble for 2–3 minutes, stirring, until thick and glossy and the chicken reaches 74°C with no pink remaining.",
+      "Meanwhile, steam or boil the broccoli for 3–4 minutes until just tender.",
+      "Serve the chicken and sauce over the rice with the broccoli, topped with sesame seeds and spring onions if using. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours, reheating until steaming hot."
+    ]
+  },
+  {
+    "slug": "chicken-cacciatore",
+    "title": "Chicken cacciatore",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Chicken",
+      "Gluten-free",
+      "Dairy-free",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "boneless skinless chicken thighs"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and sliced"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "chestnut mushrooms",
+        "note": "sliced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "sliced"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "gluten-free chicken stock"
+      },
+      {
+        "quantity": 2,
+        "unit": "sprigs",
+        "name": "fresh rosemary"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "pitted black olives"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Season the chicken with half the salt and the pepper. Heat the oil in a large deep frying pan or casserole over a medium-high heat and brown the chicken for 3–4 minutes per side. Lift onto a plate. Wash your hands and board after handling the raw chicken.",
+      "Lower the heat to medium, add the onion, pepper and mushrooms and cook for 8 minutes until softened. Add the garlic and cook for 1 minute more.",
+      "Stir in the tomatoes, stock, rosemary, oregano and remaining salt. Bring to a simmer.",
+      "Return the chicken and any juices to the pan, cover and simmer gently for 25 minutes, stirring occasionally.",
+      "Remove the lid, add the olives and simmer for 5 more minutes to thicken the sauce. The chicken should reach 74°C at the thickest part with juices running clear.",
+      "Discard the rosemary stalks, scatter with parsley if using and serve with mashed potatoes, rice or crusty bread. This freezes well for up to 3 months; cool quickly and reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "chicken-broccoli-pasta-bake",
+    "title": "Chicken and broccoli pasta bake",
+    "category": "Dinner",
+    "cuisine": "International",
+    "tags": [
+      "Chicken",
+      "Pasta",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "penne pasta"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "broccoli",
+        "note": "cut into small florets"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "chicken breasts",
+        "note": "cut into bite-sized pieces"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 600,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "Dijon mustard"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "mature Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Cook the pasta in a large pot of boiling salted water for 2 minutes less than the packet says, adding the broccoli for the final 2 minutes. Drain.",
+      "Meanwhile, heat the oil in a large frying pan over a medium-high heat and cook the chicken for 6–8 minutes until golden and cooked through to 74°C with no pink remaining. Wash your hands and board after handling the raw chicken.",
+      "Melt the butter in a saucepan over a medium heat, stir in the flour and cook for 1 minute. Gradually whisk in the milk and keep whisking for 4–5 minutes until smooth and thickened.",
+      "Take the sauce off the heat and stir in the mustard, two-thirds of the cheese, the salt and pepper.",
+      "Mix the pasta, broccoli, chicken and sauce together and tip into a large baking dish. Scatter over the remaining cheese.",
+      "Bake for 20 minutes until bubbling and golden on top. Leftovers keep in the fridge for 2 days; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "paprika-chicken-peppers",
+    "title": "Paprika chicken with peppers",
+    "category": "Dinner",
+    "cuisine": "Eastern European",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget"
+    ],
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 650,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into large chunks"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "large onion",
+        "note": "sliced"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "mixed bell peppers",
+        "note": "deseeded and sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sweet paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "gluten-free chicken stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Season the chicken with half the salt. Heat the oil in a large deep frying pan over a medium-high heat and brown the chicken for 5 minutes, turning. Lift onto a plate. Wash your hands and board after handling the raw chicken.",
+      "Add the onion and peppers to the pan and cook over a medium heat for 8–10 minutes until soft and sweet. Stir in the garlic, both paprikas and the tomato purée and cook for 1 minute, stirring so the paprika doesn't burn.",
+      "Pour in the tomatoes and stock, add the remaining salt and the pepper, then return the chicken. Cover and simmer for 20 minutes until the sauce has thickened and the chicken reaches 74°C with juices running clear.",
+      "Meanwhile, rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender, then drain.",
+      "Serve the chicken and peppers over the rice, scattered with parsley if using. Cool any leftover rice within 1 hour, refrigerate and eat within 24 hours, reheating until steaming hot."
+    ]
+  },
+  {
+    "slug": "chicken-enchiladas",
+    "title": "Chicken enchiladas",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Chicken",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 20,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "chicken breasts",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "passata"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "small flour tortillas"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 190°C (fan 170°C). Heat the oil in a large frying pan over a medium heat and soften the onion and pepper for 6 minutes.",
+      "Add the chicken and cook for 6–8 minutes until it reaches 74°C with no pink remaining. Stir in the garlic, cumin, paprika and chilli powder and cook for 1 minute. Wash your hands and board after handling the raw chicken.",
+      "Stir in the black beans, 4 tbsp of the passata and half the salt, then take off the heat.",
+      "In a small saucepan, warm the remaining passata with the oregano and remaining salt for 5 minutes to make the sauce. Spread a third of it over the base of a large baking dish.",
+      "Divide the chicken filling between the tortillas, roll them up and lay them seam side down in the dish. Pour over the rest of the sauce and scatter with the cheese.",
+      "Bake for 20–25 minutes until bubbling and the cheese is golden. Scatter with coriander if using. Assembled enchiladas can be frozen before baking; defrost in the fridge and bake until piping hot."
+    ]
+  },
+  {
+    "slug": "thai-green-chicken-curry",
+    "title": "Thai green chicken curry",
+    "category": "Dinner",
+    "cuisine": "Thai",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Dairy-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into bite-sized pieces"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "Thai green curry paste"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "canned coconut milk"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "chicken stock"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "green beans",
+        "note": "trimmed and halved"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fish sauce"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "soft brown sugar"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "juiced"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "small bunch fresh basil or coriander",
+        "note": "leaves picked",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Rinse the rice and cook in a saucepan with 450 ml water: bring to the boil, cover, turn the heat to low and cook for 12 minutes, then leave covered off the heat for 5 minutes.",
+      "Heat the oil in a wok or large saucepan over a medium heat. Add the curry paste and fry for 1 minute until fragrant.",
+      "Add the chicken and stir to coat in the paste, cooking for 3 minutes. Wash your hands and board after handling the raw chicken.",
+      "Pour in the coconut milk and stock and bring to a gentle simmer. Cook for 10 minutes.",
+      "Add the green beans and pepper and simmer for 5–6 minutes until the vegetables are just tender and the chicken reaches 74°C with no pink remaining.",
+      "Stir in the fish sauce, sugar and lime juice, then taste and adjust. Serve over the rice, topped with basil or coriander if using. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "butter-chicken",
+    "title": "Butter chicken",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 650,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "plain yogurt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "garam masala"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "passata"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "double cream"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      }
+    ],
+    "steps": [
+      "Mix the yogurt, half the salt, half the garam masala, the cumin, chilli powder and turmeric in a mixing bowl. Add the chicken, stir to coat and leave for 15 minutes. Wash your hands and board after handling the raw chicken.",
+      "Melt half the butter in a large frying pan over a medium-high heat and brown the chicken in batches for 4–5 minutes. Lift onto a plate.",
+      "Melt the remaining butter in the pan, add the onion and cook gently for 8 minutes until soft. Add the garlic, ginger and tomato purée and cook for 1 minute.",
+      "Stir in the passata, sugar, remaining garam masala and remaining salt. Simmer for 10 minutes, then blend with a stick blender until smooth.",
+      "Return the chicken to the sauce, stir in the cream and simmer gently for 10 minutes until the chicken reaches 74°C with juices running clear.",
+      "Meanwhile, rinse the rice and cook in a saucepan of boiling water for 10–12 minutes, then drain. Serve the curry with the rice. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "chicken-pot-pie",
+    "title": "Chicken pot pie",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Chicken",
+      "Kid friendly",
+      "Baking"
+    ],
+    "prepTime": 20,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into bite-sized pieces"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "celery sticks",
+        "note": "diced"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "chicken stock"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 120,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried thyme"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 320,
+        "unit": "g",
+        "name": "ready-rolled puff pastry"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "egg",
+        "note": "beaten"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Heat the oil in a large saucepan over a medium-high heat and brown the chicken for 5 minutes. Lift onto a plate. Wash your hands and board after handling the raw chicken.",
+      "Melt the butter in the pan, add the onion, carrots and celery and cook over a medium heat for 8 minutes until softened.",
+      "Stir in the flour and cook for 1 minute, then gradually add the stock and milk, stirring until smooth. Simmer for 3–4 minutes until thickened.",
+      "Return the chicken with the peas, thyme, salt and pepper and simmer for 5 minutes. Spoon into a pie dish.",
+      "Unroll the pastry and lay it over the dish, trimming the edges and pressing them onto the rim. Cut a small slit in the middle and brush with beaten egg.",
+      "Bake for 25–30 minutes until the pastry is puffed and deep golden and the filling is bubbling. Check the filling has reached 74°C. Rest for 5 minutes before serving."
+    ]
+  },
+  {
+    "slug": "chicken-sweet-potato-traybake",
+    "title": "Chicken and sweet potato traybake",
+    "category": "Dinner",
+    "cuisine": "International",
+    "tags": [
+      "Chicken",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "boneless skinless chicken thighs"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "sweet potatoes",
+        "note": "peeled and cut into chunks"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "red onions",
+        "note": "cut into wedges"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "red peppers",
+        "note": "deseeded and cut into chunks"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "garlic granules"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "cut into wedges",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 210°C (fan 190°C). Mix the oil, paprika, cumin, garlic granules, salt and pepper in a large mixing bowl.",
+      "Toss the sweet potatoes, onions and peppers in half the spiced oil and spread over a large baking tray. Roast for 15 minutes.",
+      "Meanwhile, add the chicken to the bowl with the remaining spiced oil and turn to coat. Wash your hands and board after handling the raw chicken.",
+      "Nestle the chicken among the vegetables and roast for 25 minutes more, turning the vegetables once, until the sweet potatoes are tender and caramelised at the edges.",
+      "Check the chicken reaches 74°C at the thickest part with juices running clear. Serve with lime wedges for squeezing over if you like."
+    ]
+  },
+  {
+    "slug": "chicken-shawarma-bowls",
+    "title": "Chicken shawarma bowls",
+    "category": "Dinner",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 650,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "juiced"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "cucumber",
+        "note": "diced"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "cherry tomatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "red onion",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "Greek-style yogurt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the oil, half the lemon juice, the spices, two-thirds of the garlic and the salt in a mixing bowl. Add the chicken and coat well; leave for 15 minutes or up to a day in the fridge. Wash your hands and board after handling the raw chicken.",
+      "Heat the oven to 220°C (fan 200°C). Spread the chicken on a baking tray and roast for 20–25 minutes until charred at the edges and the thickest part reaches 74°C with juices running clear.",
+      "Meanwhile, rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender, then drain.",
+      "Stir the remaining garlic and lemon juice into the yogurt with a pinch of salt to make a garlic sauce.",
+      "Rest the chicken for 5 minutes, then slice it with a sharp knife.",
+      "Divide the rice between bowls and top with the chicken, cucumber, tomatoes and red onion. Spoon over the garlic sauce and scatter with parsley if using. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "turkey-meatballs-tomato-sauce",
+    "title": "Turkey meatballs in tomato sauce",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Turkey",
+      "Pasta",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 20,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "turkey mince"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "fresh breadcrumbs"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "egg"
+      },
+      {
+        "quantity": 25,
+        "unit": "g",
+        "name": "Parmesan",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 320,
+        "unit": "g",
+        "name": "spaghetti"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh basil",
+        "note": "torn",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the turkey mince, breadcrumbs, egg, Parmesan, oregano and half the salt in a mixing bowl. Shape into about 20 walnut-sized balls. Wash your hands and board after handling the raw mince.",
+      "Heat half the oil in a large frying pan over a medium-high heat and brown the meatballs for 6–8 minutes, turning, until golden all over. Lift onto a plate.",
+      "Add the remaining oil and the onion to the pan and cook for 6 minutes until soft. Stir in the garlic for 1 minute, then add the tomatoes, sugar and remaining salt.",
+      "Return the meatballs to the sauce, cover and simmer for 15 minutes until the meatballs reach 74°C in the centre with no pink remaining.",
+      "Meanwhile, cook the spaghetti in a large pot of boiling salted water according to the packet, then drain.",
+      "Serve the meatballs and sauce over the spaghetti, topped with basil if using. Cooked meatballs in sauce freeze well; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "turkey-chilli",
+    "title": "Turkey chilli",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Turkey",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "turkey mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "diced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "diced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "carrot",
+        "note": "grated"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned kidney beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "gluten-free chicken stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "cut into wedges",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large pot over a medium heat. Add the onion, pepper and carrot and cook for 8 minutes until softened.",
+      "Turn up the heat, add the turkey mince and cook for 6–8 minutes, breaking it up with a wooden spoon, until browned all over. Wash your hands and board after handling the raw mince.",
+      "Stir in the garlic, chilli powder, cumin, paprika, oregano and tomato purée and cook for 1 minute.",
+      "Add the tomatoes, kidney beans, stock and salt. Bring to the boil, then lower the heat and simmer uncovered for 25 minutes, stirring now and then, until thick. The turkey should reach 74°C with no pink remaining.",
+      "Serve with rice or jacket potatoes and lime wedges if using. Cool leftovers quickly and freeze in portions for up to 3 months; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "spaghetti-bolognese",
+    "title": "Spaghetti bolognese",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Beef",
+      "Pasta",
+      "Kid friendly",
+      "Budget",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 50,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "lean beef mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "carrot",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "celery stick",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "beef stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "bay leaf"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 320,
+        "unit": "g",
+        "name": "spaghetti"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "Parmesan",
+        "note": "grated",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large saucepan over a medium heat. Add the onion, carrot and celery and cook gently for 10 minutes until soft.",
+      "Turn up the heat, add the mince and cook for 6–8 minutes, breaking it up with a wooden spoon, until browned all over. Wash your hands and board after handling the raw mince.",
+      "Stir in the garlic and tomato purée and cook for 1 minute. Add the tomatoes, stock, oregano, bay leaf, salt and pepper.",
+      "Bring to the boil, then lower the heat, partly cover and simmer for 30 minutes, stirring occasionally, until rich and thick. The mince should reach 71°C with no pink remaining.",
+      "About 12 minutes before the sauce is ready, cook the spaghetti in a large pot of boiling salted water according to the packet, then drain, reserving a splash of the cooking water.",
+      "Remove the bay leaf, toss the spaghetti with the sauce and a little pasta water, and serve with Parmesan if using. The sauce freezes well for up to 3 months."
+    ]
+  },
+  {
+    "slug": "beef-stew",
+    "title": "Beef stew with carrots and potatoes",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Beef",
+      "Potatoes",
+      "Gluten-free",
+      "Dairy-free",
+      "Batch cooking"
+    ],
+    "prepTime": 20,
+    "cookTime": 150,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 700,
+        "unit": "g",
+        "name": "braising steak",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "large onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 750,
+        "unit": "ml",
+        "name": "gluten-free beef stock"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "carrots",
+        "note": "cut into thick chunks"
+      },
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "floury potatoes",
+        "note": "peeled and cut into chunks"
+      },
+      {
+        "quantity": 3,
+        "unit": "sprigs",
+        "name": "fresh thyme"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "bay leaves"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 160°C (fan 140°C). Toss the beef with the cornflour, salt and pepper in a mixing bowl. Wash your hands and board after handling the raw meat.",
+      "Heat the oil in a large flameproof casserole dish over a medium-high heat. Brown the beef in two batches for 4–5 minutes each, then lift onto a plate.",
+      "Lower the heat, add the onion and cook for 6 minutes until soft. Stir in the garlic and tomato purée for 1 minute, then pour in the stock, scraping up the browned bits from the base.",
+      "Return the beef with the thyme and bay leaves, bring to a simmer, cover and transfer to the oven for 1 hour 30 minutes.",
+      "Stir in the carrots and potatoes, cover and return to the oven for another 50–60 minutes until the beef is very tender and the vegetables are cooked through. The beef will be well above 63°C.",
+      "Remove the herb stalks and bay leaves, check the seasoning and scatter with parsley if using. The stew keeps for 3 days in the fridge or 3 months in the freezer; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "cottage-pie",
+    "title": "Cottage pie",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Beef",
+      "Potatoes",
+      "Gluten-free",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 25,
+    "cookTime": 60,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "lean beef mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "diced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "celery stick",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "gluten-free beef stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried thyme"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "kg",
+        "name": "floury potatoes",
+        "note": "peeled and cut into chunks"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "Cheddar",
+        "note": "grated",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large saucepan over a medium heat and cook the onion, carrots and celery for 8 minutes until softened.",
+      "Add the mince and cook for 6–8 minutes, breaking it up, until browned. Wash your hands and board after handling the raw mince. Stir in the tomato purée and cornflour and cook for 1 minute.",
+      "Pour in the stock, add the thyme and half the salt and the pepper, and simmer for 20 minutes until thick. Stir in the peas and check the mince has reached 71°C with no pink remaining.",
+      "Meanwhile, heat the oven to 200°C (fan 180°C). Boil the potatoes in a large pot of salted water for 15–18 minutes until tender, drain well and mash with the butter, milk and remaining salt.",
+      "Spoon the mince into a baking dish, top with the mash and rough up the surface with a fork. Scatter with Cheddar if using.",
+      "Bake for 25 minutes until golden and bubbling at the edges. The assembled pie can be frozen before baking; defrost in the fridge and bake until piping hot in the centre."
+    ]
+  },
+  {
+    "slug": "beef-and-broccoli",
+    "title": "Beef and broccoli",
+    "category": "Dinner",
+    "cuisine": "Chinese",
+    "tags": [
+      "Beef",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 550,
+        "unit": "g",
+        "name": "rump steak",
+        "note": "trimmed and thinly sliced across the grain"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sesame oil"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "broccoli",
+        "note": "cut into florets"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Rinse the rice and cook in a saucepan with 450 ml water: bring to the boil, cover, turn the heat to low and cook for 12 minutes, then leave covered off the heat for 5 minutes.",
+      "Toss the beef with the cornflour and 1 tbsp of the tamari in a mixing bowl. In a small jug, mix the remaining tamari, honey, sesame oil and 4 tbsp water. Wash your hands and board after handling the raw meat.",
+      "Heat a wok or large frying pan over a high heat with 1 tbsp of the vegetable oil. Stir-fry the beef in two batches for 1–2 minutes until browned, then tip onto a plate.",
+      "Add the remaining oil, the broccoli and 3 tbsp water. Cover and steam-fry for 3 minutes until bright green and just tender. Add the garlic and ginger and stir-fry for 1 minute.",
+      "Return the beef, pour in the sauce and toss for 1–2 minutes until glossy and the beef is cooked to at least 63°C.",
+      "Serve over the rice, topped with spring onions if using. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "chilli-con-carne",
+    "title": "Chilli con carne",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Beef",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 50,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "beef mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "large onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "diced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned kidney beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 250,
+        "unit": "ml",
+        "name": "gluten-free beef stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large pot over a medium heat and cook the onion and pepper for 8 minutes until softened.",
+      "Turn up the heat, add the mince and brown for 6–8 minutes, breaking it up with a wooden spoon. Wash your hands and board after handling the raw mince.",
+      "Stir in the garlic, chilli powder, cumin, paprika, oregano and tomato purée and cook for 1 minute.",
+      "Add the tomatoes, kidney beans, stock and salt. Simmer gently, partly covered, for 30–35 minutes, stirring now and then, until thick and rich. The mince should reach 71°C with no pink remaining.",
+      "About 15 minutes before the end, rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender, then drain.",
+      "Serve the chilli over the rice, scattered with coriander if using. Freeze leftover chilli in portions for up to 3 months; cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "beef-stroganoff",
+    "title": "Beef stroganoff",
+    "category": "Dinner",
+    "cuisine": "Eastern European",
+    "tags": [
+      "Beef",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 550,
+        "unit": "g",
+        "name": "sirloin or rump steak",
+        "note": "trimmed and cut into thin strips"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 20,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "chestnut mushrooms",
+        "note": "sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "sweet paprika"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "gluten-free beef stock"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "soured cream"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender, then drain and keep warm.",
+      "Season the beef with half the salt and the pepper. Heat 1 tbsp oil in a large frying pan over a high heat and sear the beef in two batches for 1–2 minutes until browned but still pink inside. Tip onto a plate. Wash your hands and board after handling the raw meat.",
+      "Lower the heat to medium, add the remaining oil and the butter, then the onion. Cook for 5 minutes, add the mushrooms and cook for 5 minutes more until golden.",
+      "Stir in the garlic and paprika for 1 minute, then pour in the stock and bubble for 3–4 minutes until reduced by about a third.",
+      "Lower the heat and stir in the soured cream and remaining salt. Return the beef and any juices and warm through gently for 2 minutes without boiling, until the beef reaches at least 63°C.",
+      "Serve over the rice, scattered with parsley if using. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "beef-burgers",
+    "title": "Homemade beef burgers",
+    "category": "Dinner",
+    "cuisine": "American",
+    "tags": [
+      "Beef",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 12,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "beef mince",
+        "note": "not extra lean"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "small onion",
+        "note": "very finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "garlic granules"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "burger buns",
+        "note": "split"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "Cheddar",
+        "optional": true
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "lettuce leaves"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "large tomato",
+        "note": "sliced"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tomato ketchup",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the mince, onion, salt, pepper and garlic granules in a mixing bowl with your hands, without overworking. Shape into 4 patties about 2 cm thick, pressing a slight dip into the centre of each. Wash your hands and board after handling the raw mince.",
+      "Chill the patties for 10 minutes if you have time; it helps them hold their shape.",
+      "Heat the oil in a large frying pan or griddle over a medium-high heat. Cook the burgers for 5–6 minutes per side until well browned and cooked through to 71°C with no pink remaining.",
+      "Add the cheese slices for the last minute if using, and cover the pan so they melt.",
+      "Meanwhile, toast the cut sides of the buns under the grill or in a dry pan.",
+      "Build the burgers with lettuce, tomato and ketchup if using. Serve with oven chips or corn on the cob."
+    ]
+  },
+  {
+    "slug": "beef-lasagne",
+    "title": "Beef lasagne",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Beef",
+      "Pasta",
+      "Kid friendly",
+      "Batch cooking",
+      "Baking"
+    ],
+    "prepTime": 30,
+    "cookTime": 75,
+    "servings": "6",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "beef mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "carrot",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 700,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "ground nutmeg"
+      },
+      {
+        "quantity": 12,
+        "unit": "sheets",
+        "name": "dried lasagne"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "mozzarella",
+        "note": "torn"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "Parmesan",
+        "note": "grated"
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large saucepan over a medium heat and cook the onion and carrot for 8 minutes until soft. Add the mince and brown for 6–8 minutes, breaking it up. Wash your hands and board after handling the raw mince.",
+      "Stir in the garlic and tomato purée for 1 minute, then add the tomatoes, oregano, 1 tsp of the salt and the pepper. Simmer for 25 minutes until thick. The mince should reach 71°C with no pink remaining.",
+      "Meanwhile, make the white sauce: melt the butter in a saucepan, stir in the flour for 1 minute, then gradually whisk in the milk. Keep whisking over a medium heat for 5 minutes until thick, then season with the nutmeg and remaining salt.",
+      "Heat the oven to 190°C (fan 170°C). Spread a thin layer of meat sauce in a large baking dish, then layer lasagne sheets, meat sauce and white sauce, repeating to make three layers and finishing with white sauce.",
+      "Scatter over the mozzarella and Parmesan and bake for 40–45 minutes until bubbling and golden and a knife slides easily through the pasta.",
+      "Rest for 10 minutes before cutting. Lasagne freezes well whole or in portions; reheat until piping hot in the centre."
+    ]
+  },
+  {
+    "slug": "beef-koftas",
+    "title": "Beef koftas with yogurt sauce",
+    "category": "Dinner",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "Beef",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 20,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "beef mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "small onion",
+        "note": "grated and squeezed dry"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "Greek-style yogurt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "cucumber",
+        "note": "grated and squeezed dry"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh mint",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "lemon",
+        "note": "juiced"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "skewers",
+        "note": "soaked in water if wooden",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the mince, onion, half the garlic, the spices, parsley and salt in a mixing bowl. Divide into 8 portions and shape each into a long sausage shape, threading onto skewers if using. Wash your hands and board after handling the raw mince.",
+      "Stir the yogurt, cucumber, mint, lemon juice and remaining garlic together with a pinch of salt to make the sauce. Chill until needed.",
+      "Rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender, then drain.",
+      "Heat the grill to high or heat a griddle pan over a medium-high heat. Brush the koftas with oil and cook for 10–12 minutes, turning every few minutes, until charred and cooked through to 71°C with no pink remaining.",
+      "Serve the koftas on the rice with the yogurt sauce and a chopped tomato and cucumber salad. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "swedish-style-meatballs",
+    "title": "Swedish-style meatballs",
+    "category": "Dinner",
+    "cuisine": "Scandinavian",
+    "tags": [
+      "Beef",
+      "Pork",
+      "Potatoes",
+      "Kid friendly"
+    ],
+    "prepTime": 25,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "beef mince"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "pork mince"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "fresh breadcrumbs"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "egg"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "small onion",
+        "note": "very finely chopped"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "ground allspice"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "beef stock"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "double cream"
+      },
+      {
+        "quantity": 1,
+        "unit": "kg",
+        "name": "floury potatoes",
+        "note": "peeled and cut into chunks"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "lingonberry or cranberry sauce",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Soak the breadcrumbs in the milk in a mixing bowl for 5 minutes. Add both minces, the egg, onion, allspice and half the salt and mix well. Roll into about 24 small balls. Wash your hands and board after handling the raw mince.",
+      "Put the potatoes in a large pot of salted water, bring to the boil and cook for 15–18 minutes until tender.",
+      "Meanwhile, heat the oil in a large frying pan over a medium heat and fry the meatballs for 10–12 minutes, turning, until browned all over and cooked through to 71°C with no pink remaining. Lift onto a plate.",
+      "Melt the butter in the same pan, stir in the flour and cook for 1 minute. Gradually whisk in the stock and simmer for 3 minutes until thickened, then stir in the cream and remaining salt.",
+      "Return the meatballs to the gravy and simmer gently for 3 minutes to heat through.",
+      "Drain and mash the potatoes (or serve them boiled) and spoon over the meatballs and gravy, with lingonberry or cranberry sauce if using."
+    ]
+  },
+  {
+    "slug": "pork-chops-apples",
+    "title": "Pork chops with apples",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Pork",
+      "Potatoes",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "boneless pork loin chops"
+      },
+      {
+        "quantity": 700,
+        "unit": "g",
+        "name": "new potatoes",
+        "note": "halved if large"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eating apples",
+        "note": "cored and cut into wedges"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 3,
+        "unit": "sprigs",
+        "name": "fresh thyme"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "apple juice"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "gluten-free chicken stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "green beans",
+        "note": "trimmed"
+      }
+    ],
+    "steps": [
+      "Put the potatoes in a saucepan of salted water, bring to the boil and cook for 15–18 minutes until tender. Add the green beans for the last 4 minutes, then drain.",
+      "Meanwhile, season the pork chops with half the salt and the pepper. Heat 1 tbsp oil in a large frying pan over a medium-high heat and cook the chops for 4–5 minutes per side until golden and they reach at least 63°C in the centre. Rest on a plate for 3 minutes. Wash your hands and board after handling the raw pork.",
+      "Add the remaining oil to the pan and fry the apples and onion over a medium heat for 6–8 minutes until golden and softened. Add the thyme leaves.",
+      "Mix the cornflour with a splash of the apple juice, then pour all the apple juice, stock and cornflour mix into the pan. Simmer for 2–3 minutes until slightly thickened, then season with the remaining salt.",
+      "Return the chops and any resting juices to the pan to warm through, and serve with the apples, sauce, potatoes and green beans."
+    ]
+  },
+  {
+    "slug": "slow-cooker-pulled-pork",
+    "title": "Slow cooker pulled pork",
+    "category": "Dinner",
+    "cuisine": "American",
+    "tags": [
+      "Pork",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 480,
+    "servings": "6",
+    "ingredients": [
+      {
+        "quantity": 1.5,
+        "unit": "kg",
+        "name": "boneless pork shoulder",
+        "note": "rind and excess fat removed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "soft brown sugar"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "garlic granules"
+      },
+      {
+        "quantity": 1.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "sliced"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "passata"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "cider vinegar"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 6,
+        "unit": "",
+        "name": "burger buns",
+        "note": "split"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "coleslaw",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix the sugar, paprika, cumin, garlic granules, salt and pepper in a small mixing bowl and rub all over the pork. Wash your hands and board after handling the raw pork.",
+      "Scatter the onion over the base of the slow cooker and sit the pork on top.",
+      "Whisk the passata, tomato purée, cider vinegar and honey together and pour over the pork.",
+      "Cover and cook on low for 8 hours (or high for 5 hours) until the pork is very tender and falls apart easily. It will be well above 63°C.",
+      "Lift the pork onto a board and shred it with two forks, discarding any fat. Skim the fat from the sauce, then stir the shredded meat back into the slow cooker.",
+      "Pile into the buns with coleslaw if using. Cool leftovers within 2 hours and freeze in portions with some sauce for up to 3 months; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "pork-vegetable-noodles",
+    "title": "Pork and vegetable noodles",
+    "category": "Dinner",
+    "cuisine": "Chinese",
+    "tags": [
+      "Pork",
+      "Noodles",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget"
+    ],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "pork mince"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "flat rice noodles"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "cut into thin matchsticks"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "mangetout or sugar snap peas"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "rice vinegar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sesame oil"
+      }
+    ],
+    "steps": [
+      "Soak or cook the rice noodles according to the packet, then drain and rinse in cold water so they don't stick.",
+      "Mix the tamari, honey, rice vinegar and sesame oil in a small bowl to make the sauce.",
+      "Heat the oil in a wok or large frying pan over a high heat. Add the pork mince and stir-fry for 6–8 minutes, breaking it up, until browned and cooked through to 71°C with no pink remaining. Wash your hands and board after handling the raw mince.",
+      "Add the garlic, ginger, pepper, carrots and mangetout and stir-fry for 3 minutes until just tender but still crunchy.",
+      "Add the noodles and sauce and toss for 2 minutes until everything is coated and hot. Scatter with the spring onions and serve straight away."
+    ]
+  },
+  {
+    "slug": "sweet-and-sour-pork",
+    "title": "Sweet and sour pork",
+    "category": "Dinner",
+    "cuisine": "Chinese",
+    "tags": [
+      "Pork",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 550,
+        "unit": "g",
+        "name": "pork tenderloin",
+        "note": "trimmed and cut into bite-sized chunks"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "bell peppers",
+        "note": "deseeded and cut into chunks"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 435,
+        "unit": "g",
+        "name": "canned pineapple chunks in juice",
+        "note": "drained, juice reserved"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "rice vinegar"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "soft brown sugar"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      }
+    ],
+    "steps": [
+      "Rinse the rice and cook in a saucepan with 450 ml water: bring to the boil, cover, turn the heat to low and cook for 12 minutes, then leave covered off the heat for 5 minutes.",
+      "Toss the pork with 2 tbsp of the cornflour and the salt in a mixing bowl. Wash your hands and board after handling the raw pork.",
+      "Whisk 150 ml of the reserved pineapple juice with the rice vinegar, sugar, tomato purée, tamari and remaining cornflour in a jug to make the sauce.",
+      "Heat 2 tbsp oil in a wok or large frying pan over a medium-high heat and fry the pork in batches for 5–6 minutes, turning, until golden and crisp and cooked to at least 63°C. Lift onto a plate.",
+      "Add the remaining oil and stir-fry the onion and peppers for 3–4 minutes. Add the garlic and pineapple for 1 minute, then pour in the sauce and bubble for 1–2 minutes until thick and glossy.",
+      "Return the pork, toss to coat and serve straight away with the rice. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "lamb-chickpea-tagine",
+    "title": "Lamb and chickpea tagine",
+    "category": "Dinner",
+    "cuisine": "North African",
+    "tags": [
+      "Lamb",
+      "Gluten-free",
+      "Dairy-free",
+      "Batch cooking"
+    ],
+    "prepTime": 20,
+    "cookTime": 120,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 650,
+        "unit": "g",
+        "name": "diced lamb shoulder"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "large onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "paprika"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "gluten-free chicken stock"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned chickpeas",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 80,
+        "unit": "g",
+        "name": "dried apricots",
+        "note": "halved"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large flameproof casserole or heavy pot over a medium-high heat. Brown the lamb in two batches for 4–5 minutes each, then lift onto a plate. Wash your hands and board after handling the raw meat.",
+      "Lower the heat, add the onion and cook for 8 minutes until soft. Stir in the garlic, ginger and spices and cook for 1 minute until fragrant.",
+      "Add the tomatoes, stock, honey and salt, then return the lamb. Bring to a simmer, cover and cook gently for 1 hour 15 minutes, stirring now and then.",
+      "Stir in the chickpeas and apricots and simmer uncovered for 25–30 minutes until the lamb is very tender and the sauce has thickened. The lamb will be well above 63°C.",
+      "Check the seasoning and scatter with coriander if using. Serve with rice or roasted vegetables. The tagine keeps for 3 days in the fridge or 3 months frozen; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "chicken-katsu-curry",
+    "title": "Chicken katsu curry",
+    "category": "Dinner",
+    "cuisine": "Japanese",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Kid friendly"
+    ],
+    "prepTime": 25,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "small chicken breasts"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs",
+        "note": "beaten"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "panko breadcrumbs"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "mild curry powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 500,
+        "unit": "ml",
+        "name": "chicken stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "soy sauce"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      }
+    ],
+    "steps": [
+      "For the sauce, heat 1 tbsp oil in a saucepan over a medium heat and cook the onion and carrots for 10 minutes until soft. Add the garlic, ginger and curry powder and cook for 1 minute.",
+      "Pour in the stock, honey and soy sauce and simmer for 15 minutes until the carrots are very tender. Blend until smooth with a stick blender, then mix the cornflour with a little water, stir it in and simmer for 2 minutes until thickened.",
+      "Meanwhile, heat the oven to 200°C (fan 180°C). Place each chicken breast between sheets of cling film and bash with a rolling pin to an even 1.5 cm thickness. Season with the salt.",
+      "Set up three shallow bowls with the flour, beaten eggs and panko. Dip each breast in flour, then egg, then panko, pressing to coat. Wash your hands and board after handling the raw chicken.",
+      "Heat the remaining oil in a large frying pan over a medium-high heat and fry the chicken for 2–3 minutes per side until golden. Transfer to a baking tray and bake for 10–12 minutes until the centre reaches 74°C and juices run clear.",
+      "While the chicken cooks, rinse the rice and cook in a saucepan with 450 ml water: bring to the boil, cover, turn the heat to low and cook for 12 minutes, then rest for 5 minutes.",
+      "Slice the chicken with a sharp knife and serve on the rice with the curry sauce poured alongside. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "greek-chicken-souvlaki",
+    "title": "Greek chicken souvlaki",
+    "category": "Dinner",
+    "cuisine": "Greek",
+    "tags": [
+      "Chicken",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 650,
+        "unit": "g",
+        "name": "chicken breasts",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "zested and juiced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "skewers",
+        "note": "soaked in water if wooden"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "Greek-style yogurt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "cucumber",
+        "note": "grated and squeezed dry"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh mint or dill",
+        "note": "chopped"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "pitta breads"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "tomatoes",
+        "note": "sliced"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "red onion",
+        "note": "thinly sliced"
+      }
+    ],
+    "steps": [
+      "Mix the oil, lemon zest, half the lemon juice, two-thirds of the garlic, the oregano, salt and pepper in a mixing bowl. Add the chicken, toss and leave for 15 minutes (or up to a day in the fridge). Wash your hands and board after handling the raw chicken.",
+      "For the tzatziki, stir the yogurt, cucumber, herbs, remaining garlic and remaining lemon juice together with a pinch of salt.",
+      "Thread the chicken onto the skewers. Heat the grill to high or heat a griddle pan over a medium-high heat.",
+      "Cook the skewers for 10–12 minutes, turning every few minutes, until charred at the edges and cooked through to 74°C with no pink remaining.",
+      "Warm the pittas under the grill for a minute. Serve the chicken in or alongside the pittas with the tomatoes, red onion and tzatziki."
+    ]
+  },
+  {
+    "slug": "chicken-burrito-bowls",
+    "title": "Chicken burrito bowls",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "chicken breasts"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "limes"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "canned sweetcorn",
+        "note": "drained"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "cherry tomatoes",
+        "note": "quartered"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "red onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "ripe avocados",
+        "note": "diced"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Mix half the oil with the paprika, cumin, chilli powder and half the salt in a mixing bowl and rub over the chicken. Wash your hands and board after handling the raw chicken.",
+      "Rinse the rice and cook in a saucepan of boiling water for 10–12 minutes until tender. Drain, then stir in the zest and juice of one lime and the remaining salt.",
+      "Heat the remaining oil in a large frying pan over a medium heat and cook the chicken for 6–7 minutes per side until well browned and the thickest part reaches 74°C with juices running clear. Rest for 5 minutes, then slice.",
+      "Meanwhile, warm the black beans and sweetcorn together in a small saucepan for 3–4 minutes.",
+      "Mix the tomatoes and red onion with the juice of half the remaining lime to make a quick salsa. Cut the rest of the lime into wedges.",
+      "Divide the rice between bowls and top with the chicken, beans and sweetcorn, salsa and avocado. Scatter with coriander if using and serve with lime wedges. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "jambalaya",
+    "title": "Chicken and sausage jambalaya",
+    "category": "Dinner",
+    "cuisine": "American",
+    "tags": [
+      "Chicken",
+      "Pork",
+      "Rice",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 450,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into bite-sized pieces"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "chorizo sausage",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "green pepper",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "celery sticks",
+        "note": "diced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried thyme"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "cayenne pepper"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 600,
+        "unit": "ml",
+        "name": "chicken stock"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large deep frying pan or casserole over a medium-high heat. Fry the chorizo for 2–3 minutes until it releases its oil, then add the chicken and cook for 5 minutes until browned. Wash your hands and board after handling the raw chicken.",
+      "Add the onion, pepper and celery and cook for 6–8 minutes until softened. Stir in the garlic, paprika, thyme and cayenne for 1 minute.",
+      "Add the rice and stir to coat it in the spicy oil, then pour in the tomatoes, stock and salt. Bring to the boil.",
+      "Lower the heat, cover and simmer for 20–25 minutes, stirring once or twice, until the rice is tender and has absorbed most of the liquid. The chicken should reach 74°C with no pink remaining.",
+      "Leave to stand off the heat, covered, for 5 minutes, then scatter with spring onions if using. Cool leftovers within 1 hour, refrigerate and eat within 24 hours, reheating until steaming hot."
+    ]
+  }
+]

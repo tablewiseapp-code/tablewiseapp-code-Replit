@@ -3,9 +3,9 @@ import { z } from "zod";
 import { ingredientMatches, matchesMealFilters, mealTypes, normalizeIngredientTerm, type MealFilters } from "../client/src/lib/meal-filters";
 import { recipeInput } from "./request-schemas";
 import {
-  matchesPlannerFilters, noPersonalFilters, plannerCookingMethods, plannerDietary, plannerMealTypes, plannerProteinTypes,
-  plannerServings, dietaryTag, type MealsGenerationFilters,
+  matchesPlannerFilters, noPersonalFilters, plannerDietary, recipeNameMatches, dietaryTag, type MealsGenerationFilters,
 } from "../client/src/lib/planner-filters";
+import { mealsFilterSchema } from "../shared/recipe-generation-request";
 import { toPlannerRecipe } from "../client/src/lib/planner-recipes";
 import { buildGenerationBrief, personalizationSignals, type PreferenceGuidance } from "./recipe-personalization";
 import { budgetPreferences, generationStyles, type BudgetPreference, type GenerationStyle } from "../client/src/lib/recipe-generation";
@@ -24,15 +24,9 @@ const legacyRequest = z.object({
   style: z.enum(generationStyles).optional(), budget: z.enum(budgetPreferences).optional(),
 }).strict();
 // The live Meals page (/meals) sends its own canonical filter names and values.
-const set = <T extends readonly [string, ...string[]]>(values: T) => z.array(z.enum(values)).max(values.length);
 const mealsRequest = z.object({
   filterSet: z.literal("meals"),
-  filters: z.object({
-    maxMinutes: z.union([z.literal(20), z.literal(30), z.literal(40), z.literal(60), z.null()]), // = plannerTimeOptions
-    dietary: set(plannerDietary), mealType: set(plannerMealTypes), cookingMethod: set(plannerCookingMethods),
-    proteinType: set(plannerProteinTypes), servings: z.enum(plannerServings).nullable(),
-    mustInclude: terms, mustExclude: terms,
-  }).strict(),
+  filters: mealsFilterSchema,
   timeMode: z.enum(["preparation", "total"]),
   personalization: personalizationSignals.optional(),
   style: z.enum(generationStyles).optional(), budget: z.enum(budgetPreferences).optional(),
@@ -42,7 +36,7 @@ export const generationRequest = z.union([legacyRequest, mealsRequest]);
 type TimeMode = "preparation" | "total";
 export type RecipeGenerationContext =
   | { filterSet?: undefined; filters: MealFilters; timeMode: TimeMode }
-  | { filterSet: "meals"; filters: MealsGenerationFilters; timeMode: TimeMode };
+  | { filterSet: "meals"; filters: MealsGenerationFilters; timeMode: TimeMode; recipeName?: string };
 const unique = <T>(values: T[]) => [...new Set(values)];
 
 // Hard constraints only. Soft personalization is added separately (recipe-personalization.ts) and never relaxes these.
@@ -156,6 +150,11 @@ Each ingredient: quantity, unit (empty string if none) and name. Give realistic 
 Do not claim the recipe comes from a chef, restaurant or website. Do not include nutrition values, URLs or credits.
 ${briefRules}`;
 
+// Appended only for named requests (recipe search), so the existing filter-only prompt is unchanged.
+const recipeNameRule = `
+- recipeName: the recipe is a version of exactly that dish which still meets every constraint above, and its title names the dish (for example "Gluten-free Pumpkin Pie"). Never substitute a different dish.`;
+export const NAMED_PROMPT_VERSION = "recipe-generation/3+recipe-name/1";
+
 // Ingredient-level safety checks: a dietary claim is never accepted on the model's word alone.
 const notVegetarian = /\b(chicken|beef|pork|lamb|mutton|turkey|duck|goose|veal|venison|bacon|ham|pancetta|prosciutto|chorizo|salami|pepperoni|sausages?|mince(?:d meat)?|meatballs?|steak|fish|salmon|tuna|cod|haddock|trout|mackerel|sardines?|anchov(?:y|ies)|shrimp|prawns?|crab|lobster|mussels?|clams?|oysters?|scallops?|squid|octopus|gelatine?|lard|suet|fish sauce|oyster sauce|worcestershire)\b/i;
 const gluten = /\b(wheat|flour|bread|breadcrumbs?|panko|pasta|spaghetti|penne|fusilli|linguine|macaroni|lasagn[ae]|orzo|gnocchi|noodles?|couscous|bulgur|barley|rye|spelt|semolina|farro|seitan|soy sauce|beer|malt|tortillas?|pitta|pita|naan|wraps?|crackers?|croutons?|pastry|biscuits?|cake|oats?)\b/i;
@@ -210,10 +209,12 @@ function mealsRecipeFromOutput(raw: unknown, context: Extract<RecipeGenerationCo
 }
 
 /** Builds the recipe and lists every filter it misses. Labels are only attached when verified, so a miss is never saved as a match. */
-export function mealsCandidate(raw: unknown, { filters, timeMode }: Extract<RecipeGenerationContext, { filterSet: "meals" }>): GeneratedRecipe {
+export function mealsCandidate(raw: unknown, { filters, timeMode, recipeName }: Extract<RecipeGenerationContext, { filterSet: "meals" }>): GeneratedRecipe {
   const parsed = output.safeParse(raw);
   if (!parsed.success) throw new GenerationError("invalid");
   const o = parsed.data;
+  // A named request must produce that dish, or later searches for the name would never find it.
+  if (recipeName && !recipeNameMatches(o.title, recipeName)) throw new GenerationError("invalid");
   // Tags follow the planner's own classification; when the model's meal label doesn't match, its own label is kept.
   const wanted = filters.mealType.filter(type => type !== "Lunch box").map(type => type.toLowerCase());
   const meal = filters.mealType.length ? o.mealTypes.find(type => wanted.includes(type)) : undefined;
@@ -232,13 +233,28 @@ export function mealsCandidate(raw: unknown, { filters, timeMode }: Extract<Reci
     ...(lunchbox ? ["suitability:lunchbox"] : []),
     ...verifiedDiet.map(d => dietaryTag[d as keyof typeof dietaryTag])] };
 
-  const violations: FilterViolation[] = filters.dietary.filter(d => !verifiedDiet.includes(d)).map(value => ({ filter: "dietary", value }));
+  const violations = filterViolations(recipe, filters, timeMode);
+  if (filters.mealType.length && !(meal || lunchbox) && !violations.some(v => v.filter === "mealType")) {
+    violations.push({ filter: "mealType", value: filters.mealType.join(" / ") });
+  }
+  return violations.length ? { recipe, description: o.description, tip: o.tip, violations } : { recipe, description: o.description, tip: o.tip };
+}
+
+/** Every Meals filter a recipe misses. Dietary needs both the stored tag and a clean ingredient check. Also re-run after customer edits. */
+export function filterViolations(
+  recipe: Pick<z.infer<typeof recipeInput>, "title" | "ingredients" | "steps" | "tags" | "prepTime" | "cookTime" | "servings">,
+  filters: MealsGenerationFilters, timeMode: TimeMode,
+): FilterViolation[] {
+  const failedDiet = new Set(dietaryViolations(recipe, filters.dietary));
+  const violations: FilterViolation[] = filters.dietary
+    .filter(d => failedDiet.has(d) || !recipe.tags?.includes(dietaryTag[d as keyof typeof dietaryTag]))
+    .map(value => ({ filter: "dietary", value }));
   const planner = toPlannerRecipe({ ...recipe, id: "generated", createdAt: "", updatedAt: "" } as Parameters<typeof toPlannerRecipe>[0]);
   const only = (patch: Partial<MealsGenerationFilters>) => matchesPlannerFilters(planner, noPersonalFilters({
     maxMinutes: null, dietary: [], mealType: [], cookingMethod: [], proteinType: [], servings: null, mustInclude: [], mustExclude: [], ...patch,
   }), timeMode, { isMyPick: false, rating: null });
   if (filters.maxMinutes !== null && !only({ maxMinutes: filters.maxMinutes })) violations.push({ filter: "maxMinutes", value: String(filters.maxMinutes) });
-  if (filters.mealType.length && (!(meal || lunchbox) || !only({ mealType: filters.mealType }))) violations.push({ filter: "mealType", value: filters.mealType.join(" / ") });
+  if (filters.mealType.length && !only({ mealType: filters.mealType })) violations.push({ filter: "mealType", value: filters.mealType.join(" / ") });
   if (filters.cookingMethod.length && !only({ cookingMethod: filters.cookingMethod })) violations.push({ filter: "cookingMethod", value: filters.cookingMethod.join(" / ") });
   if (filters.proteinType.length && !only({ proteinType: filters.proteinType })) violations.push({ filter: "proteinType", value: filters.proteinType.join(" / ") });
   if (filters.servings && !only({ servings: filters.servings })) violations.push({ filter: "servings", value: filters.servings });
@@ -246,7 +262,26 @@ export function mealsCandidate(raw: unknown, { filters, timeMode }: Extract<Reci
   const prose = [recipe.title, ...recipe.steps].map(text => text.toLowerCase());
   for (const term of filters.mustInclude) if (!lines.some(line => line.includes(term))) violations.push({ filter: "mustInclude", value: term });
   for (const term of filters.mustExclude) if ([...lines, ...prose].some(text => text.includes(term))) violations.push({ filter: "mustExclude", value: term });
-  return violations.length ? { recipe, description: o.description, tip: o.tip, violations } : { recipe, description: o.description, tip: o.tip };
+  return violations;
+}
+
+/** Drops dietary tags an edited recipe no longer earns, so a customer edit can never publish a false claim. */
+export function reverifyDietaryTags(recipe: { title: string; ingredients: string[]; steps: string[]; tags?: string[] | null }): string[] {
+  const failed = new Set(dietaryViolations(recipe, [...plannerDietary]).map(d => dietaryTag[d as keyof typeof dietaryTag] as string));
+  return (recipe.tags ?? []).filter(tag => !failed.has(tag));
+}
+
+/** Preferences that cannot all be met. Returned as readable reasons; an empty list means the request is consistent. */
+export function filterContradictions(filters: MealsGenerationFilters): string[] {
+  const reasons = filters.mustInclude.filter(term => filters.mustExclude.includes(term))
+    .map(term => `"${term}" is both required and excluded.`);
+  if (filters.dietary.includes("Vegetarian")) {
+    for (const protein of filters.proteinType) if (protein !== "Plant-based") reasons.push(`Vegetarian conflicts with protein "${protein}".`);
+  }
+  for (const term of filters.mustInclude) {
+    for (const diet of dietaryViolations({ title: "", ingredients: [term] }, filters.dietary)) reasons.push(`${diet} conflicts with required ingredient "${term}".`);
+  }
+  return reasons;
 }
 
 function providerFailure(error: unknown): GenerationError {
@@ -271,7 +306,7 @@ export async function generateRecipe(
       const response = await client.chat.completions.create({
         model: GENERATION_MODEL, ...generationParams,
         response_format: { type: "json_schema", json_schema: { name: "recipe", strict: true, schema: jsonSchema } },
-        messages: [{ role: "system", content: context.filterSet === "meals" ? mealsSystem : system }, { role: "user", content: JSON.stringify(buildGenerationBrief(context, guidance, style, budget)) }],
+        messages: [{ role: "system", content: context.filterSet === "meals" ? mealsSystem + (context.recipeName ? recipeNameRule : "") : system }, { role: "user", content: JSON.stringify(buildGenerationBrief(context, guidance, style, budget)) }],
       }, { timeout: GENERATION_TIMEOUT_MS, maxRetries: 0, signal });
       const choice = response.choices[0];
       if (!choice?.message.content || choice.message.refusal || choice.finish_reason === "length") throw new GenerationError("invalid");

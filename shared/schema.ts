@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, timestamp, uuid, date, unique, index, check, jsonb } from "drizzle-orm/pg-core";
 import type { RecipeNutrition } from "./recipe-nutrition";
 import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
+import type { RecipeGenerationRequest, RecipeGenerationStatus } from "./recipe-generation-request";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -67,6 +68,40 @@ export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind"
   stepAnalysis?: StepAnalysis | null;
   prepTime?: number | null; creditKind?: "chef" | "mine" | null; creditName?: string | null;
 };
+
+// AI recipe generation requests and their private drafts. Drafts never live in `recipes`: only an approved
+// draft is copied there (recipe_id), so no existing recipe read path can expose a draft.
+export type RecipeDraftContent = {
+  recipe: Omit<InsertRecipe, "image" | "sourceUrl" | "stepAnalysis" | "creditKind" | "creditName">;
+  description: string;
+  tip: string;
+  violations?: { filter: string; value: string }[];
+};
+export const recipeGenerations = pgTable("recipe_generations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  /** "operator", or the SHA-256 of an anonymous browser owner cookie. Never the cookie itself. */
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  searchText: varchar("search_text", { length: 120 }).notNull(),
+  /** The validated, normalized request (shared/recipe-generation-request.ts), kept apart from the recipe content. */
+  request: jsonb("request").$type<RecipeGenerationRequest>().notNull(),
+  status: varchar("status", { length: 20 }).$type<RecipeGenerationStatus>().default("draft").notNull(),
+  draft: jsonb("draft").$type<RecipeDraftContent>().notNull(),
+  model: varchar("model", { length: 80 }).notNull(),
+  promptVersion: varchar("prompt_version", { length: 80 }).notNull(),
+  attempts: integer("attempts").default(1).notNull(),
+  recipeId: varchar("recipe_id").references(() => recipes.id, { onDelete: "set null" }),
+  approvedBy: varchar("approved_by", { length: 64 }),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  index("recipe_generations_owner").on(table.ownerId, table.createdAt),
+  index("recipe_generations_recipe").on(table.recipeId),
+  check("recipe_generations_status", sql`${table.status} IN ('draft','pending_review','changes_requested','rejected','published','unpublished')`),
+  check("recipe_generations_published", sql`${table.status} <> 'published' OR (${table.approvedAt} IS NOT NULL AND ${table.publishedAt} IS NOT NULL)`),
+]);
+export type RecipeGeneration = typeof recipeGenerations.$inferSelect;
 
 // Telemetry contains no names, email, IP, user agent, referrer, or recipe text.
 export const pilotEvents = pgTable("pilot_events", {

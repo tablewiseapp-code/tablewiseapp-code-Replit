@@ -22,6 +22,7 @@ import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { householdServings, loadSettings } from "@/lib/basic-settings";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
@@ -119,7 +120,9 @@ export default function RecipeDetail() {
     fetchRecipe(params.id)
       .then(value => {
         setRecipe(value);
-        setSelectedServings(baseServings(value.servings));
+        // Open at the household's servings (My Basic Settings) when the recipe can be scaled.
+        const base = baseServings(value.servings);
+        setSelectedServings(base === null ? null : householdServings(loadSettings()) ?? base);
         setPrepTime(value.prepTime == null ? "" : String(value.prepTime));
         setCookTime(value.cookTime == null ? "" : String(value.cookTime));
       })

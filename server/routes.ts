@@ -15,7 +15,17 @@ import type { NutritionInput } from "../shared/recipe-nutrition";
 import { timingContextSchema } from "../shared/step-timing";
 import { createRecipeAnalyzer } from "./recipe-analysis";
 import { recipeParseCache } from "./recipe-parse-cache";
-import { generationRequest, buildRecipeGenerationContext, generateRecipe, GenerationError, generationMessages, generationEvent, GENERATION_MODEL } from "./recipe-generation";
+import {
+  generationRequest, buildRecipeGenerationContext, generateRecipe, GenerationError, generationMessages, generationEvent, GENERATION_MODEL,
+  NAMED_PROMPT_VERSION, filterContradictions, filterViolations, reverifyDietaryTags,
+} from "./recipe-generation";
+import { recipeGenerationRequest, type RecipeGenerationRequest } from "../shared/recipe-generation-request";
+import { databaseDraftStore, draftView, type RecipeDraftStore } from "./recipe-drafts";
+import { draftEdit } from "./request-schemas";
+import { RequestBudget } from "./security";
+import { matchesPlannerFilters, noPersonalFilters, recipeNameMatches } from "../client/src/lib/planner-filters";
+import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
+import type { RecipeDraftContent } from "@shared/schema";
 import { analyzePreferences, PROMPT_VERSION } from "./recipe-personalization";
 import { randomUUID } from "crypto";
 import type { z } from "zod";
@@ -28,7 +38,10 @@ export type RouteDependencies = {
   ai?: () => OpenAI;
   now?: () => number;
   analytics?: Pick<PilotEventStore, "record" | "summary">;
+  drafts?: RecipeDraftStore;
 };
+// Per-owner AI generation quota (first generation + regenerations), on top of the shared AI budget.
+export const OWNER_DAILY_GENERATIONS = 10;
 
 function inferAudioFileExtension(mimeType?: string): "webm" | "mp3" | "mp4" | "wav" | "ogg" {
   if (!mimeType) return "webm";
@@ -393,6 +406,149 @@ Rules:
       res.status(502).json({ error: "Failed to parse recipe" });
     } finally {
       res.locals.releaseAI();
+    }
+  });
+
+  // Recipe search → AI generation → private draft → customer approval → published (see server/recipe-drafts.ts).
+  const drafts = dependencies.drafts ?? databaseDraftStore();
+  // ponytail: per-process fixed window like every other budget here; move to a DB count if several server processes run.
+  const ownerQuota = new RequestBudget(dependencies.now);
+  const takeQuota = (owner: string, res: express.Response) => {
+    const retry = ownerQuota.take(`generations:${owner}`, OWNER_DAILY_GENERATIONS, 86400_000);
+    if (retry) {
+      res.setHeader("Retry-After", String(retry));
+      res.status(429).json({ error: `You've reached today's limit of ${OWNER_DAILY_GENERATIONS} AI recipes. Please try again tomorrow.` });
+    }
+    return !retry;
+  };
+  /** Published recipes that already satisfy the request: same name and every generatable filter. */
+  const existingMatches = async (request: RecipeGenerationRequest) => {
+    const rows = await storage.getAllRecipes();
+    const filters = noPersonalFilters(request.filters);
+    return toPlannerRecipes((developmentCatalogEnabled() ? curateDevelopmentCatalog(rows) : rows) as any)
+      .filter(r => recipeNameMatches(r.title, request.recipeName) &&
+        matchesPlannerFilters(r, filters, request.timeMode, { isMyPick: false, rating: null }))
+      .slice(0, 5).map(r => ({ id: r.id, title: r.title }));
+  };
+  const generateDraft = async (request: RecipeGenerationRequest, res: express.Response): Promise<RecipeDraftContent> => {
+    const context = { ...buildRecipeGenerationContext(request.filters, request.timeMode), recipeName: request.recipeName };
+    if (context.filterSet !== "meals") throw new GenerationError("invalid");
+    const cancel = new AbortController(); // the browser went away: stop paying for the call
+    res.on("close", () => { if (!res.writableEnded) cancel.abort(); });
+    const { recipe, description, tip, violations } = await generateRecipe(context, getAI, cancel.signal);
+    return { recipe, description, tip, ...(violations?.length ? { violations } : {}) };
+  };
+  const generationFailed = (error: unknown, res: express.Response, operation: string) => {
+    const kind = error instanceof GenerationError ? error.kind : "unavailable";
+    console.error(`api_failure operation=${operation} kind=${kind}`);
+    const { status, error: message } = generationMessages[kind];
+    if (!res.headersSent) res.status(status).json({ error: message, retryable: true });
+  };
+  const draftId = (req: express.Request, res: express.Response) => {
+    const id = recipeId.safeParse(req.params.id);
+    if (!id.success) { res.status(400).json({ error: "Invalid draft identifier." }); return undefined; }
+    return id.data;
+  };
+  const notFound = (res: express.Response) => res.status(404).json({ error: "Draft not found." });
+
+  app.post("/api/recipe-generations", security.aiPermit, async (req, res) => {
+    try {
+      const parsed = recipeGenerationRequest.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Invalid recipe generation request." });
+      const conflicts = filterContradictions(parsed.data.filters);
+      if (conflicts.length) return res.status(400).json({ error: `These preferences can't all be met: ${conflicts.join(" ")}`, conflicts });
+      // Normalized once and stored as-is: what was asked is kept apart from what is later edited.
+      const { filters } = buildRecipeGenerationContext(parsed.data.filters, parsed.data.timeMode);
+      const request: RecipeGenerationRequest = { ...parsed.data, filters: filters as RecipeGenerationRequest["filters"] };
+      const matches = await existingMatches(request);
+      if (matches.length) return res.status(409).json({ error: "A matching recipe already exists.", matches });
+      const owner = security.owner(req, res, true)!;
+      if (!takeQuota(owner, res)) return;
+      const draft = await generateDraft(request, res);
+      const row = await drafts.create({ ownerId: owner, searchText: request.recipeName, request, draft, model: GENERATION_MODEL, promptVersion: NAMED_PROMPT_VERSION });
+      console.log("ai_event name=recipe_draft_generated"); // no recipe text, filters or identifiers
+      res.status(201).json(draftView(row));
+    } catch (error) {
+      generationFailed(error, res, "recipe_draft_generate");
+    } finally {
+      res.locals.releaseAI();
+    }
+  });
+
+  app.get("/api/recipe-drafts/:id", async (req, res) => {
+    const id = draftId(req, res); if (!id) return;
+    const owner = security.owner(req, res, false);
+    try {
+      const row = owner ? await drafts.get(id, owner) : undefined;
+      if (!row) return notFound(res);
+      res.json(draftView(row));
+    } catch {
+      console.error("api_failure operation=recipe_draft_get");
+      res.status(500).json({ error: "Unable to load the draft." });
+    }
+  });
+
+  app.patch("/api/recipe-drafts/:id", async (req, res) => {
+    const id = draftId(req, res); if (!id) return;
+    const owner = security.owner(req, res, false);
+    try {
+      const row = owner ? await drafts.get(id, owner) : undefined;
+      if (!row) return notFound(res);
+      if (row.status !== "draft") return res.status(409).json({ error: "This recipe was already approved and can no longer be edited." });
+      const edit = draftEdit.safeParse(req.body);
+      if (!edit.success) return res.status(400).json({ error: "Please check the recipe: every field needs a value, with at least one ingredient and one step." });
+      const { description, ...fields } = edit.data;
+      const merged = { ...row.draft.recipe, ...fields };
+      const recipe = recipeInput.safeParse({ ...merged, tags: reverifyDietaryTags(merged) });
+      if (!recipe.success) return res.status(400).json({ error: "Please check the recipe: every field needs a value, with at least one ingredient and one step." });
+      const violations = filterViolations(recipe.data, row.request.filters, row.request.timeMode);
+      const updated = await drafts.replaceDraft(id, owner!, {
+        recipe: recipe.data, description: description ?? row.draft.description, tip: row.draft.tip, ...(violations.length ? { violations } : {}),
+      }, false);
+      if (!updated) return res.status(409).json({ error: "This recipe was already approved and can no longer be edited." });
+      res.json(draftView(updated));
+    } catch {
+      console.error("api_failure operation=recipe_draft_edit");
+      res.status(500).json({ error: "Unable to save your changes. The draft is unchanged." });
+    }
+  });
+
+  app.post("/api/recipe-drafts/:id/regenerate", security.aiPermit, async (req, res) => {
+    try {
+      const id = draftId(req, res); if (!id) return;
+      const owner = security.owner(req, res, false);
+      const row = owner ? await drafts.get(id, owner) : undefined;
+      if (!row) return notFound(res);
+      if (row.status !== "draft") return res.status(409).json({ error: "This recipe was already approved." });
+      const matches = await existingMatches(row.request);
+      if (matches.length) return res.status(409).json({ error: "A matching recipe already exists.", matches });
+      if (!takeQuota(owner!, res)) return;
+      const updated = await drafts.replaceDraft(id, owner!, await generateDraft(row.request, res), true);
+      if (!updated) return res.status(409).json({ error: "This recipe was already approved." });
+      console.log("ai_event name=recipe_draft_regenerated");
+      res.json(draftView(updated));
+    } catch (error) {
+      generationFailed(error, res, "recipe_draft_regenerate");
+    } finally {
+      res.locals.releaseAI();
+    }
+  });
+
+  app.post("/api/recipe-drafts/:id/approve", async (req, res) => {
+    const id = draftId(req, res); if (!id) return;
+    const owner = security.owner(req, res, false);
+    if (!owner) return notFound(res);
+    try {
+      const result = await drafts.approve(id, owner);
+      if (result.kind === "not_found") return notFound(res);
+      if (result.kind === "not_draft") return res.status(409).json({ error: "This draft can't be approved any more." });
+      const recipe = await storage.getRecipe(result.recipeId);
+      console.log("ai_event name=recipe_draft_published");
+      res.status(result.created ? 201 : 200).json({ recipe, created: result.created });
+    } catch (error) {
+      console.error("api_failure operation=recipe_draft_approve");
+      if (isMissingPreparationColumn(error)) return res.status(503).json({ error: "Recipe storage needs setup. Nothing was published." });
+      res.status(500).json({ error: "Unable to publish the recipe. Your draft is unchanged." });
     }
   });
 

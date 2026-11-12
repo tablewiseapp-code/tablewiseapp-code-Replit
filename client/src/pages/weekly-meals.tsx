@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback, useMemo } from "react";
+﻿import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
+import { Search, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
@@ -11,7 +12,17 @@ import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
 import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
-import { matchesPlannerFilters } from "@/lib/planner-filters";
+import { matchesPlannerFilters, recipeNameMatches } from "@/lib/planner-filters";
+import { availableDevices, methodChoices, useSavedSettings } from "@/lib/basic-settings";
+import { cuisines, recipeCuisine } from "@shared/food-rules";
+import { ActivePreferences } from "@/components/active-preferences";
+import { limitingReasons, matchCounts } from "@/lib/active-preferences";
+import { checkEligibility, fillWeek, personalize, suggestReplacement } from "@/lib/preference-engine";
+import { restrictionText, settingsText } from "@/lib/settings-copy";
+import { RecipeSearchGeneration } from "@/components/recipe-search-generation";
+import { searchGenerationRequest } from "@/lib/recipe-drafts";
+import { generateCopy } from "@/lib/generate-recipe-copy";
+import type { Recipe as StoredRecipe } from "@/lib/storage";
 import { GenerateRecipe } from "@/components/generate-recipe";
 import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type FilterViolation, type NewRecipe } from "@/lib/recipe-generation";
 import { RecipeIngredients } from "@/components/recipe-ingredients";
@@ -43,6 +54,7 @@ interface Filters {
   servings: string | null;
   mustInclude: string[];
   mustExclude: string[];
+  cuisine: string[];
 }
 
 interface PlanAssignment {
@@ -75,12 +87,13 @@ const defaultFilters: Filters = {
   servings: null,
   mustInclude: [],
   mustExclude: [],
+  cuisine: [],
 };
 
 const defaultState: WeeklyMealsState = {
   filters: defaultFilters,
   selectedIds: [],
-  expandedSections: ["time", "dietary"],
+  expandedSections: ["mealType", "time", "protein"],
   showMoreFilters: false,
   planAssignments: [],
 };
@@ -99,7 +112,9 @@ function loadState(): WeeklyMealsState {
   try {
     const saved = localStorage.getItem("weeklyMealsState");
     if (saved) {
-      return { ...defaultState, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      // Merge filters too, so a filter added later (e.g. cuisine) has its default for returning users.
+      return { ...defaultState, ...parsed, filters: { ...defaultFilters, ...parsed.filters } };
     }
   } catch (e) {
     console.error("Failed to load state:", e);
@@ -132,7 +147,23 @@ function WeeklyMealsContent() {
   const { t, lang } = useI18n();
   const { t: timeCopy } = useMvpCopy();
   const { mode: timeMode } = useRecipeTime();
-  const [state, setState] = useState<WeeklyMealsState>(loadState);
+  // My Basic Settings are the baseline: loaded on open, refreshed when they change in another tab or on return.
+  const settings = useSavedSettings();
+  const devices = availableDevices(settings);
+  const sText = (key: string, values?: Record<string, string | number>) => settingsText(lang, key, values);
+  const [state, setState] = useState<WeeklyMealsState>(() => {
+    // Drop a saved cooking-method filter for a device the person no longer has.
+    const saved = loadState(), allowed: readonly string[] = methodChoices(devices);
+    return { ...saved, filters: { ...saved.filters, cookingMethod: saved.filters.cookingMethod.filter(m => allowed.includes(m)) } };
+  });
+  useEffect(() => {
+    // Temporary filters stay, except a cooking method for a device the person no longer has.
+    const allowed: readonly string[] = methodChoices(availableDevices(settings));
+    setState(prev => {
+      const cookingMethod = prev.filters.cookingMethod.filter(m => allowed.includes(m));
+      return cookingMethod.length === prev.filters.cookingMethod.length ? prev : { ...prev, filters: { ...prev.filters, cookingMethod } };
+    });
+  }, [settings]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [recipesError, setRecipesError] = useState<string | null>(null);
@@ -144,6 +175,9 @@ function WeeklyMealsContent() {
   const [planGenerated, setPlanGenerated] = useState(false);
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  // Recipe name search; works together with the filters. Deferred so typing stays responsive on long lists.
+  const [search, setSearch] = useState("");
+  const query = useDeferredValue(search).trim();
   const planCopy = usePlannerCopy();
   const { toast } = useToast();
 
@@ -343,11 +377,26 @@ function WeeklyMealsContent() {
     if (state.filters.servings) count++;
     count += state.filters.mustInclude.length;
     count += state.filters.mustExclude.length;
+    count += state.filters.cuisine.length;
     return count;
   };
 
+  // My Basic Settings always apply: hard restrictions (devices, diets, allergies, hard time limit) hide recipes;
+  // soft preferences only change the order (preference-engine.ts). My Recipes is not affected.
+  const personalized = useMemo(() => personalize(recipes, settings, {
+    selected: recipes.filter(r => state.selectedIds.includes(r.id)), meta: getMeta,
+  }), [recipes, settings, state.selectedIds, getMeta]);
+  const eligibleRecipes = useMemo(() => personalized.eligible.map(e => e.recipe), [personalized]);
   const filterRecipes = (): Recipe[] =>
-    recipes.filter(recipe => matchesPlannerFilters(recipe, state.filters, timeMode, getMeta(recipe.id)));
+    eligibleRecipes.filter(recipe => (!query || recipeNameMatches(recipe.title, query)) &&
+      matchesPlannerFilters(recipe, state.filters, timeMode, getMeta(recipe.id)));
+  const memberName = (id: string) => settings.household.members.find(m => m.id === id)?.name ?? null;
+  const replaceSelected = (oldId: string, newId: string) => {
+    if (weekLocked) { notify(planCopy("locked"), true); return; }
+    // Swap in place: the selection order and any planned slots keep their positions.
+    setState(prev => ({ ...prev, selectedIds: prev.selectedIds.map(id => (id === oldId ? newId : id)),
+      planAssignments: prev.planAssignments.map(a => (a.recipeId === oldId ? { ...a, recipeId: newId } : a)) }));
+  };
 
   const filteredRecipes = filterRecipes();
   const visibleFilteredRecipes = filteredRecipes.filter(recipe => !state.selectedIds.includes(recipe.id));
@@ -357,7 +406,7 @@ function WeeklyMealsContent() {
   const filterLabel: Record<string, string> = {
     "Vegetarian": t("meals.vegetarian"), "Kid friendly": t("meals.kidFriendly"), "Gluten-free": t("meals.glutenFree"),
     "Breakfast": t("meals.breakfast"), "Lunch": t("meals.lunch"), "Dinner": t("meals.dinner"), "Lunch box": t("meals.lunchBox"),
-    "Oven": t("meals.oven"), "Air fryer": t("meals.airFryer"), "Stovetop": t("meals.stovetop"), "No-cook": t("meals.noCook"),
+    "Oven": t("meals.oven"), "Air fryer": t("meals.airFryer"), "Stovetop": t("meals.stovetop"), "Microwave": t("meals.microwave"), "No-cook": t("meals.noCook"),
     "Chicken": t("meals.chicken"), "Beef": t("meals.beef"), "Seafood": t("meals.seafood"), "Plant-based": t("meals.plantBased"),
   };
   const g = generation.body.filters;
@@ -370,7 +419,7 @@ function WeeklyMealsContent() {
   ];
   const notAppliedLabel: Record<string, string> = {
     source: t("meals.source"), withNotes: t("meals.withMyNotes"), modifiedByMe: t("meals.modifiedByMe"),
-    myPicks: t("meals.showOnlyMyPicks"), minRating: t("meals.minimumRating"),
+    myPicks: t("meals.showOnlyMyPicks"), minRating: t("meals.minimumRating"), cuisine: t("meals.cuisine"),
   };
   const violationLabel = (v: FilterViolation) =>
     v.filter === "maxMinutes" ? `${timeCopy(timeMode)} ≤ ${v.value} ${timeCopy("minutesShort")}` :
@@ -386,7 +435,38 @@ function WeeklyMealsContent() {
     toast({ title: saved.title });
     return saved;
   };
+  // Search with no result: same name but other filters (explained to the customer), and the AI request for that name.
+  const nameOnly = query ? eligibleRecipes.filter(r => recipeNameMatches(r.title, query) && !filteredRecipes.includes(r)) : [];
+  const searchRequest = searchGenerationRequest(query, state.filters, timeMode);
+  const searchChips = [
+    ...(g.maxMinutes !== null ? [{ label: generationChips[0], remove: () => updateFilters({ maxMinutes: null }) }] : []),
+    ...(["dietary", "mealType", "cookingMethod", "proteinType"] as const).flatMap(key =>
+      state.filters[key].map(value => ({ label: filterLabel[value] ?? value, remove: () => toggleArrayFilter(key, value) }))),
+    ...(g.servings ? [{ label: `${t("meals.servingsFilter")}: ${g.servings}`, remove: () => updateFilters({ servings: null }) }] : []),
+    ...g.mustInclude.map(term => ({ label: `${t("meals.mustInclude")}: ${term}`, remove: () => removeIncludeIngredient(term) })),
+    ...g.mustExclude.map(term => ({ label: `${t("meals.mustExclude")}: ${term}`, remove: () => removeExcludeIngredient(term) })),
+  ];
+  const reloadRecipes = () => { fetchRecipes().then(data => setRecipes(toPlannerRecipes(data))).catch(() => undefined); };
+  const publishedFromSearch = (saved: StoredRecipe) => {
+    setRecipes(prev => [...prev.filter(r => r.id !== saved.id), toPlannerRecipe(saved)]);
+    if (state.selectedIds.length < 12) setState(prev => ({ ...prev, selectedIds: [...new Set([...prev.selectedIds, saved.id])] }));
+    else setMaxSelectionsHit(true);
+    toast({ title: generateCopy(lang, "published"), description: saved.title });
+  };
   const activeFilterCount = countActiveFilters();
+  // Cuisines present in the recipes you can cook (plus any already chosen, so it can be removed).
+  const cuisineOptions = cuisines.filter(c => state.filters.cuisine.includes(c) || eligibleRecipes.some(r => recipeCuisine(r.tags) === c));
+  // Every temporary filter as a removable chip. My Basic Settings are not here: they are always applied.
+  const sourceLabel: Record<string, string> = { "My recipes": t("meals.myRecipes"), "Imported": t("meals.imported"), "Trusted authors": t("meals.trustedAuthors"), "Personal": t("meals.personal") };
+  const activeFilterChips = [
+    ...searchChips,
+    ...state.filters.cuisine.map(c => ({ label: `${t("meals.cuisine")}: ${sText(`cuisine_${c}`)}`, remove: () => toggleArrayFilter("cuisine", c) })),
+    ...state.filters.source.map(src => ({ label: sourceLabel[src] ?? src, remove: () => toggleArrayFilter("source", src) })),
+    ...(state.filters.myPicks ? [{ label: t("meals.showOnlyMyPicks"), remove: () => updateFilters({ myPicks: false, minRating: null }) }] : []),
+    ...(state.filters.myPicks && state.filters.minRating !== null ? [{ label: `${t("meals.minimumRating")}: ${state.filters.minRating}*+`, remove: () => updateFilters({ minRating: null }) }] : []),
+    ...(state.filters.withNotes ? [{ label: t("meals.withMyNotes"), remove: () => updateFilters({ withNotes: false }) }] : []),
+    ...(state.filters.modifiedByMe ? [{ label: t("meals.modifiedByMe"), remove: () => updateFilters({ modifiedByMe: false }) }] : []),
+  ];
   const canGenerate = state.selectedIds.length >= 1;
 
   const generatePlan = () => {
@@ -472,6 +552,13 @@ function WeeklyMealsContent() {
     const planned = plannedSlotCount(plan);
     const shortlist = recipes.filter(r => state.selectedIds.includes(r.id));
     const recipeCount = shortlist.length === 1 ? planCopy("recipeOne") : planCopy("recipeMany", { count: shortlist.length });
+    // Fills empty slots only, from the selected recipes, using My Basic Settings. Never removes or moves anything.
+    const autoFill = () => {
+      if (weekLocked) { notify(planCopy("locked"), true); return; }
+      const result = fillWeek(plan, shortlist, settings, { meta: getMeta });
+      if (result.added && commit(() => result.plan)) notify(sText("filled", { count: result.added }));
+      else if (!result.added) notify(sText("fillNothing"));
+    };
     return (
       <div className="min-h-screen bg-[#fafaf7] flex flex-col">
         <AppHeader title="Tablewise" subtitle={planCopy("title")} onBrandClick={() => setLocation("/")} />
@@ -493,8 +580,16 @@ function WeeklyMealsContent() {
               <button type="button" onClick={() => setPlanGenerated(false)} className="inline-flex min-h-11 items-center rounded-full bg-[#42624e] px-4 text-sm font-medium text-white hover:bg-[#385540]">{planCopy("chooseRecipes")}</button>
             </div>
           ) : (
-            <PlannerBoard recipes={shortlist} plan={plan} locked={weekLocked} commit={commit} notify={notify} dayNames={dayNames} mealNames={Object.values(mealNames)}
-              onView={id => setLocation(`/recipe/${encodeURIComponent(id)}`)} />
+            <>
+              <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border hairline bg-white p-3" data-testid="fill-week-panel">
+                <button type="button" onClick={autoFill} disabled={weekLocked} data-testid="button-fill-week"
+                  className="min-h-11 rounded-full bg-[#42624e] px-4 text-sm font-medium text-white hover:bg-[#385540] disabled:opacity-50">{sText("fillWeek")}</button>
+                <p className="min-w-48 flex-1 text-xs text-muted-foreground">{sText("fillWeekHint", { days: settings.planning.cookingDays })}{" "}
+                  <button type="button" onClick={() => setLocation("/settings")} className="font-medium text-[#42624e] underline" data-testid="link-settings-plan">{sText("changeSettings")}</button></p>
+              </div>
+              <PlannerBoard recipes={shortlist} plan={plan} locked={weekLocked} commit={commit} notify={notify} dayNames={dayNames} mealNames={Object.values(mealNames)}
+                onView={id => setLocation(`/recipe/${encodeURIComponent(id)}`)} />
+            </>
           )}
 
           <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex flex-col gap-2 border-t border-[#d9dfd4] bg-[#fafaf7]/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-end">
@@ -571,13 +666,34 @@ function WeeklyMealsContent() {
           </div>
           <p className="mobile-readable-xs text-muted-foreground">{t("meals.adjustLater")}</p>
         </div>
+        {/* Counts come from the exact lists rendered below: all → saved restrictions → page filters/search. */}
+        <ActivePreferences settings={settings} counts={recipes.length ? matchCounts(personalized, filteredRecipes) : null}
+          noDevices={devices.length === 0} onEdit={() => setLocation("/settings")} />
+        <form role="search" className="mb-4" data-testid="recipe-search" onSubmit={e => {
+          // Results update while typing; Enter takes you to them (they sit below the filters on phones).
+          e.preventDefault();
+          (document.activeElement as HTMLElement | null)?.blur();
+          document.getElementById("meal-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}>
+          <label htmlFor="recipe-search-input" className="mb-1.5 block text-base font-medium text-foreground">{generateCopy(lang, "searchLabel")}</label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <input id="recipe-search-input" type="search" value={search} onChange={e => setSearch(e.target.value)} maxLength={120}
+              placeholder={generateCopy(lang, "searchPlaceholder")} autoComplete="off" enterKeyHint="search" data-testid="recipe-search-input"
+              className="min-h-12 w-full rounded-full border border-[#d9dfd4] bg-white ps-10 pe-12 text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a] [&::-webkit-search-cancel-button]:hidden" />
+            {search && <button type="button" onClick={() => setSearch("")} aria-label={generateCopy(lang, "searchClear")} data-testid="recipe-search-clear"
+              className="absolute end-1 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>}
+          </div>
+        </form>
         <RecipeTimeToggle />
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           
-          <aside className="w-full lg:w-[240px] lg:flex-shrink-0">
+          <aside id="meal-filters" className="w-full lg:w-[240px] lg:flex-shrink-0 scroll-mt-4">
             <div className="lg:sticky lg:top-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-foreground">{t("meals.filters", { count: activeFilterCount })}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground" data-testid="additional-filters-count">{t("meals.filters", { count: activeFilterCount })}</span>
                 {activeFilterCount > 0 && (
                   <button 
                     onClick={clearAllFilters}
@@ -588,8 +704,56 @@ function WeeklyMealsContent() {
                   </button>
                 )}
               </div>
+              <p className="mb-2 text-xs text-muted-foreground" aria-live="polite" data-testid="sidebar-matching" data-count={filteredRecipes.length}>
+                {filteredRecipes.length === 1 ? t("meals.matchingCountOne") : t("meals.matchingCount", { count: filteredRecipes.length })}
+              </p>
+              {activeFilterChips.length > 0 && (
+                <ul aria-label={t("meals.activeFilters")} className="mb-4 flex flex-wrap gap-1.5" data-testid="active-filter-chips">
+                  {activeFilterChips.map(chip => (
+                    <li key={chip.label}>
+                      <button type="button" onClick={chip.remove} aria-label={t("meals.removeFilter", { label: chip.label })} data-testid="active-filter-chip"
+                        className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[#d9dfd4] bg-white ps-3 pe-2 text-xs text-foreground hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a]">
+                        {chip.label}<X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-              <div className="border-b hairline pb-3 mb-3">
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="mealType">
+                <button 
+                  onClick={() => toggleSection("mealType")}
+                  className="flex items-center justify-between w-full text-left min-h-11"
+                  data-testid="button-toggle-mealtype"
+                >
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.mealType")}</span>
+                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("mealType") ? "-" : "+"}</span>
+                </button>
+                {state.expandedSections.includes("mealType") && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {["Breakfast", "Lunch", "Dinner", "Lunch box"].map(type => {
+                      const mealTypeTranslations: Record<string, string> = {
+                        "Breakfast": t("meals.breakfast"),
+                        "Lunch": t("meals.lunch"),
+                        "Dinner": t("meals.dinner"),
+                        "Lunch box": t("meals.lunchBox"),
+                      };
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => toggleArrayFilter("mealType", type)}
+                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
+                        >
+                          {mealTypeTranslations[type] || type}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="time">
                 <button 
                   onClick={() => toggleSection("time")}
                   className="flex items-center justify-between w-full text-left min-h-11"
@@ -614,7 +778,110 @@ function WeeklyMealsContent() {
                 )}
               </div>
 
-              <div className="border-b hairline pb-3 mb-3">
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="protein">
+                <button
+                  onClick={() => toggleSection("protein")}
+                  className="flex items-center justify-between w-full text-start min-h-11"
+                  data-testid="button-toggle-protein"
+                >
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.proteinType")}</span>
+                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("protein") ? "-" : "+"}</span>
+                </button>
+                {state.expandedSections.includes("protein") && (
+                  <div className="mt-3">
+                    <div className="flex flex-wrap gap-2">
+                      {["Chicken", "Beef", "Seafood", "Plant-based"].map(protein => {
+                        const proteinTranslations: Record<string, string> = {
+                          "Chicken": t("meals.chicken"),
+                          "Beef": t("meals.beef"),
+                          "Seafood": t("meals.seafood"),
+                          "Plant-based": t("meals.plantBased"),
+                        };
+                        return (
+                          <button
+                            key={protein}
+                            onClick={() => toggleArrayFilter("proteinType", protein)}
+                            className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                            data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
+                          >
+                            {proteinTranslations[protein] || protein}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="ingredients">
+                <button
+                  onClick={() => toggleSection("ingredients")}
+                  className="flex items-center justify-between w-full text-start min-h-11"
+                  data-testid="button-toggle-ingredients"
+                >
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.ingredients")}</span>
+                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("ingredients") ? "-" : "+"}</span>
+                </button>
+                {state.expandedSections.includes("ingredients") && (
+                  <div className="mt-3">
+                  <div className="pb-3">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustInclude")}</span>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {state.filters.mustInclude.map(ing => (
+                        <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
+                          {ing}
+                          <button
+                            onClick={() => removeIncludeIngredient(ing)}
+                            aria-label={`Remove ${ing} from must include`}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={includeInput}
+                      onChange={(e) => setIncludeInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addIncludeIngredient()}
+                      placeholder={t("meals.typeEnter")}
+                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
+                      data-testid="input-must-include"
+                    />
+                  </div>
+
+                  <div className="pb-3 mb-3">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustExclude")}</span>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {state.filters.mustExclude.map(ing => (
+                        <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
+                          {ing}
+                          <button
+                            onClick={() => removeExcludeIngredient(ing)}
+                            aria-label={`Remove ${ing} from must exclude`}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={excludeInput}
+                      onChange={(e) => setExcludeInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addExcludeIngredient()}
+                      placeholder={t("meals.typeEnter")}
+                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
+                      data-testid="input-must-exclude"
+                    />
+                  </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="dietary">
                 <button 
                   onClick={() => toggleSection("dietary")}
                   className="flex items-center justify-between w-full text-left min-h-11"
@@ -648,40 +915,7 @@ function WeeklyMealsContent() {
                 )}
               </div>
 
-              <div className="border-b hairline pb-3 mb-3">
-                <button 
-                  onClick={() => toggleSection("mealType")}
-                  className="flex items-center justify-between w-full text-left min-h-11"
-                  data-testid="button-toggle-mealtype"
-                >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.mealType")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("mealType") ? "-" : "+"}</span>
-                </button>
-                {state.expandedSections.includes("mealType") && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {["Breakfast", "Lunch", "Dinner", "Lunch box"].map(type => {
-                      const mealTypeTranslations: Record<string, string> = {
-                        "Breakfast": t("meals.breakfast"),
-                        "Lunch": t("meals.lunch"),
-                        "Dinner": t("meals.dinner"),
-                        "Lunch box": t("meals.lunchBox"),
-                      };
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => toggleArrayFilter("mealType", type)}
-                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                          data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
-                        >
-                          {mealTypeTranslations[type] || type}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3">
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="method">
                 <button 
                   onClick={() => toggleSection("method")}
                   className="flex items-center justify-between w-full text-left min-h-11"
@@ -692,11 +926,12 @@ function WeeklyMealsContent() {
                 </button>
                 {state.expandedSections.includes("method") && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {["Oven", "Air fryer", "Stovetop", "No-cook"].map(method => {
+                    {methodChoices(devices).map(method => {
                       const methodTranslations: Record<string, string> = {
                         "Oven": t("meals.oven"),
                         "Air fryer": t("meals.airFryer"),
                         "Stovetop": t("meals.stovetop"),
+                        "Microwave": t("meals.microwave"),
                         "No-cook": t("meals.noCook"),
                       };
                       return (
@@ -714,7 +949,7 @@ function WeeklyMealsContent() {
                 )}
               </div>
 
-              <div className="border-b hairline pb-3 mb-3">
+              <div className="border-b hairline pb-3 mb-3" data-filter-section="source">
                 <button 
                   onClick={() => toggleSection("source")}
                   className="flex items-center justify-between w-full text-left min-h-11"
@@ -757,27 +992,20 @@ function WeeklyMealsContent() {
 
               {state.showMoreFilters && (
                 <>
-                  <div className="border-b hairline pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.proteinType")}</span>
+                  <div className="border-b hairline pb-3 mb-3" data-filter-section="cuisine">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.cuisine")}</span>
                     <div className="flex flex-wrap gap-2">
-                      {["Chicken", "Beef", "Seafood", "Plant-based"].map(protein => {
-                        const proteinTranslations: Record<string, string> = {
-                          "Chicken": t("meals.chicken"),
-                          "Beef": t("meals.beef"),
-                          "Seafood": t("meals.seafood"),
-                          "Plant-based": t("meals.plantBased"),
-                        };
-                        return (
-                          <button
-                            key={protein}
-                            onClick={() => toggleArrayFilter("proteinType", protein)}
-                            className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                            data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
-                          >
-                            {proteinTranslations[protein] || protein}
-                          </button>
-                        );
-                      })}
+                      {cuisineOptions.map(cuisine => (
+                        <button
+                          key={cuisine}
+                          onClick={() => toggleArrayFilter("cuisine", cuisine)}
+                          aria-pressed={state.filters.cuisine.includes(cuisine)}
+                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.cuisine.includes(cuisine) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          data-testid={`filter-cuisine-${cuisine.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {sText(`cuisine_${cuisine}`)}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -851,59 +1079,6 @@ function WeeklyMealsContent() {
                     </label>
                   </div>
 
-                  <div className="border-b hairline pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustInclude")}</span>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {state.filters.mustInclude.map(ing => (
-                        <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
-                          {ing}
-                          <button
-                            onClick={() => removeIncludeIngredient(ing)}
-                            aria-label={`Remove ${ing} from must include`}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      value={includeInput}
-                      onChange={(e) => setIncludeInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addIncludeIngredient()}
-                      placeholder={t("meals.typeEnter")}
-                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
-                      data-testid="input-must-include"
-                    />
-                  </div>
-
-                  <div className="pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustExclude")}</span>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {state.filters.mustExclude.map(ing => (
-                        <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
-                          {ing}
-                          <button
-                            onClick={() => removeExcludeIngredient(ing)}
-                            aria-label={`Remove ${ing} from must exclude`}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      value={excludeInput}
-                      onChange={(e) => setExcludeInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addExcludeIngredient()}
-                      placeholder={t("meals.typeEnter")}
-                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
-                      data-testid="input-must-exclude"
-                    />
-                  </div>
                 </>
               )}
             </div>
@@ -943,10 +1118,12 @@ function WeeklyMealsContent() {
                       else if (tag === "kidFriendly") displayTags.push(t("meals.kidFriendly"));
                       else if (tag === "glutenFree") displayTags.push(t("meals.glutenFree"));
                     });
+                    const fit = checkEligibility(recipe, settings);
+                    const replacement = fit.eligible ? null : suggestReplacement(recipe, recipes, state.selectedIds, settings, { meta: getMeta });
                     return (
+                      <div key={recipe.id}>
                       <div
-                        key={recipe.id}
-                        className="flex items-center gap-2 sm:gap-3 p-3 bg-white rounded-lg border hairline"
+                        className={`flex items-center gap-2 sm:gap-3 p-3 bg-white rounded-lg border ${fit.eligible ? "hairline" : "border-amber-300"}`}
                         data-testid={`selected-recipe-${recipe.id}`}
                       >
                         <div className="w-8 h-8 rounded-lg bg-foreground/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -983,6 +1160,16 @@ function WeeklyMealsContent() {
                           ×
                         </button>
                       </div>
+                      {!fit.eligible && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900" role="alert" data-testid={`incompatible-${recipe.id}`}>
+                          <span>{sText("incompatible")}: {fit.reasons.map(r => restrictionText(lang, r, memberName)).join("; ")}</span>
+                          {replacement
+                            ? <button type="button" onClick={() => replaceSelected(recipe.id, replacement.id)} disabled={weekLocked} data-testid={`replace-${recipe.id}`}
+                                className="min-h-9 rounded-full border border-amber-300 bg-white px-3 font-medium hover:bg-amber-100 disabled:opacity-50">{sText("replaceWith", { title: replacement.title })}</button>
+                            : <span className="text-amber-700">{sText("noReplacement")}</span>}
+                        </div>
+                      )}
+                      </div>
                     );
                   })}
                 </div>
@@ -995,9 +1182,25 @@ function WeeklyMealsContent() {
               </div>
             )}
 
-            {visibleFilteredRecipes.length > 0 && <div className="mb-3 flex justify-end"><GenerateRecipe request={generationRequest} variant="button" onAccept={acceptGenerated} /></div>}
-            <div className="space-y-2">
-              {visibleFilteredRecipes.length === 0 ? (
+            {!query && visibleFilteredRecipes.length > 0 && <div className="mb-3 flex justify-end"><GenerateRecipe request={generationRequest} variant="button" onAccept={acceptGenerated} /></div>}
+            <div id="meal-results" className="space-y-2 scroll-mt-4">
+              {recipes.length > 0 && eligibleRecipes.length === 0 ? (
+                // Every recipe breaks a hard restriction: say which ones, never fall back to incompatible suggestions.
+                <div className="rounded-xl border hairline bg-white p-5" role="status" data-testid="no-match-settings">
+                  <h2 className="text-base font-medium text-foreground">{sText("noMatchTitle")}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">{sText("noMatchBody")}</p>
+                  <ul className="mt-1 list-disc ps-5 text-sm text-muted-foreground">
+                    {limitingReasons(personalized.excluded, lang, memberName).map(reason => <li key={reason}>{reason}</li>)}
+                  </ul>
+                  <button type="button" onClick={() => setLocation("/settings")} data-testid="button-no-match-edit"
+                    className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[#42624e] px-4 text-sm font-medium text-white hover:bg-[#385540]">{sText("editPrefs")}</button>
+                </div>
+              ) : query && query.length >= 2 && filteredRecipes.length === 0 ? (
+                <RecipeSearchGeneration key={JSON.stringify(searchRequest.body)} query={query} request={searchRequest.body}
+                  chips={searchChips} notApplied={searchRequest.notApplied.map(key => notAppliedLabel[key])} nameOnly={nameOnly}
+                  violationLabel={violationLabel} onPublished={publishedFromSearch} onExisting={reloadRecipes}
+                  onEditFilters={() => document.getElementById("meal-filters")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+              ) : query && visibleFilteredRecipes.length === 0 ? null : visibleFilteredRecipes.length === 0 ? (
                 <GenerateRecipe request={generationRequest} variant="empty" onAccept={acceptGenerated} />
               ) : (
                 visibleFilteredRecipes.map(recipe => {
@@ -1104,6 +1307,16 @@ function WeeklyMealsContent() {
             </footer>
           </main>
         </div>
+        {/* The top button scrolls away while picking recipes; keep the next step in reach. */}
+        {canGenerate && (
+          <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex items-center justify-end gap-3 border-t border-[#d9dfd4] bg-background/95 px-4 py-3 backdrop-blur" data-testid="selection-next-bar">
+            <p className="me-auto text-sm text-muted-foreground">{t("meals.selected", { count: state.selectedIds.length })}</p>
+            <button type="button" onClick={generatePlan} data-testid="button-generate-plan-sticky"
+              className="min-h-11 rounded-full bg-foreground px-5 text-sm font-medium text-background hover:bg-foreground/90">
+              {t("meals.generateWeeklyPlan")}
+            </button>
+          </div>
+        )}
       </PageContainer>
     </div>
   );

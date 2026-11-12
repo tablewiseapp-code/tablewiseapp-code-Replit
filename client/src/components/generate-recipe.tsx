@@ -30,9 +30,9 @@ type Props = ({
 type State = { kind: "idle" } | { kind: "loading" } | { kind: "error"; message: string }
   | { kind: "preview"; result: GeneratedRecipe; ideaId: string | null; saving: boolean; saveError: boolean };
 
-const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#42624e] px-4 text-sm font-medium text-white transition-colors hover:bg-[#365041] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
-const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d9dfd4] bg-white px-4 text-sm font-medium text-[#45594c] transition-colors hover:bg-[#f4f7f1] disabled:cursor-not-allowed disabled:opacity-45";
-const chip = "inline-flex max-w-full rounded-full border border-[#e2e6dd] bg-[#f1f4ed] px-2.5 py-1 text-xs text-[#68756a]";
+export const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#42624e] px-4 text-sm font-medium text-white transition-colors hover:bg-[#365041] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
+export const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d9dfd4] bg-white px-4 text-sm font-medium text-[#45594c] transition-colors hover:bg-[#f4f7f1] disabled:cursor-not-allowed disabled:opacity-45";
+export const chip = "inline-flex max-w-full rounded-full border border-[#e2e6dd] bg-[#f1f4ed] px-2.5 py-1 text-xs text-[#68756a]";
 
 export function GenerateRecipe({ filters, timeMode, request, variant, disabled, label, onAccept }: Props) {
   const { lang, dir } = useI18n();

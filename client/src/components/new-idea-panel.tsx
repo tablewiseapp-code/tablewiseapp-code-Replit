@@ -57,7 +57,7 @@ type Key = keyof typeof copy.en;
 export const filterLabelKey: Record<string, string> = {
   "Vegetarian": "meals.vegetarian", "Kid friendly": "meals.kidFriendly", "Gluten-free": "meals.glutenFree",
   "Breakfast": "meals.breakfast", "Lunch": "meals.lunch", "Dinner": "meals.dinner", "Lunch box": "meals.lunchBox",
-  "Oven": "meals.oven", "Air fryer": "meals.airFryer", "Stovetop": "meals.stovetop", "No-cook": "meals.noCook",
+  "Oven": "meals.oven", "Air fryer": "meals.airFryer", "Stovetop": "meals.stovetop", "Microwave": "meals.microwave", "No-cook": "meals.noCook",
 };
 const chipClass = (on: boolean) =>
   `px-3 py-2 min-h-11 text-xs rounded-full border hairline ${on ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`;

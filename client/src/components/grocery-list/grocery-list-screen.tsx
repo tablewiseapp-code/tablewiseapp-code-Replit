@@ -7,6 +7,9 @@ import { plannedServingsFactor } from "@/lib/meal-plan";
 import { baseServings, scaleIngredient } from "@/lib/ingredient-scale";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryNavigation } from "./grocery-navigation";
+import { loadSettings } from "@/lib/basic-settings";
+import { settingsText } from "@/lib/settings-copy";
+import { mentionsTerm } from "@shared/food-rules";
 import "./grocery-list.css";
 
 type Recipe = PlannerRecipe;
@@ -70,7 +73,8 @@ type CategoryPointerDrag = {
 
 export default function GroceryListScreen() {
   const [, setLocation] = useLocation();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const pantry = useMemo(() => loadSettings().shopping.pantry, []); // My Basic Settings: "Ingredients I usually have"
   const [initialPrefs] = useState(readGroceryPrefs);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(initialPrefs.checked);
   const [expansion, setExpansion] = useState<Expansion>(initialPrefs.expansion);
@@ -431,6 +435,8 @@ export default function GroceryListScreen() {
                             <svg viewBox="0 0 16 16"><path d="m3.5 8.2 3 3 6-6.3" /></svg>
                           </span>
                           <span className="grocery-ingredient">{item.ingredient}</span>
+                          {pantry.some(term => mentionsTerm(term, [item.ingredient])) &&
+                            <span className="ms-2 rounded bg-[#42624e]/10 px-1.5 py-0.5 text-[11px] font-medium text-[#42624e]" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
                         </label>
                         {item.recipes.length > 0 && (
                           <span className="grocery-recipes" data-testid="grocery-item-recipes">
