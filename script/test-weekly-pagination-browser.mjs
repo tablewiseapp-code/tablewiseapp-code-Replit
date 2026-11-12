@@ -61,7 +61,7 @@ try {
   // 0 selected: Continue disabled with the reason; page 1 shows 12; range + total.
   await go("/meals"); await ev("localStorage.clear()"); await resetPage(); await openMeals();
   ok(await ev(`${q("button-generate-plan")}.disabled`), "Continue disabled with nothing selected");
-  ok((await text("selected-count")).includes("Select at least 1"), "disabled Continue explains why");
+  ok((await text("selected-count")).includes("Select at least 1"), `disabled Continue explains why: ${await text("selected-count")}`);
   ok((await pageCards()).length === 12, "12 recipes on page 1");
   ok(await text("results-range") === `Showing 1–12 of ${total} recipes`, `range on page 1: ${await text("results-range")}`);
   ok(await ev(`${q("page-prev")}.disabled`) && !(await ev(`${q("page-next")}.disabled`)), "Previous disabled on page 1");

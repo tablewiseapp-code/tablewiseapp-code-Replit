@@ -1331,16 +1331,6 @@ function WeeklyMealsContent() {
             </footer>
           </main>
         </div>
-        {/* The top button scrolls away while picking recipes; keep the next step in reach. */}
-        {canGenerate && (
-          <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex items-center justify-end gap-3 border-t border-[#d9dfd4] bg-background/95 px-4 py-3 backdrop-blur" data-testid="selection-next-bar">
-            <p className="me-auto text-sm text-muted-foreground">{t("meals.selected", { count: state.selectedIds.length })}</p>
-            <button type="button" onClick={generatePlan} data-testid="button-generate-plan-sticky"
-              className="min-h-11 rounded-full bg-foreground px-5 text-sm font-medium text-background hover:bg-foreground/90">
-              {t("meals.generateWeeklyPlan")}
-            </button>
-          </div>
-        )}
       </PageContainer>
     </div>
   );
