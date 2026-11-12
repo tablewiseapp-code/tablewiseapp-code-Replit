@@ -1,9 +1,9 @@
 // Household preference engine. Pure and deterministic: no network, no AI, no storage.
 // Eligibility (hard restrictions) is separate from ranking (soft preferences).
-import { evaluateAllergen, evaluateDiet, evaluateMeat, mentionsIngredientPref, mentionsTerm, recipeCuisine,
-  type Allergen, type DietPattern, type IngredientPref, type RuleStatus } from "@shared/food-rules";
+import { evaluateAllergen, evaluateDiet, evaluateMeat, matchesFoodPref, mentionsTerm, recipeCuisine,
+  type Allergen, type DietPattern, type RuleStatus } from "@shared/food-rules";
 import { satisfiesDevices, unmetGroups, type DeviceId, type DeviceRequirements } from "./device-requirements";
-import { availableDevices, householdServings, type BasicSettings, type IngredientChoice, type Member } from "./basic-settings";
+import { availableDevices, householdServings, type BasicSettings, type Member } from "./basic-settings";
 import { mealSlots, occupant, type MealSlot, type PlanAssignment, type PlanState } from "./meal-plan";
 import type { RecipeToolKey } from "./recipe-tools";
 
@@ -88,8 +88,6 @@ export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, 
   return { eligible: reasons.length === 0, reasons, members: [HOUSEHOLD, ...people.map(m => m.id)] };
 }
 
-const choiceMatches = (choice: IngredientChoice, ingredients: string[]) => choice.startsWith("custom:")
-  ? mentionsTerm(choice.slice(7), ingredients) : mentionsIngredientPref(choice as IngredientPref, ingredients);
 const keyIngredients = (r: EngineRecipe) => new Set(r.ingredients.map(line =>
   line.toLowerCase().replace(/^[\d.\/\s]+(g|kg|ml|l|tsp|tbsp|pinch|cloves?|slices?|sprigs?|sheets?)?\s+/, "").split(",")[0].trim())
   .filter(name => name && !/\b(salt|pepper|oil|water|sugar)\b/.test(name)));
@@ -111,10 +109,15 @@ export function rankRecipe(recipe: EngineRecipe, settings: BasicSettings, ctx: R
   let score = 0;
   const matches: string[] = [], concerns: string[] = [];
   const people = diners(settings, ctx.memberIds);
-  const ing = recipe.ingredients;
-  const favorites = [...new Set([...settings.dietary.favorites, ...people.flatMap(m => m.favorites)])].filter(c => choiceMatches(c, ing));
-  if (favorites.length) { score += 2 * Math.min(2, favorites.length); matches.push(...favorites.map(f => `favorite:${f}`)); }
-  const dislikedBy = [settings.dietary.dislikes, ...people.map(m => m.dislikes)].filter(list => list.some(c => choiceMatches(c, ing))).length;
+  // Likes and dislikes count per person (the household-wide list is one more "person"), so a dish two children like
+  // ranks above one only one likes, and a long list can't outweigh everyone else: at most +3 per person.
+  const likers = [{ id: HOUSEHOLD, list: settings.dietary.favorites }, ...people.map(m => ({ id: m.id, list: m.favorites }))]
+    .map(p => ({ id: p.id, hits: p.list.filter(c => matchesFoodPref(c, recipe)) })).filter(p => p.hits.length);
+  for (const p of likers) {
+    score += Math.min(3, 1 + p.hits.length);
+    matches.push(...p.hits.map(f => `favorite:${f}`), ...(p.id === HOUSEHOLD ? [] : [`likedBy:${p.id}`]));
+  }
+  const dislikedBy = [settings.dietary.dislikes, ...people.map(m => m.dislikes)].filter(list => list.some(c => matchesFoodPref(c, recipe))).length;
   if (dislikedBy) { score -= 3 * dislikedBy; concerns.push(`disliked:${dislikedBy}`); }
   const cuisine = recipeCuisine(recipe.tags);
   if (cuisine && settings.dietary.preferredCuisines.includes(cuisine)) { score += 2; matches.push(`cuisine:${cuisine}`); }

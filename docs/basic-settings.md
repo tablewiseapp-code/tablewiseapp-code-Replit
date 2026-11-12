@@ -58,7 +58,19 @@ list uses only the global rules, so a recipe that fails Breakfast still shows fo
 diets, devices, hard time limit) always apply first; a meal rule never relaxes them. Older settings without meal rules
 read as Both / Same as Cooking Preferences.
 
-**Soft (order only):** favourite/disliked ingredients (household and per member), preferred/avoided cuisines,
+**Food preferences (per member, order only):** each member card has a collapsible **Food preferences** section:
+“Foods and meals they love” and “Foods they don't like”, with suggested chips and free text. Suggestions are dishes
+(muffins, pancakes, pizza, soup… — matched against the recipe title and tags) and ingredients (matched against
+ingredient lines); free text is kept as typed and matches either, by whole word with simple plural tolerance
+(`matchesFoodPref` in `shared/food-rules.ts`). Likes count per person: each person who likes a recipe adds +2 (+3 with
+several of their likes matching), so a dish two children like ranks above one only one likes, and a long list can't
+outweigh the others. Each person who dislikes it takes −3. Only the members eating count (`memberIds`). Likes never
+hide a recipe and never relax an allergy, diet or meal rule — they rank what is already eligible, before pagination,
+in the Weekly Meals list, Fill my week, the slot picker and replacements. A real match shows “Matches Mia's
+favourites” or “Liked by 2 family members” on the recipe card. Recipe text is English, so Russian or Hebrew free
+text only matches through the translated suggestion chips.
+
+**Soft (order only):** favourite/disliked foods (household and per member), preferred/avoided cuisines,
 weekday/weekend time, quick, minimal clean-up, one-pot and batch cooking (set separately for weekdays and the weekend; Fill my week uses each day's set, the list uses the weekday set), meals to plan, repeat favourites,
 familiar vs new, variety against already-selected recipes, ingredient reuse, budget-friendly (catalog
 “Budget” tag). With default settings nothing is hidden and the order is unchanged.
@@ -88,7 +100,7 @@ event. Moving to account storage later is a storage swap behind `loadSettings`/`
 
 ## Tests
 
-`npm run test:basic-settings` (20 checks: persistence, migration, empty vs unset, two-tab merge, failed write,
+`npm run test:basic-settings` (45 checks, incl. per-member food likes/dislikes: persistence, migration, empty vs unset, two-tab merge, failed write,
 AND/OR devices, household restrictions, uncertain allergens, ranking, replacement, Weekly Meals filtering,
 Fill my week) and `BASE_URL=http://localhost:5001 npm run test:basic-settings-browser` (39 checks: keyboard,
 autosave failure/retry, reload, Weekly Meals, My Recipes unchanged, en/ru/he, RTL, desktop/mobile, touch targets) and

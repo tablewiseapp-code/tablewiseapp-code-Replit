@@ -507,4 +507,77 @@ test("meal settings read correctly in English, Russian and Hebrew", () => {
   const chips = activePreferenceChips(withRules(acceptance), "en", m => m);
   assert.deepEqual(chips.filter(c => c.id.startsWith("meal-")).map(c => c.text), ["Breakfast: Meatless · 15 min", "Lunch: Meat · 30 min", "Dinner: 45 min"]);
 });
+// ---------- Individual food preferences (likes / dislikes per member) ----------
+const kid = (name: string, favorites: string[] = [], dislikes: string[] = []) => ({ ...emptyMember("child", name), favorites, dislikes });
+const withKids = (...members: ReturnType<typeof kid>[]) => withSettings(s => ({ ...s, household: { ...s.household, members } }));
+const muffin = recipe({ id: "muffin", title: "Blueberry Muffins", mealType: "Breakfast", tags: ["Breakfast", "Baking"], ingredients: ["200 g flour", "150 g blueberries", "2 eggs"] });
+const eggs = recipe({ id: "eggs", title: "Scrambled Eggs on Toast", mealType: "Breakfast", tags: ["Breakfast"], ingredients: ["4 eggs", "2 slices bread"] });
+test("likes and dislikes are stored per member, persist, and keep the person's own words", () => {
+  const store = memory();
+  const mia = kid("Mia", ["muffins", "custom:strawberries"], ["mushrooms"]), sam = kid("Sam", ["pizza"], ["onions"]);
+  updateSettings(s => ({ ...s, household: { ...s.household, members: [mia, sam] } }), store);
+  const [a, b] = loadSettings(store).household.members;
+  assert.deepEqual([a.id, a.favorites, a.dislikes], [mia.id, ["muffins", "custom:strawberries"], ["mushrooms"]]);
+  assert.deepEqual([b.favorites, b.dislikes], [["pizza"], ["onions"]]);
+  // Older members without likes, and unknown ids, sanitize safely.
+  const old = sanitizeSettings({ version: 2, household: { members: [{ id: "abcd1234", name: "Old", favorites: ["unicorns", "muffins"] }, { id: "efgh5678", name: "Older" }] } });
+  assert.deepEqual(old.household.members.map(m => m.favorites), [["muffins"], []]);
+});
+test("a dish like (muffins) matches by recipe title, an ingredient like (strawberries) by ingredient lines", () => {
+  const s = withKids(kid("Mia", ["muffins"]));
+  assert.ok(rankRecipe(muffin, s).matches.includes("favorite:muffins"));
+  assert.ok(!rankRecipe(recipe({ title: "Pancakes", ingredients: ["1 leftover muffin, crumbled"] }), s).matches.length, "dishes don't match ingredient lines");
+  const berries = withKids(kid("Mia", ["custom:strawberries"]));
+  assert.ok(rankRecipe(recipe({ title: "Yogurt Pots", ingredients: ["200 g strawberries"] }), berries).matches.includes("favorite:custom:strawberries"));
+  assert.ok(!rankRecipe(recipe({ title: "Strawberry-free Toast", ingredients: ["bread"] }), withKids(kid("Mia", ["custom:straw"]))).matches.length, "no naive substring match");
+  assert.ok(rankRecipe(muffin, withKids(kid("Mia", ["custom:blueberry muffins"]))).matches.length, "free text matches the dish name");
+});
+test("the more members like a recipe, the higher it ranks; one long list can't outweigh everyone else", () => {
+  const one = rankRecipe(muffin, withKids(kid("Mia", ["muffins"]), kid("Sam"))).score;
+  const two = rankRecipe(muffin, withKids(kid("Mia", ["muffins"]), kid("Sam", ["muffins"]))).score;
+  assert.ok(two > one && one > 0);
+  const greedy = withKids(kid("Mia", ["muffins", "custom:blueberries", "custom:flour", "eggs"]), kid("Sam", ["omelette"]), kid("Ana", ["omelette"]));
+  assert.ok(rankRecipe(eggs, greedy).score > rankRecipe(muffin, greedy).score, "two people's likes beat one person's four");
+  // Only the members eating count.
+  const twoKids = withKids(kid("Mia", ["muffins"]), kid("Sam", ["muffins"]));
+  assert.equal(rankRecipe(muffin, twoKids, { memberIds: [twoKids.household.members[0].id] }).score, one);
+  assert.deepEqual(rankRecipe(muffin, twoKids).matches.filter(m => m.startsWith("likedBy:")).length, 2);
+});
+test("dislikes lower a recipe but never hide it; an allergy always wins over a like", () => {
+  const s = withKids(kid("Mia", [], ["muffins"]));
+  const { eligible } = personalize([muffin, eggs], s);
+  assert.deepEqual(eligible.map(e => e.recipe.id), ["eggs", "muffin"]);
+  const allergic = { ...kid("Mia", ["muffins"]), allergies: ["eggs" as const] };
+  const r = personalize([muffin, eggs], withKids(allergic, kid("Sam", ["muffins"])));
+  assert.deepEqual([r.eligible.length, r.excluded.length], [0, 2], "a liked recipe with an allergen is still excluded");
+});
+test("breakfast on the real catalog: liked muffins come first, nothing is hidden, pagination comes after ranking", () => {
+  const s = withKids(kid("Mia", ["muffins"]), kid("Sam", ["muffins"]));
+  const breakfasts = planner.filter(r => r.mealType === "Breakfast");
+  const plain = personalize(breakfasts, defaultSettings(), { meals: ["Breakfast"] }).eligible.map(e => e.recipe.id);
+  const ranked = personalize(breakfasts, s, { meals: ["Breakfast"] }).eligible.map(e => e.recipe);
+  assert.equal(ranked.length, plain.length, "same recipes, only the order changes");
+  const muffins = breakfasts.filter(r => /muffin/i.test(r.title));
+  assert.ok(muffins.length >= 2);
+  const firstPage = ranked.slice(0, muffins.length);
+  assert.ok(firstPage.every(r => /muffin/i.test(r.title)), firstPage.map(r => r.title).join(", "));
+  assert.deepEqual(personalize(breakfasts, withKids(kid("Mia"), kid("Sam")), { meals: ["Breakfast"] }).eligible.map(e => e.recipe.id), plain, "empty likes keep today's order");
+});
+test("lunch and dinner use the same likes; Fill my week puts the liked recipe into the slot", () => {
+  const s = withKids(kid("Mia", ["pizza", "soup"]));
+  const lunch = [recipe({ id: "wrap", title: "Chicken Wrap", mealType: "Lunch" }), recipe({ id: "soup", title: "Tomato Soup", mealType: "Lunch", tags: ["Lunch", "Soup"] })];
+  assert.equal(personalize(lunch, s, { meals: ["Lunch"] }).eligible[0].recipe.id, "soup");
+  const dinner = [recipe({ id: "stew", title: "Beef Stew" }), recipe({ id: "pizza", title: "Margherita Pizza" })];
+  const plan = { selectedIds: [], planAssignments: [] } as never;
+  const one = { ...s, planning: { ...s.planning, meals: ["Dinner" as const], cookingDays: 1 } };
+  assert.equal(fillWeek(plan, dinner, one).plan.planAssignments[0].recipeId, "pizza");
+});
+test("food preference copy is translated in English, Russian and Hebrew", () => {
+  for (const lang of ["en", "ru", "he"]) for (const key of ["foodPrefs", "foodPrefsHint", "memberLikes", "memberDislikes", "ing_muffins", "ing_pizza", "likedByMember", "likedByMany"]) {
+    const text = settingsText(lang, key);
+    assert.ok(text && text !== key, `${lang}.${key}`);
+    if (lang !== "en" && !["ing_pizza"].includes(key)) assert.notEqual(text, settingsText("en", key), `${lang}.${key} is translated`);
+  }
+  assert.equal(settingsText("he", "likedByMany", { count: 2 }), "אהוב על 2 מבני הבית");
+});
 console.log(`All ${passed} My Basic Settings tests passed.`);

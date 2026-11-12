@@ -109,6 +109,35 @@ export const ingredientPrefIds = Object.keys(ingredientPrefs) as IngredientPref[
 export const mentionsIngredientPref = (id: IngredientPref, ingredients: readonly string[]) =>
   ingredients.some(line => ingredientPrefs[id].test(line.toLowerCase()));
 
+// ---- Dishes and food types (likes / dislikes). Matched against the recipe's title and tags, never its ingredient
+// lines: "muffins" is a kind of dish, not an ingredient, and "chocolate chips" must not look like chips. ----
+export const dishPrefs = {
+  muffins: /\bmuffins?\b/, pancakes: /\b(pancakes?|crêpes?|crepes?|blini|fritters?)\b/, waffles: /\bwaffles?\b/,
+  porridge: /\b(porridge|oatmeal|overnight oats|oats)\b/, omelette: /\b(omelettes?|omelets?|frittatas?|scrambled eggs?|shakshuka)\b/,
+  toast: /\b(toasts?|toasties?)\b/, sandwiches: /\b(sandwich(es)?|wraps?|pittas?|pitas?|bagels?)\b/, salad: /\b(salads?|slaw)\b/,
+  soup: /\b(soups?|broth|chowder)\b/, pizza: /\b(pizzas?|flatbreads?)\b/, burgers: /\bburgers?\b/,
+  tacos: /\b(tacos?|burritos?|quesadillas?|fajitas?|enchiladas?)\b/, noodles: /\b(noodles?|ramen|pad thai|stir[- ]fry)\b/,
+  curry: /\b(curry|curries|tikka|masala|korma|dal|dhal)\b/, stew: /\b(stews?|casseroles?|tagine|chilli con carne|goulash)\b/,
+  pie: /\b(pies?|bakes?|lasagne|lasagna|moussaka|gratin)\b/, cake: /\b(cakes?|brownies?|cookies?|biscuits?|traybakes?)\b/,
+  smoothie: /\b(smoothies?|shakes?)\b/,
+} as const;
+export type DishPref = keyof typeof dishPrefs;
+export const dishPrefIds = Object.keys(dishPrefs) as DishPref[];
+/** Every structured food preference: dishes first (they are what children ask for), then ingredients. */
+export const foodPrefIds = [...dishPrefIds, ...ingredientPrefIds];
+type MatchableRecipe = { title?: string | null; tags?: readonly string[] | null; ingredients: readonly string[] };
+const dishText = (r: MatchableRecipe) => [r.title ?? "", ...(r.tags ?? [])].join(" · ").toLowerCase();
+/** A structured id or "custom:<text>" against a recipe. A dish matches by title/tags; an ingredient by ingredient lines;
+ * free text by either (the person may have typed "blueberry muffins" or "strawberries"). */
+export function matchesFoodPref(choice: string, recipe: MatchableRecipe): boolean {
+  if (choice.startsWith("custom:")) {
+    const re = termPattern(choice.slice(7));
+    return !!re && (re.test(dishText(recipe)) || recipe.ingredients.some(line => re.test(line.toLowerCase())));
+  }
+  if (choice in dishPrefs) return dishPrefs[choice as DishPref].test(dishText(recipe));
+  return choice in ingredientPrefs && mentionsIngredientPref(choice as IngredientPref, recipe.ingredients);
+}
+
 // ---- Cuisines (catalog vocabulary; recipes carry them as tags) ----
 export const cuisines = ["American", "British", "Caribbean", "Chinese", "French", "Greek", "Indian", "Italian", "Japanese", "Korean",
   "Mediterranean", "Mexican", "Middle Eastern", "North African", "Scandinavian", "Spanish", "Thai", "Vietnamese", "Eastern European"] as const;
