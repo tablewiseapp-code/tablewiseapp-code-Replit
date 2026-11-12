@@ -28,10 +28,11 @@ import type { Recipe as StoredRecipe } from "@/lib/storage";
 import { GenerateRecipe } from "@/components/generate-recipe";
 import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type FilterViolation, type NewRecipe } from "@/lib/recipe-generation";
 import { RecipeIngredients } from "@/components/recipe-ingredients";
-import { NutritionDetailsToggle } from "@/components/recipe-display";
+import { NutritionDetailsToggle, useRecipeDisplay } from "@/components/recipe-display";
+import { usableNutrition } from "@shared/recipe-nutrition";
 import { RecipePriceSummary } from "@/components/recipe-price";
 import { RecipeCreditLine } from "@/components/recipe-credit";
-import { MealRecipeFacts, RecipeTimeProvider, RecipeTimeToggle, useRecipeTime } from "@/components/recipe-time-display";
+import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTime } from "@/components/recipe-time-display";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { PlannerBoard } from "@/components/planner-board";
@@ -149,6 +150,7 @@ function WeeklyMealsContent() {
   const { t, lang } = useI18n();
   const { t: timeCopy } = useMvpCopy();
   const { mode: timeMode } = useRecipeTime();
+  const { showNutrition } = useRecipeDisplay();
   // My Basic Settings are the baseline: loaded on open, refreshed when they change in another tab or on return.
   const settings = useSavedSettings();
   const devices = availableDevices(settings);
@@ -719,7 +721,6 @@ function WeeklyMealsContent() {
             </button>}
           </div>
         </form>
-        <RecipeTimeToggle />
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           
           <aside id="meal-filters" className="w-full lg:w-[240px] lg:flex-shrink-0 scroll-mt-4">
@@ -1199,6 +1200,7 @@ function WeeklyMealsContent() {
                 {t("meals.showingRange", { from: results.from, to: results.to, total: results.total })}
               </h2>
             )}
+            <RecipeDisplayToolbar />
             <div id="meal-results" className="space-y-2 scroll-mt-24">
               {recipes.length > 0 && eligibleRecipes.length === 0 ? (
                 // Every recipe breaks a hard restriction: say which ones, never fall back to incompatible suggestions.
@@ -1300,6 +1302,11 @@ function WeeklyMealsContent() {
                             <p className="text-xs font-medium text-foreground">{t("import.recipePreview")}</p>
                             <NutritionDetailsToggle context={recipe.id} />
                           </div>
+                          {showNutrition && !usableNutrition(recipe.nutrition) && (
+                            <p className="mb-2 text-xs text-muted-foreground" data-testid={`nutrition-unavailable-${recipe.id}`}>
+                              {t(recipe.nutritionStatus === "unavailable" ? "nutrition.unavailable" : "nutrition.notAnalyzed")}
+                            </p>
+                          )}
                           <RecipeIngredients recipe={recipe} compact mainOnly />
                         </div>
                       )}

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { Check, Salad } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { normalizeFactOrder, readFactOrder, recipeFactOrderKey, type RecipeFactId } from "@/lib/recipe-fact-layout";
 
@@ -38,16 +39,13 @@ export function NutritionDetailsToggle({ context }: { context?: string }) {
   const { showNutrition, setShowNutrition } = useRecipeDisplay();
   const { t } = useI18n();
   return (
-    <button type="button" role="switch" aria-checked={showNutrition}
-      aria-label={t("display.nutritionDetails")}
+    <button type="button" aria-pressed={showNutrition}
       onClick={() => setShowNutrition(!showNutrition)}
       data-testid={context ? `nutrition-details-toggle-${context}` : "nutrition-details-toggle"}
-      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${showNutrition ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
+      className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${showNutrition ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a] hover:bg-[#f2f6ef]"}`}>
+      <Salad className="h-3.5 w-3.5" aria-hidden="true" />
       {t("display.nutritionDetails")}
-      <span aria-hidden="true" className={`relative inline-flex h-4 w-7 rounded-full ${showNutrition ? "bg-white/40" : "bg-[#d9dfd4]"}`}>
-        <span className={`absolute top-0.5 h-3 w-3 rounded-full ${showNutrition ? "end-0.5 bg-white" : "start-0.5 bg-[#52665a]"}`} />
-      </span>
-      <span>{t(showNutrition ? "display.on" : "display.off")}</span>
+      {showNutrition && <Check className="h-3 w-3" aria-hidden="true" />}
     </button>
   );
 }

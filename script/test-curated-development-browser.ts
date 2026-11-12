@@ -84,7 +84,7 @@ async function main() {
     await wait(el(`meals-catalog-facts-${recipes[0].id}`));
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "false");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "false");
     assert.equal(await evaluate(`Boolean(${el(`nutrition-catalog-${recipes[0].id}`)})`), false);
     for (const recipe of recipes) await checkPrice(recipe, "catalog");
     await evaluate(`${el("nutrition-details-toggle")}.click()`);
@@ -165,11 +165,11 @@ async function main() {
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
     await navigate(`${base}/meals`);
     await wait(el("nutrition-details-toggle"));
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "true");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "true");
     await evaluate(`${el("nutrition-details-toggle")}.click()`);
     await navigate(`${base}/meals`);
     await wait(el(`price-catalog-${recipes[0].id}`));
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "false");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "false");
     assert.equal(await evaluate(`Boolean(${el(`nutrition-catalog-${recipes[0].id}`)})`), false);
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
     await evaluate(`${el("dev-nav-mobile-trigger")}.click()`);
