@@ -43,7 +43,7 @@ try {
   await tab.navigate(`${origin}/grocery-list`);
   await tab.wait(`document.querySelectorAll('input[type="checkbox"]').length===${expected.length}`);
   assert.deepEqual(await tab.evaluate(`Array.from(document.querySelectorAll("[data-testid^=grocery-item-]")).map(e=>e.dataset.testid.slice("grocery-item-".length)).sort()`), expected);
-  assert.ok(await tab.evaluate(`!document.body.innerText.includes("Design preview") && Boolean(document.querySelector('[data-testid="dev-nav"]'))`));
+  assert.ok(await tab.evaluate(`!document.body.innerText.includes("Design preview") && document.querySelector('[data-testid="app-nav-link-grocery-list"]').getAttribute("aria-current")==="page"`));
   assert.ok(await tab.evaluate(`document.querySelectorAll(".grocery-recipes").length===${expected.length} && Array.from(document.querySelectorAll(".grocery-recipes")).every(e=>e.innerText.replace("Used in:","").trim().length>0)`));
 
   await tab.evaluate(`document.querySelector('input[type="checkbox"]').focus()`);
@@ -80,16 +80,19 @@ try {
     await tab.call("Emulation.setDeviceMetricsOverride",{width,height:844,deviceScaleFactor:1,mobile:width<500});
     assert.ok(await tab.evaluate(`document.documentElement.scrollWidth<=window.innerWidth`),`Overflow at ${width}`);
   }
-  await tab.evaluate(`document.querySelector(".grocery-navigation-menu").click()`);
+  // Shared app navigation on mobile: four bottom items in fixed order, Settings + language in the header menu.
+  assert.deepEqual(await tab.evaluate(`Array.from(document.querySelectorAll('[data-testid="app-nav-bottom"] a')).map(a=>a.getAttribute("href"))`),["/recipes","/meals","/grocery-list","/my-ideas"]);
+  assert.equal(await tab.evaluate(`document.querySelector('[data-testid="app-nav-bottom"] [aria-current="page"]').getAttribute("href")`),"/grocery-list");
+  await tab.evaluate(`document.querySelector('[data-testid="app-nav-menu-trigger"]').click()`);
   await tab.wait(`Boolean(document.querySelector('[role="dialog"]'))`);
-  assert.equal(await tab.evaluate(`document.querySelectorAll('[role="dialog"] a').length`),5);
-  assert.equal(await tab.evaluate(`document.querySelectorAll('[data-testid^="button-grocery-lang-"]').length`),3);
+  assert.deepEqual(await tab.evaluate(`Array.from(document.querySelectorAll('[role="dialog"] a')).map(a=>a.getAttribute("href"))`),["/settings"]);
+  assert.equal(await tab.evaluate(`document.querySelectorAll('[data-testid^="button-mobile-lang-"]').length`),3);
   await key("Escape",27);
   await tab.wait(`!document.querySelector('[role="dialog"]')`);
-  await tab.evaluate(`document.querySelector('[data-testid="button-back-to-plan"]').click()`);
-  await tab.wait(`location.pathname==="/meals" && Boolean(document.querySelector('[data-testid="dev-nav-mobile"]'))`);
+  await tab.evaluate(`document.querySelector('[data-testid="app-nav-bottom-link-meals"]').click()`);
+  await tab.wait(`location.pathname==="/meals" && Boolean(document.querySelector('[data-testid="app-nav-bottom"]'))`);
   await tab.navigate(`${origin}/grocery-list?source=mvp`);
-  await tab.wait(`!document.querySelector(".grocery-page") && Boolean(document.querySelector('[data-testid="dev-nav-mobile"]'))`);
+  await tab.wait(`!document.querySelector(".grocery-page") && Boolean(document.querySelector('[data-testid="app-nav-bottom"]'))`);
 
   // Simulate a catalog read failure entirely in this browser, not on the server.
   await tab.call("Page.addScriptToEvaluateOnNewDocument",{source:`const realFetch=window.fetch; window.fetch=(input,...rest)=>String(input).includes("/api/recipes")?Promise.reject(new Error("Simulated catalog failure")):realFetch(input,...rest);`});

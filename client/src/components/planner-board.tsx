@@ -10,12 +10,12 @@ import { usePlannerCopy } from "@/lib/planner-copy";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
 
 // Same tokens as the Recipe View (recipe-detail.tsx / add-to-meal-plan.tsx).
-const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
+const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
-const primary = `${pill} bg-[#42624e] text-white hover:bg-[#385540] disabled:opacity-50`;
-const secondary = `${pill} border border-[#d9dfd4] bg-white text-foreground hover:bg-[#f2f6ef]`;
+const primary = `${pill} bg-primary text-white hover:bg-primary-hover disabled:opacity-50`;
+const secondary = `${pill} border border-border bg-white text-foreground hover:bg-accent`;
 const choice = (active: boolean, disabled = false) =>
-  `min-h-11 rounded-lg border px-3 text-sm ${focus} ${active ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-foreground"} ${disabled ? "opacity-40" : ""}`;
+  `min-h-11 rounded-lg border px-3 text-sm ${focus} ${active ? "border-primary bg-primary text-white" : "border-border bg-white text-foreground"} ${disabled ? "opacity-40" : ""}`;
 
 type Modal =
   | { kind: "plan"; recipeId: string; day?: number; meal?: MealSlot }
@@ -48,7 +48,7 @@ const addKeepingShortlist = (plan: PlanState, req: Parameters<typeof addToPlan>[
 
 function Stepper({ value, onChange, label, fewer, more }: { value: number; onChange: (value: number) => void; label: string; fewer: string; more: string }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex items-center rounded-full border border-[#d9dfd4]">
+    <div role="group" aria-label={label} className="inline-flex items-center rounded-full border border-border">
       <button type="button" aria-label={fewer} disabled={value <= 1} onClick={() => onChange(value - 1)} className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Minus className="h-4 w-4" aria-hidden="true" /></button>
       <span className="min-w-8 text-center text-sm font-medium" aria-live="polite">{value}</span>
       <button type="button" aria-label={more} disabled={value >= 99} onClick={() => onChange(value + 1)} className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Plus className="h-4 w-4" aria-hidden="true" /></button>
@@ -67,11 +67,11 @@ function RecipeCard({ recipe, locked, onPlan, onView }: { recipe: PlannerRecipe;
       className={`flex items-center gap-3 rounded-lg border hairline bg-white p-3 ${locked ? "" : "cursor-grab"} ${isDragging ? "opacity-40" : ""}`} data-testid={`selected-recipe-${recipe.id}`}>
       {recipe.image && <img src={recipe.image} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-md object-cover" />}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{recipe.title}</p>
+        <p className="break-words text-sm font-medium">{recipe.title}</p>
         {facts && <p className="text-xs text-muted-foreground">{facts}</p>}
         <div className="mt-1 flex items-center gap-1">
-          <button type="button" onClick={onView} className={`-ms-2 min-h-11 rounded-full px-2 text-xs font-medium text-[#42624e] hover:bg-[#f2f6ef] ${focus}`} data-testid={`view-recipe-${recipe.id}`}>{t("view")}</button>
-          <button type="button" onClick={onPlan} disabled={locked} className={`${pill} ms-auto bg-[#42624e] px-3 text-xs text-white hover:bg-[#385540] disabled:opacity-50`} data-testid={`plan-recipe-${recipe.id}`}>
+          <button type="button" onClick={onView} className={`-ms-2 min-h-11 rounded-full px-2 text-xs font-medium text-primary hover:bg-accent ${focus}`} data-testid={`view-recipe-${recipe.id}`}>{t("view")}</button>
+          <button type="button" onClick={onPlan} disabled={locked} className={`${pill} ms-auto bg-primary px-3 text-xs text-white hover:bg-primary-hover disabled:opacity-50`} data-testid={`plan-recipe-${recipe.id}`}>
             <Plus className="me-1 h-3.5 w-3.5" aria-hidden="true" />{t("plan")}
           </button>
         </div>
@@ -95,7 +95,7 @@ function SlotCell({ day, meal, plan, recipes, locked, dayName, mealName, onOpen,
   return (
     <div ref={setNodeRef} data-testid={`cell-${meal}-${day}`} role="group"
       aria-label={found ? t("slotFilled", { day: dayName, meal: mealName, title }) : t("slotEmpty", { day: dayName, meal: mealName })}
-      className={`rounded-lg border p-2 ${isOver ? "border-[#42624e] bg-[#42624e]/10" : found ? "border-[#42624e]/40 bg-[#f2f6ef]" : "border-dashed border-[#d9dfd4] bg-white"}`}>
+      className={`rounded-lg border p-2 ${isOver ? "border-primary bg-primary/10" : found ? "border-primary/40 bg-accent" : "border-dashed border-border bg-white"}`}>
       <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{mealName}</p>
       {found ? (
         <div className={`flex items-start gap-1 ${drag.isDragging ? "opacity-40" : ""}`}>
@@ -104,7 +104,7 @@ function SlotCell({ day, meal, plan, recipes, locked, dayName, mealName, onOpen,
             <div className="min-w-0">
               <p className="line-clamp-2 text-sm font-medium leading-snug">{continued ? "↳ " : ""}{title}</p>
               {(servings || (!continued && found.spanDays > 1)) && (
-                <p className="text-xs text-[#42624e]">{[servings, !continued && found.spanDays > 1 ? t("linked", { count: found.spanDays }) : null].filter(Boolean).join(" · ")}</p>
+                <p className="text-xs text-primary">{[servings, !continued && found.spanDays > 1 ? t("linked", { count: found.spanDays }) : null].filter(Boolean).join(" · ")}</p>
               )}
             </div>
           </div>
@@ -123,7 +123,7 @@ function SlotCell({ day, meal, plan, recipes, locked, dayName, mealName, onOpen,
         </div>
       ) : (
         <button type="button" disabled={locked} onClick={() => onOpen({ kind: "pick", day, meal, replace: false })} data-testid={`add-${meal}-${day}`}
-          className={`flex min-h-11 w-full items-center gap-1 rounded-md px-1 text-sm text-muted-foreground hover:bg-[#f2f6ef] hover:text-[#42624e] disabled:opacity-50 ${focus}`}>
+          className={`flex min-h-11 w-full items-center gap-1 rounded-md px-1 text-sm text-muted-foreground hover:bg-accent hover:text-primary disabled:opacity-50 ${focus}`}>
           <Plus className="h-4 w-4" aria-hidden="true" />{t("addMeal")}
         </button>
       )}
@@ -189,7 +189,7 @@ export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, 
         ))}
       </div>
 
-      <DragOverlay>{dragging && <div className="rounded-lg border border-[#42624e] bg-white p-3 text-sm font-medium shadow-lg">{dragging.title}</div>}</DragOverlay>
+      <DragOverlay>{dragging && <div className="rounded-lg border border-primary bg-white p-3 text-sm font-medium shadow-lg">{dragging.title}</div>}</DragOverlay>
 
       <Dialog open={!!modal} onOpenChange={open => !open && close()}>
         <DialogContent className="max-w-md" data-testid="planner-dialog">
@@ -213,9 +213,9 @@ export function PlannerBoard({ recipes, plan, locked, commit, notify, dayNames, 
                     {recipe === others[0] && <p className="mb-2 mt-3 text-xs text-muted-foreground" data-testid="pick-others">{othersLabel}</p>}
                     <button type="button" disabled={occupant(plan, modal.meal, modal.day)?.recipeId === recipe.id} data-testid={`pick-${recipe.id}`}
                       onClick={() => add(recipe.id, modal, baseServings(recipe.servings), modal.replace) && close()}
-                      className={`flex min-h-11 w-full items-center gap-3 rounded-lg border border-[#d9dfd4] bg-white p-2 text-start text-sm hover:bg-[#f2f6ef] disabled:opacity-40 ${focus}`}>
+                      className={`flex min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-white p-2 text-start text-sm hover:bg-accent disabled:opacity-40 ${focus}`}>
                       {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />}
-                      <span className="min-w-0 flex-1 truncate font-medium">{recipe.title}</span>
+                      <span className="min-w-0 flex-1 break-words font-medium">{recipe.title}</span>
                     </button>
                   </li>
                   ));

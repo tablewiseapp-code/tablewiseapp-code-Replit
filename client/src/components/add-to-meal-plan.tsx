@@ -6,7 +6,7 @@ import { addToPlan, checkAdd, isWeekLocked, mealSlots, readPlan, writePlan, type
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 
 const pill = "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
-const choice = (active: boolean) => `min-h-11 rounded-lg border px-3 text-sm ${active ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-foreground"}`;
+const choice = (active: boolean) => `min-h-11 rounded-lg border px-3 text-sm ${active ? "border-primary bg-primary text-white" : "border-border bg-white text-foreground"}`;
 
 export function AddToMealPlanDialog({ open, onOpenChange, recipe, servings, plannerHref, onSaved }: {
   open: boolean; onOpenChange: (open: boolean) => void; onSaved?: () => void;
@@ -61,8 +61,8 @@ export function AddToMealPlanDialog({ open, onOpenChange, recipe, servings, plan
           <div className="space-y-4" role="status" data-testid="add-to-plan-success">
             <p className="text-sm">{t("planSaved", slotName(saved.day, saved.meal))}</p>
             <DialogFooter className="gap-2 sm:gap-2">
-              <button type="button" className={`${pill} border border-[#d9dfd4] bg-white text-foreground`} onClick={() => onOpenChange(false)}>{t("planClose")}</button>
-              <Link href={plannerHref} className={`${pill} bg-[#42624e] text-white`} data-testid="link-open-planner">{t("planViewPlanner")}</Link>
+              <button type="button" className={`${pill} border border-border bg-white text-foreground`} onClick={() => onOpenChange(false)}>{t("planClose")}</button>
+              <Link href={plannerHref} className={`${pill} bg-primary text-white`} data-testid="link-open-planner">{t("planViewPlanner")}</Link>
             </DialogFooter>
           </div>
         ) : (
@@ -88,9 +88,9 @@ export function AddToMealPlanDialog({ open, onOpenChange, recipe, servings, plan
             {message && <p role={check.status === "conflict" && !locked ? "status" : "alert"} className="rounded-lg bg-foreground/5 p-3 text-sm" data-testid="add-to-plan-message">{message}</p>}
             {error && <p role="alert" className="text-sm text-red-600" data-testid="add-to-plan-error">{error}</p>}
             <DialogFooter className="gap-2 sm:gap-2">
-              <button type="button" className={`${pill} border border-[#d9dfd4] bg-white text-foreground`} onClick={() => onOpenChange(false)}>{t("cancel")}</button>
+              <button type="button" className={`${pill} border border-border bg-white text-foreground`} onClick={() => onOpenChange(false)}>{t("cancel")}</button>
               <button type="button" onClick={confirm} disabled={locked || check.status === "same" || check.status === "full"}
-                data-testid="button-confirm-add-to-plan" className={`${pill} bg-[#42624e] text-white disabled:opacity-50`}>
+                data-testid="button-confirm-add-to-plan" className={`${pill} bg-primary text-white disabled:opacity-50`}>
                 {check.status === "conflict" ? t("planReplace") : t("planConfirm")}
               </button>
             </DialogFooter>

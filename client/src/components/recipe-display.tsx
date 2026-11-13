@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { Check, Salad } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { normalizeFactOrder, readFactOrder, recipeFactOrderKey, type RecipeFactId } from "@/lib/recipe-fact-layout";
 
@@ -35,17 +34,20 @@ export function useRecipeDisplay() {
   return value;
 }
 
+/** "Show nutrition: Off / On" — one switch (role="switch"), styled as a two-part control; the state is announced. */
 export function NutritionDetailsToggle({ context }: { context?: string }) {
   const { showNutrition, setShowNutrition } = useRecipeDisplay();
   const { t } = useI18n();
+  const id = context ? `nutrition-details-toggle-${context}` : "nutrition-details-toggle";
   return (
-    <button type="button" aria-pressed={showNutrition}
-      onClick={() => setShowNutrition(!showNutrition)}
-      data-testid={context ? `nutrition-details-toggle-${context}` : "nutrition-details-toggle"}
-      className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${showNutrition ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a] hover:bg-[#f2f6ef]"}`}>
-      <Salad className="h-3.5 w-3.5" aria-hidden="true" />
-      {t("display.nutritionDetails")}
-      {showNutrition && <Check className="h-3 w-3" aria-hidden="true" />}
-    </button>
+    <div className="inline-flex items-center gap-2">
+      <span id={`${id}-label`} className="text-sm text-muted-foreground">{t("display.showNutrition")}</span>
+      <button type="button" role="switch" aria-checked={showNutrition} aria-labelledby={`${id}-label`}
+        onClick={() => setShowNutrition(!showNutrition)} data-testid={id} className="segmented">
+        <span aria-hidden="true" className={`inline-flex min-h-10 items-center rounded-full px-3 text-sm ${!showNutrition ? "bg-primary font-semibold text-primary-foreground" : "text-muted-foreground"}`}>{t("display.off")}</span>
+        <span aria-hidden="true" className={`inline-flex min-h-10 items-center rounded-full px-3 text-sm ${showNutrition ? "bg-primary font-semibold text-primary-foreground" : "text-muted-foreground"}`}>{t("display.on")}</span>
+      </button>
+      {!context && <span className="sr-only" aria-live="polite">{`${t("display.showNutrition")}: ${t(showNutrition ? "display.on" : "display.off")}`}</span>}
+    </div>
   );
 }

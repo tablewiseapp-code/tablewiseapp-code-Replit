@@ -11,8 +11,8 @@ import { clearTimers, formatClock, idleTimer, isDone, isRunning, pauseTimer, rea
 import { StepTiming } from "@/components/step-timing";
 import type { StepAnalysis } from "@shared/step-timing";
 
-const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
-const btn = `inline-flex min-h-12 items-center justify-center gap-1 rounded-full px-5 text-sm font-medium ${focus}`;
+const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const btn = `inline-flex min-h-12 items-center justify-center gap-1 rounded-full px-5 text-base font-medium ${focus}`;
 
 export function CookingMode({ recipeId, title, steps, analysis, servings, scaledIngredients, onExit, onFinish }: {
   recipeId: string; title: string; steps: string[]; analysis?: StepAnalysis | null;
@@ -72,11 +72,11 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
         <span className={`font-mono tabular-nums ${big ? "text-4xl sm:text-5xl" : "text-xl"} ${done ? "text-red-600" : ""}`} data-testid={`step-timer-clock-${index}`}
           role="timer" aria-label={t("startTimer")}>{formatClock(left)}</span>
         {!started && <button type="button" onClick={() => update(index, seconds, timer => startTimer(timer, Date.now()))} data-testid="timer-start"
-          className={`${btn} bg-[#42624e] text-white`}>{t("startTimer")} · {formatClock(seconds)}</button>}
+          className={`${btn} bg-primary text-white`}>{t("startTimer")} · {formatClock(seconds)}</button>}
         {started && !done && (running
-          ? <button type="button" onClick={() => update(index, seconds, timer => pauseTimer(timer, Date.now()))} data-testid="timer-pause" className={`${btn} border border-[#d9dfd4] bg-white`}>{t("pauseTimer")}</button>
-          : <button type="button" onClick={() => update(index, seconds, timer => startTimer(timer, Date.now()))} data-testid="timer-resume" className={`${btn} bg-[#42624e] text-white`}>{t("resumeTimer")}</button>)}
-        {started && <button type="button" onClick={() => resetTimer(index)} data-testid="timer-reset" className={`${btn} border border-[#d9dfd4] bg-white`}>{t("resetTimer")}</button>}
+          ? <button type="button" onClick={() => update(index, seconds, timer => pauseTimer(timer, Date.now()))} data-testid="timer-pause" className={`${btn} border border-border bg-white`}>{t("pauseTimer")}</button>
+          : <button type="button" onClick={() => update(index, seconds, timer => startTimer(timer, Date.now()))} data-testid="timer-resume" className={`${btn} bg-primary text-white`}>{t("resumeTimer")}</button>)}
+        {started && <button type="button" onClick={() => resetTimer(index)} data-testid="timer-reset" className={`${btn} border border-border bg-white`}>{t("resetTimer")}</button>}
         {done && <p role="alert" className="w-full text-sm font-medium text-red-600" data-testid="timer-done">{t("timerDone")}</p>}
       </div>
     );
@@ -103,11 +103,11 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
       className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background text-foreground outline-none">
       <header className="border-b hairline px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2">
-          <button type="button" onClick={onExit} data-testid="cooking-exit" className={`${btn} border border-[#d9dfd4] bg-white px-4`}>
+          <button type="button" onClick={onExit} data-testid="cooking-exit" className={`${btn} border border-border bg-white px-4`}>
             <X className="h-4 w-4" aria-hidden="true" />{t("exitCooking")}
           </button>
           <button type="button" role="switch" aria-checked={zen} onClick={toggleZen} data-testid="cooking-zen-toggle"
-            className={`${btn} border px-4 ${zen ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
+            className={`${btn} border px-4 ${zen ? "border-primary bg-primary text-white" : "border-border bg-white text-muted-foreground"}`}>
             {t("zenMode")}<span aria-hidden="true" className="text-xs">{zen ? "✓" : ""}</span>
           </button>
         </div>
@@ -117,7 +117,7 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
             <p className="shrink-0 text-sm font-medium" aria-live="polite" data-testid="cooking-step-label">{t("stepOf", { current: progress.current, total })}</p>
             <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={progress.current} aria-label={t("stepOf", { current: progress.current, total })}
               className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-foreground/10" data-testid="cooking-progress">
-              <div className="h-full rounded-full bg-[#42624e]" style={{ width: `${progress.percent}%` }} />
+              <div className="h-full rounded-full bg-primary" style={{ width: `${progress.percent}%` }} />
             </div>
           </div>
         </div>
@@ -135,8 +135,8 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
             <>
               {scaledIngredients.length > 0 && (
                 <details className="mb-5 rounded-lg border hairline bg-white p-3" data-testid="cooking-ingredients">
-                  <summary className={`min-h-11 cursor-pointer py-2 text-sm font-medium ${focus}`}>{t("showIngredients", { count: servings ?? "" })}</summary>
-                  <ul className="list-disc space-y-1 ps-5 pb-2 text-sm">{scaledIngredients.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
+                  <summary className={`min-h-11 cursor-pointer py-2 text-base font-medium ${focus}`}>{t("showIngredients", { count: servings ?? "" })}</summary>
+                  <ul className="list-disc space-y-1 ps-5 pb-2 text-base">{scaledIngredients.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
                 </details>
               )}
               <ol className="space-y-3" data-testid="cooking-steps">
@@ -146,11 +146,11 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
                   return (
                     <li key={i} ref={active ? activeRef : undefined} aria-current={active ? "step" : undefined} data-testid={`cooking-step-${i}`} data-active={active}>
                       <button type="button" onClick={() => go(i)} aria-label={t("goToStep", { n: i + 1 })}
-                        className={`flex w-full min-h-14 items-start gap-3 rounded-lg p-4 text-start ${focus} ${active ? "border-2 border-[#42624e] bg-[#42624e]/10" : "border hairline bg-white opacity-80"}`}>
-                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${active ? "bg-[#42624e] text-white" : "bg-foreground/5"}`} aria-hidden="true">{i + 1}</span>
+                        className={`flex w-full min-h-14 items-start gap-3 rounded-lg p-4 text-start ${focus} ${active ? "border-2 border-primary bg-primary/10" : "border hairline bg-white opacity-80"}`}>
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${active ? "bg-primary text-white" : "bg-foreground/5"}`} aria-hidden="true">{i + 1}</span>
                         <span className="min-w-0 flex-1 space-y-2">
-                          {active && <span className="block text-xs font-medium uppercase tracking-wide text-[#42624e]">{t("currentStep")}</span>}
-                          <span className={`block break-words leading-relaxed ${active ? "text-lg" : "text-base"}`}>{cleanStep(raw)}</span>
+                          {active && <span className="block text-xs font-medium uppercase tracking-wide text-primary">{t("currentStep")}</span>}
+                          <span className={`block break-words leading-relaxed ${active ? "text-xl sm:text-2xl" : "text-base"}`}>{cleanStep(raw)}</span>
                           <StepTiming duration={stepTime ?? undefined} />
                         </span>
                       </button>
@@ -164,17 +164,17 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
         </div>
       </main>
 
-      <footer className="border-t hairline bg-background px-4 py-3">
+      <footer className="border-t hairline bg-background px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-3xl flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <button type="button" onClick={() => go(previousStep(step, total))} disabled={step === 0} data-testid="cooking-prev"
-              className={`${btn} flex-1 border border-[#d9dfd4] bg-white disabled:opacity-40 sm:flex-none`}>
+              className={`${btn} flex-1 border border-border bg-white disabled:opacity-40 sm:flex-none`}>
               <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />{t("prevStep")}
             </button>
             {last ? (
-              <button type="button" onClick={finish} data-testid="cooking-finish" className={`${btn} flex-1 bg-[#42624e] text-white sm:flex-none`}>{t("finishCooking")}</button>
+              <button type="button" onClick={finish} data-testid="cooking-finish" className={`${btn} flex-1 bg-primary text-white sm:flex-none`}>{t("finishCooking")}</button>
             ) : (
-              <button type="button" onClick={() => go(nextStep(step, total))} data-testid="cooking-next" className={`${btn} flex-1 bg-[#42624e] text-white sm:flex-none`}>
+              <button type="button" onClick={() => go(nextStep(step, total))} data-testid="cooking-next" className={`${btn} flex-1 bg-primary text-white sm:flex-none`}>
                 {t("nextStepLabel")}<ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </button>
             )}

@@ -1,7 +1,7 @@
 import { useI18n } from "@/lib/i18n";
 import { nutritionAmounts, nutritionBasis, usableNutrition, type NutritionFields } from "@shared/recipe-nutrition";
-import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { RecipeFactLayout, type RecipeFactBlock } from "./recipe-fact-layout";
+import { NutritionRow } from "./recipe-summary";
 
 export function useNutritionBlocks({ recipe, compact = false, context = "detail" }: {
   recipe: NutritionFields & { id: string; servings?: string | null };
@@ -52,11 +52,13 @@ export function RecipeNutritionSummary(props: {
 /** Cooking-view nutrition: real AI estimates only, collapsed, not draggable; mock/missing data is never shown as numbers. */
 export function RecipeNutritionPanel({ recipe }: { recipe: NutritionFields & { id: string; servings?: string | null } }) {
   const { t } = useI18n();
-  const view = useRecipeViewCopy();
   const blocks = useNutritionBlocks({ recipe, context: "detail" });
-  if (!usableNutrition(recipe.nutrition)) return <p className="text-xs text-muted-foreground" data-testid="nutrition-unavailable">{view.t("nutritionNone")}</p>;
-  return <details className="rounded-lg border hairline bg-white p-3 text-xs text-muted-foreground" data-testid="nutrition-panel">
-    <summary className="cursor-pointer text-sm font-medium text-foreground">{t("nutrition.aiEstimate")}</summary>
+  if (!usableNutrition(recipe.nutrition)) return <p className="text-sm text-muted-foreground" data-testid="nutrition-unavailable">{t("nutrition.unavailableShort")}</p>;
+  return <div className="space-y-3" data-testid="nutrition-panel">
+    <NutritionRow recipe={recipe} testId="nutrition-detail-row" />
+    <details className="text-sm text-muted-foreground">
+    <summary className="flex min-h-11 cursor-pointer items-center font-medium text-primary">{t("nutrition.details")}</summary>
     <div className="mt-3"><RecipeFactLayout blocks={blocks} context={`detail-${recipe.id}`} interactive={false} testId={`nutrition-detail-${recipe.id}`} /></div>
-  </details>;
+  </details>
+  </div>;
 }

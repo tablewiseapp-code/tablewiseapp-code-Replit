@@ -425,16 +425,15 @@ export default function ImportRecipe() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageContainer size="md" className="py-8 sm:py-10">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">{t("import.label")}</p>
-        <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2">{t("import.title")}</h1>
-        <p className="text-sm text-muted-foreground mb-8">
-          {t("import.subtitle")}
-        </p>
+      <PageContainer size="md" className="py-6 sm:py-10">
+        <header className="page-header">
+          <h1 className="page-title">{t("import.title")}</h1>
+          <p className="page-subtitle">{t("import.subtitle")}</p>
+        </header>
 
         <fieldset disabled={isSaving} className="space-y-6">
           <div>
-            <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               {t("import.photo")}
             </label>
             <input
@@ -484,7 +483,7 @@ export default function ImportRecipe() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               {t("import.sourceLink")}
             </label>
             <input
@@ -500,7 +499,7 @@ export default function ImportRecipe() {
             )}
           </div>
 
-          <div className="p-5 bg-[#FAFAF8] rounded-xl">
+          <div className="p-5 bg-background rounded-xl">
             <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">{t("import.voiceAi")}</p>
             <p className="text-sm font-medium text-foreground mb-1">{t("import.speakRecipe")}</p>
             <p className="text-xs text-muted-foreground mb-4">
@@ -520,7 +519,7 @@ export default function ImportRecipe() {
                     <button
                       onClick={startDictation}
                       disabled={isProcessing}
-                      className="px-4 py-2 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+                      className="btn btn-secondary"
                       data-testid="button-start-dictation"
                     >
                       {t("import.startDictation")}
@@ -585,7 +584,7 @@ export default function ImportRecipe() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               {t("import.titleLabel")}
             </label>
             <input
@@ -602,7 +601,7 @@ export default function ImportRecipe() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               {t("import.ingredientsLabel")}
             </label>
             <textarea
@@ -619,7 +618,7 @@ export default function ImportRecipe() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               {t("import.stepsLabel")}
             </label>
             <textarea
@@ -649,14 +648,15 @@ Sauté onions until golden brown"
             <button
               onClick={handleSave}
               disabled={isSaving || analyzing || isProcessing || isRecording}
-              className="w-full sm:w-auto px-6 py-2.5 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+              className="btn btn-primary w-full sm:w-auto"
+              aria-busy={isSaving || analyzing}
               data-testid="button-save"
             >
               {isSaving ? t("import.saving") : validAnalysis ? t("import.saveAndOpen") : t("timing.analyze")}
             </button>
             <button
-              onClick={() => setLocation("/recipe-view")}
-              className="w-full sm:w-auto px-6 py-2.5 min-h-11 text-sm rounded-full border hairline text-muted-foreground hover:text-foreground"
+              onClick={() => setLocation("/recipes")}
+              className="btn btn-text w-full sm:w-auto"
               data-testid="button-back"
             >
               {t("import.back")}
@@ -664,8 +664,8 @@ Sauté onions until golden brown"
           </div>
         </fieldset>
 
-        <div className="mt-12 p-5 bg-[#FAFAF8] rounded-xl">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">{t("import.howItWorks")}</p>
+        <div className="card mt-12 p-5">
+          <h2 className="mb-3 text-base font-semibold text-foreground">{t("import.howItWorks")}</h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>{`• ${t("import.howIt1")}`}</li>
             <li>{`• ${t("import.howIt2")}`}</li>

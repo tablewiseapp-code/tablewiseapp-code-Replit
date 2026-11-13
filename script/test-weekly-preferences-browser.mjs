@@ -60,7 +60,7 @@ try {
   ok((await cards()).length === total, `all ${total} recipes without settings`);
   const num = id => ev(`Number(${q(id)}?.dataset.count ?? -1)`);
   ok(await num("count-matching") === total && await num("count-settings") === 0 && await num("count-filters") === -1, "counts without settings");
-  ok((await ev(`document.body.innerText`)).includes("Additional filters (0)"), "Additional filters label");
+  ok((await ev(`document.body.innerText`)).includes("Filters (0)"), "Filters label");
 
   // 2. Saved settings apply automatically; chips reflect them.
   await setSettings(settings()); await openMeals();
@@ -104,7 +104,10 @@ try {
   ok(JSON.stringify(order) === JSON.stringify(["mealType", "time", "protein", "ingredients", "dietary", "method", "source"]), `sidebar order ${order}`);
   await ev(`${q("button-more-filters")}.click()`); await until(`document.querySelector('[data-filter-section="cuisine"]')`, "cuisine under More filters");
   ok(JSON.stringify(await ev(`[...document.querySelectorAll("#meal-filters [data-filter-section]")].map(e => e.dataset.filterSection)`)).endsWith('"source","cuisine"]'), "cuisine listed after the main sections");
-  ok(await ev(`document.querySelectorAll('[data-testid^="filter-protein-"]').length`) === 4, "protein shown once (not duplicated in More)");
+  // Advanced groups start collapsed; open protein to check it is listed once.
+  await ev(`document.querySelector('#meal-filters [data-filter-section="protein"] button').click()`); await sleep(150);
+  ok(await ev(`document.querySelectorAll('#meal-filters [data-testid^="filter-protein-"]').length`) === 4, "protein shown once (not duplicated in More)");
+  await ev(`document.querySelector('#meal-filters [data-filter-section="protein"] button').click()`); await sleep(150);
   const open = async section => { if (!(await ev(`!!document.querySelector('[data-filter-section="${section}"] [data-testid^="filter-"]')`))) await ev(`document.querySelector('[data-filter-section="${section}"] button').click()`); await sleep(150); };
   const sidebar = () => num("sidebar-matching");
   ok(await sidebar() === baseline.length && await num("count-matching") === baseline.length, "sidebar count = top count = cards");
@@ -126,7 +129,7 @@ try {
   ok(chicken.length > 0 && chicken.length < baseline.length && chicken.every(id => baseline.includes(id)), "manual filter narrows within the baseline");
   ok(await num("count-matching") === chicken.length && await num("count-filters") === baseline.length - chicken.length, "counts follow the manual filter");
   ok(await num("count-settings") === total - baseline.length, "manual filters never change the settings count");
-  ok((await ev(`${q("button-clear-filters")}.textContent`)).trim() === "Clear additional filters", "Clear additional filters label");
+  ok((await ev(`${q("button-clear-filters")}.textContent`)).trim() === "Clear all", "Clear all label");
   const savedBefore = await ev(`localStorage.getItem("tablewise_basic_settings")`);
   await ev(`${q("button-clear-filters")}.click()`); await sleep(400);
   ok(JSON.stringify(await cards()) === JSON.stringify(baseline), "Clear filters returns to the saved baseline");
@@ -139,7 +142,7 @@ try {
   await ev(`${q("section-dietary-toggle")}.click()`); await until(q("diet-vegetarian"), "dietary open");
   await ev(`${q("diet-vegetarian")}.click()`);
   await until(`${q("settings-status")}.dataset.status === "saved"`, "saved");
-  await ev(`${q("dev-nav-link-meals")}.click()`);
+  await ev(`${q("app-nav-link-meals")}.click()`);
   await until(`${q("preference-chip-diet-vegetarian")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "vegetarian chip on return");
   const vegetarian = await cards();
   ok(vegetarian.length < baseline.length && vegetarian.every(id => baseline.includes(id)), "returning applies the new restriction");
@@ -197,7 +200,7 @@ try {
     const raw = (await ev("document.body.innerText")).match(/\b(nav|meals|recipes|settings|planner|grocery)\.[a-zA-Z]+\b/g);
     ok(!raw, `${lang}: untranslated keys ${raw}`);
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
-    await openMeals(); await ev(`${q("dev-nav-mobile-trigger")}?.click()`); await sleep(400);
+    await openMeals(); await ev(`${q("app-nav-menu-trigger")}?.click()`); await sleep(400);
     const rawMobile = (await ev("document.body.innerText")).match(/\b(nav|meals)\.[a-zA-Z]+\b/g);
     ok(!rawMobile, `${lang} mobile menu: untranslated keys ${rawMobile}`);
   }

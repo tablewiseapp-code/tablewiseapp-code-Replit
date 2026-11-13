@@ -30,9 +30,9 @@ type Props = ({
 type State = { kind: "idle" } | { kind: "loading" } | { kind: "error"; message: string }
   | { kind: "preview"; result: GeneratedRecipe; ideaId: string | null; saving: boolean; saveError: boolean };
 
-export const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#42624e] px-4 text-sm font-medium text-white transition-colors hover:bg-[#365041] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
-export const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d9dfd4] bg-white px-4 text-sm font-medium text-[#45594c] transition-colors hover:bg-[#f4f7f1] disabled:cursor-not-allowed disabled:opacity-45";
-export const chip = "inline-flex max-w-full rounded-full border border-[#e2e6dd] bg-[#f1f4ed] px-2.5 py-1 text-xs text-[#68756a]";
+export const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+export const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-45";
+export const chip = "inline-flex max-w-full rounded-full border border-border bg-accent px-2.5 py-1 text-xs text-muted-foreground";
 
 export function GenerateRecipe({ filters, timeMode, request, variant, disabled, label, onAccept }: Props) {
   const { lang, dir } = useI18n();
@@ -93,12 +93,12 @@ export function GenerateRecipe({ filters, timeMode, request, variant, disabled, 
     {chips.map(label => <li key={label} className={chip}>{label}</li>)}
   </ul>;
   const notAppliedNote = notApplied.length > 0 &&
-    <p className="mt-2 text-xs text-[#798279]" data-testid="generate-recipe-not-applied">{t("notApplied")}: {notApplied.join(", ")}</p>;
+    <p className="mt-2 text-xs text-muted-foreground" data-testid="generate-recipe-not-applied">{t("notApplied")}: {notApplied.join(", ")}</p>;
 
   const trigger = variant === "empty" ? (
-    <div role="status" data-testid="mvp-no-matches" className="rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-5 text-center">
-      <h3 className="text-base font-semibold text-[#34443a]">{t("emptyTitle")}</h3>
-      <p className="mt-1 text-sm text-[#68756a]">{t("emptyBody")}</p>
+    <div role="status" data-testid="mvp-no-matches" className="rounded-2xl border border-dashed border-border bg-background p-5 text-center">
+      <h3 className="text-base font-semibold text-foreground">{t("emptyTitle")}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{t("emptyBody")}</p>
       {chipList}
       {notAppliedNote}
       <button type="button" onClick={generate} disabled={disabled || state.kind === "loading"} className={`${primary} mt-4`} data-testid="generate-recipe-empty">
@@ -116,23 +116,23 @@ export function GenerateRecipe({ filters, timeMode, request, variant, disabled, 
     <>
       {trigger}
       <Dialog open={state.kind !== "idle"} onOpenChange={open => { if (!open) close(); }}>
-        <DialogContent dir={dir} className="max-h-[90dvh] overflow-y-auto rounded-2xl border-[#d9dfd4] bg-[#fbfbf7] sm:max-w-xl" data-testid="generate-recipe-dialog">
-          {state.kind === "loading" && <div role="status" className="flex items-center gap-3 py-6 text-sm text-[#45594c]">
+        <DialogContent dir={dir} className="max-h-[90dvh] overflow-y-auto rounded-2xl border-border bg-background sm:max-w-xl" data-testid="generate-recipe-dialog">
+          {state.kind === "loading" && <div role="status" className="flex items-center gap-3 py-6 text-sm text-foreground">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             <DialogTitle className="text-sm font-medium">{t("generating")}</DialogTitle>
             <DialogDescription className="sr-only">{t("emptyBody")}</DialogDescription>
           </div>}
           {state.kind === "error" && <div role="alert" data-testid="generate-recipe-error">
-            <DialogTitle className="text-base font-semibold text-[#34443a]">{t("failedTitle")}</DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-[#68756a]">{state.message}</DialogDescription>
+            <DialogTitle className="text-base font-semibold text-foreground">{t("failedTitle")}</DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-muted-foreground">{state.message}</DialogDescription>
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" className={primary} onClick={generate} data-testid="generate-recipe-retry">{t("retry")}</button>
               <button type="button" className={secondary} onClick={close}>{t("cancel")}</button>
             </div>
           </div>}
           {recipe && state.kind === "preview" && <div data-testid="generate-recipe-preview">
-            <DialogTitle className="pe-6 text-xl font-semibold text-[#27342e]">{recipe.title}</DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-[#68756a]">{state.result.description}</DialogDescription>
+            <DialogTitle className="pe-6 text-xl font-semibold text-foreground">{recipe.title}</DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-muted-foreground">{state.result.description}</DialogDescription>
             {state.result.violations?.length ? (
               <div role="status" className="mt-3 rounded-lg border border-[#e7d2bf] bg-[#fbf3ea] p-3 text-sm text-[#6e4f3a]" data-testid="generate-recipe-violations">
                 <p className="font-medium">{t("violationsTitle")}</p>
@@ -143,7 +143,7 @@ export function GenerateRecipe({ filters, timeMode, request, variant, disabled, 
               </div>
             ) : null}
             <GeneratedRecipeBody recipe={recipe} />
-            {state.ideaId && <p className="mt-2 text-xs text-[#68756a]" data-testid="generate-recipe-saved-idea">
+            {state.ideaId && <p className="mt-2 text-xs text-muted-foreground" data-testid="generate-recipe-saved-idea">
               {t("savedToIdeas")} <Link href="/my-ideas" className="underline underline-offset-2">{t("openIdeas")}</Link>
             </p>}
             {state.saveError && <p role="alert" className="mt-3 text-xs text-[#815b49]">{t("saveFailed")}</p>}
@@ -166,18 +166,18 @@ export function GeneratedRecipeBody({ recipe }: { recipe: Pick<NewRecipe, "servi
   const { lang } = useI18n();
   const t = (key: GenerateCopyKey) => generateCopy(lang, key);
   return <>
-    <p className="mt-3 text-xs text-[#798279]">
+    <p className="mt-3 text-xs text-muted-foreground">
       {recipe.servings && `${t("servings")}: ${recipe.servings} · `}
       {recipe.prepTime != null && `${t("prep")}: ${recipe.prepTime} ${t("min")} · `}
       {recipe.cookTime != null && `${t("cook")}: ${recipe.cookTime} ${t("min")}`}
       {recipe.prepTime != null && recipe.cookTime != null && ` · ${t("total")}: ${recipe.prepTime + recipe.cookTime} ${t("min")}`}
     </p>
-    <h3 className="mb-2 mt-4 text-sm font-semibold text-[#34443a]">{t("ingredients")}</h3>
+    <h3 className="mb-2 mt-4 text-sm font-semibold text-foreground">{t("ingredients")}</h3>
     <RecipeIngredients recipe={{ id: "generated", ingredients: recipe.ingredients }} />
-    <h3 className="mb-2 mt-4 text-sm font-semibold text-[#34443a]">{t("steps")}</h3>
-    <ol className="list-decimal space-y-2 ps-5 text-sm text-[#27342e]">
+    <h3 className="mb-2 mt-4 text-sm font-semibold text-foreground">{t("steps")}</h3>
+    <ol className="list-decimal space-y-2 ps-5 text-sm text-foreground">
       {recipe.steps.map((step, index) => <li key={index} className="break-words">{step}</li>)}
     </ol>
-    <p className="mt-4 rounded-lg bg-[#f2f3ec] p-3 text-xs leading-5 text-[#737c72]">{t("notice")}</p>
+    <p className="mt-4 rounded-lg bg-background p-3 text-xs leading-5 text-muted-foreground">{t("notice")}</p>
   </>;
 }

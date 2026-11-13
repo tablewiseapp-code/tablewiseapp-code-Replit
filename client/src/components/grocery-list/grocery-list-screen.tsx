@@ -6,12 +6,13 @@ import { categoryProgress, countChecked, isCategoryCollapsed, isListComplete, re
 import { plannedServingsFactor } from "@/lib/meal-plan";
 import { baseServings, scaleIngredient } from "@/lib/ingredient-scale";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
-import { GroceryNavigation } from "./grocery-navigation";
 import { GroceryShareDialog } from "./grocery-share-dialog";
 import { Share2 } from "lucide-react";
 import { loadSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import "./grocery-list.css";
 
 type Recipe = PlannerRecipe;
@@ -76,6 +77,7 @@ type CategoryPointerDrag = {
 export default function GroceryListScreen() {
   const [, setLocation] = useLocation();
   const { t, lang } = useI18n();
+  const { toast } = useToast();
   const pantry = useMemo(() => loadSettings().shopping.pantry, []); // My Basic Settings: "Ingredients I usually have"
   const [initialPrefs] = useState(readGroceryPrefs);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(initialPrefs.checked);
@@ -271,7 +273,6 @@ export default function GroceryListScreen() {
   if (isLoadingRecipes) {
     return (
       <main className="grocery-page" aria-busy="true">
-        <div className="grocery-shell"><GroceryNavigation /></div>
         <div className="grocery-shell">
           <div className="grocery-skeleton grocery-skeleton-title" />
           <div className="grocery-skeleton grocery-skeleton-copy" />
@@ -287,9 +288,7 @@ export default function GroceryListScreen() {
   if (recipesError) {
     return (
       <main className="grocery-page">
-        <div className="grocery-shell"><GroceryNavigation /></div>
         <section className="grocery-shell grocery-state" role="alert">
-          <span className="grocery-eyebrow">TABLEWISE · GROCERY LIST</span>
           <h1>We couldn’t load your list.</h1>
           <p>{recipesError}</p>
           <button className="grocery-primary" onClick={() => window.location.reload()}>Try again</button>
@@ -301,9 +300,7 @@ export default function GroceryListScreen() {
   if (groceryData.usedRecipes.length === 0) {
     return (
       <main className="grocery-page">
-        <div className="grocery-shell"><GroceryNavigation /></div>
         <section className="grocery-shell grocery-state">
-          <span className="grocery-eyebrow">TABLEWISE · GROCERY LIST</span>
           <h1>A little room for this week.</h1>
           <p>{t("grocery.noMeals")}</p>
           <button className="grocery-primary" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>
@@ -327,8 +324,6 @@ export default function GroceryListScreen() {
   return (
     <main className="grocery-page">
       <div className="grocery-shell">
-        <GroceryNavigation />
-
         <header className="grocery-heading">
           <div className="grocery-title-row">
             <div>
@@ -338,7 +333,13 @@ export default function GroceryListScreen() {
             <div className="grocery-count" aria-live="polite">
               <strong>{completed} / {groceryData.totalItems}</strong> checked
               {completed > 0 && (
-                <button className="grocery-reset" onClick={() => { setCheckedItems(new Set()); setExpansion({}); setCompletionNote(""); }} data-testid="button-uncheck-all">
+                <button className="grocery-reset" onClick={() => {
+                  // Undo restores exactly what was checked and expanded before.
+                  const before = { checked: checkedItems, expansion, note: completionNote };
+                  setCheckedItems(new Set()); setExpansion({}); setCompletionNote("");
+                  toast({ title: t("grocery.uncheckAll"), action: <ToastAction altText={t("undo")} data-testid="button-undo-uncheck"
+                    onClick={() => { setCheckedItems(before.checked); setExpansion(before.expansion); setCompletionNote(before.note); }}>{t("undo")}</ToastAction> });
+                }} data-testid="button-uncheck-all">
                   {t("grocery.uncheckAll")}
                 </button>
               )}
@@ -453,7 +454,7 @@ export default function GroceryListScreen() {
                           </span>
                           <span className="grocery-ingredient">{item.ingredient}</span>
                           {isPantry(item.ingredient) &&
-                            <span className="ms-2 rounded bg-[#42624e]/10 px-1.5 py-0.5 text-[11px] font-medium text-[#42624e]" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
+                            <span className="ms-2 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
                         </label>
                         {item.recipes.length > 0 && (
                           <span className="grocery-recipes" data-testid="grocery-item-recipes">

@@ -4,6 +4,8 @@ import { fetchRecipes, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { RecipeCreditLine } from "@/components/recipe-credit";
+import { Plus } from "lucide-react";
+import { DietaryTags, RecipeMeta } from "@/components/recipe-summary";
 
 export default function RecipeList() {
   const { t } = useI18n();
@@ -53,13 +55,16 @@ export default function RecipeList() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageContainer size="md" className="py-8 sm:py-10">
-        <h1 className="text-xl sm:text-2xl font-medium text-foreground mb-2" data-testid="text-page-title">
-          {t("recipes.title") || "My Recipes"}
-        </h1>
-        <p className="text-sm text-muted-foreground mb-8" data-testid="text-page-subtitle">
-          {t("recipes.subtitle") || "Your saved recipes"}
-        </p>
+      <PageContainer size="lg" className="py-6 sm:py-10">
+        <header className="page-header flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="page-title" data-testid="text-page-title">{t("recipes.title") || "My Recipes"}</h1>
+            <p className="page-subtitle" data-testid="text-page-subtitle">{t("recipes.subtitle") || "Your saved recipes"}</p>
+          </div>
+          <Link href="/import" data-testid="link-add-recipe" className="btn btn-primary">
+            <Plus className="h-4 w-4" aria-hidden="true" />{t("nav.addRecipe")}
+          </Link>
+        </header>
 
         {loading ? (
           <div>
@@ -71,7 +76,7 @@ export default function RecipeList() {
                 type="button"
                 onClick={retryRecipes}
                 disabled
-                className="mt-4 inline-flex items-center justify-center px-6 py-2.5 min-h-11 text-sm rounded-full border hairline text-foreground opacity-50 cursor-not-allowed"
+                className="btn btn-secondary mt-4"
                 data-testid="button-retry"
               >
                 {t("recipes.retry") || "Try again"}
@@ -87,7 +92,7 @@ export default function RecipeList() {
               type="button"
               onClick={retryRecipes}
               disabled={loading}
-              className="inline-flex items-center justify-center px-6 py-2.5 min-h-11 text-sm rounded-full border hairline text-foreground hover:bg-[#FAFAF8] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-secondary"
               data-testid="button-retry"
             >
               {loading
@@ -102,7 +107,7 @@ export default function RecipeList() {
             </p>
             <Link
               href="/import"
-              className="inline-flex items-center px-6 py-2.5 min-h-11 text-sm rounded-full bg-foreground text-background hover:bg-foreground/90"
+              className="btn btn-primary"
               data-testid="link-import-first"
             >
               {t("recipes.importFirst") || "Import your first recipe"}
@@ -114,43 +119,22 @@ export default function RecipeList() {
               <Link
                 key={recipe.id}
                 href={`/recipe/${recipe.id}`}
-                className="relative block p-4 rounded-xl border hairline hover:bg-[#FAFAF8] transition-colors"
+                className="card flex flex-col p-4 transition-colors hover:border-input"
                 data-testid={`card-recipe-${recipe.id}`}
               >
-                <div className="absolute right-3 top-3 max-w-[45%] text-right text-[10px] text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
-                <div className="flex items-start gap-3 sm:gap-4">
-                  {recipe.image && (
-                    <img
-                      src={recipe.image}
-                      alt={recipe.title}
-                      className="image-fade-in w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
-                      loading="lazy"
-                      decoding="async"
-                      sizes="(max-width: 640px) 56px, 64px"
-                      onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
-                      data-testid={`img-recipe-${recipe.id}`}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-medium text-foreground truncate pr-28" data-testid={`text-recipe-title-${recipe.id}`}>
-                      {recipe.title}
-                    </h2>
-                    <p className="mobile-readable-xs text-muted-foreground mt-1" data-testid={`text-recipe-info-${recipe.id}`}>
-                      {recipe.ingredients.length} {t("recipes.ingredients") || "ingredients"} - {recipe.steps.length} {t("recipes.steps") || "steps"}
-                      {recipe.cookTime ? ` - ${recipe.cookTime} min` : ""}
-                    </p>
-                    {recipe.tags && recipe.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {recipe.tags.map((tag) => (
-                          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/5 text-muted-foreground">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-muted-foreground text-xs mt-0.5">&rsaquo;</span>
-                </div>
+                {recipe.image && (
+                  <img src={recipe.image} alt="" loading="lazy" decoding="async"
+                    className="image-fade-in mb-3 aspect-[16/9] w-full rounded-lg object-cover"
+                    onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
+                    onError={(e) => { e.currentTarget.hidden = true; }}
+                    data-testid={`img-recipe-${recipe.id}`} />
+                )}
+                <h2 className="text-base font-semibold leading-snug text-foreground break-words" data-testid={`text-recipe-title-${recipe.id}`}>
+                  {recipe.title}
+                </h2>
+                <RecipeMeta recipe={recipe} className="mt-2" testId={`text-recipe-info-${recipe.id}`} />
+                <div className="mt-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
+                <div className="mt-3"><DietaryTags tags={recipe.tags} testId={`recipe-tags-${recipe.id}`} /></div>
               </Link>
             ))}
           </div>

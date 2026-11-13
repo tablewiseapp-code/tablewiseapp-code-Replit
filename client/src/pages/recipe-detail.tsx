@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChefHat, ChevronLeft, Clock3, MoreVertical, Minus, Plus, Users, Wrench } from "lucide-react";
+import { ChevronLeft, Clock3, MoreVertical, Minus, Plus, Users, Wrench } from "lucide-react";
 import { useRoute, useLocation, useSearch, Link } from "wouter";
 import { fetchRecipe, deleteRecipe, updateRecipe, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
@@ -15,6 +15,7 @@ import { ingredientRows, ingredientSections, ingredientViews, readIngredientView
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit";
 import { RecipeNutritionPanel } from "@/components/recipe-nutrition";
+import { DietaryTags } from "@/components/recipe-summary";
 import { CookingMode } from "@/components/cooking-mode";
 import { hasCookingProgress } from "@/lib/cooking-session";
 import { AddToMealPlanDialog } from "@/components/add-to-meal-plan";
@@ -25,8 +26,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { householdServings, loadSettings } from "@/lib/basic-settings";
 
-const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
-const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
+const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const stripArrow = (text: string) => text.replace(/^[←→]\s*/, "");
 
 // Only plain web links are shown as links; other schemes are never rendered as hrefs.
@@ -49,7 +49,7 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
   const item = (row: IngredientRow) => (
     <li key={row.id}>
       <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2">
-        <input type="checkbox" checked={checked.has(row.id)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#42624e]"
+        <input type="checkbox" checked={checked.has(row.id)} className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
           data-testid={`ingredient-check-${rows.indexOf(row)}`}
           onChange={event => setChecked(prev => {
             const next = new Set(prev);
@@ -57,17 +57,17 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
             return next;
           })} />
         <span data-testid={`text-ingredient-${rows.indexOf(row)}`}
-          className={`min-w-0 break-words text-sm ${checked.has(row.id) ? "text-muted-foreground line-through" : "text-foreground"}`}>{row.text}</span>
+          className={`min-w-0 break-words text-base ${checked.has(row.id) ? "text-muted-foreground line-through" : "text-foreground"}`}>{row.text}</span>
       </label>
     </li>
   );
 
   return (
     <div data-testid={`ingredients-checklist-${recipe.id}`}>
-      <div role="group" aria-label={view("ingredientView")} className="mb-3 inline-flex rounded-full border border-[#d9dfd4] bg-white p-0.5" data-testid="ingredient-view-toggle">
+      <div role="group" aria-label={view("ingredientView")} className="mb-3 inline-flex rounded-full border border-border bg-white p-0.5" data-testid="ingredient-view-toggle">
         {ingredientViews.map(value => (
           <button key={value} type="button" aria-pressed={mode === value} onClick={() => choose(value)} data-testid={`ingredient-view-${value}`}
-            className={`min-h-11 rounded-full px-3 text-xs font-medium ${focus} ${mode === value ? "bg-[#42624e] text-white" : "text-[#52665a]"}`}>
+            className={`min-h-11 rounded-full px-3 text-xs font-medium ${focus} ${mode === value ? "bg-primary text-white" : "text-muted-foreground"}`}>
             {view(value === "order" ? "viewOrder" : "viewCategory")}
           </button>
         ))}
@@ -144,9 +144,9 @@ export default function RecipeDetail() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
         <p className="text-sm text-muted-foreground" role="alert">{error || view("notFound")}</p>
         <div className="flex flex-wrap justify-center gap-2">
-          <button type="button" onClick={() => setReloadKey(key => key + 1)} className={`${pill} border border-[#d9dfd4] bg-white`}>{view("retry")}</button>
+          <button type="button" onClick={() => setReloadKey(key => key + 1)} className="btn btn-secondary">{view("retry")}</button>
           <Link href={fromPlanner ? plannerHref : "/recipes"} data-testid={fromPlanner ? "link-back-to-planner" : "link-back-to-recipes"}
-            className={`${pill} bg-[#42624e] text-white`}>{fromPlanner ? stripArrow(t("recipeDetail.backToPlanner")) : view("toRecipes")}</Link>
+            className="btn btn-primary">{fromPlanner ? stripArrow(t("recipeDetail.backToPlanner")) : view("toRecipes")}</Link>
         </div>
       </div>
     );
@@ -158,9 +158,7 @@ export default function RecipeDetail() {
   const scaledIngredients = recipe.ingredients.map(text => scaleIngredient(text, factor));
   const analysis = currentAnalysis(recipe, recipe.stepAnalysis);
   const host = sourceHost(recipe.sourceUrl);
-  const verified = (recipe.tags ?? []).some(tag => tag.toLowerCase() === "source-verified");
-  const tags = (recipe.tags ?? []).filter(tag => tag.toLowerCase() !== "source-verified");
-  const tools = recipeToolKeys(recipe.steps, recipe.equipment).map(tool => timingCopy(tool)).join(", ") || timingCopy("toolsUnknown");
+  const tools = recipeToolKeys(recipe.steps, recipe.equipment).map(tool => timingCopy(tool)).join(", ");
   const canEditCredit = Boolean(recipe.creditEditable);
   const hasMenu = !readOnly || canEditCredit;
 
@@ -201,7 +199,7 @@ export default function RecipeDetail() {
               event.preventDefault();
               window.history.back();
             }}
-            className={`-ms-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-sm font-medium text-[#42624e] hover:bg-[#f2f6ef] ${focus}`}>
+            className={`-ms-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-sm font-medium text-primary hover:bg-accent ${focus}`}>
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             {stripArrow(fromPlanner ? t("recipeDetail.backToPlanner") : view("back"))}
           </Link>
@@ -220,71 +218,61 @@ export default function RecipeDetail() {
           )}
         </div>
 
-        <div className="relative mb-4 aspect-[16/9] w-full overflow-hidden rounded-lg border hairline bg-foreground/5">
-          {recipe.image && !imageFailed ? (
-            <img src={recipe.image} alt={recipe.title} className="image-fade-in h-full w-full object-cover" decoding="async"
-              sizes="(max-width: 768px) 100vw, 768px" onLoad={e => e.currentTarget.classList.add("image-loaded")}
-              onError={() => setImageFailed(true)} data-testid="img-recipe-hero" />
-          ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground" data-testid="img-recipe-placeholder">
-              <ChefHat className="h-8 w-8" aria-hidden="true" /><span className="text-xs">{view("noImage")}</span>
-            </div>
-          )}
-        </div>
-
-        <h1 className="text-xl font-medium text-foreground sm:text-2xl" data-testid="text-recipe-title">{recipe.title}</h1>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /><CookedBadge recipeId={recipe.id} /></div>
-
-        {(tags.length > 0 || verified) && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {verified && <span className="rounded bg-[#42624e]/10 px-1.5 py-0.5 text-[11px] font-medium text-[#42624e]" data-testid="badge-source-verified">{view("sourceVerified")}</span>}
-            {tags.map(tag => <span key={tag} className="rounded bg-foreground/5 px-1.5 py-0.5 text-[11px] text-muted-foreground" data-testid={`tag-${tag}`}>{tag}</span>)}
-          </div>
+        {recipe.image && !imageFailed && (
+          <img src={recipe.image} alt="" className="image-fade-in mb-4 aspect-[16/9] w-full rounded-lg border hairline object-cover" decoding="async"
+            sizes="(max-width: 768px) 100vw, 768px" onLoad={e => e.currentTarget.classList.add("image-loaded")}
+            onError={() => setImageFailed(true)} data-testid="img-recipe-hero" />
         )}
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          {recipe.prepTime != null && <span className={meta} data-testid="text-prep-time"><Clock3 className="h-4 w-4" aria-hidden="true" />{view("prep")}: {recipe.prepTime} {view("minutes")}</span>}
-          {recipe.cookTime != null && <span className={meta} data-testid="text-cook-time"><Clock3 className="h-4 w-4" aria-hidden="true" />{view("cook")}: {recipe.cookTime} {view("minutes")}</span>}
-          {recipe.servings && base === null && <span className={meta} data-testid="text-servings"><Users className="h-4 w-4" aria-hidden="true" />{recipe.servings}</span>}
-          <span className={meta} data-testid="text-tools"><Wrench className="h-4 w-4" aria-hidden="true" />{timingCopy("toolsUsed")}: {tools}</span>
+        <header>
+          <h1 className="page-title break-words" data-testid="text-recipe-title">{recipe.title}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /><CookedBadge recipeId={recipe.id} /></div>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-base text-foreground">
+            {recipe.prepTime != null && <span className={meta} data-testid="text-prep-time"><Clock3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />{view("prep")}: {recipe.prepTime} {view("minutes")}</span>}
+            {recipe.cookTime != null && <span className={meta} data-testid="text-cook-time"><Clock3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />{view("cook")}: {recipe.cookTime} {view("minutes")}</span>}
+            {recipe.servings && base === null && <span className={meta} data-testid="text-servings"><Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />{recipe.servings}</span>}
+          </div>
+          {tools && <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="text-tools"><Wrench className="h-4 w-4" aria-hidden="true" />{timingCopy("toolsUsed")}: {tools}</p>}
+          <div className="mt-3"><DietaryTags tags={recipe.tags} testId="recipe-dietary-tags" /></div>
+          {recipe.metadataEstimated && <p className="mt-2 text-sm text-muted-foreground" data-testid="text-development-estimates">{timingCopy("developmentEstimates")}</p>}
+        </header>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3" data-testid="recipe-actions">
+          {base !== null && selectedServings !== null && (
+            <div role="group" aria-label={view("servingsLabel")} className="inline-flex items-center rounded-full border border-input bg-card" data-testid="servings-control">
+              <button type="button" onClick={() => adjust(-1)} disabled={selectedServings <= servingLimits.min} aria-label={view("decrease")}
+                data-testid="button-servings-decrease" className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Minus className="h-4 w-4" aria-hidden="true" /></button>
+              <span className="min-w-24 text-center text-base font-medium" aria-live="polite" data-testid="text-servings">{view("servings", { count: selectedServings })}</span>
+              <button type="button" onClick={() => adjust(1)} disabled={selectedServings >= servingLimits.max} aria-label={view("increase")}
+                data-testid="button-servings-increase" className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Plus className="h-4 w-4" aria-hidden="true" /></button>
+            </div>
+          )}
+          {recipe.steps.length > 0 && <button type="button" onClick={() => setCooking(true)} data-testid="button-start-cooking"
+            className="btn btn-primary">{hasCookingProgress(recipe.id) ? view("resumeCooking") : view("startCooking")}</button>}
+          <button type="button" onClick={() => setPlanOpen(true)} data-testid="button-add-to-plan" className="btn btn-secondary">{view("addToPlan")}</button>
         </div>
-        {recipe.metadataEstimated && <p className="mt-2 text-xs text-muted-foreground" data-testid="text-development-estimates">{timingCopy("developmentEstimates")}</p>}
 
-        <button type="button" onClick={() => setPlanOpen(true)} data-testid="button-add-to-plan"
-          className={`${pill} mt-5 w-full bg-[#42624e] text-white hover:bg-[#385540]`}>{view("addToPlan")}</button>
-
-        <section className="mt-6 rounded-lg border hairline bg-white p-4" aria-labelledby="ingredients-heading">
+        <section className="card mt-6 p-4 sm:p-5" aria-labelledby="ingredients-heading">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h2 id="ingredients-heading" className="text-base font-medium text-foreground" data-testid="text-ingredients-heading">{view("ingredients")}</h2>
-            {base !== null && selectedServings !== null && (
-              <div role="group" aria-label={view("servingsLabel")} className="inline-flex items-center rounded-full border border-[#d9dfd4]" data-testid="servings-control">
-                <button type="button" onClick={() => adjust(-1)} disabled={selectedServings <= servingLimits.min} aria-label={view("decrease")}
-                  data-testid="button-servings-decrease" className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Minus className="h-4 w-4" aria-hidden="true" /></button>
-                <span className="min-w-20 text-center text-sm font-medium" aria-live="polite" data-testid="text-servings">{view("servings", { count: selectedServings })}</span>
-                <button type="button" onClick={() => adjust(1)} disabled={selectedServings >= servingLimits.max} aria-label={view("increase")}
-                  data-testid="button-servings-increase" className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Plus className="h-4 w-4" aria-hidden="true" /></button>
-              </div>
-            )}
+            <h2 id="ingredients-heading" className="text-lg font-semibold text-foreground" data-testid="text-ingredients-heading">{view("ingredients")}</h2>
           </div>
           {base !== null && selectedServings !== null && selectedServings !== base &&
             <p className="mb-2 text-xs text-muted-foreground" data-testid="servings-note">{view("servingsNote", { base })}</p>}
           <IngredientChecklist key={recipe.id} recipe={recipe} scaled={scaledIngredients} />
         </section>
 
-        <section className="mt-4 rounded-lg border hairline bg-white p-4" aria-labelledby="instructions-heading">
+        <section className="card mt-4 p-4 sm:p-5" aria-labelledby="instructions-heading">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 id="instructions-heading" className="text-base font-medium text-foreground" data-testid="text-steps-heading">{view("instructions")}</h2>
-            {recipe.steps.length > 0 && <button type="button" onClick={() => setCooking(true)} data-testid="button-start-cooking"
-              className={`${pill} bg-[#42624e] text-white hover:bg-[#385540]`}>{hasCookingProgress(recipe.id) ? view("resumeCooking") : view("startCooking")}</button>}
+            <h2 id="instructions-heading" className="text-lg font-semibold text-foreground" data-testid="text-steps-heading">{view("instructions")}</h2>
           </div>
           <ol className="space-y-4">
             {recipe.steps.map((step, i) => {
               const duration = stepDuration(step, analysis?.steps[i]);
               return (
                 <li key={i} className="flex gap-3" data-testid={`text-step-${i}`}>
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#42624e]/10 text-xs font-medium text-[#42624e]" aria-hidden="true">{i + 1}</span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-primary" aria-hidden="true">{i + 1}</span>
                   <div className="min-w-0 flex-1 space-y-2">
-                    <p className="break-words text-sm leading-relaxed text-foreground">{cleanStep(step)}</p>
+                    <p className="break-words text-base leading-relaxed text-foreground">{cleanStep(step)}</p>
                     <StepTiming duration={duration ?? undefined} />
                   </div>
                 </li>
@@ -296,7 +284,10 @@ export default function RecipeDetail() {
 
         <MyCookingExperience key={recipe.id} recipeId={recipe.id} />
 
-        <div className="mt-4"><RecipeNutritionPanel recipe={recipe} /></div>
+        <section className="card mt-4 p-4 sm:p-5" aria-labelledby="nutrition-heading">
+          <h2 id="nutrition-heading" className="mb-2 text-lg font-semibold text-foreground">{t("display.nutritionDetails")}</h2>
+          <RecipeNutritionPanel recipe={recipe} />
+        </section>
 
         {isDevelopmentFixture(recipe) && (
           <p className="mt-4 rounded-lg border hairline bg-white p-3 text-xs text-muted-foreground" data-testid="synthetic-provenance">
@@ -312,7 +303,7 @@ export default function RecipeDetail() {
             {host ? (
               <>{view("sourceFrom", { host })}{" · "}
                 <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" data-testid="link-source"
-                  className={`inline-flex min-h-11 items-center font-medium text-[#42624e] underline underline-offset-2 ${focus}`}>
+                  className={`inline-flex min-h-11 items-center font-medium text-primary underline underline-offset-2 ${focus}`}>
                   {isDevelopmentFixture(recipe) ? "Supplied link (unverified)" : view("sourceLink")}
                 </a></>
             ) : <span data-testid="text-source-unlinked">{recipe.sourceUrl}</span>}
@@ -337,7 +328,7 @@ export default function RecipeDetail() {
                 <input type="number" min="0" max="10080" step="1" value={cookTime} disabled={savingTimes} data-testid="input-cooking-time"
                   onChange={event => { setCookTime(event.target.value); setTimingStatus(null); }} className="block min-h-11 w-full rounded-lg border bg-background px-3" /></label>
             </div>
-            <button type="submit" disabled={savingTimes} data-testid="button-save-times" className={`${pill} bg-[#42624e] text-white disabled:opacity-50`}>{timingCopy("saveTiming")}</button>
+            <button type="submit" disabled={savingTimes} data-testid="button-save-times" className="btn btn-primary">{timingCopy("saveTiming")}</button>
             {timingStatus && <p role={timingStatus === "error" ? "alert" : "status"} className="text-sm">{timingCopy(timingStatus === "error" ? "timingSaveFailed" : "timingSaved")}</p>}
           </form>
         </DialogContent>

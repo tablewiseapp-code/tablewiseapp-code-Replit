@@ -7,12 +7,12 @@ import type { BasicSettings } from "@/lib/basic-settings";
 
 const COLLAPSED = 6;
 const groupStyle: Record<PreferenceChip["group"], string> = {
-  hard: "border-[#42624e]/30 bg-[#42624e]/10 text-[#2f4a39]",
+  hard: "border-primary/30 bg-primary/10 text-foreground",
   planning: "border-transparent bg-foreground/5 text-foreground",
-  soft: "border-[#d9dfd4] bg-white text-muted-foreground",
+  soft: "border-border bg-white text-muted-foreground",
 };
 const groupKey = { hard: "groupHard", planning: "groupPlanning", soft: "groupSoft" } as const;
-const link = "inline-flex min-h-11 items-center rounded-full px-2 text-xs font-medium text-[#42624e] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a]";
+const link = "inline-flex min-h-11 items-center rounded-full px-2 text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary";
 
 /** Weekly Meals: live match counts from the rendered dataset, the saved settings shaping them, and a link to edit them. */
 export function ActivePreferences({ settings, counts, noDevices, onEdit }:
@@ -26,13 +26,13 @@ export function ActivePreferences({ settings, counts, noDevices, onEdit }:
   const groups = (["hard", "planning", "soft"] as const).map(group => ({ group, items: visible.filter(c => c.group === group) })).filter(g => g.items.length);
   const reasons = counts ? breakdownKeys.filter(k => counts.breakdown[k] > 0) : [];
   return (
-    <section aria-labelledby="active-preferences-title" className="mb-4 rounded-xl border hairline bg-white p-3 sm:p-4" data-testid="active-preferences">
+    <section aria-labelledby="active-preferences-title" className="card mb-4 p-3 sm:p-4" data-testid="active-preferences">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="active-preferences-title" className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-          <SlidersHorizontal className="h-4 w-4 text-[#42624e]" aria-hidden="true" />{t("matchesTitle")}
+          <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />{t("matchesTitle")}
         </h2>
         <button type="button" onClick={onEdit} data-testid="button-edit-preferences"
-          className="inline-flex min-h-11 items-center rounded-full border border-[#d9dfd4] px-3 text-xs font-medium text-[#42624e] hover:bg-[#f2f6ef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a]">
+          className="btn btn-secondary">
           {t(chips.length ? "editPrefs" : "setUp")}
         </button>
       </div>

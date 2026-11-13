@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { fetchRecipes, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
@@ -46,12 +45,11 @@ export default function RecipeView() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <AppHeader title="Tablewise" subtitle={t("nav.recipeView")} onBrandClick={() => setLocation("/")} />
       <PageContainer size="md" className="flex-1 py-8 sm:py-10">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">{t("recipes.loading") || "Loading recipes..."}</p>
         ) : error ? (
-          <div className="rounded-xl border hairline p-5 bg-[#FAFAF8] max-w-xl">
+          <div className="rounded-xl border hairline p-5 bg-background max-w-xl">
             <p className="text-sm text-foreground mb-2">Failed to load recipes.</p>
             <p className="text-xs text-muted-foreground mb-4">{error}</p>
             <button
@@ -62,7 +60,7 @@ export default function RecipeView() {
             </button>
           </div>
         ) : recipes.length === 0 ? (
-          <div className="rounded-xl border hairline p-5 bg-[#FAFAF8] max-w-xl">
+          <div className="rounded-xl border hairline p-5 bg-background max-w-xl">
             <p className="text-sm text-foreground mb-2">{t("recipes.empty") || "No recipes yet"}</p>
             <p className="text-xs text-muted-foreground mb-4">Import a recipe to open recipe view.</p>
             <button

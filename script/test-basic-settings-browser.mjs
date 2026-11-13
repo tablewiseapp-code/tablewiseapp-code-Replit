@@ -95,6 +95,18 @@ try {
   await go("/meals"); await until(q("count-settings"), "settings count");
   ok(Number(await ev(`${q("count-settings")}.dataset.count`)) > 0, "excluded-by-settings count shown");
 
+  // Long option lists are searchable; searching only filters what is shown and never changes saved values.
+  await go("/settings"); await openSection("dietary");
+  await ev(`${q("dietary-preferences-more")}.open = true`);
+  await click("cuisine-like-thai"); await until(`${q("settings-status")}.dataset.status === "saved" && ${q("cuisine-like-thai")}.getAttribute("aria-pressed") === "true"`, "Thai liked");
+  const before = await ev(`localStorage.getItem("tablewise_basic_settings")`);
+  await ev(`(i => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(i, "ital"); i.dispatchEvent(new Event("input", { bubbles: true })); })(${q("cuisine-like-search")})`);
+  await until(`!${q("cuisine-like-greek")}`, "search filters options");
+  ok(await ev(`Boolean(${q("cuisine-like-italian")}) && Boolean(${q("cuisine-like-thai")})`), "match shown and selected option stays visible");
+  ok(await ev(`document.querySelector('label[for="cuisine-like-search"]')?.textContent.length > 0`), "search box has a label");
+  ok((await ev(`${q("selected-count-cuisine-like")}.textContent`)).includes("1 selected"), "selected count shown");
+  ok(await ev(`localStorage.getItem("tablewise_basic_settings")`) === before, "search does not change saved settings");
+
   // Languages, RTL and layouts.
   for (const [label, metrics] of [["desktop", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }], ["mobile", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }]]) {
     await call("Emulation.setDeviceMetricsOverride", metrics);
