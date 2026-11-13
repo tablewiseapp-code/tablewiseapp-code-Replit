@@ -6,14 +6,15 @@ interface StarRatingProps {
   onChange: (next: number) => void;
   readOnly?: boolean;
   size?: "sm" | "md";
+  label?: string;
 }
 
-export function StarRating({ value, onChange, readOnly = false, size = "md" }: StarRatingProps) {
+export function StarRating({ value, onChange, readOnly = false, size = "md", label = "Star rating" }: StarRatingProps) {
   const [hover, setHover] = useState<number | null>(null);
   const starSize = size === "sm" ? 14 : 20;
 
   return (
-    <div className="flex items-center gap-1" role="radiogroup" aria-label="Star rating">
+    <div className="flex items-center gap-1" role="radiogroup" aria-label={label}>
       {[1, 2, 3, 4, 5].map((star) => {
         const active = (hover || value || 0) >= star;
         return (

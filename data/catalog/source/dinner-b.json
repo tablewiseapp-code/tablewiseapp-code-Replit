@@ -1,0 +1,3401 @@
+[
+  {
+    "slug": "baked-cod-herb-crumb",
+    "title": "Baked cod with herb crumb",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Fish",
+      "Potatoes",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 750,
+        "unit": "g",
+        "name": "new potatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "skinless cod fillets",
+        "note": "cut into four pieces"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "Dijon mustard"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "fresh white breadcrumbs"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "zested, then cut into wedges"
+      },
+      {
+        "quantity": 1,
+        "unit": "clove",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Toss the potatoes with 1 tbsp of the oil and a pinch of the salt on a baking tray and roast for 10 minutes.",
+      "Meanwhile, mix the breadcrumbs, parsley, lemon zest, garlic, the remaining 2 tbsp oil and the rest of the salt and pepper in a mixing bowl until the crumbs look evenly moistened.",
+      "Pat the cod dry with kitchen paper and brush the tops thinly with the mustard. Press the herb crumb firmly onto the mustard-coated side of each piece.",
+      "Push the potatoes to the edges of the tray, sit the cod in the middle and bake for 12–15 minutes, until the crumb is golden and the fish is opaque and flakes easily (63°C in the thickest part).",
+      "While the fish bakes, cook the peas in a saucepan of boiling water for 3 minutes, then drain.",
+      "Serve the cod with the potatoes, peas and lemon wedges for squeezing over."
+    ]
+  },
+  {
+    "slug": "fish-tacos-lime-slaw",
+    "title": "Fish tacos with lime slaw",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Fish",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "red cabbage",
+        "note": "finely shredded"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "carrot",
+        "note": "coarsely grated"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "limes"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "mayonnaise"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt",
+        "note": "divided"
+      },
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "skinless white fish fillets",
+        "note": "such as cod or haddock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "garlic powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "small corn tortillas"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "avocado",
+        "note": "sliced",
+        "optional": true
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "leaves picked",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Make the slaw: zest one lime and juice both. In a mixing bowl, toss the cabbage and carrot with the mayonnaise, half the lime juice and a pinch of the salt. Set aside while you cook the fish.",
+      "Pat the fish dry and cut into large chunks, about 4 cm. Mix the paprika, cumin, garlic powder, lime zest and remaining salt, then rub over the fish.",
+      "Heat the oil in a large frying pan over medium-high heat. Cook the fish for 2–3 minutes per side, turning carefully, until opaque all the way through and it flakes easily (63°C). Squeeze over the remaining lime juice.",
+      "Warm the tortillas in a dry frying pan for about 30 seconds each side, or wrap in foil and warm in a low oven for 5 minutes.",
+      "Fill each tortilla with slaw and a few chunks of fish, and top with avocado and coriander if you like."
+    ]
+  },
+  {
+    "slug": "prawn-pea-risotto",
+    "title": "Prawn and pea risotto",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Seafood",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 1.2,
+        "unit": "l",
+        "name": "gluten-free vegetable stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 25,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "risotto rice"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "dry white wine"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "raw peeled king prawns"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "zested and juiced"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "Parmesan",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Bring the stock to a gentle simmer in a saucepan and keep it warm over a low heat.",
+      "Heat the oil and half the butter in a large deep frying pan over medium heat. Cook the onion for 6–8 minutes until soft, add the garlic for 1 minute, then stir in the rice for 2 minutes until the grains look glossy.",
+      "Pour in the wine and let it bubble until almost absorbed. Add the hot stock a ladle at a time, stirring often and waiting until each addition is nearly absorbed before adding the next. This takes about 18–20 minutes.",
+      "When the rice is almost tender, stir in the prawns and peas with a final ladle of stock. Cook for 3–4 minutes, until the prawns are pink and opaque throughout.",
+      "Take the pan off the heat and stir in the remaining butter, the Parmesan, lemon zest and a squeeze of lemon juice. Cover and rest for 2 minutes, then serve scattered with parsley."
+    ]
+  },
+  {
+    "slug": "garlic-prawn-linguine",
+    "title": "Garlic prawn linguine",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Seafood",
+      "Pasta",
+      "Dairy-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 350,
+        "unit": "g",
+        "name": "dried linguine"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 4,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "dried chilli flakes"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "cherry tomatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "raw peeled king prawns"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "zested and juiced"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      }
+    ],
+    "steps": [
+      "Cook the linguine in a large pot of well-salted boiling water according to the packet instructions. Scoop out a mugful of the cooking water before draining.",
+      "Meanwhile, warm the oil in a large frying pan over medium-low heat. Add the garlic and chilli and cook gently for 2 minutes until the garlic is fragrant and just pale gold, not brown.",
+      "Turn the heat up to medium-high, add the tomatoes and cook for 2 minutes until they start to soften. Add the prawns and cook for 3–4 minutes, stirring, until pink and opaque throughout.",
+      "Add the drained linguine, lemon zest and juice, parsley and salt, and toss well, adding splashes of the pasta water until the pasta is glossy and coated. Serve straight away."
+    ]
+  },
+  {
+    "slug": "fish-pie",
+    "title": "Fish pie",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Fish",
+      "Seafood",
+      "Potatoes",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 25,
+    "cookTime": 50,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 1,
+        "unit": "kg",
+        "name": "floury potatoes",
+        "note": "peeled and cut into chunks"
+      },
+      {
+        "quantity": 90,
+        "unit": "g",
+        "name": "butter",
+        "note": "divided"
+      },
+      {
+        "quantity": 600,
+        "unit": "ml",
+        "name": "whole milk",
+        "note": "divided"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "bay leaf"
+      },
+      {
+        "quantity": 450,
+        "unit": "g",
+        "name": "fish pie mix",
+        "note": "skinless cod, salmon and smoked haddock"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "raw peeled prawns"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "mature Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Boil the potatoes in a large pot of salted water for 15–18 minutes until tender, then drain and mash with 50 g of the butter and 100 ml of the milk. Season with half the salt.",
+      "Meanwhile, melt the remaining 40 g butter in a saucepan over medium heat, stir in the flour and cook for 1 minute. Gradually whisk in the remaining 500 ml milk, add the bay leaf and simmer, stirring, for 3–4 minutes until smooth and thick. Remove the bay leaf and season with the rest of the salt and the pepper.",
+      "Spread the raw fish, prawns and peas over the base of a baking dish of about 2 litres. Stir the parsley into the sauce and pour it over evenly.",
+      "Spoon the mash over the top, starting at the edges to seal, then rough it up with a fork and scatter over the cheese.",
+      "Set the dish on a baking tray and bake for 30–35 minutes, until golden and bubbling at the edges, the fish is opaque and flakes easily and the prawns are pink throughout. Rest for 5 minutes before serving.",
+      "To batch cook, cool the assembled unbaked pie, cover and refrigerate for up to 24 hours, then bake for 45–50 minutes until piping hot in the centre."
+    ]
+  },
+  {
+    "slug": "honey-mustard-salmon-traybake",
+    "title": "Honey mustard salmon traybake",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Fish",
+      "Potatoes",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "baby potatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red onion",
+        "note": "cut into wedges"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "tenderstem broccoli"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "skinless salmon fillets"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "wholegrain mustard"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "Dijon mustard"
+      },
+      {
+        "quantity": 1,
+        "unit": "clove",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "half juiced, half cut into wedges"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Toss the potatoes and onion with the oil and salt on a large baking tray and roast for 20 minutes, until starting to colour.",
+      "Meanwhile, mix the honey, both mustards, garlic and lemon juice in a small bowl.",
+      "Add the broccoli to the tray and turn it in the oil. Make spaces between the vegetables and lay in the salmon fillets. Spoon the honey mustard over the salmon.",
+      "Roast for 12–15 minutes, until the salmon is opaque and flakes easily (63°C in the thickest part) and the potatoes are tender.",
+      "Serve with the lemon wedges and any glaze spooned from the tray."
+    ]
+  },
+  {
+    "slug": "cod-tomato-olive-sauce",
+    "title": "Cod in tomato and olive sauce",
+    "category": "Dinner",
+    "cuisine": "Mediterranean",
+    "tags": [
+      "Fish",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 80,
+        "unit": "g",
+        "name": "pitted black olives",
+        "note": "halved"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "capers",
+        "note": "drained"
+      },
+      {
+        "quantity": 600,
+        "unit": "g",
+        "name": "skinless cod fillets",
+        "note": "cut into four pieces"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Cook the rice in a saucepan of boiling water according to the packet instructions, then drain.",
+      "Meanwhile, heat the oil in a large frying pan with a lid over medium heat. Cook the onion for 6–8 minutes until soft, then add the garlic for 1 minute.",
+      "Stir in the tomatoes, tomato purée, oregano, sugar, olives and capers. Simmer for 8–10 minutes until slightly thickened, then season with the salt and pepper.",
+      "Nestle the cod into the sauce and spoon some sauce over the top. Cover and simmer gently for 8–10 minutes, until the fish is opaque and flakes easily (63°C).",
+      "Scatter with parsley and serve with the rice."
+    ]
+  },
+  {
+    "slug": "thai-fishcakes",
+    "title": "Thai-style fishcakes",
+    "category": "Dinner",
+    "cuisine": "Thai",
+    "tags": [
+      "Fish",
+      "Rice",
+      "Dairy-free"
+    ],
+    "prepTime": 20,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "skinless white fish fillets",
+        "note": "such as cod or haddock, roughly chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "Thai red curry paste"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "egg"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fish sauce"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "spring onions",
+        "note": "finely sliced"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "green beans",
+        "note": "very thinly sliced"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "cucumber",
+        "note": "sliced"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "sweet chilli sauce"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "cut into wedges"
+      }
+    ],
+    "steps": [
+      "Cook the rice in a saucepan according to the packet instructions and keep warm.",
+      "Put the fish, curry paste, egg, fish sauce and cornflour in a food processor and pulse until it forms a thick, sticky paste. Do not over-blend.",
+      "Transfer to a mixing bowl and stir in the spring onions, green beans and coriander. With wet hands, shape into 12 small patties about 1.5 cm thick, and wash your hands after handling the raw fish mixture.",
+      "Heat half the oil in a large frying pan over medium heat. Fry half the fishcakes for 3–4 minutes per side, until golden and cooked through (63°C in the centre, firm and opaque when cut). Repeat with the remaining oil and fishcakes.",
+      "Serve with the rice, cucumber, sweet chilli sauce for dipping and lime wedges."
+    ]
+  },
+  {
+    "slug": "pan-fried-trout-new-potatoes",
+    "title": "Pan-fried trout with new potatoes",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Fish",
+      "Potatoes",
+      "Gluten-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 750,
+        "unit": "g",
+        "name": "new potatoes",
+        "note": "halved if large"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "green beans",
+        "note": "trimmed"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "trout fillets",
+        "note": "skin on"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "half juiced, half cut into wedges"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh dill or parsley",
+        "note": "chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "capers",
+        "note": "drained",
+        "optional": true
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      }
+    ],
+    "steps": [
+      "Boil the potatoes in a large pot of salted water for 15–18 minutes until tender, adding the green beans for the last 4 minutes. Drain and keep warm.",
+      "Pat the trout dry with kitchen paper and season both sides with the salt and pepper.",
+      "Heat the oil in a large frying pan over medium-high heat. Lay the trout in skin-side down and press gently for a few seconds so it stays flat. Cook for 3–4 minutes until the skin is crisp, then turn and cook for 1–2 minutes more, until the flesh is opaque and flakes easily (63°C). Lift onto warm plates.",
+      "Turn the heat down, add the butter to the pan and let it foam. Stir in the lemon juice, herbs and capers, if using, then toss in the potatoes and beans to coat.",
+      "Serve the trout with the buttery potatoes and beans and the lemon wedges."
+    ]
+  },
+  {
+    "slug": "prawn-pad-thai",
+    "title": "Prawn pad thai",
+    "category": "Dinner",
+    "cuisine": "Thai",
+    "tags": [
+      "Seafood",
+      "Noodles",
+      "Dairy-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "flat rice noodles"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fish sauce"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "tamarind paste"
+      },
+      {
+        "quantity": 1.5,
+        "unit": "tbsp",
+        "name": "soft light brown sugar"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "half juiced, half cut into wedges"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "raw peeled king prawns"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs",
+        "note": "beaten"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "beansprouts"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "spring onions",
+        "note": "cut into short lengths"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "roasted unsalted peanuts",
+        "note": "roughly chopped"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "dried chilli flakes",
+        "optional": true
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "leaves picked",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Soak or cook the noodles according to the packet instructions until just pliable, then drain and rinse under cold water.",
+      "Mix the fish sauce, tamarind, sugar and lime juice in a small bowl until the sugar dissolves.",
+      "Heat the oil in a wok or large frying pan over high heat. Stir-fry the garlic for 30 seconds, then add the prawns and cook for 2–3 minutes until pink and opaque throughout. Push to one side.",
+      "Pour the eggs into the empty side of the wok and scramble for about 1 minute until set, then break up and mix with the prawns.",
+      "Add the noodles and sauce and toss for 2 minutes until the noodles are hot and coated. Add the beansprouts and spring onions and toss for 1 minute more.",
+      "Serve topped with the peanuts, chilli flakes and coriander, if using, with lime wedges on the side."
+    ]
+  },
+  {
+    "slug": "chicken-prawn-paella",
+    "title": "Chicken and prawn paella",
+    "category": "Dinner",
+    "cuisine": "Spanish",
+    "tags": [
+      "Chicken",
+      "Seafood",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs",
+        "note": "cut into bite-sized pieces"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "saffron threads"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "paella rice"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "l",
+        "name": "hot gluten-free chicken stock"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "raw peeled king prawns"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "cut into wedges"
+      }
+    ],
+    "steps": [
+      "Heat the oil in a paella pan or large deep frying pan over medium-high heat. Brown the chicken for 5 minutes, turning, then lift onto a plate. Wash your hands and board after handling the raw chicken.",
+      "Lower the heat to medium, add the onion and pepper and cook for 6–8 minutes until soft. Stir in the garlic and paprika for 1 minute.",
+      "Crumble the saffron into the stock. Add the rice to the pan and stir to coat, then add the tomatoes, stock, salt and the chicken. Stir once, bring to a simmer and cook uncovered without stirring for 18 minutes.",
+      "Scatter the prawns and peas over the top, pressing them in lightly. Cook for 5–7 minutes more, until the rice is tender and has absorbed the liquid, the prawns are pink and opaque throughout and the chicken reaches 74°C with juices running clear.",
+      "Take off the heat, cover with a clean tea towel or foil and rest for 5 minutes. Serve with lemon wedges."
+    ]
+  },
+  {
+    "slug": "vegetable-lasagne",
+    "title": "Vegetable lasagne",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Pasta",
+      "Batch cooking",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 30,
+    "cookTime": 60,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "courgettes",
+        "note": "diced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "diced"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "mushrooms",
+        "note": "sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned green lentils",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 600,
+        "unit": "ml",
+        "name": "whole milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "ground nutmeg"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "dried lasagne sheets"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "mature Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt",
+        "note": "divided"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "black pepper"
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large frying pan over medium heat. Cook the onion, courgettes, pepper and mushrooms for 10 minutes until softened and any liquid has evaporated. Add the garlic for 1 minute.",
+      "Stir in the tomatoes, tomato purée, lentils, oregano, half the salt and the pepper. Simmer for 15 minutes until thick.",
+      "Meanwhile, make the white sauce: melt the butter in a saucepan, stir in the flour and cook for 1 minute, then gradually whisk in the milk. Simmer, stirring, for 3–4 minutes until smooth and thick. Season with the nutmeg and remaining salt.",
+      "Heat the oven to 190°C (fan 170°C). In a baking dish about 20 x 30 cm, layer a third of the vegetable sauce, then a layer of lasagne sheets, then a quarter of the white sauce. Repeat twice, then finish with the remaining white sauce and scatter over the cheese.",
+      "Bake for 35–40 minutes, until golden and bubbling and a knife slides easily through the pasta. Rest for 10 minutes before cutting.",
+      "Leftovers keep covered in the fridge for up to 3 days or can be frozen in portions; reheat until piping hot throughout."
+    ]
+  },
+  {
+    "slug": "mushroom-risotto",
+    "title": "Mushroom risotto",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 10,
+        "unit": "g",
+        "name": "dried porcini mushrooms"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "boiling water"
+      },
+      {
+        "quantity": 1,
+        "unit": "l",
+        "name": "gluten-free vegetable stock"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter",
+        "note": "divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "chestnut mushrooms",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "fresh thyme leaves"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "risotto rice"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "vegetarian hard cheese",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Soak the porcini in the boiling water for 10 minutes. Lift them out, chop finely, and pour the soaking liquid into a saucepan with the stock, leaving any grit behind. Keep the stock warm over a low heat.",
+      "Heat the oil and half the butter in a large deep frying pan over medium-high heat. Fry the chestnut mushrooms for 6–8 minutes until golden and their liquid has evaporated. Lift out half for topping.",
+      "Lower the heat, add the onion and cook for 5 minutes until soft. Add the garlic, thyme and porcini for 1 minute, then stir in the rice for 2 minutes until glossy.",
+      "Add the hot stock a ladle at a time, stirring often and letting each ladle be nearly absorbed before adding the next, for 18–20 minutes, until the rice is tender with a slight bite and the risotto is loose and creamy.",
+      "Off the heat, stir in the remaining butter, the cheese, salt and pepper. Cover and rest for 2 minutes, then serve topped with the reserved mushrooms and parsley."
+    ]
+  },
+  {
+    "slug": "saag-paneer",
+    "title": "Saag paneer",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "tags": [
+      "Vegetarian",
+      "Rice",
+      "Gluten-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 450,
+        "unit": "g",
+        "name": "paneer",
+        "note": "cut into cubes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "cumin seeds"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "green chilli",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "garam masala"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 450,
+        "unit": "g",
+        "name": "spinach"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "double cream"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      }
+    ],
+    "steps": [
+      "Rinse the rice, then cook in a saucepan according to the packet instructions and keep warm.",
+      "Heat 1 tbsp of the oil in a large frying pan over medium-high heat and fry the paneer for 4–5 minutes, turning, until golden on most sides. Lift onto a plate.",
+      "Add the remaining oil and the cumin seeds to the pan. When they sizzle, add the onion and cook over medium heat for 8 minutes until soft and golden. Stir in the garlic, ginger and chilli for 1 minute, then the coriander, turmeric and garam masala for 30 seconds.",
+      "Add the tomatoes and cook for 5 minutes until thick. Add the spinach a handful at a time, stirring until wilted. For a smoother sauce, blitz briefly with a stick blender.",
+      "Stir in the cream, salt and paneer and simmer for 3–4 minutes until the paneer is hot through. Serve with the rice."
+    ]
+  },
+  {
+    "slug": "three-bean-vegetable-chilli",
+    "title": "Three-bean vegetable chilli",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget",
+      "Batch cooking",
+      "Rice"
+    ],
+    "prepTime": 15,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "celery sticks",
+        "note": "diced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "diced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned kidney beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned cannellini beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 300,
+        "unit": "ml",
+        "name": "gluten-free vegetable stock"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lime",
+        "note": "cut into wedges",
+        "optional": true
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large pot over medium heat. Cook the onion, carrots, celery and pepper for 10 minutes until softened.",
+      "Add the garlic, cumin, paprika, chilli powder and oregano and cook for 1 minute, stirring. Stir in the tomato purée for 1 minute more.",
+      "Add the tomatoes, all the beans, the stock and the salt. Bring to the boil, then lower the heat and simmer, partly covered, for 30 minutes, stirring now and then, until thick.",
+      "Meanwhile, cook the rice in a saucepan according to the packet instructions.",
+      "Serve the chilli over the rice with lime wedges and coriander, if you like.",
+      "This doubles easily. Cool leftover chilli quickly and refrigerate for up to 3 days or freeze in portions. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours, reheating until steaming hot."
+    ]
+  },
+  {
+    "slug": "black-bean-burgers",
+    "title": "Black bean burgers",
+    "category": "Dinner",
+    "cuisine": "American",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Dairy-free",
+      "Budget",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 480,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained, rinsed and patted dry"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "small red onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "frozen sweetcorn",
+        "note": "defrosted"
+      },
+      {
+        "quantity": 75,
+        "unit": "g",
+        "name": "dried breadcrumbs"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "vegan burger buns",
+        "note": "split"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "lettuce leaves"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "tomatoes",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "avocado",
+        "note": "sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat 1 tbsp of the oil in a large frying pan over medium heat. Cook the onion for 5 minutes until soft, then add the garlic, cumin and paprika for 1 minute. Tip into a mixing bowl.",
+      "Add the beans to the bowl and mash with a potato masher or fork until mostly smooth with some whole beans left.",
+      "Stir in the sweetcorn, breadcrumbs, flour and salt until the mixture holds together when squeezed. Shape into four patties about 2 cm thick and chill for 15 minutes if you have time, to firm up.",
+      "Wipe the frying pan, heat the remaining oil over medium heat and cook the burgers for 4–5 minutes per side, turning carefully, until crisp and hot all the way through.",
+      "Toast the buns lightly, then fill with lettuce, tomato, a burger and avocado, if using."
+    ]
+  },
+  {
+    "slug": "stuffed-peppers",
+    "title": "Stuffed peppers with rice and beans",
+    "category": "Dinner",
+    "cuisine": "Mexican",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Rice",
+      "Budget"
+    ],
+    "prepTime": 15,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "long-grain rice"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "large red peppers",
+        "note": "halved lengthways and deseeded"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "frozen sweetcorn"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "mature Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Cook the rice in a saucepan according to the packet instructions, then drain.",
+      "Rub the pepper halves with 1 tbsp of the oil, sit them cut-side up in a baking dish and roast for 10 minutes to soften.",
+      "Meanwhile, heat the remaining oil in a large frying pan over medium heat. Cook the onion for 6 minutes until soft, then add the garlic, cumin and paprika for 1 minute.",
+      "Stir in the beans, tomatoes, sweetcorn, salt and cooked rice and heat through for 3 minutes. Stir in half the cheese.",
+      "Pack the filling into the peppers, scatter over the remaining cheese and bake for 20–25 minutes, until the peppers are tender and the cheese is golden. Scatter with coriander to serve."
+    ]
+  },
+  {
+    "slug": "aubergine-parmigiana",
+    "title": "Aubergine parmigiana",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free"
+    ],
+    "prepTime": 25,
+    "cookTime": 60,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "large aubergines",
+        "note": "sliced lengthways"
+      },
+      {
+        "quantity": 5,
+        "unit": "tbsp",
+        "name": "olive oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 20,
+        "unit": "g",
+        "name": "fresh basil",
+        "note": "leaves torn"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "mozzarella",
+        "note": "drained and torn"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "vegetarian hard cheese",
+        "note": "finely grated"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 220°C (fan 200°C). Cut the aubergines into slices about 1 cm thick, brush both sides with 4 tbsp of the oil, spread over two baking trays and roast for 20–25 minutes, turning once, until soft and golden.",
+      "Meanwhile, heat the remaining oil in a saucepan over medium heat. Cook the onion for 6–8 minutes until soft, then add the garlic for 1 minute.",
+      "Add the tomatoes, tomato purée, sugar and salt and simmer for 15 minutes until thick. Stir in most of the basil.",
+      "Turn the oven down to 190°C (fan 170°C). In a baking dish, layer a little sauce, then aubergine, mozzarella and a sprinkle of hard cheese. Repeat the layers, finishing with sauce and the remaining hard cheese.",
+      "Bake for 30–35 minutes, until bubbling and golden on top. Rest for 10 minutes, then scatter with the remaining basil and serve."
+    ]
+  },
+  {
+    "slug": "vegetable-korma",
+    "title": "Vegetable korma",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Rice",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "garam masala"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "sliced"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "cauliflower florets"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned chickpeas",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "canned coconut milk"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "gluten-free vegetable stock"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "ground almonds"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large pot over medium heat. Cook the onion for 8 minutes until soft and lightly golden, then add the garlic and ginger for 1 minute.",
+      "Stir in the coriander, cumin, garam masala, turmeric and cinnamon and cook for 30 seconds until fragrant.",
+      "Add the carrots, cauliflower and chickpeas and stir to coat in the spices. Pour in the coconut milk and stock, add the ground almonds, sugar and salt, and bring to a simmer.",
+      "Cover and cook gently for 15–20 minutes, stirring now and then, until the vegetables are tender. Add the peas for the last 3 minutes.",
+      "Meanwhile, rinse the rice and cook in a saucepan according to the packet instructions.",
+      "Serve the korma over the rice with coriander. Leftover korma freezes well; reheat until steaming hot. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "tofu-vegetable-stir-fry",
+    "title": "Tofu and vegetable stir-fry",
+    "category": "Dinner",
+    "cuisine": "Chinese",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Rice"
+    ],
+    "prepTime": 20,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 450,
+        "unit": "g",
+        "name": "extra-firm tofu",
+        "note": "drained and patted dry"
+      },
+      {
+        "quantity": 3,
+        "unit": "tsp",
+        "name": "cornflour",
+        "note": "divided"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "maple syrup"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "rice vinegar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "toasted sesame oil"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "water"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "vegetable oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "broccoli florets"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "carrot",
+        "note": "cut into thin batons"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "mangetout"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sesame seeds",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Cook the rice in a saucepan according to the packet instructions and keep warm.",
+      "Cut the tofu into 2 cm cubes and toss in a mixing bowl with 2 tsp of the cornflour. In a small bowl, mix the tamari, maple syrup, vinegar, sesame oil, water and remaining cornflour to make the sauce.",
+      "Heat 2 tbsp of the vegetable oil in a wok or large frying pan over medium-high heat. Fry the tofu for 8–10 minutes, turning, until crisp and golden on all sides. Lift onto a plate.",
+      "Add the remaining oil and stir-fry the broccoli, pepper and carrot for 3 minutes. Add the mangetout, garlic and ginger and stir-fry for 2 minutes more, until the vegetables are just tender but still crisp.",
+      "Stir the sauce, pour it into the wok and bubble for 1 minute until glossy. Return the tofu, toss to coat, then scatter with spring onions and sesame seeds. Serve with the rice."
+    ]
+  },
+  {
+    "slug": "halloumi-vegetable-traybake",
+    "title": "Halloumi and vegetable traybake",
+    "category": "Dinner",
+    "cuisine": "Mediterranean",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Potatoes"
+    ],
+    "prepTime": 15,
+    "cookTime": 45,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "baby potatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "red peppers",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "courgettes",
+        "note": "cut into chunks"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red onion",
+        "note": "cut into wedges"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned chickpeas",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "cherry tomatoes"
+      },
+      {
+        "quantity": 450,
+        "unit": "g",
+        "name": "halloumi",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "cut into wedges"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Put the potatoes on a large baking tray and roast with 1 tbsp of the oil for 15 minutes.",
+      "Add the peppers, courgettes, onion and chickpeas to the tray. Mix the remaining oil with the oregano, paprika, garlic and salt, pour over and toss everything together.",
+      "Roast for 20 minutes, until the vegetables are softening and starting to char at the edges.",
+      "Add the tomatoes and lay the halloumi slices on top. Drizzle the halloumi with the honey and roast for 10–12 minutes more, until the halloumi is golden and the potatoes are tender.",
+      "Squeeze over some lemon and serve straight from the tray with the remaining wedges."
+    ]
+  },
+  {
+    "slug": "macaroni-cheese",
+    "title": "Macaroni cheese",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Pasta",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 350,
+        "unit": "g",
+        "name": "dried macaroni"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 750,
+        "unit": "ml",
+        "name": "whole milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "Dijon mustard"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "ground nutmeg"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "mature Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "fresh breadcrumbs"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "cherry tomatoes",
+        "note": "halved",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Cook the macaroni in a large pot of salted boiling water for 2 minutes less than the packet says, then drain.",
+      "Meanwhile, melt the butter in a saucepan over medium heat, stir in the flour and cook for 1 minute. Gradually whisk in the milk and simmer, stirring, for 4–5 minutes until smooth and thick enough to coat the back of a spoon.",
+      "Take the sauce off the heat and stir in the mustard, nutmeg, salt, pepper and three-quarters of the cheese until melted.",
+      "Stir the macaroni into the sauce and tip into a baking dish. Top with the cherry tomatoes, if using, then scatter over the breadcrumbs and remaining cheese.",
+      "Bake for 15–20 minutes until golden and bubbling. Rest for 5 minutes before serving."
+    ]
+  },
+  {
+    "slug": "pesto-pasta-green-beans",
+    "title": "Pesto pasta with green beans and potatoes",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Pasta",
+      "Potatoes"
+    ],
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "fresh basil",
+        "note": "leaves picked"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "pine nuts"
+      },
+      {
+        "quantity": 1,
+        "unit": "clove",
+        "name": "garlic"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "vegetarian hard cheese",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 100,
+        "unit": "ml",
+        "name": "extra virgin olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt",
+        "note": "divided"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "small waxy potatoes",
+        "note": "peeled and cut into small chunks"
+      },
+      {
+        "quantity": 350,
+        "unit": "g",
+        "name": "dried trofie or linguine"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "green beans",
+        "note": "trimmed and halved"
+      }
+    ],
+    "steps": [
+      "Make the pesto: lightly toast the pine nuts in a dry frying pan over medium heat for 2–3 minutes until golden. Blitz in a blender or food processor with the basil, garlic, cheese, lemon juice and a pinch of the salt, then gradually blend in the oil until you have a loose paste.",
+      "Bring a large pot of water to the boil with the remaining salt. Add the potatoes and cook for 5 minutes.",
+      "Add the pasta to the same pot and cook according to the packet instructions, adding the green beans for the last 5 minutes. Everything should be tender at the same time.",
+      "Scoop out a mugful of the cooking water, then drain. Return the pasta, potatoes and beans to the pot off the heat.",
+      "Stir in the pesto with a few splashes of the cooking water until the sauce is creamy and coats everything. Serve straight away."
+    ]
+  },
+  {
+    "slug": "spinach-ricotta-cannelloni",
+    "title": "Spinach and ricotta cannelloni",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Pasta",
+      "Batch cooking"
+    ],
+    "prepTime": 30,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 700,
+        "unit": "g",
+        "name": "passata"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt",
+        "note": "divided"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "spinach"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "ricotta"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "vegetarian hard cheese",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "egg"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "zested"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "ground nutmeg"
+      },
+      {
+        "quantity": 16,
+        "unit": "",
+        "name": "dried cannelloni tubes"
+      },
+      {
+        "quantity": 125,
+        "unit": "g",
+        "name": "mozzarella",
+        "note": "drained and torn"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 190°C (fan 170°C). Heat the oil in a saucepan over medium heat and cook the onion for 6 minutes until soft. Add the garlic for 1 minute, then the passata, oregano and half the salt. Simmer for 10 minutes.",
+      "Put the spinach in a colander and pour over a kettle of boiling water to wilt it. Cool slightly, then squeeze out as much water as you can and chop finely.",
+      "In a mixing bowl, mix the spinach, ricotta, most of the hard cheese, the egg, lemon zest, nutmeg and remaining salt.",
+      "Spread a third of the tomato sauce over the base of a baking dish. Spoon or pipe the filling into the cannelloni tubes and lay them in a single layer on the sauce. Pour over the remaining sauce, making sure the pasta is covered.",
+      "Top with the mozzarella and the rest of the hard cheese. Bake for 35–40 minutes, until the pasta is tender when pierced with a knife, the sauce is bubbling and the filling is piping hot in the centre.",
+      "To batch cook, assemble, cool, cover and freeze. Defrost overnight in the fridge and bake until piping hot throughout."
+    ]
+  },
+  {
+    "slug": "gnocchi-tomato-mozzarella",
+    "title": "Gnocchi with tomato and mozzarella",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "kg",
+        "name": "fresh potato gnocchi"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "baby spinach"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "mozzarella",
+        "note": "drained and torn"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "vegetarian hard cheese",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh basil",
+        "note": "leaves torn",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large ovenproof frying pan over medium heat. Cook the onion for 6 minutes until soft, then add the garlic for 1 minute.",
+      "Add the tomatoes, oregano, sugar and salt and simmer for 10 minutes until thickened.",
+      "Meanwhile, cook the gnocchi in a large pot of boiling water according to the packet instructions, until they float to the surface. Drain.",
+      "Heat the grill to high. Stir the gnocchi and spinach into the sauce until the spinach wilts. Scatter over the mozzarella and hard cheese.",
+      "Grill for 4–5 minutes until the cheese is melted and golden in spots. Scatter with basil, if using, and serve."
+    ]
+  },
+  {
+    "slug": "penne-arrabbiata",
+    "title": "Penne arrabbiata",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Dairy-free",
+      "Pasta",
+      "Budget"
+    ],
+    "prepTime": 5,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 4,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried chilli flakes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "dried penne"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh parsley or basil",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Warm the oil in a large frying pan over medium-low heat. Add the garlic and chilli and cook gently for 2 minutes until the garlic is fragrant and just turning golden.",
+      "Stir in the tomato purée for 1 minute, then add the tomatoes, sugar and salt. Simmer for 15–20 minutes, stirring now and then, until thick and rich. Use less chilli for a milder sauce.",
+      "Meanwhile, cook the penne in a large pot of salted boiling water according to the packet instructions. Scoop out a mugful of the cooking water, then drain.",
+      "Toss the penne into the sauce with a splash of the cooking water until glossy and well coated.",
+      "Serve scattered with the herbs, if using."
+    ]
+  },
+  {
+    "slug": "spaghetti-carbonara",
+    "title": "Spaghetti carbonara",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "tags": [
+      "Pork",
+      "Pasta",
+      "Eggs"
+    ],
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "dried spaghetti"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "smoked pancetta cubes"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "large eggs"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "large egg yolks"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "Parmesan or Pecorino",
+        "note": "finely grated, plus extra to serve"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "black pepper",
+        "note": "freshly ground"
+      }
+    ],
+    "steps": [
+      "Bring a large pot of salted water to the boil and cook the spaghetti according to the packet instructions.",
+      "Meanwhile, heat the oil in a large frying pan over medium heat and fry the pancetta for 6–8 minutes until crisp, golden and cooked through. Take the pan off the heat.",
+      "In a mixing bowl, whisk the eggs, egg yolks, cheese and pepper together until smooth.",
+      "Scoop out a mugful of the pasta water, then drain the spaghetti and tip it straight into the pancetta pan, still off the heat. Toss well so the pasta is coated in the fat and cools slightly for about 1 minute.",
+      "Pour in the egg mixture with a splash of pasta water and toss quickly and continuously. The heat of the pasta cooks the eggs: keep tossing for 2–3 minutes, adding more pasta water as needed, until the sauce has thickened and is glossy and creamy, not runny. If it stays thin, set the pan over a very low heat for 30 seconds at a time, tossing constantly so it does not scramble. For anyone who needs to avoid lightly cooked eggs, use pasteurised eggs.",
+      "Serve straight away with extra cheese and black pepper."
+    ]
+  },
+  {
+    "slug": "red-lentil-dal",
+    "title": "Red lentil dal",
+    "category": "Dinner",
+    "cuisine": "Indian",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget",
+      "Batch cooking",
+      "Rice"
+    ],
+    "prepTime": 10,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "cumin seeds"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "mild chilli powder"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "dried red lentils",
+        "note": "rinsed"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 900,
+        "unit": "ml",
+        "name": "water"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "canned coconut milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "baby spinach"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "",
+        "name": "lemon",
+        "note": "juiced"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large saucepan over medium heat. Add the cumin seeds and, when they sizzle, add the onion and cook for 8 minutes until soft and golden.",
+      "Stir in the garlic, ginger, turmeric, coriander and chilli powder for 1 minute.",
+      "Add the lentils, tomatoes and water. Bring to the boil, then simmer, partly covered, for 20–25 minutes, stirring often, until the lentils have broken down and the dal is thick. Add a splash more water if it catches.",
+      "Meanwhile, rinse the rice and cook in a separate saucepan according to the packet instructions.",
+      "Stir the coconut milk, salt and spinach into the dal and cook for 2 minutes until the spinach wilts. Add the lemon juice and serve with the rice and coriander.",
+      "Dal keeps in the fridge for 3 days or freezes well; loosen with water when reheating until steaming hot. Cool leftover rice within 1 hour, refrigerate and eat within 24 hours."
+    ]
+  },
+  {
+    "slug": "beef-bibimbap-bowls",
+    "title": "Beef bibimbap bowls",
+    "category": "Dinner",
+    "cuisine": "Korean",
+    "tags": [
+      "Beef",
+      "Rice",
+      "Eggs",
+      "Dairy-free"
+    ],
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "short-grain or sushi rice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "soy sauce"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "soft light brown sugar"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "toasted sesame oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "vegetable oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "lean beef mince"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "carrots",
+        "note": "cut into thin batons"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "courgette",
+        "note": "cut into thin batons"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "spinach"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "beansprouts"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "gochujang",
+        "note": "loosened with a little water"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sesame seeds",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Rinse the rice and cook in a saucepan according to the packet instructions; keep covered and warm. Mix the soy sauce, sugar, 1 tsp of the sesame oil and the garlic in a small bowl.",
+      "Heat 1 tbsp of the vegetable oil in a large frying pan over high heat. Fry the beef for 6–8 minutes, breaking it up, until browned with no pink remaining (71°C). Add the soy mixture and cook for 1 minute until sticky. Tip into a bowl and keep warm.",
+      "Wipe the pan, add another 1 tbsp oil and stir-fry the carrots and courgette separately for 2–3 minutes each until just tender. Wilt the spinach and beansprouts in the pan for 1–2 minutes, then toss with the salt and remaining sesame oil.",
+      "Heat the remaining oil and fry the eggs until the whites are fully set and the edges are crisp.",
+      "Divide the rice between four bowls. Arrange the beef and vegetables in sections on top, add a fried egg to each and serve with the gochujang and sesame seeds for everyone to mix in."
+    ]
+  },
+  {
+    "slug": "moussaka",
+    "title": "Moussaka",
+    "category": "Dinner",
+    "cuisine": "Greek",
+    "tags": [
+      "Lamb",
+      "Potatoes",
+      "Batch cooking"
+    ],
+    "prepTime": 30,
+    "cookTime": 75,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "large aubergines",
+        "note": "sliced"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "floury potatoes",
+        "note": "peeled and thinly sliced"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "olive oil",
+        "note": "divided"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "lean lamb mince"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tomato purée"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "water"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt",
+        "note": "divided"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 500,
+        "unit": "ml",
+        "name": "whole milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "ground nutmeg"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "egg",
+        "note": "beaten"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "Parmesan",
+        "note": "finely grated"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Cut the aubergines into slices about 1 cm thick. Brush the aubergine and potato slices with 3 tbsp of the oil, spread over two baking trays and roast for 20–25 minutes until tender.",
+      "Meanwhile, heat the remaining oil in a large frying pan over medium-high heat. Brown the lamb for 6–8 minutes, breaking it up, then add the onion and cook for 5 minutes. Add the garlic, cinnamon and oregano for 1 minute. Wash your hands and board after handling the raw mince.",
+      "Stir in the tomato purée, tomatoes, water and half the salt. Simmer for 20 minutes until thick, and check the mince is cooked through with no pink remaining (71°C).",
+      "Make the topping: melt the butter in a saucepan, stir in the flour for 1 minute, then gradually whisk in the milk. Simmer, stirring, for 4 minutes until thick. Off the heat, season with the nutmeg and remaining salt, cool for 5 minutes, then whisk in the egg and half the cheese.",
+      "Turn the oven down to 180°C (fan 160°C). Layer the potatoes in a baking dish, then half the aubergine, all the lamb sauce, and the remaining aubergine. Pour over the topping and scatter with the rest of the cheese.",
+      "Bake for 40–45 minutes, until deep golden and the topping is set in the centre. Rest for 15 minutes before cutting. Leftovers keep for 3 days in the fridge or freeze in portions; reheat until piping hot."
+    ]
+  },
+  {
+    "slug": "vegetable-chow-mein",
+    "title": "Vegetable chow mein",
+    "category": "Dinner",
+    "cuisine": "Chinese",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Dairy-free",
+      "Noodles",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "dried egg-free wheat noodles"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "soy sauce"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "rice vinegar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "cornflour"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "water"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "carrot",
+        "note": "cut into thin batons"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "mushrooms",
+        "note": "sliced"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "frozen edamame beans"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "beansprouts"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "toasted sesame oil"
+      }
+    ],
+    "steps": [
+      "Cook the noodles in a saucepan according to the packet instructions, then drain, rinse under cold water and toss with the sesame oil so they don't stick.",
+      "Mix the soy sauce, vinegar, sugar, cornflour and water in a small bowl to make the sauce.",
+      "Heat the vegetable oil in a wok or large frying pan over high heat. Stir-fry the pepper, carrot and mushrooms for 3 minutes, then add the edamame, garlic and ginger for 2 minutes until the edamame are hot through.",
+      "Add the noodles, beansprouts and spring onions, pour over the sauce and toss for 2–3 minutes until everything is coated, glossy and piping hot. Serve straight away."
+    ]
+  },
+  {
+    "slug": "pork-schnitzel",
+    "title": "Pork schnitzel",
+    "category": "Dinner",
+    "cuisine": "International",
+    "tags": [
+      "Pork",
+      "Potatoes",
+      "Kid friendly"
+    ],
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 750,
+        "unit": "g",
+        "name": "new potatoes",
+        "note": "halved if large"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "boneless pork loin steaks",
+        "note": "fat trimmed"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "panko breadcrumbs"
+      },
+      {
+        "quantity": 6,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "cut into wedges"
+      }
+    ],
+    "steps": [
+      "Boil the potatoes in a large pot of salted water for 15–18 minutes until tender. Drain and toss with the butter and parsley; keep warm.",
+      "Meanwhile, lay each pork steak between two sheets of baking paper and bash with a rolling pin until about 5 mm thick.",
+      "Set out three shallow dishes: the flour mixed with the salt and pepper, the eggs beaten, and the breadcrumbs. Coat each steak in flour, then egg, then breadcrumbs, pressing to stick. Wash your hands and board after handling the raw pork.",
+      "Heat half the oil in a large frying pan over medium-high heat. Fry two schnitzels for 2–3 minutes per side, until deep golden and cooked through (at least 63°C in the centre). Drain on kitchen paper and repeat with the remaining oil and pork.",
+      "Rest the schnitzels for 3 minutes, then serve with the potatoes and lemon wedges for squeezing."
+    ]
+  },
+  {
+    "slug": "jacket-potatoes-beans-cheese",
+    "title": "Jacket potatoes with beans and cheese",
+    "category": "Dinner",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Potatoes",
+      "Budget",
+      "Kid friendly"
+    ],
+    "prepTime": 5,
+    "cookTime": 75,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "large baking potatoes",
+        "note": "scrubbed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 820,
+        "unit": "g",
+        "name": "canned gluten-free baked beans in tomato sauce"
+      },
+      {
+        "quantity": 120,
+        "unit": "g",
+        "name": "mature Cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 20,
+        "unit": "g",
+        "name": "butter",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Prick the potatoes all over with a fork, rub with the oil and salt, and put them straight onto the oven shelf with a baking tray on the shelf below.",
+      "Bake for 1 hour–1 hour 15 minutes, until the skins are crisp and a knife slides easily into the centre.",
+      "Towards the end, warm the beans in a saucepan over medium heat for 4–5 minutes, stirring, until bubbling and hot through.",
+      "Cut a cross in the top of each potato and squeeze the base to open it up. Add a little butter, if using, then spoon over the beans and top with the cheese.",
+      "Leftover baked potatoes can be cooled, refrigerated and reheated until piping hot within 2 days."
+    ]
+  },
+  {
+    "slug": "baked-falafel-tahini",
+    "title": "Baked falafel with tahini sauce",
+    "category": "Dinner",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget"
+    ],
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 480,
+        "unit": "g",
+        "name": "canned chickpeas",
+        "note": "drained, rinsed and patted dry"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "small onion",
+        "note": "roughly chopped"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "divided"
+      },
+      {
+        "quantity": 20,
+        "unit": "g",
+        "name": "fresh parsley"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "fresh coriander"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "dried chilli flakes"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "gram flour"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "gluten-free baking powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "salt",
+        "note": "divided"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "quinoa",
+        "note": "rinsed"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tahini"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "juiced"
+      },
+      {
+        "quantity": 5,
+        "unit": "tbsp",
+        "name": "cold water"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "cucumber",
+        "note": "diced"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "cherry tomatoes",
+        "note": "quartered"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C) and brush a baking tray with 1 tbsp of the oil.",
+      "Put the chickpeas, onion, two of the garlic cloves, the herbs, cumin, ground coriander, chilli, gram flour, baking powder and most of the salt in a food processor. Pulse until finely chopped and the mixture holds together when pressed, but is not a smooth paste.",
+      "Shape into 16 small patties, place on the tray and brush the tops with the remaining oil. Bake for 20–25 minutes, turning halfway, until golden and crisp on both sides.",
+      "Meanwhile, cook the quinoa in a saucepan of boiling water for 12–15 minutes until tender, then drain.",
+      "For the sauce, crush the remaining garlic clove and whisk it with the tahini, half the lemon juice, a pinch of salt and the cold water in a small bowl. It will thicken at first, then loosen into a smooth, pourable sauce.",
+      "Toss the cucumber and tomatoes with the remaining lemon juice and salt. Serve the falafel on the quinoa with the salad and drizzle with tahini sauce."
+    ]
+  },
+  {
+    "slug": "sesame-salmon-greens-rice",
+    "title": "Sesame salmon with greens and rice",
+    "category": "Dinner",
+    "cuisine": "Japanese",
+    "tags": [
+      "Fish",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)",
+        "note": "divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "toasted sesame oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "clove",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 10,
+        "unit": "g",
+        "name": "fresh ginger",
+        "note": "grated"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "skinless salmon fillets"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sesame seeds"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "vegetable oil"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "tenderstem broccoli"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "pak choi",
+        "note": "quartered"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Rinse the rice and cook in a saucepan according to the packet instructions.",
+      "Mix 2 tbsp of the tamari with the honey, sesame oil, garlic and ginger. Put the salmon in a lined baking dish, spoon over the glaze and sprinkle with the sesame seeds.",
+      "Bake for 12–15 minutes, until the salmon is opaque and flakes easily (63°C in the thickest part).",
+      "Meanwhile, heat the vegetable oil in a large frying pan or wok over medium-high heat. Stir-fry the broccoli for 3 minutes, add the pak choi and a splash of water, and cook for 2 minutes more until just tender. Toss with the remaining tamari.",
+      "Serve the salmon on the rice with the greens, spooning over any juices from the dish, and scatter with spring onions, if using."
+    ]
+  }
+]

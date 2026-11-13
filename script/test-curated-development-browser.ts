@@ -4,6 +4,7 @@ import { curatedDevelopmentIds } from "../server/seeds/curated-development-catal
 import type { Recipe } from "../client/src/lib/storage";
 import { groupIngredients } from "../client/src/lib/ingredient-groups";
 import { nutrientKeys, nutritionAmounts, nutritionBasis, recipeNutritionSchema } from "../shared/recipe-nutrition";
+import { usableNutrition } from "../shared/recipe-nutrition";
 import { dishPriceTier, mockRecipePrice } from "../client/src/lib/recipe-price";
 
 async function main() {
@@ -47,6 +48,10 @@ async function main() {
   };
   const checkNutrition = async (recipe: Recipe, context: string) => {
     await wait(el(`nutrition-${context}-${recipe.id}`));
+    if (!usableNutrition(recipe.nutrition)) { // placeholder values are never shown as numbers
+      assert.doesNotMatch(await evaluate(`${el(`nutrition-${context}-${recipe.id}`)}.textContent`), /\d+(?:\.\d+)?\s*(?:kcal|g)\b/);
+      return;
+    }
     const basis = nutritionBasis(recipe.servings);
     assert.match(await evaluate(`${el(`nutrition-${context}-${recipe.id}`)}.textContent`),
       basis ? new RegExp(`AI nutrition estimate.*per ${basis.unit}`) : /AI nutrition estimate.*whole recipe/);
@@ -79,7 +84,7 @@ async function main() {
     await wait(el(`meals-catalog-facts-${recipes[0].id}`));
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "false");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "false");
     assert.equal(await evaluate(`Boolean(${el(`nutrition-catalog-${recipes[0].id}`)})`), false);
     for (const recipe of recipes) await checkPrice(recipe, "catalog");
     await evaluate(`${el("nutrition-details-toggle")}.click()`);
@@ -118,26 +123,30 @@ async function main() {
       await navigate(`${base}/recipe/${encodeURIComponent(recipe.id)}`);
       await wait(`${el("text-recipe-title")}?.textContent.trim()===${JSON.stringify(recipe.title)}`);
       await wait(el("text-tools"));
-      await checkPrice(recipe, "detail");
-      await checkNutrition(recipe, "detail");
-      assert.equal(await evaluate(`${el("link-back-to-planner")}.getAttribute('href')`), "/meals");
+      // Cooking view: one back control, no dish price, mock nutrition never shown as numbers.
+      assert.equal(await evaluate(`${el("link-back")}.getAttribute('href')`), "/recipes");
+      assert.equal(await evaluate(`Boolean(${el("link-back-to-planner")})`), false);
+      assert.equal(await evaluate(`Boolean(document.querySelector('[data-testid^="price-"]'))`), false);
+      assert.equal(await evaluate(`Boolean(${el("nutrition-unavailable")})`), !usableNutrition(recipe.nutrition));
+      assert.equal(await evaluate(`Boolean(${el("nutrition-panel")})`), Boolean(usableNutrition(recipe.nutrition)));
+      assert.equal(await evaluate(`Boolean(${el("button-add-to-plan")})`), true);
       assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));
-      assert.ok(await evaluate(`Boolean(${el("recipe-credit-editor")})`));
       assert.match(await evaluate(`${el("text-prep-time")}.textContent`), new RegExp(`\\b${recipe.prepTime}\\b`));
       assert.ok((await evaluate(`${el("text-servings")}.textContent`)).includes(recipe.servings!));
       assert.doesNotMatch(await evaluate(`${el("text-tools")}.textContent`), /not specified/);
       assert.equal(await evaluate(`Boolean(${el("text-development-estimates")})`), Boolean(recipe.metadataEstimated));
       assert.equal(await evaluate(`Boolean(${el("development-read-only")})`), true);
-      for (const id of ["input-prep-time", "input-cooking-time", "button-save-times", "button-delete-recipe"]) {
-        assert.equal(await evaluate(`${el(id)}.disabled`), true);
-      }
-      if (recipe.id === recipes[0].id || recipe.id === recipes.find(r => r.metadataEstimated)!.id) {
-        await evaluate(`document.querySelector('details').open=true;${el("input-prep-time")}.value="";${el("button-save-times")}.click()`);
-        await navigate(`${base}/recipe/${encodeURIComponent(recipe.id)}`);
-        await wait(`${el("text-recipe-title")}?.textContent.trim()===${JSON.stringify(recipe.title)}`);
-        assert.equal(await evaluate(`${el("input-prep-time")}.value`), String(recipe.prepTime));
+      assert.equal(await evaluate("document.body.textContent.includes('Time unspecified')"), false);
+      // Read-only recipes expose no timing or delete editing; credit stays editable from the overflow menu.
+      await evaluate(`${el("button-recipe-menu")}.click()`);
+      await wait(el("menu-edit-credit"));
+      assert.equal(await evaluate(`Boolean(${el("menu-edit-times")}) || Boolean(${el("menu-delete-recipe")})`), false);
+      await evaluate(`${el("menu-edit-credit")}.click()`);
+      await wait(el("recipe-credit-editor"));
+      await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+      if (recipe.id === recipes[0].id) {
         const reloaded: Response = await fetch(`${base}/api/recipes/${encodeURIComponent(recipe.id)}`);
-        assert.deepEqual(await reloaded.json(), recipe, "A read-only edit attempt must not change the source or displayed estimate.");
+        assert.deepEqual(await reloaded.json(), recipe, "Viewing a read-only recipe must not change its source or estimates.");
       }
     }
     await navigate(`${base}/meals`);
@@ -156,11 +165,11 @@ async function main() {
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
     await navigate(`${base}/meals`);
     await wait(el("nutrition-details-toggle"));
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "true");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "true");
     await evaluate(`${el("nutrition-details-toggle")}.click()`);
     await navigate(`${base}/meals`);
     await wait(el(`price-catalog-${recipes[0].id}`));
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "false");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "false");
     assert.equal(await evaluate(`Boolean(${el(`nutrition-catalog-${recipes[0].id}`)})`), false);
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
     await evaluate(`${el("dev-nav-mobile-trigger")}.click()`);

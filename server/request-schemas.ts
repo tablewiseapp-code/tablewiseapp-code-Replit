@@ -37,6 +37,10 @@ export const recipeInput = recipeBase.extend({
 }).transform(value => value.creditKind ? {
   ...value, ...recipeCreditInput.parse({ creditKind: value.creditKind, creditName: value.creditName }),
 } : value);
+// Customer edits of an AI draft: content only. Tags, provenance and status are server-controlled.
+export const draftEdit = recipeBase.pick({ title: true, ingredients: true, steps: true, prepTime: true, cookTime: true, servings: true })
+  .extend({ description: z.string().trim().max(400).optional() }).partial().strict()
+  .refine(value => Object.keys(value).length > 0);
 // Attribution is changed atomically through its bounded, separate endpoint.
 export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0);
 export const recipeId = z.string().min(1).max(150).regex(/^[a-zA-Z0-9:_-]+$/);
@@ -52,3 +56,20 @@ export const audioInput = z.object({
   language: z.enum(["en", "ru", "he"]).optional(),
   verifyText: z.boolean().optional(),
 }).strict().refine(value => Buffer.byteLength(value.audio, "base64") <= maxAudioBytes);
+
+// My Cooking Experience. Photos arrive already resized by the browser, as canonical base64 JPEG.
+export const cookingSessionId = z.string().uuid();
+export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
+export const cookingSessionPatch = z.object({
+  rating: z.number().int().min(1).max(5).nullable(),
+  notes: z.string().max(4000).transform(value => value.trim() ? value : null).nullable(),
+}).partial().strict().refine(value => Object.keys(value).length > 0);
+export const maxCookingPhotoBytes = 1_500_000;
+export const maxCookingThumbnailBytes = 200_000;
+const jpeg = (maxBytes: number) => z.string().min(4).max(Math.ceil(maxBytes / 3) * 4)
+  .refine(value => value.length % 4 === 0 && Buffer.from(value, "base64").toString("base64") === value)
+  .transform(value => Buffer.from(value, "base64"))
+  .refine(bytes => bytes.length <= maxBytes && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff);
+export const cookingPhotoInput = z.object({
+  image: jpeg(maxCookingPhotoBytes), thumbnail: jpeg(maxCookingThumbnailBytes),
+}).strict();

@@ -35,21 +35,24 @@ export function useRecipeTime() {
   return context;
 }
 
-export function RecipeTimeToggle() {
+/** Display preferences (not filters): sits directly above the recipe results. */
+export function RecipeDisplayToolbar() {
   const { mode, setMode } = useRecipeTime();
   const { t } = useMvpCopy();
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3">
-    <div role="group" aria-label={t("timeDisplay")} className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-muted-foreground">{t("timeDisplay")}:</span>
-      {(["preparation", "total"] as const).map(value => (
-        <button key={value} type="button" onClick={() => setMode(value)} aria-pressed={mode === value}
-          data-testid={`meals-time-${value}`}
-          className={`min-h-11 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${mode === value ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
-          {t(value)}
-        </button>
-      ))}
-    </div>
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2" data-testid="recipe-display-toolbar">
+      <div role="group" aria-label={t("timeDisplay")} className="inline-flex items-center gap-1.5">
+        <Clock3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <div className="inline-flex rounded-full border border-[#d9dfd4] bg-white p-0.5">
+          {(["preparation", "total"] as const).map(value => (
+            <button key={value} type="button" onClick={() => setMode(value)} aria-pressed={mode === value}
+              data-testid={`meals-time-${value}`}
+              className={`min-h-10 rounded-full px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${mode === value ? "bg-[#42624e] text-white" : "text-[#52665a] hover:bg-[#f2f6ef]"}`}>
+              {t(value === "preparation" ? "prepShort" : "totalShort")}
+            </button>
+          ))}
+        </div>
+      </div>
       <NutritionDetailsToggle />
     </div>
   );
@@ -67,7 +70,8 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
   const { t } = useMvpCopy();
   const minutes = recipeStageMinutes(recipe, mode);
   const portions = recipe.servings?.trim();
-  const nutritionBlocks = useNutritionBlocks({ recipe, compact, context });
+  const nutritionBlocks = useNutritionBlocks({ recipe, compact, context })
+    .filter(block => context !== "catalog" || block.id !== "nutrition-status");
   const blocks: RecipeFactBlock[] = [
     { id: "portions", label: t("portions", { count: portions ?? "?" }), content:
       <div className="flex items-start gap-1"><Users className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
@@ -82,7 +86,8 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
         ? recipe.equipment.map(tool => t(tool)).join(", ") : t("toolsUnknown")}</div></div> },
     ...(mode === "total" && recipe.prepTime != null ? [{ id: "preparation" as const, label: t("preparation"), content:
       <div>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</div> }] : []),
-    { id: "credit", label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> },
+    // catalog cards show the credit in their top-right corner instead
+    ...(context === "catalog" ? [] : [{ id: "credit" as const, label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> }]),
     ...(showNutrition ? nutritionBlocks : []),
   ];
   return (

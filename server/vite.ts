@@ -20,10 +20,9 @@ export async function setupVite(server: Server, app: Express) {
     configFile: false,
     customLogger: {
       ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
-      },
+      // Log only: the runtime-error plugin reports browser errors here, and exiting would take the
+      // whole dev server (and every page's API) down because of one broken tab.
+      error: (msg, options) => viteLogger.error(msg, options),
     },
     server: serverOptions,
     appType: "custom",

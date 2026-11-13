@@ -5,7 +5,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { useRecipeCatalog, useWeekPlan } from "@/hooks/use-week-workspace";
 import { addDays, assignDinner, canConfirm, confirmPlan, parseCalendarDate, plannerURL, plannerRecipeURL, replaceDinner, selectedWeek, toggleDinner, weekDays } from "@/lib/week-plan";
-import type { Recipe } from "@/lib/storage";
+import { createRecipe, type Recipe } from "@/lib/storage";
+import { queryClient } from "@/lib/queryClient";
+import { GenerateRecipe } from "@/components/generate-recipe";
+import type { NewRecipe } from "@/lib/recipe-generation";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recipeStageMinutes, type RecipeTimeMode } from "@/lib/recipe-time";
@@ -90,6 +93,14 @@ function PlannerForWeek({ week }: { week: string }) {
   const updatePlan = (next: typeof plan) => {
     if (!workspace.issue) workspace.save(next);
   };
+  const acceptGenerated = async (data: NewRecipe) => {
+    // Normal recipe persistence: the saved recipe is an ordinary catalog recipe from here on.
+    const saved = await createRecipe(data);
+    await queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+    if (plan.selectedRecipeIds.length < 3 && !workspace.issue) updatePlan(toggleDinner(plan, saved.id));
+    return saved;
+  };
+  const generatorProps = { filters, timeMode, onAccept: acceptGenerated, disabled: !!workspace.issue || catalog.isFetching };
   const jumpToWeek = (date: string) => setLocation(plannerURL(date));
   const resetWeek = () => {
     if (window.confirm(t("resetConfirm"))) workspace.reset();
@@ -200,8 +211,8 @@ function PlannerForWeek({ week }: { week: string }) {
                     {catalog.isFetching || catalog.isPending ? t("loading") : catalog.isError ? t("catalogError") : t("noRecipes")}
                   </div>
                 ) : matchingRecipes.length === 0 ? (
-                  <p role="status" data-testid="mvp-no-matches" className="rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-5 text-sm leading-6 text-[#68756a]">{t("noFilterMatches")}</p>
-                ) : <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="mt-3"><GenerateRecipe {...generatorProps} variant="empty" /></div>
+                ) : <><GenerateRecipe {...generatorProps} variant="button" /><div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {matchingRecipes.map(recipe => {
                     const selected = plan.selectedRecipeIds.includes(recipe.id);
                     const canChoose = !selected && plan.selectedRecipeIds.length < 3 &&
@@ -225,7 +236,7 @@ function PlannerForWeek({ week }: { week: string }) {
                       </article>
                     );
                   })}
-                </div>}
+                </div></>}
               </section>
 
               <aside className="rounded-2xl border border-[#d9dfd4] bg-[#fbfbf7] p-4 sm:p-5 lg:sticky lg:top-4">

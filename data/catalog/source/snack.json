@@ -1,0 +1,534 @@
+[
+  {
+    "slug": "hummus-vegetable-sticks",
+    "title": "Hummus with vegetable sticks",
+    "category": "Snack",
+    "cuisine": "Middle Eastern",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly", "Budget"],
+    "prepTime": 15,
+    "cookTime": 0,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 240, "unit": "g", "name": "canned chickpeas", "note": "drained and rinsed" },
+      { "quantity": 3, "unit": "tbsp", "name": "tahini" },
+      { "quantity": 1, "unit": "", "name": "lemon", "note": "juiced" },
+      { "quantity": 1, "unit": "clove", "name": "garlic", "note": "peeled" },
+      { "quantity": 3, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 0.5, "unit": "tsp", "name": "ground cumin" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" },
+      { "quantity": 3, "unit": "tbsp", "name": "cold water" },
+      { "quantity": 3, "unit": "", "name": "carrots", "note": "peeled" },
+      { "quantity": 1, "unit": "", "name": "cucumber" },
+      { "quantity": 1, "unit": "", "name": "red pepper", "note": "deseeded" },
+      { "quantity": 2, "unit": "", "name": "celery sticks" },
+      { "quantity": 1, "unit": "pinch", "name": "paprika", "optional": true }
+    ],
+    "steps": [
+      "Put the chickpeas, tahini, lemon juice, garlic, ground cumin and salt into a food processor or blender.",
+      "Blend for a minute, then scrape down the sides. With the motor running, add the olive oil and cold water a spoonful at a time until the hummus is smooth and creamy.",
+      "Taste and add a little more lemon juice or salt if needed, then spoon into a serving bowl and dust with paprika, if using.",
+      "Using a sharp knife, cut the carrots, cucumber, red pepper and celery into sticks roughly the length of your finger.",
+      "Arrange the vegetable sticks around the hummus and serve. Keep leftover hummus covered in the fridge for up to 3 days."
+    ]
+  },
+  {
+    "slug": "guacamole-baked-tortilla-chips",
+    "title": "Guacamole with baked tortilla chips",
+    "category": "Snack",
+    "cuisine": "Mexican",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "prepTime": 15,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 6, "unit": "", "name": "corn tortillas" },
+      { "quantity": 1, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" },
+      { "quantity": 3, "unit": "", "name": "ripe avocados" },
+      { "quantity": 1, "unit": "", "name": "lime", "note": "juiced" },
+      { "quantity": 0.25, "unit": "", "name": "red onion", "note": "very finely chopped" },
+      { "quantity": 1, "unit": "", "name": "tomato", "note": "deseeded and diced" },
+      { "quantity": 2, "unit": "tbsp", "name": "fresh coriander", "note": "chopped" }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C). Brush the corn tortillas lightly with the olive oil, stack them and cut each into 8 wedges with a sharp knife.",
+      "Spread the wedges in a single layer on a large baking tray and sprinkle with half the salt.",
+      "Bake for 8–10 minutes, turning once, until crisp and lightly golden at the edges. They will crisp up further as they cool.",
+      "Meanwhile, halve and stone the avocados, scoop the flesh into a mixing bowl and mash with a fork, leaving a little texture.",
+      "Stir in the lime juice, red onion, tomato, fresh coriander and the remaining salt. Taste and add more lime if needed.",
+      "Serve the guacamole straight away with the cooled tortilla chips. If making ahead, press cling film onto the surface of the guacamole to stop it browning."
+    ]
+  },
+  {
+    "slug": "crispy-roasted-chickpeas",
+    "title": "Crispy roasted chickpeas",
+    "category": "Snack",
+    "cuisine": "Mediterranean",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Budget"],
+    "prepTime": 10,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 480, "unit": "g", "name": "canned chickpeas", "note": "drained and rinsed" },
+      { "quantity": 1, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 1, "unit": "tsp", "name": "smoked paprika" },
+      { "quantity": 0.5, "unit": "tsp", "name": "ground cumin" },
+      { "quantity": 0.5, "unit": "tsp", "name": "garlic granules" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Tip the chickpeas onto a clean tea towel and rub them dry, removing any loose skins.",
+      "Spread the chickpeas on a large baking tray, drizzle with the olive oil and shake the tray to coat them evenly.",
+      "Roast for 25–30 minutes, shaking the tray halfway through, until deep golden and crunchy all the way through.",
+      "Meanwhile, mix the smoked paprika, cumin, garlic granules and salt in a small bowl.",
+      "Toss the hot chickpeas with the spice mix on the tray and leave to cool completely; they crisp up more as they cool.",
+      "Whole crunchy chickpeas are a choking hazard for children under five, so offer this snack to older children and adults only. Store in an open container and eat within 2 days, as they soften once sealed."
+    ]
+  },
+  {
+    "slug": "date-nut-energy-balls",
+    "title": "Date and nut energy balls",
+    "category": "Snack",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free"],
+    "prepTime": 20,
+    "cookTime": 0,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 200, "unit": "g", "name": "pitted Medjool dates" },
+      { "quantity": 100, "unit": "g", "name": "unsalted cashews" },
+      { "quantity": 50, "unit": "g", "name": "whole almonds" },
+      { "quantity": 2, "unit": "tbsp", "name": "cocoa powder" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" },
+      { "quantity": 3, "unit": "tbsp", "name": "desiccated coconut" }
+    ],
+    "steps": [
+      "Put the cashews and almonds into a food processor and blitz until finely ground, with no large pieces left.",
+      "Add the dates, cocoa powder, vanilla extract and salt and blitz again until the mixture clumps together into a sticky dough. If it seems dry, add a teaspoon of water.",
+      "With damp hands, roll the mixture into 12 walnut-sized balls.",
+      "Tip the desiccated coconut onto a plate and roll each ball in it to coat.",
+      "Chill the balls on a plate in the fridge for at least 30 minutes to firm up.",
+      "Store in an airtight container in the fridge for up to a week. These contain nuts, so check for allergies before sharing."
+    ]
+  },
+  {
+    "slug": "stovetop-popcorn",
+    "title": "Stovetop popcorn",
+    "category": "Snack",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Budget"],
+    "prepTime": 2,
+    "cookTime": 5,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 2, "unit": "tbsp", "name": "sunflower oil" },
+      { "quantity": 80, "unit": "g", "name": "popcorn kernels" },
+      { "quantity": 0.5, "unit": "tsp", "name": "fine salt" }
+    ],
+    "steps": [
+      "Put the sunflower oil and three popcorn kernels into a large saucepan with a lid and set over medium-high heat.",
+      "When the test kernels pop, add the rest of the kernels, shake the pan to coat them in oil and cover with the lid.",
+      "Cook, shaking the pan every few seconds, until the popping slows to a gap of about two seconds between pops, around 2–3 minutes.",
+      "Take the pan off the heat and leave the lid on for 30 seconds in case of late pops, then tip the popcorn into a large bowl.",
+      "Sprinkle with the salt and toss well, discarding any unpopped kernels. Popcorn is a choking hazard for children under five, so don't give it to young children."
+    ]
+  },
+  {
+    "slug": "cheese-straws",
+    "title": "Cheese straws",
+    "category": "Snack",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Kid friendly", "Baking"],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 1, "unit": "tbsp", "name": "plain flour", "note": "for dusting" },
+      { "quantity": 1, "unit": "sheet", "name": "ready-rolled puff pastry" },
+      { "quantity": 1, "unit": "", "name": "egg", "note": "beaten" },
+      { "quantity": 75, "unit": "g", "name": "vegetarian mature cheddar", "note": "finely grated" },
+      { "quantity": 25, "unit": "g", "name": "vegetarian hard cheese", "note": "finely grated" },
+      { "quantity": 0.5, "unit": "tsp", "name": "paprika" }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C) and line a large baking tray with baking paper.",
+      "Unroll the puff pastry on a lightly floured surface and brush all over with beaten egg.",
+      "Mix the cheddar, hard cheese and paprika and scatter evenly over one half of the pastry. Fold the other half over the top and press down firmly with a rolling pin.",
+      "Brush the top with more egg, then use a sharp knife to cut the pastry into strips about 1 cm wide. Twist each strip a few times and lay on the baking tray.",
+      "Bake for 12–15 minutes until puffed, crisp and deep golden.",
+      "Cool on the tray for 5 minutes before serving. Keep leftovers in an airtight tin for up to 2 days."
+    ]
+  },
+  {
+    "slug": "trail-mix",
+    "title": "Homemade trail mix",
+    "category": "Snack",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Vegan", "Dairy-free"],
+    "prepTime": 5,
+    "cookTime": 5,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 100, "unit": "g", "name": "whole almonds" },
+      { "quantity": 75, "unit": "g", "name": "unsalted cashews" },
+      { "quantity": 50, "unit": "g", "name": "pumpkin seeds" },
+      { "quantity": 30, "unit": "g", "name": "sunflower seeds" },
+      { "quantity": 75, "unit": "g", "name": "raisins" },
+      { "quantity": 50, "unit": "g", "name": "dried cranberries" },
+      { "quantity": 50, "unit": "g", "name": "dairy-free dark chocolate chips" }
+    ],
+    "steps": [
+      "Put the almonds, cashews, pumpkin seeds and sunflower seeds into a dry large frying pan over medium heat.",
+      "Toast for 4–5 minutes, stirring often, until fragrant and lightly golden. Tip onto a plate and leave to cool completely.",
+      "In a mixing bowl, combine the cooled nuts and seeds with the raisins, dried cranberries and chocolate chips.",
+      "Divide into small portions or store in an airtight jar for up to 2 weeks.",
+      "Whole nuts are a choking hazard for children under five, so don't give this mix to young children, and check for nut allergies before sharing."
+    ]
+  },
+  {
+    "slug": "kale-chips",
+    "title": "Kale chips",
+    "category": "Snack",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly", "Budget"],
+    "prepTime": 10,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 200, "unit": "g", "name": "curly kale", "note": "tough stalks removed" },
+      { "quantity": 1, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 0.5, "unit": "tsp", "name": "smoked paprika" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" }
+    ],
+    "steps": [
+      "Heat the oven to 150°C (fan 130°C) and line two baking trays with baking paper.",
+      "Tear the kale into bite-sized pieces, wash and dry it very thoroughly; any water left on the leaves will stop them crisping.",
+      "Put the kale into a large mixing bowl, add the olive oil and massage it into the leaves with your hands until every piece is lightly coated.",
+      "Spread the kale in a single layer over the trays and sprinkle with the smoked paprika and salt.",
+      "Bake for 15–20 minutes, swapping the trays halfway, until crisp but still green. Check often near the end as they can scorch quickly.",
+      "Leave to cool on the trays for a few minutes to crisp up fully, then serve the same day."
+    ]
+  },
+  {
+    "slug": "sweet-potato-wedges",
+    "title": "Sweet potato wedges",
+    "category": "Snack",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Kid friendly", "Budget"],
+    "prepTime": 10,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 750, "unit": "g", "name": "sweet potatoes", "note": "scrubbed" },
+      { "quantity": 2, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 1, "unit": "tsp", "name": "smoked paprika" },
+      { "quantity": 0.5, "unit": "tsp", "name": "garlic granules" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" },
+      { "quantity": 0.25, "unit": "tsp", "name": "ground black pepper" }
+    ],
+    "steps": [
+      "Heat the oven to 220°C (fan 200°C).",
+      "Using a sharp knife, cut the sweet potatoes in half lengthways, then cut each half into 3 or 4 even wedges, leaving the skin on.",
+      "Put the wedges on a large baking tray, add the olive oil, smoked paprika, garlic granules, salt and pepper and toss with your hands to coat.",
+      "Spread the wedges out in a single layer, skin-side down, leaving space between them so they roast rather than steam.",
+      "Roast for 25–30 minutes, turning once, until tender in the middle and caramelised at the edges.",
+      "Leave to cool for a few minutes before serving, as the centres stay very hot."
+    ]
+  },
+  {
+    "slug": "tzatziki-pitta-chips",
+    "title": "Tzatziki with pitta chips",
+    "category": "Snack",
+    "cuisine": "Greek",
+    "tags": ["Vegetarian", "Kid friendly"],
+    "prepTime": 15,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 0.5, "unit": "", "name": "cucumber" },
+      { "quantity": 250, "unit": "g", "name": "Greek yogurt" },
+      { "quantity": 1, "unit": "clove", "name": "garlic", "note": "finely grated" },
+      { "quantity": 1, "unit": "tbsp", "name": "lemon juice" },
+      { "quantity": 1, "unit": "tbsp", "name": "fresh mint", "note": "finely chopped" },
+      { "quantity": 3, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" },
+      { "quantity": 4, "unit": "", "name": "pitta breads" },
+      { "quantity": 0.5, "unit": "tsp", "name": "dried oregano" }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C).",
+      "Coarsely grate the cucumber, then squeeze it firmly in a clean tea towel to remove as much liquid as possible.",
+      "In a mixing bowl, stir together the cucumber, Greek yogurt, garlic, lemon juice, mint, 1 tbsp of the olive oil and a pinch of the salt. Chill while you make the chips.",
+      "Use a sharp knife to cut each pitta into 8 triangles, splitting them open into single layers.",
+      "Spread the pitta pieces on a large baking tray, drizzle with the remaining olive oil and sprinkle with the oregano and remaining salt.",
+      "Bake for 8–10 minutes, turning once, until golden and crisp. Cool for a few minutes, then serve with the tzatziki."
+    ]
+  },
+  {
+    "slug": "devilled-eggs",
+    "title": "Devilled eggs",
+    "category": "Snack",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Gluten-free", "Dairy-free", "Kid friendly", "Eggs"],
+    "prepTime": 15,
+    "cookTime": 10,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 6, "unit": "", "name": "eggs" },
+      { "quantity": 3, "unit": "tbsp", "name": "mayonnaise" },
+      { "quantity": 1, "unit": "tsp", "name": "Dijon mustard" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" },
+      { "quantity": 1, "unit": "pinch", "name": "ground black pepper" },
+      { "quantity": 0.25, "unit": "tsp", "name": "paprika" },
+      { "quantity": 1, "unit": "tbsp", "name": "fresh chives", "note": "snipped", "optional": true }
+    ],
+    "steps": [
+      "Put the eggs into a saucepan, cover with cold water and bring to the boil. Simmer for 10 minutes so the yolks are fully set.",
+      "Drain the eggs and plunge them into a bowl of cold water for 5 minutes, then peel.",
+      "Using a sharp knife, halve the eggs lengthways and pop the yolks into a mixing bowl.",
+      "Mash the yolks with the mayonnaise, mustard, salt and pepper until smooth.",
+      "Spoon or pipe the yolk mixture back into the egg whites and dust with paprika. Scatter over the chives, if using.",
+      "Serve straight away or keep covered in the fridge and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "courgette-fritters",
+    "title": "Courgette fritters",
+    "category": "Snack",
+    "cuisine": "Mediterranean",
+    "tags": ["Vegetarian", "Kid friendly", "Eggs"],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 2, "unit": "", "name": "courgettes", "note": "coarsely grated" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" },
+      { "quantity": 2, "unit": "", "name": "eggs" },
+      { "quantity": 60, "unit": "g", "name": "plain flour" },
+      { "quantity": 75, "unit": "g", "name": "vegetarian feta", "note": "crumbled" },
+      { "quantity": 2, "unit": "", "name": "spring onions", "note": "thinly sliced" },
+      { "quantity": 1, "unit": "pinch", "name": "ground black pepper" },
+      { "quantity": 3, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 100, "unit": "g", "name": "Greek yogurt", "note": "to serve", "optional": true }
+    ],
+    "steps": [
+      "Toss the grated courgettes with the salt in a sieve and leave for 10 minutes, then squeeze out as much liquid as you can with your hands or a clean tea towel.",
+      "Beat the eggs in a mixing bowl, then stir in the courgette, flour, feta, spring onions and pepper to make a thick batter.",
+      "Heat 1 tbsp of the olive oil in a large frying pan over medium heat.",
+      "Drop heaped tablespoons of the mixture into the pan, flatten slightly and cook for 3 minutes on each side until golden and set all the way through, with no runny egg in the centre.",
+      "Transfer to a plate lined with kitchen paper and repeat with the rest of the mixture, adding more oil as needed.",
+      "Serve warm with Greek yogurt for dipping, if you like."
+    ]
+  },
+  {
+    "slug": "apple-peanut-butter-dip",
+    "title": "Apple slices with peanut butter dip",
+    "category": "Snack",
+    "cuisine": "American",
+    "tags": ["Vegetarian", "Gluten-free", "Kid friendly", "Budget"],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 4, "unit": "tbsp", "name": "smooth peanut butter" },
+      { "quantity": 150, "unit": "g", "name": "natural yogurt" },
+      { "quantity": 1, "unit": "tbsp", "name": "honey" },
+      { "quantity": 0.25, "unit": "tsp", "name": "ground cinnamon" },
+      { "quantity": 3, "unit": "", "name": "crisp apples" },
+      { "quantity": 1, "unit": "tbsp", "name": "lemon juice" }
+    ],
+    "steps": [
+      "In a mixing bowl, whisk the peanut butter, yogurt, honey and cinnamon together until smooth. Spoon into a small serving bowl.",
+      "Using a sharp knife, quarter and core the apples, then cut each quarter into thin slices.",
+      "Toss the apple slices with the lemon juice to stop them browning.",
+      "Arrange the slices around the dip and serve straight away.",
+      "Honey isn't suitable for babies under one year old, and this dip contains peanuts, so check for allergies before serving."
+    ]
+  },
+  {
+    "slug": "frozen-yogurt-bark",
+    "title": "Frozen yogurt berry bark",
+    "category": "Snack",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Gluten-free", "Kid friendly"],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 500, "unit": "g", "name": "Greek yogurt" },
+      { "quantity": 2, "unit": "tbsp", "name": "honey" },
+      { "quantity": 1, "unit": "tsp", "name": "vanilla extract" },
+      { "quantity": 200, "unit": "g", "name": "mixed fresh berries", "note": "larger berries halved" },
+      { "quantity": 1, "unit": "tbsp", "name": "pumpkin seeds", "optional": true }
+    ],
+    "steps": [
+      "Line a large baking tray with baking paper, making sure it fits flat in your freezer.",
+      "In a mixing bowl, stir together the Greek yogurt, honey and vanilla extract.",
+      "Spread the yogurt over the lined tray in an even layer about 1 cm thick.",
+      "Scatter the berries over the top, pressing them in lightly, then sprinkle with the pumpkin seeds, if using.",
+      "Freeze for at least 3 hours until completely firm, then break or cut into pieces with a knife.",
+      "Serve straight from the freezer, as it softens quickly. Store in a freezer bag for up to a month. Honey isn't suitable for babies under one year old."
+    ]
+  },
+  {
+    "slug": "spiced-roasted-nuts",
+    "title": "Spiced roasted nuts",
+    "category": "Snack",
+    "cuisine": "International",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free"],
+    "prepTime": 5,
+    "cookTime": 15,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 300, "unit": "g", "name": "mixed unsalted nuts" },
+      { "quantity": 1, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 1, "unit": "tbsp", "name": "maple syrup" },
+      { "quantity": 1, "unit": "tsp", "name": "smoked paprika" },
+      { "quantity": 0.5, "unit": "tsp", "name": "ground cumin" },
+      { "quantity": 1, "unit": "pinch", "name": "cayenne pepper" },
+      { "quantity": 0.5, "unit": "tsp", "name": "sea salt flakes" },
+      { "quantity": 1, "unit": "sprig", "name": "fresh rosemary", "note": "leaves finely chopped" }
+    ],
+    "steps": [
+      "Heat the oven to 170°C (fan 150°C) and line a baking tray with baking paper.",
+      "In a mixing bowl, stir together the olive oil, maple syrup, smoked paprika, cumin, cayenne and rosemary.",
+      "Add the nuts and toss until evenly coated, then spread them in a single layer on the tray.",
+      "Roast for 12–15 minutes, stirring halfway, until golden and fragrant. Watch closely towards the end as nuts burn quickly.",
+      "Sprinkle with the sea salt and leave to cool completely on the tray; they crisp as they cool.",
+      "Store in an airtight jar for up to a week. Whole nuts are a choking hazard for children under five, so don't give them to young children, and check for nut allergies."
+    ]
+  },
+  {
+    "slug": "edamame-sea-salt",
+    "title": "Edamame with sea salt and chilli",
+    "category": "Snack",
+    "cuisine": "Japanese",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free"],
+    "prepTime": 2,
+    "cookTime": 5,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 400, "unit": "g", "name": "frozen edamame beans in pods" },
+      { "quantity": 1, "unit": "tsp", "name": "toasted sesame oil" },
+      { "quantity": 1, "unit": "tsp", "name": "sea salt flakes" },
+      { "quantity": 0.5, "unit": "tsp", "name": "dried chilli flakes" },
+      { "quantity": 0.5, "unit": "", "name": "lime", "note": "cut into wedges", "optional": true }
+    ],
+    "steps": [
+      "Bring a large saucepan of water to the boil.",
+      "Add the frozen edamame and cook for 4–5 minutes until the beans inside the pods are tender.",
+      "Drain well in a colander and tip into a serving bowl.",
+      "Toss with the sesame oil, sea salt and chilli flakes while still hot.",
+      "Serve warm with lime wedges, if using, and an empty bowl for the pods. Squeeze the beans out of the pods with your teeth and discard the pods."
+    ]
+  },
+  {
+    "slug": "tomato-salsa",
+    "title": "Fresh tomato salsa",
+    "category": "Snack",
+    "cuisine": "Mexican",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Budget"],
+    "prepTime": 15,
+    "cookTime": 0,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 4, "unit": "", "name": "ripe tomatoes" },
+      { "quantity": 0.5, "unit": "", "name": "red onion", "note": "very finely chopped" },
+      { "quantity": 1, "unit": "", "name": "green chilli", "note": "deseeded and finely chopped" },
+      { "quantity": 1, "unit": "", "name": "lime", "note": "juiced" },
+      { "quantity": 3, "unit": "tbsp", "name": "fresh coriander", "note": "chopped" },
+      { "quantity": 1, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" }
+    ],
+    "steps": [
+      "Using a sharp knife, quarter the tomatoes, scoop out the watery seeds and cut the flesh into small dice.",
+      "Put the tomatoes, red onion and green chilli into a mixing bowl.",
+      "Add the lime juice, coriander, olive oil and salt and stir gently to combine.",
+      "Leave to stand for 10 minutes so the flavours mingle, then taste and adjust the salt or lime.",
+      "Serve with vegetable sticks or tortilla chips. Keep leftovers covered in the fridge and eat within a day."
+    ]
+  },
+  {
+    "slug": "baba-ganoush",
+    "title": "Baba ganoush",
+    "category": "Snack",
+    "cuisine": "Middle Eastern",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free"],
+    "prepTime": 15,
+    "cookTime": 40,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 2, "unit": "", "name": "large aubergines" },
+      { "quantity": 2, "unit": "tbsp", "name": "tahini" },
+      { "quantity": 1, "unit": "", "name": "lemon", "note": "juiced" },
+      { "quantity": 1, "unit": "clove", "name": "garlic", "note": "finely grated" },
+      { "quantity": 2, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 0.25, "unit": "tsp", "name": "ground cumin" },
+      { "quantity": 0.5, "unit": "tsp", "name": "salt" },
+      { "quantity": 1, "unit": "tbsp", "name": "fresh parsley", "note": "chopped", "optional": true },
+      { "quantity": 1, "unit": "pinch", "name": "smoked paprika", "optional": true }
+    ],
+    "steps": [
+      "Heat the oven to 220°C (fan 200°C). Prick the aubergines all over with a fork and put them on a baking tray.",
+      "Roast for 35–40 minutes, turning halfway, until the skins are wrinkled and charred and the flesh has completely collapsed.",
+      "Leave until cool enough to handle, then halve and scoop the soft flesh into a sieve. Let it drain for 10 minutes to remove excess liquid.",
+      "Chop the flesh finely with a knife, or pulse briefly in a food processor, and tip into a mixing bowl.",
+      "Stir in the tahini, lemon juice, garlic, half the olive oil, the cumin and salt. Taste and add more lemon or salt if needed.",
+      "Spoon into a serving bowl, drizzle with the remaining olive oil and scatter with parsley and paprika, if using. Keeps covered in the fridge for up to 3 days."
+    ]
+  },
+  {
+    "slug": "cucumber-cream-cheese-bites",
+    "title": "Cucumber and cream cheese bites",
+    "category": "Snack",
+    "cuisine": "British",
+    "tags": ["Vegetarian", "Gluten-free", "Kid friendly"],
+    "prepTime": 15,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      { "quantity": 1, "unit": "", "name": "large cucumber" },
+      { "quantity": 150, "unit": "g", "name": "full-fat cream cheese" },
+      { "quantity": 1, "unit": "tbsp", "name": "fresh dill", "note": "finely chopped" },
+      { "quantity": 0.5, "unit": "", "name": "lemon", "note": "zest only" },
+      { "quantity": 1, "unit": "pinch", "name": "salt" },
+      { "quantity": 1, "unit": "pinch", "name": "ground black pepper" }
+    ],
+    "steps": [
+      "Using a sharp knife, trim the ends of the cucumber and cut it into slices about 1.5 cm thick.",
+      "Use a teaspoon to scoop a shallow hollow from the centre of each slice, leaving a base so the filling doesn't fall through.",
+      "In a mixing bowl, beat the cream cheese with most of the dill, the lemon zest, salt and pepper until smooth.",
+      "Spoon or pipe a little of the cream cheese mixture into each cucumber slice.",
+      "Scatter with the remaining dill and serve straight away, or chill for up to 2 hours before serving."
+    ]
+  },
+  {
+    "slug": "seeded-crackers",
+    "title": "Seeded crackers",
+    "category": "Snack",
+    "cuisine": "Scandinavian",
+    "tags": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Baking"],
+    "prepTime": 25,
+    "cookTime": 55,
+    "servings": "6",
+    "ingredients": [
+      { "quantity": 70, "unit": "g", "name": "sunflower seeds" },
+      { "quantity": 50, "unit": "g", "name": "pumpkin seeds" },
+      { "quantity": 40, "unit": "g", "name": "sesame seeds" },
+      { "quantity": 40, "unit": "g", "name": "linseeds" },
+      { "quantity": 30, "unit": "g", "name": "chia seeds" },
+      { "quantity": 0.75, "unit": "tsp", "name": "salt" },
+      { "quantity": 1, "unit": "tbsp", "name": "olive oil" },
+      { "quantity": 200, "unit": "ml", "name": "boiling water" }
+    ],
+    "steps": [
+      "In a mixing bowl, stir together all the seeds and the salt. Pour over the olive oil and boiling water, stir well and leave for 15 minutes until the chia and linseeds have thickened the mixture into a sticky paste.",
+      "Heat the oven to 160°C (fan 140°C) and line a large baking tray with baking paper.",
+      "Spread the mixture over the paper as thinly and evenly as you can, about 3 mm thick, using the back of a wet spoon. Leave no holes.",
+      "Bake for 30 minutes, then take out and use a knife to score into crackers. Carefully flip the whole sheet over.",
+      "Return to the oven for 20–25 minutes more until dry, crisp and golden at the edges.",
+      "Turn off the oven and leave the crackers inside to cool, then snap along the score lines. Store in an airtight tin for up to 2 weeks."
+    ]
+  }
+]

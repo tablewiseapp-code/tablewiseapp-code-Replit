@@ -1,0 +1,1818 @@
+{
+  "catalog": "tablewise-recipes-v1",
+  "sources": [
+    {
+      "sourceId": "tablewise-original",
+      "kind": "Original recipes authored for TableWise",
+      "license": "Proprietary TableWise content (no third-party licence obligations)",
+      "attribution": "TableWise",
+      "method": "Written for this catalog from general culinary knowledge (common dish names, standard techniques, food-safety temperatures). No third-party recipe text, datasets, scraped pages or photographs were used. Authored with AI assistance inside the development session; no paid external API was called.",
+      "authoredOn": "2026-11-11",
+      "reviewRequired": "Human culinary review recommended before production publication; see validation report."
+    }
+  ],
+  "images": "None. Every recipe has image = null and uses the app's existing no-image fallback.",
+  "nutrition": "None stored. No nutrition values were calculated or invented.",
+  "recipes": [
+    {
+      "id": "tablewise:catalog:v1:aubergine-parmigiana",
+      "title": "Aubergine parmigiana",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:baked-cod-herb-crumb",
+      "title": "Baked cod with herb crumb",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:baked-falafel-tahini",
+      "title": "Baked falafel with tahini sauce",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-and-broccoli",
+      "title": "Beef and broccoli",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-bibimbap-bowls",
+      "title": "Beef bibimbap bowls",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-burgers",
+      "title": "Homemade beef burgers",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-koftas",
+      "title": "Beef koftas with yogurt sauce",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-lasagne",
+      "title": "Beef lasagne",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-stew",
+      "title": "Beef stew with carrots and potatoes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-stroganoff",
+      "title": "Beef stroganoff",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:black-bean-burgers",
+      "title": "Black bean burgers",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:butter-chicken",
+      "title": "Butter chicken",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-broccoli-pasta-bake",
+      "title": "Chicken and broccoli pasta bake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-burrito-bowls",
+      "title": "Chicken burrito bowls",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-cacciatore",
+      "title": "Chicken cacciatore",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-enchiladas",
+      "title": "Chicken enchiladas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-fajitas",
+      "title": "Chicken fajitas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-katsu-curry",
+      "title": "Chicken katsu curry",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-pot-pie",
+      "title": "Chicken pot pie",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-prawn-paella",
+      "title": "Chicken and prawn paella",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-shawarma-bowls",
+      "title": "Chicken shawarma bowls",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-sweet-potato-traybake",
+      "title": "Chicken and sweet potato traybake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-tikka-masala",
+      "title": "Chicken tikka masala",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chilli-con-carne",
+      "title": "Chilli con carne",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cod-tomato-olive-sauce",
+      "title": "Cod in tomato and olive sauce",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cottage-pie",
+      "title": "Cottage pie",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:fish-pie",
+      "title": "Fish pie",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:fish-tacos-lime-slaw",
+      "title": "Fish tacos with lime slaw",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:garlic-prawn-linguine",
+      "title": "Garlic prawn linguine",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:gnocchi-tomato-mozzarella",
+      "title": "Gnocchi with tomato and mozzarella",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:greek-chicken-souvlaki",
+      "title": "Greek chicken souvlaki",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:halloumi-vegetable-traybake",
+      "title": "Halloumi and vegetable traybake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:honey-garlic-chicken-drumsticks",
+      "title": "Honey garlic chicken drumsticks",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:honey-mustard-salmon-traybake",
+      "title": "Honey mustard salmon traybake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:jacket-potatoes-beans-cheese",
+      "title": "Jacket potatoes with beans and cheese",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:jambalaya",
+      "title": "Chicken and sausage jambalaya",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:lamb-chickpea-tagine",
+      "title": "Lamb and chickpea tagine",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:lemon-herb-roast-chicken-thighs",
+      "title": "Lemon herb roast chicken thighs",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:macaroni-cheese",
+      "title": "Macaroni cheese",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:moussaka",
+      "title": "Moussaka",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:mushroom-risotto",
+      "title": "Mushroom risotto",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pan-fried-trout-new-potatoes",
+      "title": "Pan-fried trout with new potatoes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:paprika-chicken-peppers",
+      "title": "Paprika chicken with peppers",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:penne-arrabbiata",
+      "title": "Penne arrabbiata",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pesto-pasta-green-beans",
+      "title": "Pesto pasta with green beans and potatoes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pork-chops-apples",
+      "title": "Pork chops with apples",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pork-schnitzel",
+      "title": "Pork schnitzel",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pork-vegetable-noodles",
+      "title": "Pork and vegetable noodles",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:prawn-pad-thai",
+      "title": "Prawn pad thai",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:prawn-pea-risotto",
+      "title": "Prawn and pea risotto",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:red-lentil-dal",
+      "title": "Red lentil dal",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:saag-paneer",
+      "title": "Saag paneer",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sesame-salmon-greens-rice",
+      "title": "Sesame salmon with greens and rice",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:slow-cooker-pulled-pork",
+      "title": "Slow cooker pulled pork",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:spaghetti-bolognese",
+      "title": "Spaghetti bolognese",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:spaghetti-carbonara",
+      "title": "Spaghetti carbonara",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:spinach-ricotta-cannelloni",
+      "title": "Spinach and ricotta cannelloni",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:stuffed-peppers",
+      "title": "Stuffed peppers with rice and beans",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:swedish-style-meatballs",
+      "title": "Swedish-style meatballs",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sweet-and-sour-pork",
+      "title": "Sweet and sour pork",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:teriyaki-chicken-rice",
+      "title": "Teriyaki chicken with rice",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:thai-fishcakes",
+      "title": "Thai-style fishcakes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:thai-green-chicken-curry",
+      "title": "Thai green chicken curry",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:three-bean-vegetable-chilli",
+      "title": "Three-bean vegetable chilli",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tofu-vegetable-stir-fry",
+      "title": "Tofu and vegetable stir-fry",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:turkey-chilli",
+      "title": "Turkey chilli",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:turkey-meatballs-tomato-sauce",
+      "title": "Turkey meatballs in tomato sauce",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-a.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:vegetable-chow-mein",
+      "title": "Vegetable chow mein",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:vegetable-korma",
+      "title": "Vegetable korma",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:vegetable-lasagne",
+      "title": "Vegetable lasagne",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dinner-b.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:asian-chicken-noodle-salad",
+      "title": "Sesame chicken noodle salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beef-bean-burritos",
+      "title": "Beef and bean burritos",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:beetroot-feta-salad",
+      "title": "Beetroot and feta salad with walnuts",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:blt-sandwich",
+      "title": "BLT sandwich",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cheese-onion-quiche",
+      "title": "Cheese and onion quiche",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-avocado-wrap",
+      "title": "Chicken and avocado wrap",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-caesar-salad",
+      "title": "Chicken Caesar salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-pepper-quesadillas",
+      "title": "Chicken and pepper quesadillas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-pitta-tzatziki",
+      "title": "Chicken pitta with tzatziki",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-satay-skewers",
+      "title": "Chicken satay skewers with rice",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-waldorf-salad",
+      "title": "Chicken Waldorf salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chickpea-salad-sandwich",
+      "title": "Smashed chickpea sandwich",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cobb-salad",
+      "title": "Cobb salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cold-sesame-noodles",
+      "title": "Cold sesame noodles",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:corn-black-bean-salad",
+      "title": "Sweetcorn and black bean salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:couscous-feta-mint-salad",
+      "title": "Couscous salad with feta and mint",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:egg-mayonnaise-sandwich",
+      "title": "Egg mayonnaise sandwich",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:fattoush-salad",
+      "title": "Fattoush salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:flatbread-pizzas",
+      "title": "Tomato and mozzarella flatbread pizzas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:greek-salad-chickpeas",
+      "title": "Greek salad with chickpeas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:ham-cheese-toastie",
+      "title": "Ham and cheese toastie",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:hummus-roasted-vegetable-wrap",
+      "title": "Hummus and roasted vegetable wrap",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:korean-beef-lettuce-cups",
+      "title": "Korean-style beef lettuce cups",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:lentil-roasted-pepper-salad",
+      "title": "Lentil salad with roasted peppers",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:nicoise-salad",
+      "title": "Niçoise salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:panzanella",
+      "title": "Panzanella",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pesto-pasta-salad",
+      "title": "Pesto pasta salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:prawn-avocado-rice-bowl",
+      "title": "Prawn and avocado rice bowl",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:quinoa-roasted-vegetable-salad",
+      "title": "Quinoa salad with roasted vegetables",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:rice-noodle-salad",
+      "title": "Vietnamese-style rice noodle salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sausage-rolls",
+      "title": "Homemade sausage rolls",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:smoked-mackerel-potato-salad",
+      "title": "Smoked mackerel and potato salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:spanakopita-triangles",
+      "title": "Spinach and feta filo triangles",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sweet-potatoes-black-beans",
+      "title": "Baked sweet potatoes with black beans",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tabbouleh-halloumi",
+      "title": "Tabbouleh with grilled halloumi",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:teriyaki-tofu-rice-bowl",
+      "title": "Teriyaki tofu rice bowl",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tomato-mozzarella-ciabatta",
+      "title": "Tomato, mozzarella and basil ciabatta",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tuna-sweetcorn-sandwich",
+      "title": "Tuna and sweetcorn sandwich",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:turkey-club-sandwich",
+      "title": "Turkey club sandwich",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:warm-potato-green-bean-salad",
+      "title": "Warm potato and green bean salad",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/lunch.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:avocado-toast-poached-eggs",
+      "title": "Avocado toast with poached eggs",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:bacon-egg-breakfast-muffins",
+      "title": "Bacon and egg breakfast muffins",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:baked-oats-apple",
+      "title": "Baked oats with apple",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:banana-bread",
+      "title": "Banana bread",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:banana-pancakes",
+      "title": "Banana pancakes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:berry-smoothie",
+      "title": "Berry smoothie",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:bircher-muesli",
+      "title": "Bircher muesli",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:blueberry-muffins",
+      "title": "Blueberry muffins",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:breakfast-burritos",
+      "title": "Breakfast burritos",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:breakfast-quesadillas",
+      "title": "Breakfast quesadillas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cheese-chive-scones",
+      "title": "Cheese and chive scones",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-congee",
+      "title": "Chicken congee",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cooked-breakfast-traybake",
+      "title": "Cooked breakfast traybake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cottage-cheese-pancakes",
+      "title": "Cottage cheese pancakes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:crepes",
+      "title": "Crêpes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:eggs-benedict",
+      "title": "Eggs Benedict",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:fluffy-pancakes",
+      "title": "Fluffy pancakes",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:french-toast",
+      "title": "French toast",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:greek-yogurt-parfait",
+      "title": "Greek yogurt parfait",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:homemade-granola",
+      "title": "Homemade granola",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:huevos-rancheros",
+      "title": "Huevos rancheros",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:kedgeree",
+      "title": "Kedgeree",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:mango-chia-pudding",
+      "title": "Mango chia pudding",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:mushrooms-on-toast",
+      "title": "Mushrooms on toast",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:overnight-oats",
+      "title": "Overnight oats",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:porridge-with-berries",
+      "title": "Porridge with berries",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:potato-breakfast-frittata",
+      "title": "Potato breakfast frittata",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:scrambled-eggs-on-toast",
+      "title": "Scrambled eggs on toast",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:shakshuka",
+      "title": "Shakshuka",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:spinach-feta-omelette",
+      "title": "Spinach and feta omelette",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sweet-potato-breakfast-hash",
+      "title": "Sweet potato breakfast hash",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tofu-scramble",
+      "title": "Tofu scramble",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:turkish-eggs",
+      "title": "Turkish eggs with garlic yogurt",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:vegetable-egg-muffins",
+      "title": "Vegetable egg muffins",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:waffles",
+      "title": "Waffles",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/breakfast.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:apple-crumble",
+      "title": "Apple crumble",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:baked-apples",
+      "title": "Baked apples",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:banana-nice-cream",
+      "title": "Banana nice cream",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:bread-butter-pudding",
+      "title": "Bread and butter pudding",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:carrot-cake",
+      "title": "Carrot cake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cherry-clafoutis",
+      "title": "Cherry clafoutis",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chocolate-brownies",
+      "title": "Chocolate brownies",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chocolate-chip-cookies",
+      "title": "Chocolate chip cookies",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chocolate-dipped-strawberries",
+      "title": "Chocolate-dipped strawberries",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chocolate-mousse",
+      "title": "Chocolate mousse",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:creme-caramel",
+      "title": "Crème caramel",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:eggless-tiramisu",
+      "title": "Eggless tiramisu",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:fruit-salad-honey-lime",
+      "title": "Fresh fruit bowl with honey and lime",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:gingerbread",
+      "title": "Sticky gingerbread",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:lemon-drizzle-cake",
+      "title": "Lemon drizzle cake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:lemon-posset",
+      "title": "Lemon posset",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:no-bake-cheesecake",
+      "title": "No-bake strawberry cheesecake",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:panna-cotta",
+      "title": "Vanilla panna cotta",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pavlova",
+      "title": "Pavlova with summer berries",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:peach-cobbler",
+      "title": "Peach cobbler",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:poached-pears",
+      "title": "Poached pears",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:rice-pudding",
+      "title": "Rice pudding",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:shortbread",
+      "title": "Shortbread",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sticky-toffee-pudding",
+      "title": "Sticky toffee pudding",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:victoria-sponge",
+      "title": "Victoria sponge",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/dessert.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:apple-peanut-butter-dip",
+      "title": "Apple slices with peanut butter dip",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:baba-ganoush",
+      "title": "Baba ganoush",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cheese-straws",
+      "title": "Cheese straws",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:courgette-fritters",
+      "title": "Courgette fritters",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:crispy-roasted-chickpeas",
+      "title": "Crispy roasted chickpeas",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:cucumber-cream-cheese-bites",
+      "title": "Cucumber and cream cheese bites",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:date-nut-energy-balls",
+      "title": "Date and nut energy balls",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:devilled-eggs",
+      "title": "Devilled eggs",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:edamame-sea-salt",
+      "title": "Edamame with sea salt and chilli",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:frozen-yogurt-bark",
+      "title": "Frozen yogurt berry bark",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:guacamole-baked-tortilla-chips",
+      "title": "Guacamole with baked tortilla chips",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:hummus-vegetable-sticks",
+      "title": "Hummus with vegetable sticks",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:kale-chips",
+      "title": "Kale chips",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:seeded-crackers",
+      "title": "Seeded crackers",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:spiced-roasted-nuts",
+      "title": "Spiced roasted nuts",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:stovetop-popcorn",
+      "title": "Stovetop popcorn",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:sweet-potato-wedges",
+      "title": "Sweet potato wedges",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tomato-salsa",
+      "title": "Fresh tomato salsa",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:trail-mix",
+      "title": "Homemade trail mix",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tzatziki-pitta-chips",
+      "title": "Tzatziki with pitta chips",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/snack.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:black-bean-soup",
+      "title": "Mexican black bean soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:butternut-squash-soup",
+      "title": "Butternut squash soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:carrot-coriander-soup",
+      "title": "Carrot and coriander soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:chicken-noodle-soup",
+      "title": "Chicken noodle soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:french-onion-soup",
+      "title": "French onion soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:leek-potato-soup",
+      "title": "Leek and potato soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:minestrone",
+      "title": "Minestrone",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:mushroom-soup",
+      "title": "Creamy mushroom soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:pea-mint-soup",
+      "title": "Pea and mint soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    },
+    {
+      "id": "tablewise:catalog:v1:tomato-basil-soup",
+      "title": "Tomato and basil soup",
+      "sourceId": "tablewise-original",
+      "sourceUrl": null,
+      "license": "Proprietary TableWise content",
+      "attribution": "TableWise",
+      "sourceFile": "data/catalog/source/soup.json"
+    }
+  ]
+}

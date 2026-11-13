@@ -52,19 +52,18 @@ export function parseFixtureSource(text: string) {
 // A checked-in manifest makes startup/import independent of ignored uploads.
 // Attachment-to-manifest equality is checked exhaustively by the isolated test.
 if (createHash("sha256").update(JSON.stringify(savedManifest)).digest("hex") !==
-  "fe4f814fda6704c109cfd586bd51a4933c8744e65e26b50b4731fbef2d4cdeed" ||
+  "2e09cb25567017bc7c80a46641e7166256076c0067d0c14ac0d0c6e2b5f45f09" ||
   savedManifest.sourceSHA256 !== fixtureSourceSHA256 || savedManifest.disclaimer !== fixtureDisclaimer) {
   throw new Error("Fixture manifest differs from the reviewed batch.");
 }
 export const developmentFixtureManifest = savedManifest;
-if (developmentFixtureManifest.entries.filter(entry => entry.sourceType.startsWith("collection")).length !== 95) {
-  throw new Error("Expected the supplied 95 collection links, without deduplicating shared URLs.");
-}
-export const developmentFixtures = developmentFixtureManifest.entries.map((entry, index) => {
+// ponytail: curated 20-recipe subset of the 100 supplied; numbers keep their original source numbering.
+export const developmentFixtures = developmentFixtureManifest.entries.map(entry => {
   const { id, ...input } = entry.recipe;
-  if (entry.number !== String(index + 1).padStart(3, "0") || id !== `${developmentFixturePrefix}${entry.number}` ||
+  if (id !== `${developmentFixturePrefix}${entry.number}` ||
     !isDeepStrictEqual(input, recipeInput.parse(input))) throw new Error("Invalid manifest recipe.");
   recipeId.parse(id);
   return entry.recipe;
 });
-if (developmentFixtures.length !== 100) throw new Error("Expected all 100 manifest entries.");
+if (developmentFixtures.length !== 20) throw new Error("Expected all 20 manifest entries.");
+if (developmentFixtures.some(r => !r.servings || r.prepTime == null || r.cookTime == null)) throw new Error("Every fixture needs servings, prep and cook time.");

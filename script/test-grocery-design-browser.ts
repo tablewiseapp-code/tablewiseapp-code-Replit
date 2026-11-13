@@ -44,7 +44,7 @@ try {
   await tab.wait(`document.querySelectorAll('input[type="checkbox"]').length===${expected.length}`);
   assert.deepEqual(await tab.evaluate(`Array.from(document.querySelectorAll("[data-testid^=grocery-item-]")).map(e=>e.dataset.testid.slice("grocery-item-".length)).sort()`), expected);
   assert.ok(await tab.evaluate(`!document.body.innerText.includes("Design preview") && Boolean(document.querySelector('[data-testid="dev-nav"]'))`));
-  assert.ok(await tab.evaluate(`Array.from(document.querySelectorAll(".grocery-recipe-context summary")).every(e=>!e.innerText.includes("Protein")&&!/\\d+ recipes?/.test(e.innerText))`));
+  assert.ok(await tab.evaluate(`document.querySelectorAll(".grocery-recipes").length===${expected.length} && Array.from(document.querySelectorAll(".grocery-recipes")).every(e=>e.innerText.replace("Used in:","").trim().length>0)`));
 
   await tab.evaluate(`document.querySelector('input[type="checkbox"]').focus()`);
   await key(" ",32);
@@ -55,9 +55,7 @@ try {
   assert.ok(await tab.evaluate(`document.querySelector(".grocery-category > ul").hidden`));
   assert.equal(await tab.evaluate(checkedCount), 1);
   await tab.evaluate(`document.querySelector(".grocery-category-toggle").click()`);
-  await tab.evaluate(`document.querySelector(".grocery-recipe-context summary").click()`);
-  await tab.wait(`document.querySelector(".grocery-recipe-context").open`);
-  assert.ok(await tab.evaluate(`document.querySelector(".grocery-recipe-popover").innerText.includes("Salmon")`));
+  assert.ok(await tab.evaluate(`document.querySelector(".grocery-item.is-checked .grocery-recipes").offsetParent!==null`)); // attribution stays visible when checked
 
   const initialOrder = await tab.evaluate(categories);
   await tab.evaluate(`document.querySelector(".grocery-drag-handle").focus()`);

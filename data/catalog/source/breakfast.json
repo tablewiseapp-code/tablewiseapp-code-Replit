@@ -1,0 +1,2662 @@
+[
+  {
+    "slug": "porridge-with-berries",
+    "title": "Porridge with berries",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Budget",
+      "Kid friendly"
+    ],
+    "prepTime": 5,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 160,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 500,
+        "unit": "ml",
+        "name": "unsweetened almond milk"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "water"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "mixed berries",
+        "note": "fresh or frozen"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "maple syrup"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "mixed seeds",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Put the oats, almond milk, water, salt and cinnamon into a medium saucepan and stir well.",
+      "Bring to a gentle simmer over medium heat, then turn the heat down and cook for 5–7 minutes, stirring often, until thick and creamy. Add a splash more water if it gets too stiff.",
+      "Meanwhile, if using frozen berries, warm them in a small saucepan over low heat for 3–4 minutes until juicy.",
+      "Spoon the porridge into bowls, top with the berries and drizzle with maple syrup.",
+      "Scatter over the seeds, if using, and serve straight away."
+    ]
+  },
+  {
+    "slug": "overnight-oats",
+    "title": "Overnight oats",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "chia seeds"
+      },
+      {
+        "quantity": 500,
+        "unit": "ml",
+        "name": "unsweetened almond milk"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "coconut yogurt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "maple syrup"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "mixed berries"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "toasted flaked almonds",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "In a large mixing bowl, stir together the oats, chia seeds, almond milk, coconut yogurt, maple syrup, vanilla and salt until evenly combined.",
+      "Divide the mixture between four jars or lidded containers and press half the berries into the tops.",
+      "Cover and refrigerate overnight, or for at least 6 hours, so the oats soften and thicken.",
+      "In the morning, stir each jar, loosening with a splash more almond milk if you like, and top with the remaining berries and the almonds.",
+      "Keep any extra jars in the fridge and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "banana-pancakes",
+    "title": "Banana pancakes",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Dairy-free",
+      "Eggs",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "ripe bananas"
+      },
+      {
+        "quantity": 6,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "gluten-free baking powder"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "sunflower oil",
+        "note": "for frying"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "blueberries",
+        "optional": true
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "maple syrup",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Peel the bananas and put them in a blender with the eggs, oats, baking powder, cinnamon and salt. Blend until smooth, then leave to stand for 5 minutes to thicken slightly.",
+      "Heat a little of the oil in a large non-stick frying pan over medium-low heat.",
+      "Spoon in about 2 tablespoons of batter per pancake, leaving space between them. Cook for 2–3 minutes until bubbles appear and the edges look set.",
+      "Flip carefully with a thin spatula and cook for 1–2 minutes more until golden and cooked through with no wet batter in the middle.",
+      "Keep warm on a plate while you cook the rest, adding a little more oil as needed.",
+      "Serve topped with blueberries and a drizzle of maple syrup, if using."
+    ]
+  },
+  {
+    "slug": "fluffy-pancakes",
+    "title": "Fluffy pancakes",
+    "category": "Breakfast",
+    "cuisine": "American",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "baking powder"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "caster sugar"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 300,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "butter",
+        "note": "melted, plus extra for frying"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "maple syrup",
+        "optional": true
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "fresh berries",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Whisk the flour, baking powder, sugar and salt together in a large mixing bowl and make a well in the centre.",
+      "In a jug, whisk the milk, eggs, melted butter and vanilla. Pour into the well and whisk gently until just combined; a few small lumps are fine. Rest for 5 minutes.",
+      "Heat a large non-stick frying pan over medium heat and brush with a little butter.",
+      "Pour in about 3 tablespoons of batter per pancake. Cook for 2 minutes until bubbles pop on the surface and the underside is golden.",
+      "Flip and cook for 1–2 minutes more until risen and cooked through in the middle. Keep warm in a low oven while you cook the rest.",
+      "Serve stacked with maple syrup and berries, if using."
+    ]
+  },
+  {
+    "slug": "french-toast",
+    "title": "French toast",
+    "category": "Breakfast",
+    "cuisine": "American",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "caster sugar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 8,
+        "unit": "slices",
+        "name": "thick white bread",
+        "note": "preferably a day old"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "strawberries",
+        "note": "sliced",
+        "optional": true
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "maple syrup",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Whisk the eggs, milk, sugar, cinnamon, vanilla and salt together in a wide shallow dish.",
+      "Heat a large frying pan over medium heat and add a knob of the butter.",
+      "Dip two slices of bread into the egg mixture for about 10 seconds per side so they soak it up without falling apart.",
+      "Fry for 2–3 minutes per side until deep golden and the centre feels firm, with no runny egg mixture left inside.",
+      "Keep warm in a low oven while you cook the remaining slices, adding more butter as needed.",
+      "Serve with strawberries and maple syrup, if using."
+    ]
+  },
+  {
+    "slug": "scrambled-eggs-on-toast",
+    "title": "Scrambled eggs on toast",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Budget",
+      "Kid friendly"
+    ],
+    "prepTime": 5,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "milk"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter",
+        "note": "plus extra for spreading"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "wholemeal bread"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "chives",
+        "note": "finely snipped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Crack the eggs into a mixing bowl, add the milk, salt and pepper, and beat with a fork until evenly combined.",
+      "Melt the butter in a non-stick saucepan over medium-low heat.",
+      "Pour in the eggs and stir slowly with a spatula, scraping the base and sides, for 4–5 minutes until softly set curds form.",
+      "Meanwhile, toast the bread and spread with a little butter.",
+      "Take the pan off the heat when the eggs are just set with no liquid egg remaining, then spoon onto the toast.",
+      "Scatter over the chives, if using, and serve straight away."
+    ]
+  },
+  {
+    "slug": "shakshuka",
+    "title": "Shakshuka",
+    "category": "Breakfast",
+    "cuisine": "North African",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Dairy-free",
+      "Eggs",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "red peppers",
+        "note": "deseeded and sliced"
+      },
+      {
+        "quantity": 3,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "chilli flakes"
+      },
+      {
+        "quantity": 800,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sugar"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 6,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large deep frying pan with a lid over medium heat. Add the onion and peppers and cook for 8–10 minutes, stirring now and then, until soft.",
+      "Stir in the garlic, cumin, paprika and chilli flakes and cook for 1 minute until fragrant.",
+      "Tip in the tomatoes, sugar and salt. Simmer for 10 minutes, stirring occasionally, until thickened.",
+      "Make six hollows in the sauce with a spoon and crack an egg into each.",
+      "Cover the pan and cook over low heat for 7–10 minutes. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs.",
+      "Scatter with coriander, if using, and serve hot straight from the pan."
+    ]
+  },
+  {
+    "slug": "breakfast-burritos",
+    "title": "Breakfast burritos",
+    "category": "Breakfast",
+    "cuisine": "Mexican",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "potatoes",
+        "note": "peeled"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and diced"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 6,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "large flour tortillas"
+      },
+      {
+        "quantity": 80,
+        "unit": "g",
+        "name": "mature cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tomato salsa"
+      }
+    ],
+    "steps": [
+      "Cut the potatoes into 1 cm cubes. Heat the oil in a large frying pan over medium heat and fry the potatoes for 12–15 minutes, turning often, until golden and tender.",
+      "Add the pepper, spring onions and paprika and cook for 3 minutes, then stir in the beans to warm through.",
+      "Beat the eggs with the salt in a mixing bowl. Push the vegetables to one side of the pan, pour the eggs into the space and stir gently until fully set with no liquid egg remaining, then mix everything together.",
+      "Warm the tortillas in a dry frying pan or the microwave for a few seconds so they are pliable.",
+      "Divide the filling between the tortillas, top with cheese and salsa, fold in the sides and roll up tightly.",
+      "Serve straight away, or toast seam-side down in the dry pan for 1–2 minutes to seal.",
+      "To batch cook, cool the burritos, wrap individually and freeze for up to 3 months. Reheat from frozen in the oven at 180°C (fan 160°C) for 25–30 minutes until piping hot in the centre."
+    ]
+  },
+  {
+    "slug": "homemade-granola",
+    "title": "Homemade granola",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Batch cooking",
+      "Baking"
+    ],
+    "prepTime": 10,
+    "cookTime": 30,
+    "servings": "10",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "mixed nuts",
+        "note": "roughly chopped"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "mixed seeds"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "coconut oil",
+        "note": "melted"
+      },
+      {
+        "quantity": 5,
+        "unit": "tbsp",
+        "name": "maple syrup"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "raisins"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 160°C (fan 140°C) and line a large baking tray with baking paper.",
+      "Mix the oats, nuts, seeds, cinnamon and salt in a large mixing bowl.",
+      "Whisk the melted coconut oil, maple syrup and vanilla together, pour over the dry ingredients and stir until everything is evenly coated.",
+      "Spread the mixture out on the baking tray in an even layer and bake for 25–30 minutes, stirring halfway, until golden and toasty.",
+      "Leave to cool completely on the tray; it will crisp up as it cools. Stir through the raisins.",
+      "Store in an airtight jar for up to 2 weeks. Serve with plant-based milk or yogurt and fruit."
+    ]
+  },
+  {
+    "slug": "blueberry-muffins",
+    "title": "Blueberry muffins",
+    "category": "Breakfast",
+    "cuisine": "American",
+    "tags": [
+      "Vegetarian",
+      "Baking",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 15,
+    "cookTime": 22,
+    "servings": "12",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "baking powder"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "bicarbonate of soda"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "caster sugar"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 90,
+        "unit": "ml",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "blueberries",
+        "note": "fresh or frozen"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "demerara sugar",
+        "note": "for sprinkling",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C) and line a 12-hole muffin tin with paper cases.",
+      "Mix the flour, baking powder, bicarbonate of soda, salt and sugar in a large mixing bowl.",
+      "In a jug, whisk the eggs, milk, oil and vanilla. Pour into the dry ingredients and fold together with a spatula until just combined; do not overmix.",
+      "Gently fold in the blueberries, then divide the batter between the cases and sprinkle with demerara sugar, if using.",
+      "Bake for 20–22 minutes until risen, golden and a skewer pushed into the centre comes out clean.",
+      "Cool in the tin for 5 minutes, then move to a wire rack. Keep in an airtight tin for up to 3 days or freeze for up to 3 months."
+    ]
+  },
+  {
+    "slug": "avocado-toast-poached-eggs",
+    "title": "Avocado toast with poached eggs",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Dairy-free",
+      "Eggs"
+    ],
+    "prepTime": 10,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "ripe avocados"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "chilli flakes"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "white wine vinegar"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "sourdough bread"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "extra virgin olive oil",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Halve the avocados, remove the stones and scoop the flesh into a bowl. Mash with a fork, then mix in the lemon juice, chilli flakes, half the salt and the pepper.",
+      "Bring a large saucepan of water to a gentle simmer and add the vinegar.",
+      "Crack each egg into a cup, stir the water to make a gentle swirl and slide the eggs in one at a time. Poach for 4–5 minutes. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs.",
+      "Meanwhile, toast the sourdough.",
+      "Lift the eggs out with a slotted spoon and drain on kitchen paper.",
+      "Spread the avocado over the toast, top each slice with an egg, sprinkle with the remaining salt and drizzle with olive oil, if using."
+    ]
+  },
+  {
+    "slug": "cooked-breakfast-traybake",
+    "title": "Cooked breakfast traybake",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Pork",
+      "Eggs",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 40,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "baby potatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "pork sausages"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "chestnut mushrooms",
+        "note": "halved"
+      },
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "cherry tomatoes"
+      },
+      {
+        "quantity": 8,
+        "unit": "slices",
+        "name": "back bacon"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 200°C (fan 180°C). Toss the potatoes with half the oil and the salt in a large roasting tin or baking tray and roast for 10 minutes.",
+      "Add the sausages to the tin and roast for 10 minutes more.",
+      "Toss the mushrooms and tomatoes with the remaining oil, add to the tin with the bacon laid on top, and roast for 10 minutes until the bacon is crisp and the sausages are browned.",
+      "Check the sausages are cooked through: they should reach 71°C in the centre with no pink remaining. Wash your hands after handling raw meat.",
+      "Make four gaps in the tin and crack an egg into each. Return to the oven for 6–8 minutes. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs.",
+      "Season with pepper, scatter with parsley, if using, and serve straight from the tin."
+    ]
+  },
+  {
+    "slug": "spinach-feta-omelette",
+    "title": "Spinach and feta omelette",
+    "category": "Breakfast",
+    "cuisine": "Greek",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Eggs"
+    ],
+    "prepTime": 5,
+    "cookTime": 10,
+    "servings": "2",
+    "ingredients": [
+      {
+        "quantity": 5,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 80,
+        "unit": "g",
+        "name": "baby spinach"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "feta",
+        "note": "crumbled"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "dried oregano",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Beat the eggs with the salt and pepper in a mixing bowl.",
+      "Heat half the oil in a non-stick frying pan over medium heat. Add the spinach and stir for 1–2 minutes until wilted, then tip onto a plate and squeeze out any excess liquid.",
+      "Add the remaining oil to the pan, pour in half the egg and swirl to cover the base. Cook for 1 minute, drawing the edges into the centre with a spatula so the runny egg flows underneath.",
+      "When the omelette is almost set, scatter half the spinach and feta over one side and cook for 1–2 minutes more until the egg is fully set with no liquid remaining.",
+      "Fold the omelette in half, slide onto a plate and sprinkle with oregano, if using.",
+      "Repeat with the remaining ingredients to make a second omelette."
+    ]
+  },
+  {
+    "slug": "huevos-rancheros",
+    "title": "Huevos rancheros",
+    "category": "Breakfast",
+    "cuisine": "Mexican",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Dairy-free",
+      "Eggs"
+    ],
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "green chilli",
+        "note": "deseeded and finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "canned chopped tomatoes"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lime juice"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "small corn tortillas"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "ripe avocado",
+        "note": "sliced",
+        "optional": true
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh coriander",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat 1 tablespoon of the oil in a saucepan over medium heat. Cook the onion for 6–8 minutes until soft, then add the garlic, chilli and cumin and cook for 1 minute.",
+      "Add the tomatoes and salt and simmer for 10 minutes until thick. Stir in the beans and lime juice and keep warm.",
+      "Warm the tortillas in a dry large frying pan for 30 seconds per side, then wrap in a clean tea towel.",
+      "Heat the remaining oil in the frying pan over medium heat and crack in the eggs. Fry for 3–4 minutes, spooning a little hot oil over the tops. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs.",
+      "Lay two overlapping tortillas on each plate, spoon over the bean and tomato sauce and top with a fried egg.",
+      "Finish with avocado and coriander, if using, and serve straight away."
+    ]
+  },
+  {
+    "slug": "greek-yogurt-parfait",
+    "title": "Greek yogurt parfait",
+    "category": "Breakfast",
+    "cuisine": "Greek",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "Greek yogurt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "mixed berries"
+      },
+      {
+        "quantity": 120,
+        "unit": "g",
+        "name": "gluten-free granola"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "pistachios",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Stir the yogurt, honey and vanilla together in a mixing bowl until smooth.",
+      "Halve any large berries, such as strawberries, with a small knife.",
+      "Spoon a layer of yogurt into four glasses or bowls, then add a layer of berries and a layer of granola.",
+      "Repeat the layers, finishing with berries and a final sprinkle of granola.",
+      "Scatter with pistachios, if using, and serve straight away so the granola stays crunchy."
+    ]
+  },
+  {
+    "slug": "banana-bread",
+    "title": "Banana bread",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Baking",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 15,
+    "cookTime": 55,
+    "servings": "10",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "very ripe bananas"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "butter",
+        "note": "melted, plus extra for greasing"
+      },
+      {
+        "quantity": 120,
+        "unit": "g",
+        "name": "light brown soft sugar"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 225,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "bicarbonate of soda"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "baking powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "walnuts",
+        "note": "chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C). Grease a 900 g loaf tin and line with baking paper.",
+      "Mash the bananas in a large mixing bowl until mostly smooth, then whisk in the melted butter, sugar, eggs and vanilla.",
+      "Add the flour, bicarbonate of soda, baking powder, cinnamon and salt and fold together until no dry flour remains. Stir in the walnuts, if using.",
+      "Scrape the batter into the tin and level the top.",
+      "Bake for 50–55 minutes until risen and a skewer pushed into the centre comes out clean. Cover loosely with foil if it browns too quickly.",
+      "Cool in the tin for 10 minutes, then turn out onto a wire rack to cool completely. Keep wrapped for up to 4 days, or freeze in slices."
+    ]
+  },
+  {
+    "slug": "waffles",
+    "title": "Waffles",
+    "category": "Breakfast",
+    "cuisine": "American",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly",
+      "Batch cooking"
+    ],
+    "prepTime": 10,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 250,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "baking powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "caster sugar"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 350,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 75,
+        "unit": "g",
+        "name": "butter",
+        "note": "melted"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "sunflower oil",
+        "note": "for greasing"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "fresh berries",
+        "optional": true
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "maple syrup",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat a waffle iron and lightly brush the plates with oil.",
+      "Whisk the flour, baking powder, sugar and salt in a large mixing bowl.",
+      "In a jug, whisk the eggs, milk, melted butter and vanilla, then pour into the dry ingredients and whisk until just smooth.",
+      "Pour enough batter into the waffle iron to cover the plates, close and cook for 4–5 minutes until crisp, golden and no longer steaming heavily.",
+      "Keep the waffles warm on a wire rack in a low oven while you cook the rest.",
+      "Serve with berries and maple syrup, if using. To batch cook, cool leftover waffles, freeze in a bag for up to 2 months and reheat in a toaster until hot through."
+    ]
+  },
+  {
+    "slug": "baked-oats-apple",
+    "title": "Baked oats with apple",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly",
+      "Budget",
+      "Baking"
+    ],
+    "prepTime": 10,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "gluten-free baking powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "ground flaxseed"
+      },
+      {
+        "quantity": 450,
+        "unit": "ml",
+        "name": "unsweetened almond milk"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "maple syrup"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eating apples",
+        "note": "cored and diced"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "coconut oil",
+        "note": "melted, plus extra for greasing"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "pecans",
+        "note": "roughly chopped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the oven to 190°C (fan 170°C) and grease a medium baking dish with a little coconut oil.",
+      "Mix the oats, baking powder, cinnamon, salt and flaxseed in a large mixing bowl.",
+      "Stir in the almond milk, maple syrup, vanilla and melted coconut oil, then fold in most of the apple.",
+      "Pour into the baking dish, scatter over the remaining apple and the pecans, if using.",
+      "Bake for 30–35 minutes until golden on top and set, with no liquid pooling in the centre.",
+      "Leave to stand for 5 minutes, then spoon into bowls. Leftovers keep covered in the fridge for up to 3 days; reheat until hot."
+    ]
+  },
+  {
+    "slug": "vegetable-egg-muffins",
+    "title": "Vegetable egg muffins",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Dairy-free",
+      "Eggs",
+      "Batch cooking",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 22,
+    "servings": "12",
+    "ingredients": [
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "olive oil",
+        "note": "plus extra for greasing"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and finely diced"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "spring onions",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "baby spinach",
+        "note": "chopped"
+      },
+      {
+        "quantity": 10,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "dried oregano"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "cherry tomatoes",
+        "note": "quartered"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 180°C (fan 160°C) and generously grease a 12-hole muffin tin with oil.",
+      "Heat the oil in a frying pan over medium heat and cook the pepper and spring onions for 4 minutes until soft. Add the spinach and stir until wilted, then take off the heat.",
+      "Whisk the eggs, salt, pepper and oregano in a large jug or mixing bowl.",
+      "Divide the vegetables and cherry tomatoes between the muffin holes, then pour over the egg mixture to fill each about three-quarters full.",
+      "Bake for 18–22 minutes until puffed and set in the centre (71°C), with no liquid egg when pierced with a knife.",
+      "Cool for 5 minutes, then run a knife around each one to release. Keep in the fridge for up to 3 days and reheat until piping hot, or freeze for up to 1 month."
+    ]
+  },
+  {
+    "slug": "berry-smoothie",
+    "title": "Berry smoothie",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free",
+      "Kid friendly"
+    ],
+    "prepTime": 5,
+    "cookTime": 0,
+    "servings": "2",
+    "ingredients": [
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "frozen mixed berries"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "ripe banana",
+        "note": "peeled"
+      },
+      {
+        "quantity": 300,
+        "unit": "ml",
+        "name": "unsweetened almond milk"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "chia seeds"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "maple syrup",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Put the berries, banana, almond milk, oats and chia seeds into a blender.",
+      "Blend on high for 1 minute until completely smooth.",
+      "Taste and blend in the maple syrup if you would like it sweeter, or add a splash more almond milk if it is too thick.",
+      "Pour into two glasses and serve straight away."
+    ]
+  },
+  {
+    "slug": "bircher-muesli",
+    "title": "Bircher muesli",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Batch cooking"
+    ],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 180,
+        "unit": "g",
+        "name": "gluten-free oats"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "apple juice"
+      },
+      {
+        "quantity": 150,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eating apples"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 200,
+        "unit": "g",
+        "name": "natural yogurt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "honey"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cinnamon"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "hazelnuts",
+        "note": "roughly chopped"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "raspberries",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Put the oats, apple juice and milk into a large mixing bowl and stir well.",
+      "Coarsely grate the apples, skin on, and toss with the lemon juice to stop them browning. Stir into the oats with the yogurt, honey and cinnamon.",
+      "Cover and refrigerate overnight, or for at least 6 hours, until the oats are soft and creamy.",
+      "In the morning, stir and loosen with a splash more milk if needed.",
+      "Spoon into bowls and top with hazelnuts and raspberries, if using.",
+      "Keep any leftovers covered in the fridge and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "mango-chia-pudding",
+    "title": "Mango chia pudding",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 0,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 80,
+        "unit": "g",
+        "name": "chia seeds"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "canned coconut milk"
+      },
+      {
+        "quantity": 200,
+        "unit": "ml",
+        "name": "unsweetened almond milk"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "maple syrup"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "ripe mangoes",
+        "note": "peeled and stoned"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lime juice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "toasted coconut flakes",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Whisk the chia seeds, coconut milk, almond milk, maple syrup and vanilla in a mixing bowl.",
+      "Leave for 10 minutes, then whisk again to break up any clumps.",
+      "Cover and refrigerate for at least 4 hours, or overnight, until thick and spoonable.",
+      "Roughly chop one mango and blend with the lime juice in a blender until smooth. Dice the other mango with a knife.",
+      "Layer the chia pudding and mango purée in four glasses, top with diced mango and coconut flakes, if using.",
+      "Keep covered in the fridge and eat within 2 days."
+    ]
+  },
+  {
+    "slug": "eggs-benedict",
+    "title": "Eggs Benedict",
+    "category": "Breakfast",
+    "cuisine": "American",
+    "tags": [
+      "Pork",
+      "Eggs"
+    ],
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "pasteurised egg yolks"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 125,
+        "unit": "g",
+        "name": "unsalted butter",
+        "note": "melted and warm"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "cayenne pepper"
+      },
+      {
+        "quantity": 8,
+        "unit": "slices",
+        "name": "cooked ham"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "English muffins",
+        "note": "split"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "white wine vinegar"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "chives",
+        "note": "snipped",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "For the hollandaise, use pasteurised egg yolks. Put the yolks and lemon juice in a heatproof bowl set over a saucepan of barely simmering water, making sure the bowl does not touch the water.",
+      "Whisk constantly while slowly pouring in the warm melted butter until the sauce is thick and glossy and reaches 71°C on a thermometer. Season with salt and cayenne, take off the heat and keep warm.",
+      "Warm the ham in a dry frying pan for 1 minute per side and toast the muffin halves.",
+      "Bring a large saucepan of water to a gentle simmer and add the vinegar. Crack each egg into a cup and slide in, four at a time.",
+      "Poach for 4–5 minutes. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs. Lift out with a slotted spoon and drain on kitchen paper.",
+      "Top each muffin half with a slice of ham and a poached egg, spoon over the hollandaise and scatter with chives, if using. Serve straight away."
+    ]
+  },
+  {
+    "slug": "sweet-potato-breakfast-hash",
+    "title": "Sweet potato breakfast hash",
+    "category": "Breakfast",
+    "cuisine": "American",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Dairy-free",
+      "Eggs"
+    ],
+    "prepTime": 15,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 700,
+        "unit": "g",
+        "name": "sweet potatoes",
+        "note": "peeled"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red onion",
+        "note": "chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 240,
+        "unit": "g",
+        "name": "canned black beans",
+        "note": "drained and rinsed"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Cut the sweet potatoes into 1.5 cm cubes with a sharp knife.",
+      "Heat the oil in a large frying pan with a lid over medium heat. Add the sweet potato, cover and cook for 10 minutes, stirring now and then.",
+      "Uncover, add the onion and pepper and cook for 8–10 minutes more until the potato is tender and crisp at the edges.",
+      "Stir in the garlic, paprika, cumin and salt and cook for 1 minute, then add the beans and warm through.",
+      "Make four hollows in the hash and crack an egg into each. Cover and cook over low heat for 6–8 minutes. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs.",
+      "Scatter with spring onions, if using, and serve from the pan."
+    ]
+  },
+  {
+    "slug": "cheese-chive-scones",
+    "title": "Cheese and chive scones",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Baking"
+    ],
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": "8",
+    "ingredients": [
+      {
+        "quantity": 350,
+        "unit": "g",
+        "name": "self-raising flour",
+        "note": "plus extra for dusting"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "baking powder"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "mustard powder"
+      },
+      {
+        "quantity": 85,
+        "unit": "g",
+        "name": "cold butter",
+        "note": "diced"
+      },
+      {
+        "quantity": 120,
+        "unit": "g",
+        "name": "mature cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "chives",
+        "note": "finely snipped"
+      },
+      {
+        "quantity": 170,
+        "unit": "ml",
+        "name": "milk",
+        "note": "plus extra for brushing"
+      }
+    ],
+    "steps": [
+      "Heat the oven to 220°C (fan 200°C) and line a baking tray with baking paper.",
+      "Mix the flour, baking powder, salt and mustard powder in a large mixing bowl. Rub in the butter with your fingertips until the mixture looks like breadcrumbs.",
+      "Stir in most of the cheese and the chives. Pour in the milk and mix with a table knife into a soft, slightly sticky dough.",
+      "Tip onto a floured surface, knead very briefly and pat out to about 3 cm thick. Cut out rounds with a 6 cm cutter, re-pressing the trimmings to use it all.",
+      "Put on the baking tray, brush the tops with milk and sprinkle with the remaining cheese.",
+      "Bake for 12–15 minutes until well risen and golden and they sound hollow when tapped underneath. Cool on a wire rack and eat warm or the same day, or freeze for up to 1 month."
+    ]
+  },
+  {
+    "slug": "crepes",
+    "title": "Crêpes",
+    "category": "Breakfast",
+    "cuisine": "French",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "plain flour"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "caster sugar"
+      },
+      {
+        "quantity": 3,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 400,
+        "unit": "ml",
+        "name": "milk"
+      },
+      {
+        "quantity": 30,
+        "unit": "g",
+        "name": "butter",
+        "note": "melted, plus extra for the pan"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "cut into wedges",
+        "optional": true
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "caster sugar",
+        "note": "for sprinkling",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Sift the flour, salt and sugar into a mixing bowl and make a well in the centre.",
+      "Add the eggs and a little of the milk and whisk, gradually drawing in the flour and adding the rest of the milk until you have a smooth batter like single cream. Whisk in the melted butter and rest for 15 minutes.",
+      "Heat a crêpe pan or medium non-stick frying pan over medium heat and wipe with a little butter on kitchen paper.",
+      "Pour in about 3 tablespoons of batter and swirl quickly to coat the base thinly. Cook for 1 minute until the edges lift and the underside is lightly golden.",
+      "Flip with a spatula and cook for 30 seconds more. Stack on a plate and repeat, greasing the pan as needed; you should get about 12 crêpes.",
+      "Serve with a squeeze of lemon and a sprinkle of sugar, if using, or your favourite filling."
+    ]
+  },
+  {
+    "slug": "bacon-egg-breakfast-muffins",
+    "title": "Bacon and egg breakfast muffins",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Pork",
+      "Eggs",
+      "Kid friendly"
+    ],
+    "prepTime": 5,
+    "cookTime": 15,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 8,
+        "unit": "slices",
+        "name": "back bacon"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "English muffins",
+        "note": "split"
+      },
+      {
+        "quantity": 15,
+        "unit": "g",
+        "name": "butter",
+        "note": "softened"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "mild cheddar"
+      },
+      {
+        "quantity": 4,
+        "unit": "tsp",
+        "name": "tomato ketchup",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Heat the grill to high. Lay the bacon on the grill rack and cook for 3–4 minutes per side until cooked through and crisp at the edges. Wash your hands after handling raw meat.",
+      "Meanwhile, heat the oil in a large non-stick frying pan over medium heat. Crack in the eggs and fry for 3–4 minutes, then flip and cook for 1 minute more. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs.",
+      "Toast the muffin halves and spread lightly with butter.",
+      "Lay a slice of cheese on each muffin base, then add an egg and two slices of bacon.",
+      "Add ketchup, if using, top with the muffin lids and serve warm."
+    ]
+  },
+  {
+    "slug": "turkish-eggs",
+    "title": "Turkish eggs with garlic yogurt",
+    "category": "Breakfast",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Eggs"
+    ],
+    "prepTime": 10,
+    "cookTime": 10,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "Greek yogurt",
+        "note": "at room temperature"
+      },
+      {
+        "quantity": 1,
+        "unit": "clove",
+        "name": "garlic",
+        "note": "finely grated"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "white wine vinegar"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 40,
+        "unit": "g",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "chilli flakes"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "fresh dill",
+        "note": "chopped"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "gluten-free bread",
+        "note": "toasted",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Stir the yogurt, garlic and salt together in a mixing bowl, then spread over four shallow bowls.",
+      "Bring a large saucepan of water to a gentle simmer and add the vinegar. Crack each egg into a cup and slide them in, four at a time.",
+      "Poach for 4–5 minutes. Cook until the whites are fully set; for young children, pregnant people or anyone vulnerable, cook until the yolks are firm too, or use pasteurised eggs. Lift out with a slotted spoon and drain on kitchen paper.",
+      "Meanwhile, melt the butter in a small saucepan over medium heat until foaming, then stir in the chilli flakes and paprika and take off the heat.",
+      "Sit two eggs on each bowl of yogurt, spoon over the spiced butter and scatter with dill.",
+      "Serve straight away with toasted gluten-free bread for dipping, if using."
+    ]
+  },
+  {
+    "slug": "mushrooms-on-toast",
+    "title": "Mushrooms on toast",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Dairy-free",
+      "Budget"
+    ],
+    "prepTime": 10,
+    "cookTime": 12,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "chestnut mushrooms",
+        "note": "thickly sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "fresh thyme leaves"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "sourdough bread"
+      }
+    ],
+    "steps": [
+      "Heat the oil in a large frying pan over high heat.",
+      "Add the mushrooms in a single layer and leave for 2 minutes to brown, then stir and cook for 5–6 minutes more until golden and any liquid has evaporated.",
+      "Turn the heat down to medium, add the garlic and thyme and cook for 1 minute until fragrant.",
+      "Season with the salt and pepper, then stir in the lemon juice and parsley.",
+      "Meanwhile, toast the sourdough.",
+      "Pile the mushrooms onto the toast, spooning over any pan juices, and serve straight away."
+    ]
+  },
+  {
+    "slug": "breakfast-quesadillas",
+    "title": "Breakfast quesadillas",
+    "category": "Breakfast",
+    "cuisine": "Mexican",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly"
+    ],
+    "prepTime": 10,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 6,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and finely diced"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "spring onions",
+        "note": "sliced"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "large flour tortillas"
+      },
+      {
+        "quantity": 120,
+        "unit": "g",
+        "name": "mature cheddar",
+        "note": "grated"
+      },
+      {
+        "quantity": 4,
+        "unit": "tbsp",
+        "name": "tomato salsa",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Beat the eggs with the salt in a mixing bowl.",
+      "Heat the oil in a large non-stick frying pan over medium heat. Cook the pepper and spring onions for 3 minutes until soft.",
+      "Pour in the eggs and stir gently for 2–3 minutes until fully set with no liquid egg remaining. Tip onto a plate and wipe out the pan.",
+      "Lay a tortilla in the dry pan, scatter a quarter of the cheese over half of it, top with a quarter of the eggs and fold over.",
+      "Cook for 2 minutes per side until golden and crisp and the cheese has melted. Repeat with the remaining tortillas.",
+      "Cut each quesadilla into wedges with a knife and serve with salsa, if using."
+    ]
+  },
+  {
+    "slug": "chicken-congee",
+    "title": "Chicken congee",
+    "category": "Breakfast",
+    "cuisine": "Chinese",
+    "tags": [
+      "Chicken",
+      "Rice",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 70,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "jasmine rice"
+      },
+      {
+        "quantity": 1,
+        "unit": "l",
+        "name": "gluten-free chicken stock"
+      },
+      {
+        "quantity": 750,
+        "unit": "ml",
+        "name": "water"
+      },
+      {
+        "quantity": 4,
+        "unit": "slices",
+        "name": "fresh ginger"
+      },
+      {
+        "quantity": 400,
+        "unit": "g",
+        "name": "boneless skinless chicken thighs"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "ground white pepper"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "spring onions",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "tamari (gluten-free soy sauce)"
+      },
+      {
+        "quantity": 2,
+        "unit": "tsp",
+        "name": "toasted sesame oil"
+      }
+    ],
+    "steps": [
+      "Rinse the rice in a sieve until the water runs mostly clear.",
+      "Put the rice, stock, water and ginger in a large pot and bring to the boil, then reduce to a gentle simmer, partly covered.",
+      "Add the whole chicken thighs and simmer for 20 minutes until cooked through: the thickest part should reach 74°C and the juices run clear. Lift out onto a board and wash your hands and the board after handling raw chicken.",
+      "Keep the rice simmering for a further 40–50 minutes, stirring often so it does not stick, until broken down into a thick, creamy porridge. Add a splash of water if it gets too thick.",
+      "Shred the chicken with two forks, stir it back into the pot with the salt and white pepper, and remove the ginger slices.",
+      "Ladle into bowls and top with spring onions, tamari and sesame oil.",
+      "To keep leftovers, cool within 1 hour, refrigerate and eat within 24 hours; reheat with a splash of water until steaming hot throughout."
+    ]
+  },
+  {
+    "slug": "kedgeree",
+    "title": "Kedgeree",
+    "category": "Breakfast",
+    "cuisine": "British",
+    "tags": [
+      "Fish",
+      "Rice",
+      "Eggs",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 15,
+    "cookTime": 30,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 300,
+        "unit": "g",
+        "name": "basmati rice"
+      },
+      {
+        "quantity": 4,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "smoked haddock fillets"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "bay leaf"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "sunflower oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "ground coriander"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "chilli powder"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "frozen peas"
+      },
+      {
+        "quantity": 1,
+        "unit": "tbsp",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "lemon",
+        "note": "cut into wedges",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Cook the rice in a saucepan of boiling water for 10–12 minutes until tender, then drain.",
+      "Meanwhile, lower the eggs into a small saucepan of boiling water and cook for 10 minutes until hard-boiled. Cool under cold water, peel and cut into quarters.",
+      "Put the haddock and bay leaf in a large frying pan, cover with water and simmer gently for 6–8 minutes until the fish reaches 63°C, is opaque and flakes easily. Lift out, discard the skin and any bones, and flake into large pieces.",
+      "Wipe out the frying pan, heat the oil over medium heat and cook the onion for 8 minutes until soft. Stir in the turmeric, cumin, coriander and chilli and cook for 1 minute.",
+      "Add the peas and cook for 2 minutes, then fold in the rice until coloured all over and piping hot.",
+      "Gently fold through the haddock, lemon juice and most of the parsley. Top with the eggs and remaining parsley and serve with lemon wedges, if using.",
+      "To keep leftovers, cool within 1 hour, refrigerate and eat within 24 hours; reheat until steaming hot throughout."
+    ]
+  },
+  {
+    "slug": "cottage-cheese-pancakes",
+    "title": "Cottage cheese pancakes",
+    "category": "Breakfast",
+    "cuisine": "Eastern European",
+    "tags": [
+      "Vegetarian",
+      "Eggs",
+      "Kid friendly"
+    ],
+    "prepTime": 15,
+    "cookTime": 20,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "cottage cheese",
+        "note": "drained well"
+      },
+      {
+        "quantity": 2,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "caster sugar"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "vanilla extract"
+      },
+      {
+        "quantity": 1,
+        "unit": "pinch",
+        "name": "salt"
+      },
+      {
+        "quantity": 100,
+        "unit": "g",
+        "name": "plain flour",
+        "note": "plus extra for dusting"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "sunflower oil",
+        "note": "for frying"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "soured cream",
+        "optional": true
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "raspberries",
+        "optional": true
+      }
+    ],
+    "steps": [
+      "Tip the cottage cheese into a sieve and press out as much liquid as you can, then put it in a mixing bowl and mash with a fork until fairly smooth.",
+      "Beat in the eggs, sugar, vanilla and salt, then stir in the flour to make a soft, thick mixture.",
+      "With floured hands, shape into 12 small patties about 2 cm thick and dust lightly with flour.",
+      "Heat the oil in a large non-stick frying pan over medium-low heat. Fry the pancakes in batches for 3–4 minutes per side until deep golden and firm in the centre.",
+      "Drain briefly on kitchen paper and serve warm with soured cream and raspberries, if using."
+    ]
+  },
+  {
+    "slug": "potato-breakfast-frittata",
+    "title": "Potato breakfast frittata",
+    "category": "Breakfast",
+    "cuisine": "Spanish",
+    "tags": [
+      "Vegetarian",
+      "Gluten-free",
+      "Dairy-free",
+      "Eggs",
+      "Potatoes",
+      "Budget"
+    ],
+    "prepTime": 15,
+    "cookTime": 35,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 500,
+        "unit": "g",
+        "name": "waxy potatoes",
+        "note": "peeled"
+      },
+      {
+        "quantity": 3,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "thinly sliced"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and sliced"
+      },
+      {
+        "quantity": 60,
+        "unit": "g",
+        "name": "baby spinach"
+      },
+      {
+        "quantity": 8,
+        "unit": "",
+        "name": "eggs"
+      },
+      {
+        "quantity": 0.75,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "fresh parsley",
+        "note": "chopped"
+      }
+    ],
+    "steps": [
+      "Cut the potatoes into 5 mm slices. Heat the oil in a 24 cm ovenproof non-stick frying pan over medium heat and cook the potatoes and onion, partly covered, for 15 minutes, turning often, until tender.",
+      "Add the pepper and cook for 4 minutes, then stir in the spinach until wilted.",
+      "Heat the grill to medium-high.",
+      "Beat the eggs with the salt, pepper and parsley in a mixing bowl, then pour over the vegetables and gently shake the pan to spread evenly.",
+      "Cook over low heat for 8–10 minutes until the edges and base are set.",
+      "Slide the pan under the grill for 3–5 minutes until puffed, golden and set in the centre (71°C), with no liquid egg when cut.",
+      "Rest for 5 minutes, then cut into wedges. Leftovers keep in the fridge for up to 2 days and are good cold."
+    ]
+  },
+  {
+    "slug": "tofu-scramble",
+    "title": "Tofu scramble",
+    "category": "Breakfast",
+    "cuisine": "International",
+    "tags": [
+      "Vegetarian",
+      "Vegan",
+      "Gluten-free",
+      "Dairy-free"
+    ],
+    "prepTime": 10,
+    "cookTime": 12,
+    "servings": "4",
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "olive oil"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "onion",
+        "note": "finely chopped"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "red pepper",
+        "note": "deseeded and diced"
+      },
+      {
+        "quantity": 2,
+        "unit": "cloves",
+        "name": "garlic",
+        "note": "crushed"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "ground turmeric"
+      },
+      {
+        "quantity": 1,
+        "unit": "tsp",
+        "name": "smoked paprika"
+      },
+      {
+        "quantity": 560,
+        "unit": "g",
+        "name": "firm tofu",
+        "note": "drained"
+      },
+      {
+        "quantity": 2,
+        "unit": "tbsp",
+        "name": "nutritional yeast"
+      },
+      {
+        "quantity": 0.5,
+        "unit": "tsp",
+        "name": "salt"
+      },
+      {
+        "quantity": 0.25,
+        "unit": "tsp",
+        "name": "black pepper"
+      },
+      {
+        "quantity": 150,
+        "unit": "g",
+        "name": "cherry tomatoes",
+        "note": "halved"
+      },
+      {
+        "quantity": 80,
+        "unit": "g",
+        "name": "baby spinach"
+      }
+    ],
+    "steps": [
+      "Pat the tofu dry with kitchen paper.",
+      "Heat the oil in a large frying pan over medium heat. Cook the onion and pepper for 5 minutes until soft, then add the garlic, turmeric and paprika and cook for 1 minute.",
+      "Crumble the tofu into the pan with your hands into rough, scrambled-egg-sized pieces.",
+      "Stir in the nutritional yeast, salt and pepper and cook for 4–5 minutes, stirring, until the tofu is hot and evenly golden.",
+      "Add the tomatoes and spinach and cook for 2 minutes until the spinach has wilted. Serve straight away."
+    ]
+  }
+]
