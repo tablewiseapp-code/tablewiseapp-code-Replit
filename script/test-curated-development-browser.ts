@@ -73,7 +73,7 @@ async function main() {
     await wait(el(`meals-catalog-facts-${recipes[0].id}`));
     assert.equal(await evaluate("document.querySelectorAll('[data-testid^=\"recipe-card-\"]').length"), 20);
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
-    assert.equal(await evaluate("document.querySelector('[data-testid=\"dev-nav\"] a').getAttribute('href')"), "/meals");
+    assert.deepEqual(await evaluate("Array.from(document.querySelectorAll('[data-testid=\"app-nav\"] a')).map(a => a.getAttribute('href'))"), ["/recipes", "/meals", "/grocery-list", "/my-ideas"]);
     assert.equal(await evaluate("Boolean(document.querySelector('a[href=\"/plan\"]'))"), false);
     const legacyKey = "tablewise:mvp:plan:v1:2026-10-19";
     const legacyValue = JSON.stringify({ version: 1, weekStart: "2026-10-19",
@@ -84,7 +84,7 @@ async function main() {
     await wait(el(`meals-catalog-facts-${recipes[0].id}`));
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "false");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "false");
     assert.equal(await evaluate(`Boolean(${el(`nutrition-catalog-${recipes[0].id}`)})`), false);
     for (const recipe of recipes) await checkPrice(recipe, "catalog");
     await evaluate(`${el("nutrition-details-toggle")}.click()`);
@@ -165,16 +165,15 @@ async function main() {
     assert.ok(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"));
     await navigate(`${base}/meals`);
     await wait(el("nutrition-details-toggle"));
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "true");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "true");
     await evaluate(`${el("nutrition-details-toggle")}.click()`);
     await navigate(`${base}/meals`);
     await wait(el(`price-catalog-${recipes[0].id}`));
-    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-pressed')`), "false");
+    assert.equal(await evaluate(`${el("nutrition-details-toggle")}.getAttribute('aria-checked')`), "false");
     assert.equal(await evaluate(`Boolean(${el(`nutrition-catalog-${recipes[0].id}`)})`), false);
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), legacyValue);
-    await evaluate(`${el("dev-nav-mobile-trigger")}.click()`);
-    await wait(el("dev-nav-mobile-link-meals"));
-    assert.equal(await evaluate(`Boolean(${el("dev-nav-mobile-link-plan")})`), false);
+    await wait(el("app-nav-bottom-link-meals"));
+    assert.equal(await evaluate(`${el("app-nav-bottom-link-meals")}.getAttribute('aria-current')`), "page");
     await navigate(`${base}/recipes`);
     await wait(el(`recipe-credit-${recipes[0].id}`));
     for (const recipe of recipes) assert.equal(await evaluate(`${el(`recipe-credit-${recipe.id}`)}.textContent.trim()`), expectedCredit(recipe));

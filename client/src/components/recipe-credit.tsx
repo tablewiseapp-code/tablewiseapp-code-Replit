@@ -9,10 +9,11 @@ export function RecipeCreditLine({ recipe }: { recipe: RecipeCredit & { id: stri
   const personal = recipe.creditKind === "mine";
   const name = recipe.creditName?.trim();
   const reference = recipe.chefReference?.trim();
+  // No known author: show nothing rather than a "not specified" message.
+  if (!personal && !name && !reference) return null;
   return <span className="min-w-0 max-w-full basis-full break-words" data-testid={`recipe-credit-${recipe.id}`}>
     {personal ? `${t("creditMine")}${name ? ` — ${name}` : ""}` :
-      name ? `${t(reference ? "creditReference" : "creditChef")}: ${name}` :
-        reference ? `${t("creditReference")}: ${reference}` : t("creditUnknown")}
+      name ? `${t(reference ? "creditReference" : "creditChef")}: ${name}` : `${t("creditReference")}: ${reference}`}
   </span>;
 }
 

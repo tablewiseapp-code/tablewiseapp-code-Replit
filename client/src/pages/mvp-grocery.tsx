@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { Link, useSearch } from "wouter";
 import { ArrowLeft, Check, CircleAlert, RotateCcw, ShoppingBasket } from "lucide-react";
-import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
 import { useGroceryChecks, useRecipeCatalog, useWeekPlan } from "@/hooks/use-week-workspace";
 import { buildGroceries, groceryCategories, type GroceryCategory } from "@/lib/grocery-engine";
@@ -11,7 +10,7 @@ import { useI18n } from "@/lib/i18n";
 import type { Recipe } from "@/lib/storage";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 
-const buttonBase = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] disabled:cursor-not-allowed disabled:opacity-45";
+const buttonBase = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-45";
 
 function localDate(value: string, locale: string, options: Intl.DateTimeFormatOptions) {
   const date = parseCalendarDate(value);
@@ -60,27 +59,26 @@ function GroceryForWeek({ week }: { week: string }) {
   };
 
   return (
-    <div dir={dir} className="min-h-[100dvh] bg-[#f5f4ed] text-[#27342e]" data-testid="mvp-grocery">
-      <AppHeader title="TableWise" subtitle={t("groceryEyebrow")} />
+    <div dir={dir} className="min-h-[100dvh] bg-background text-foreground" data-testid="mvp-grocery">
       <PageContainer size="lg" className="py-5 sm:py-9">
         <div className="mx-auto max-w-5xl">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <Link href={plannerURL(week)} className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium text-[#637369] hover:bg-white hover:text-[#34483b]" data-testid="mvp-back-plan">
+            <Link href={plannerURL(week)} className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium text-[#637369] hover:bg-white hover:text-primary-hover" data-testid="mvp-back-plan">
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               {t("backPlanner")}
             </Link>
-            <time dateTime={week} className="rounded-full border border-[#d9dfd4] bg-[#fbfbf7] px-3 py-2 text-xs font-medium text-[#607166]">
+            <time dateTime={week} className="rounded-full border border-border bg-background px-3 py-2 text-xs font-medium text-[#607166]">
               {t("weekOf")} {localDate(week, locale, { month: "long", day: "numeric", year: "numeric" })}
             </time>
           </div>
 
-          <header className="relative overflow-hidden rounded-[1.75rem] border border-[#dbe1d7] bg-[#e8eee4] px-5 py-7 sm:px-9 sm:py-9">
-            <div className="pointer-events-none absolute -end-8 -top-16 h-56 w-56 rounded-full border border-[#cbd7c9]" />
+          <header className="relative overflow-hidden rounded-[1.75rem] border border-border bg-accent px-5 py-7 sm:px-9 sm:py-9">
+            <div className="pointer-events-none absolute -end-8 -top-16 h-56 w-56 rounded-full border border-border" />
             <div className="relative">
               <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#8d674b]"><ShoppingBasket className="h-4 w-4" aria-hidden="true" />{t("groceryEyebrow")}</p>
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.035em] text-[#273b30] sm:text-4xl">{t("groceryTitle")}</h1>
               {planDoc.plan.confirmed && catalog.data && (
-                <p className="mt-3 text-sm text-[#5c6b60]">
+                <p className="mt-3 text-sm text-muted-foreground">
                   {t("groceryCount", { count: grocery.items.length, recipes: grocery.recipeTitles.length })}
                 </p>
               )}
@@ -112,11 +110,11 @@ function GroceryForWeek({ week }: { week: string }) {
           )}
 
           {!planDoc.plan.confirmed ? (
-            <section className="mt-6 rounded-2xl border border-dashed border-[#cbd5c7] bg-[#fbfbf7] p-6 sm:p-8">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e8eee4] text-[#69836c]"><CircleAlert className="h-5 w-5" aria-hidden="true" /></div>
+            <section className="mt-6 rounded-2xl border border-dashed border-border bg-background p-6 sm:p-8">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-primary"><CircleAlert className="h-5 w-5" aria-hidden="true" /></div>
               <h2 className="mt-4 text-xl font-semibold">{t("noConfirmedPlan")}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#68756a]">{t("finishPlan")}</p>
-              <Link href={plannerURL(week)} className={`${buttonBase} mt-5 bg-[#42624e] text-white hover:bg-[#344f3e]`}>{t("backPlanner")}</Link>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("finishPlan")}</p>
+              <Link href={plannerURL(week)} className={`${buttonBase} mt-5 bg-primary text-white hover:bg-primary-hover`}>{t("backPlanner")}</Link>
             </section>
           ) : (
             <>
@@ -132,7 +130,7 @@ function GroceryForWeek({ week }: { week: string }) {
                 </section>
               )}
               {catalog.isFetching && !catalog.isError && (
-                <section role="status" className="mt-5 rounded-2xl border border-[#d9dfd4] bg-[#fbfbf7] p-4 text-sm text-[#68756a]">
+                <section role="status" className="mt-5 rounded-2xl border border-border bg-background p-4 text-sm text-muted-foreground">
                   {t("loading")}
                   {recipes.length > 0 && <p className="mt-1 text-xs">{t("stale")}</p>}
                 </section>
@@ -150,23 +148,23 @@ function GroceryForWeek({ week }: { week: string }) {
 
               {catalog.isPending && !catalog.data ? (
                 <section className="mt-6 grid gap-3 sm:grid-cols-2" aria-label={t("loading")}>
-                  {[0, 1, 2, 3, 4, 5].map(index => <div key={index} className="h-16 animate-pulse rounded-xl bg-[#e9ebe4]" />)}
+                  {[0, 1, 2, 3, 4, 5].map(index => <div key={index} className="h-16 animate-pulse rounded-xl bg-border" />)}
                 </section>
               ) : catalog.isError && !catalog.data ? null : (
                 <>
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#dfe3da] bg-[#fbfbf7] px-4 py-3">
-                    <p className="text-sm font-medium text-[#5c6b60]" aria-live="polite">
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3">
+                    <p className="text-sm font-medium text-muted-foreground" aria-live="polite">
                       {t("checkedCount", { checked: checkedVisible.length, total: grocery.items.length })}
                     </p>
                     {checkedVisible.length > 0 && (
-                      <button type="button" disabled={interactionBlocked} onClick={clearChecks} className="min-h-11 rounded-full px-2 text-xs font-semibold text-[#68756a] underline underline-offset-4 disabled:opacity-45">
+                      <button type="button" disabled={interactionBlocked} onClick={clearChecks} className="min-h-11 rounded-full px-2 text-xs font-semibold text-muted-foreground underline underline-offset-4 disabled:opacity-45">
                         {t("clearChecks")}
                       </button>
                     )}
                   </div>
 
                   {grocery.items.length === 0 ? (
-                    <section className="mt-5 rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-6 text-center text-sm text-[#69766d]">{t("emptyGroceries")}</section>
+                    <section className="mt-5 rounded-2xl border border-dashed border-border bg-background p-6 text-center text-sm text-[#69766d]">{t("emptyGroceries")}</section>
                   ) : (
                     <div className="mt-6 grid gap-6 md:grid-cols-2">
                       {groceryCategories.map(category => {
@@ -185,14 +183,14 @@ function GroceryForWeek({ week }: { week: string }) {
                                 const itemIndex = grocery.items.indexOf(item);
                                 return (
                                   <li key={item.id} data-testid="mvp-grocery-item">
-                                    <label className={`flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${checked ? "border-[#b7cbb3] bg-[#edf3e9]" : "border-[#dfe3da] bg-[#fbfbf7] hover:border-[#becdbb]"}`}>
+                                    <label className={`flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${checked ? "border-[#b7cbb3] bg-[#edf3e9]" : "border-border bg-background hover:border-[#becdbb]"}`}>
                                       <input type="checkbox" checked={checked} disabled={interactionBlocked}
                                         onChange={() => checkDoc.toggle(item.id)}
                                         aria-label={item.text}
                                         className="mt-0.5 h-5 w-5 shrink-0 accent-[#54745a] disabled:cursor-not-allowed"
                                         data-testid={`mvp-check-${itemIndex}`} />
                                       <span className="min-w-0 flex-1">
-                                        <span dir="auto" data-testid={`mvp-quantity-${itemIndex}`} className={`block break-words text-sm font-medium ${checked ? "text-[#79847b] line-through" : "text-[#34443a]"}`}>{item.text}</span>
+                                        <span dir="auto" data-testid={`mvp-quantity-${itemIndex}`} className={`block break-words text-sm font-medium ${checked ? "text-[#79847b] line-through" : "text-foreground"}`}>{item.text}</span>
                                         {sourceTitles.length > 1 ? (
                                           <span className="mt-1 block text-xs leading-5 text-[#778279]">{t("fromRecipes", { recipes: sourceTitles.join(", ") })}</span>
                                         ) : null}
@@ -200,7 +198,7 @@ function GroceryForWeek({ week }: { week: string }) {
                                       {checked && <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#56735a]" aria-hidden="true" />}
                                     </label>
                                     {item.sources.length > 1 && (
-                                      <details className="px-3 pb-2 text-xs leading-5 text-[#68756a]">
+                                      <details className="px-3 pb-2 text-xs leading-5 text-muted-foreground">
                                         <summary className="min-h-9 cursor-pointer break-words py-2">
                                           {t("fromRecipes", { recipes: sourceTitles.join(", ") })}
                                         </summary>
@@ -227,11 +225,11 @@ function GroceryForWeek({ week }: { week: string }) {
               )}
             </>
           )}
-          <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-[#dfe3da] pt-5">
-            <Link href={plannerURL(week)} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[#627269] hover:text-[#34483b]" data-testid="mvp-back-plan">
+          <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+            <Link href={plannerURL(week)} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[#627269] hover:text-primary-hover" data-testid="mvp-back-plan">
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" /> {t("backPlanner")}
             </Link>
-            <Link href="/meals" className="min-h-11 px-2 py-3 text-xs font-medium text-[#829087] underline decoration-[#c7d0c3] underline-offset-4">{t("advancedInfo")}</Link>
+            <Link href="/meals" className="min-h-11 px-2 py-3 text-xs font-medium text-muted-foreground underline decoration-border underline-offset-4">{t("advancedInfo")}</Link>
           </footer>
         </div>
       </PageContainer>
@@ -245,13 +243,12 @@ export default function MvpGrocery() {
   const week = selectedWeek(search);
   if (!week) {
     return (
-      <div dir={dir} className="min-h-[100dvh] bg-[#f5f4ed] text-[#27342e]">
-        <AppHeader title="TableWise" subtitle={t("groceryEyebrow")} />
+      <div dir={dir} className="min-h-[100dvh] bg-background text-foreground">
         <PageContainer size="md" className="py-12">
           <section role="alert" className="rounded-2xl border border-[#d8c6b7] bg-[#fffaf4] p-6">
             <h1 className="text-xl font-semibold">{t("invalidWeek")}</h1>
-            <p className="mt-2 text-sm text-[#6b746d]">{t("invalidWeekHint")}</p>
-            <Link href="/meals" className={`${buttonBase} mt-5 bg-[#42624e] text-white`}>{t("backPlanner")}</Link>
+            <p className="mt-2 text-sm text-muted-foreground">{t("invalidWeekHint")}</p>
+            <Link href="/meals" className={`${buttonBase} mt-5 bg-primary text-white`}>{t("backPlanner")}</Link>
           </section>
         </PageContainer>
       </div>

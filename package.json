@@ -24,6 +24,8 @@
     "test:grocery-completion-browser": "node script/test-grocery-completion-browser.mjs",
     "test:weekly-planner": "tsx script/test-weekly-planner.ts",
     "test:cooking-mode-browser": "node script/test-cooking-mode-browser.mjs",
+    "test:app-nav-browser": "node script/test-app-nav-browser.mjs",
+    "test:ui-pass-browser": "node script/test-ui-pass-browser.mjs",
     "test:recipe-price": "tsx script/test-recipe-price.ts",
     "test:recipe-fact-layout": "tsx script/test-recipe-fact-layout.ts",
     "test:recipe-fact-layout-browser": "tsx script/test-recipe-fact-layout-browser.ts",

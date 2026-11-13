@@ -1,14 +1,13 @@
 ﻿import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
-import { Search, X } from "lucide-react";
+import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { StarRating } from "@/components/ui/star-rating";
 import { getRecipeUserMeta, type RecipeUserMeta } from "@/hooks/use-recipe-user-meta";
 import { useI18n } from "@/lib/i18n";
-import { AppHeader } from "@/components/layout/app-header";
 import { PageContainer } from "@/components/layout/page-container";
-import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { Button } from "@/components/ui/button";
 import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
@@ -30,8 +29,7 @@ import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type Fil
 import { RecipeIngredients } from "@/components/recipe-ingredients";
 import { NutritionDetailsToggle, useRecipeDisplay } from "@/components/recipe-display";
 import { usableNutrition } from "@shared/recipe-nutrition";
-import { RecipePriceSummary } from "@/components/recipe-price";
-import { RecipeCreditLine } from "@/components/recipe-credit";
+import { DietaryTags, NutritionRow, RecipeMeta } from "@/components/recipe-summary";
 import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTime } from "@/components/recipe-time-display";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
@@ -39,6 +37,7 @@ import { PlannerBoard } from "@/components/planner-board";
 import { usePlannerCopy } from "@/lib/planner-copy";
 import { mealSlots, plannedSlotCount, totalSlots, writePlan, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type Recipe = PlannerRecipe;
@@ -96,7 +95,7 @@ const defaultFilters: Filters = {
 const defaultState: WeeklyMealsState = {
   filters: defaultFilters,
   selectedIds: [],
-  expandedSections: ["mealType", "time", "protein"],
+  expandedSections: [], // advanced filter groups start collapsed
   showMoreFilters: false,
   planAssignments: [],
 };
@@ -108,6 +107,9 @@ const TAG_LABELS: Record<string, Record<string, string>> = {
   he: { Breakfast: "ארוחת בוקר", Lunch: "ארוחת צהריים", Dinner: "ארוחת ערב", Chicken: "עוף", Fish: "דגים", Beef: "בקר", Pasta: "פסטה", Vegetarian: "צמחוני", Vegan: "טבעוני", "Source-verified": "מקור מאומת", "Synthetic test data": "נתוני בדיקה", "Unverified collection link": "קישור אוסף לא מאומת", "Development estimates": "הערכות לפיתוח" },
 };
 const tagLabel = (lang: string, tag: string) => TAG_LABELS[lang]?.[tag] ?? tag;
+
+// English page copy for this pass; other languages keep their existing translations.
+const WEEK_EN = { title: "Plan your week", subtitle: "Pick recipes you'd like to cook, then generate your plan." };
 
 const MEALS: ("Breakfast" | "Lunch" | "Dinner")[] = ["Breakfast", "Lunch", "Dinner"];
 
@@ -131,14 +133,6 @@ function saveState(state: WeeklyMealsState) {
   } catch (e) {
     console.error("Failed to save state:", e);
   }
-}
-
-function getMonogram(title: string): string {
-  const words = title.split(" ").filter(w => w.length > 0);
-  if (words.length >= 2) {
-    return (words[0][0] + words[1][0]).toUpperCase();
-  }
-  return title.substring(0, 2).toUpperCase();
 }
 
 export default function WeeklyMeals() {
@@ -184,6 +178,7 @@ function WeeklyMealsContent() {
   const query = useDeferredValue(search).trim();
   const [page, setPage] = useState(1);
   const [showAllSelected, setShowAllSelected] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersKey = JSON.stringify(state.filters);
   useEffect(() => setPage(1), [query, filtersKey]); // new search or filters → back to page 1
   const planCopy = usePlannerCopy();
@@ -333,10 +328,23 @@ function WeeklyMealsContent() {
     updateFilters(defaultFilters);
   };
 
+  // Removing a selection is reversible: Undo puts the same recipe back in the same position.
+  const removeSelected = (id: string) => {
+    const index = state.selectedIds.indexOf(id);
+    const title = recipes.find(r => r.id === id)?.title ?? "";
+    setState(prev => ({ ...prev, selectedIds: prev.selectedIds.filter(i => i !== id) }));
+    setMaxSelectionsHit(false);
+    toast({
+      title: t("removedFromSelection", { title }),
+      action: <ToastAction altText={t("undo")} onClick={() => setState(prev =>
+        prev.selectedIds.includes(id) || prev.selectedIds.length >= 12 ? prev
+          : { ...prev, selectedIds: [...prev.selectedIds.slice(0, index), id, ...prev.selectedIds.slice(index)] })}>{t("undo")}</ToastAction>,
+    });
+  };
+
   const toggleSelection = (id: string) => {
     if (state.selectedIds.includes(id)) {
-      setState(prev => ({ ...prev, selectedIds: prev.selectedIds.filter(i => i !== id) }));
-      setMaxSelectionsHit(false);
+      removeSelected(id);
     } else if (state.selectedIds.length < 12) {
       setState(prev => ({ ...prev, selectedIds: [...prev.selectedIds, id] }));
       setMaxSelectionsHit(false);
@@ -520,7 +528,6 @@ function WeeklyMealsContent() {
   if (isLoadingRecipes) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <AppHeader title="Tablewise" subtitle={t("meals.calmPlanning")} onBrandClick={() => setLocation("/")} />
         <PageContainer size="xl" className="flex-1 py-6">
           <p className="text-sm text-muted-foreground">{t("recipes.loading") || "Loading recipes..."}</p>
         </PageContainer>
@@ -531,21 +538,20 @@ function WeeklyMealsContent() {
   if (recipesError) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <AppHeader title="Tablewise" subtitle={t("meals.calmPlanning")} onBrandClick={() => setLocation("/")} />
         <PageContainer size="xl" className="flex-1 py-6">
-          <div className="rounded-xl border hairline p-5 bg-[#FAFAF8] max-w-xl">
+          <div className="card max-w-xl p-5">
             <p className="text-sm text-foreground mb-3">Failed to load recipes.</p>
             <p className="text-xs text-muted-foreground mb-4">{recipesError}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 min-h-11 rounded-full bg-foreground text-background text-sm"
+                className="btn btn-primary"
               >
                 Retry
               </button>
               <button
                 onClick={() => setLocation("/import")}
-                className="px-4 py-2 min-h-11 rounded-full border hairline text-sm text-muted-foreground hover:text-foreground"
+                className="btn btn-secondary"
               >
                 {t("nav.importRecipe")}
               </button>
@@ -559,18 +565,17 @@ function WeeklyMealsContent() {
   if (recipes.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <AppHeader title="Tablewise" subtitle={t("meals.calmPlanning")} onBrandClick={() => setLocation("/")} />
         <PageContainer size="xl" className="flex-1 py-6">
-          <div className="rounded-xl border hairline p-5 bg-[#FAFAF8] max-w-xl">
+          <div className="card max-w-xl p-5">
             <p className="text-sm text-foreground mb-3">{t("recipes.empty") || "No recipes yet"}</p>
             <p className="text-xs text-muted-foreground mb-4">
               Import at least one recipe to build a weekly plan.
             </p>
             <button
               onClick={() => setLocation("/import")}
-              className="px-4 py-2 min-h-11 rounded-full bg-foreground text-background text-sm"
+              className="btn btn-primary"
             >
-              {t("nav.importRecipe")}
+              {t("nav.addRecipe")}
             </button>
           </div>
         </PageContainer>
@@ -591,16 +596,15 @@ function WeeklyMealsContent() {
       else if (!result.added) notify(sText("fillNothing"));
     };
     return (
-      <div className="min-h-screen bg-[#fafaf7] flex flex-col">
-        <AppHeader title="Tablewise" subtitle={planCopy("title")} onBrandClick={() => setLocation("/")} />
+      <div className="min-h-screen bg-background flex flex-col">
         <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
           <button type="button" onClick={() => setPlanGenerated(false)} data-testid="button-back-to-selection"
-            className="-ms-2 mb-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-medium text-[#42624e] hover:bg-[#f2f6ef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a]">
+            className="btn btn-text -ms-2 mb-2">
             {planCopy("back")}
           </button>
-          <h1 className="text-2xl font-medium text-foreground">{planCopy("title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{planCopy("subtitle")}</p>
-          <p className="mt-3 mb-6 text-sm text-[#42624e]" data-testid="plan-summary">
+          <h1 className="page-title">{planCopy("title")}</h1>
+          <p className="page-subtitle">{planCopy("subtitle")}</p>
+          <p className="mt-3 mb-6 text-sm text-primary" data-testid="plan-summary">
             {planCopy("summary", { recipes: recipeCount, planned, total: totalSlots })}
           </p>
 
@@ -608,15 +612,15 @@ function WeeklyMealsContent() {
             <div className="rounded-lg border hairline bg-white p-6 text-center" data-testid="planner-empty">
               <h2 className="text-base font-medium">{planCopy("emptyTitle")}</h2>
               <p className="mt-1 mb-4 text-sm text-muted-foreground">{planCopy("emptyBody")}</p>
-              <button type="button" onClick={() => setPlanGenerated(false)} className="inline-flex min-h-11 items-center rounded-full bg-[#42624e] px-4 text-sm font-medium text-white hover:bg-[#385540]">{planCopy("chooseRecipes")}</button>
+              <button type="button" onClick={() => setPlanGenerated(false)} className="btn btn-primary">{planCopy("chooseRecipes")}</button>
             </div>
           ) : (
             <>
               <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border hairline bg-white p-3" data-testid="fill-week-panel">
                 <button type="button" onClick={autoFill} disabled={weekLocked} data-testid="button-fill-week"
-                  className="min-h-11 rounded-full bg-[#42624e] px-4 text-sm font-medium text-white hover:bg-[#385540] disabled:opacity-50">{sText("fillWeek")}</button>
+                  className="btn btn-secondary">{sText("fillWeek")}</button>
                 <p className="min-w-48 flex-1 text-xs text-muted-foreground">{sText("fillWeekHint", { days: settings.planning.cookingDays })}{" "}
-                  <button type="button" onClick={() => setLocation("/settings")} className="font-medium text-[#42624e] underline" data-testid="link-settings-plan">{sText("changeSettings")}</button></p>
+                  <button type="button" onClick={() => setLocation("/settings")} className="font-medium text-primary underline" data-testid="link-settings-plan">{sText("changeSettings")}</button></p>
               </div>
               <PlannerBoard recipes={shortlist} plan={plan} locked={weekLocked} commit={commit} notify={notify} dayNames={dayNames} mealNames={Object.values(mealNames)}
                 onView={id => setLocation(`/recipe/${encodeURIComponent(id)}`)}
@@ -624,18 +628,18 @@ function WeeklyMealsContent() {
             </>
           )}
 
-          <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex flex-col gap-2 border-t border-[#d9dfd4] bg-[#fafaf7]/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-end">
+          <div className="sticky bottom-[var(--app-bottom-nav)] z-10 -mx-4 mt-6 flex flex-col gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-end">
             {planned === 0 && <p className="me-auto text-xs text-muted-foreground">{planCopy("groceryNone")}</p>}
             {!weekLocked && planned > 0 && (
-              <button type="button" onClick={() => setConfirmClear(true)} data-testid="button-clear-week" className="min-h-11 rounded-full px-3 text-sm text-muted-foreground hover:text-foreground sm:me-auto">{planCopy("clear")}</button>
+              <button type="button" onClick={() => setConfirmClear(true)} data-testid="button-clear-week" className="btn btn-text sm:me-auto">{planCopy("clear")}</button>
             )}
             {weekLocked ? (
-              <button type="button" onClick={() => setWeekLocked(false)} data-testid="button-unlock-week" className="min-h-11 rounded-full border border-[#d9dfd4] bg-white px-4 text-sm font-medium">{planCopy("finalized")} · {planCopy("unlock")}</button>
+              <button type="button" onClick={() => setWeekLocked(false)} data-testid="button-unlock-week" className="btn btn-secondary">{planCopy("finalized")} · {planCopy("unlock")}</button>
             ) : (
-              <button type="button" onClick={() => setWeekLocked(true)} disabled={planned === 0} data-testid="button-finalize-week" className="min-h-11 rounded-full border border-[#d9dfd4] bg-white px-4 text-sm font-medium disabled:opacity-50">{planCopy("finalize")}</button>
+              <button type="button" onClick={() => setWeekLocked(true)} disabled={planned === 0} data-testid="button-finalize-week" className="btn btn-secondary">{planCopy("finalize")}</button>
             )}
             <button type="button" onClick={() => setLocation("/grocery-list")} disabled={planned === 0} data-testid="button-create-grocery-list"
-              className="min-h-11 rounded-full bg-[#42624e] px-5 text-sm font-medium text-white hover:bg-[#385540] disabled:opacity-50">{planCopy("grocery")}</button>
+              className="btn btn-primary">{planCopy("grocery")}</button>
           </div>
 
           <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
@@ -652,100 +656,26 @@ function WeeklyMealsContent() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <AppHeader
-        title="Tablewise"
-        subtitle={t("meals.calmPlanning")}
-        onBrandClick={() => setLocation("/")}
-        desktopActions={
-          <nav className="flex items-center gap-6">
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.howItWorks")}</a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.plan")}</a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">{t("meals.cost")}</a>
-            <button className="text-sm min-h-11 text-muted-foreground hover:text-foreground px-3 py-1.5 border hairline rounded-lg" data-testid="button-login">
-              {t("meals.logIn")}
-            </button>
-          </nav>
-        }
-        mobileMenuTitle={t("meals.calmPlanning")}
-        mobileMenuContent={
-          <div className="space-y-2">
-            <a href="#" className="block px-3 py-2.5 min-h-11 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.howItWorks")}</a>
-            <a href="#" className="block px-3 py-2.5 min-h-11 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.plan")}</a>
-            <a href="#" className="block px-3 py-2.5 min-h-11 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5">{t("meals.cost")}</a>
-            <button className="w-full text-left px-3 py-2.5 min-h-11 text-sm rounded-lg border hairline text-muted-foreground hover:text-foreground" data-testid="button-login-mobile">
-              {t("meals.logIn")}
-            </button>
-          </div>
-        }
-      />
-
-      <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
-        {/* Sticky: the next step stays in reach while browsing. The app header is not sticky, so nothing overlaps. */}
-        <div className="sticky top-0 z-20 -mt-4 sm:-mt-6 mb-4 flex items-center gap-3 border-b hairline bg-background/95 py-2 sm:py-3 backdrop-blur" data-testid="weekly-meals-header">
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-base sm:text-xl md:text-2xl font-medium text-foreground">{t("meals.step2Title")}</h1>
-            <p id="continue-hint" className="mobile-readable-xs text-muted-foreground" aria-live="polite" data-testid="selected-count">
-              {canGenerate ? t("meals.selectedShort", { count: state.selectedIds.length }) : t("meals.minimum_meals_selection")}
-            </p>
-          </div>
-          <button
-            onClick={generatePlan}
-            disabled={!canGenerate}
-            aria-describedby="continue-hint"
-            className={`flex-shrink-0 px-4 sm:px-6 py-2 min-h-11 text-sm rounded-full ${canGenerate ? "bg-foreground text-background hover:bg-foreground/90" : "bg-foreground/20 text-muted-foreground cursor-not-allowed"}`}
-            data-testid="button-generate-plan"
-          >
-            {t("meals.generateWeeklyPlan")} <span aria-hidden="true">→</span>
-          </button>
-        </div>
-        {/* Counts come from the exact lists rendered below: all → saved restrictions → page filters/search. */}
-        <ActivePreferences settings={settings} counts={recipes.length ? matchCounts(personalized, filteredRecipes) : null}
-          noDevices={devices.length === 0} onEdit={() => setLocation("/settings")} />
-        <form role="search" className="mb-4" data-testid="recipe-search" onSubmit={e => {
-          // Results update while typing; Enter takes you to them (they sit below the filters on phones).
-          e.preventDefault();
-          (document.activeElement as HTMLElement | null)?.blur();
-          document.getElementById("meal-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }}>
-          <label htmlFor="recipe-search-input" className="mb-1.5 block text-base font-medium text-foreground">{generateCopy(lang, "searchLabel")}</label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <input id="recipe-search-input" type="search" value={search} onChange={e => setSearch(e.target.value)} maxLength={120}
-              placeholder={generateCopy(lang, "searchPlaceholder")} autoComplete="off" enterKeyHint="search" data-testid="recipe-search-input"
-              className="min-h-12 w-full rounded-full border border-[#d9dfd4] bg-white ps-10 pe-12 text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a] [&::-webkit-search-cancel-button]:hidden" />
-            {search && <button type="button" onClick={() => setSearch("")} aria-label={generateCopy(lang, "searchClear")} data-testid="recipe-search-clear"
-              className="absolute end-1 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>}
-          </div>
-        </form>
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-          
-          <aside id="meal-filters" className="w-full lg:w-[240px] lg:flex-shrink-0 scroll-mt-4">
-            <div className="lg:sticky lg:top-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-foreground" data-testid="additional-filters-count">{t("meals.filters", { count: activeFilterCount })}</span>
+  // One filter panel: the desktop sidebar and the mobile sheet render the same controls.
+  const filterPanel = (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-medium text-foreground" data-testid="additional-filters-count">{t("filters.open", { count: activeFilterCount })}</h2>
                 {activeFilterCount > 0 && (
-                  <button 
-                    onClick={clearAllFilters}
-                    className="text-xs min-h-11 px-2 text-muted-foreground hover:text-foreground"
-                    data-testid="button-clear-filters"
-                  >
-                    {t("meals.clearAll")}
+                  <button type="button" onClick={clearAllFilters} className="btn btn-text" data-testid="button-clear-filters">
+                    {t("filters.clearAll")}
                   </button>
                 )}
               </div>
-              <p className="mb-2 text-xs text-muted-foreground" aria-live="polite" data-testid="sidebar-matching" data-count={filteredRecipes.length}>
+              <p className="mb-3 text-sm text-muted-foreground" aria-live="polite" data-testid="sidebar-matching" data-count={filteredRecipes.length}>
                 {filteredRecipes.length === 1 ? t("meals.matchingCountOne") : t("meals.matchingCount", { count: filteredRecipes.length })}
               </p>
               {activeFilterChips.length > 0 && (
-                <ul aria-label={t("meals.activeFilters")} className="mb-4 flex flex-wrap gap-1.5" data-testid="active-filter-chips">
+                <ul aria-label={t("filters.applied")} className="mb-4 flex flex-wrap gap-1.5" data-testid="active-filter-chips">
                   {activeFilterChips.map(chip => (
                     <li key={chip.label}>
                       <button type="button" onClick={chip.remove} aria-label={t("meals.removeFilter", { label: chip.label })} data-testid="active-filter-chip"
-                        className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[#d9dfd4] bg-white ps-3 pe-2 text-xs text-foreground hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#496c5a]">
+                        className="chip">
                         {chip.label}<X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                       </button>
                     </li>
@@ -755,12 +685,12 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="mealType">
                 <button 
-                  onClick={() => toggleSection("mealType")}
+                  onClick={() => toggleSection("mealType")} aria-expanded={state.expandedSections.includes("mealType")}
                   className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-mealtype"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.mealType")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("mealType") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.mealType")}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("mealType") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("mealType") && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -775,7 +705,7 @@ function WeeklyMealsContent() {
                         <button
                           key={type}
                           onClick={() => toggleArrayFilter("mealType", type)}
-                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.mealType.includes(type) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className="chip" aria-pressed={state.filters.mealType.includes(type)}
                           data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
                         >
                           {mealTypeTranslations[type] || type}
@@ -791,12 +721,12 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="time">
                 <button 
-                  onClick={() => toggleSection("time")}
+                  onClick={() => toggleSection("time")} aria-expanded={state.expandedSections.includes("time")}
                   className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-time"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.maxMinutes")} · {timeCopy(timeMode)}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("time") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.maxMinutes")} · {timeCopy(timeMode)}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("time") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("time") && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -804,7 +734,7 @@ function WeeklyMealsContent() {
                       <button
                         key={mins ?? "any"}
                         onClick={() => updateFilters({ maxMinutes: mins })}
-                        className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.maxMinutes === mins ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                        className="chip" aria-pressed={state.filters.maxMinutes === mins}
                         data-testid={`filter-time-${mins ?? "any"}`}
                       >
                         {mins ?? t("meals.any")}
@@ -816,12 +746,12 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="protein">
                 <button
-                  onClick={() => toggleSection("protein")}
+                  onClick={() => toggleSection("protein")} aria-expanded={state.expandedSections.includes("protein")}
                   className="flex items-center justify-between w-full text-start min-h-11"
                   data-testid="button-toggle-protein"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.proteinType")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("protein") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.proteinType")}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("protein") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("protein") && (
                   <div className="mt-3">
@@ -837,7 +767,7 @@ function WeeklyMealsContent() {
                           <button
                             key={protein}
                             onClick={() => toggleArrayFilter("proteinType", protein)}
-                            className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.proteinType.includes(protein) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                            className="chip" aria-pressed={state.filters.proteinType.includes(protein)}
                             data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
                           >
                             {proteinTranslations[protein] || protein}
@@ -851,17 +781,17 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="ingredients">
                 <button
-                  onClick={() => toggleSection("ingredients")}
+                  onClick={() => toggleSection("ingredients")} aria-expanded={state.expandedSections.includes("ingredients")}
                   className="flex items-center justify-between w-full text-start min-h-11"
                   data-testid="button-toggle-ingredients"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.ingredients")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("ingredients") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.ingredients")}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("ingredients") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("ingredients") && (
                   <div className="mt-3">
                   <div className="pb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustInclude")}</span>
+                    <span className="text-sm text-muted-foreground block mb-2">{t("meals.mustInclude")}</span>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {state.filters.mustInclude.map(ing => (
                         <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
@@ -882,13 +812,13 @@ function WeeklyMealsContent() {
                       onChange={(e) => setIncludeInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addIncludeIngredient()}
                       placeholder={t("meals.typeEnter")}
-                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
+                      className="w-full px-3 min-h-11 text-base border hairline rounded-lg bg-card focus-ring-quiet"
                       data-testid="input-must-include"
                     />
                   </div>
 
                   <div className="pb-3 mb-3">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.mustExclude")}</span>
+                    <span className="text-sm text-muted-foreground block mb-2">{t("meals.mustExclude")}</span>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {state.filters.mustExclude.map(ing => (
                         <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
@@ -909,7 +839,7 @@ function WeeklyMealsContent() {
                       onChange={(e) => setExcludeInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addExcludeIngredient()}
                       placeholder={t("meals.typeEnter")}
-                      className="w-full px-3 py-2.5 min-h-11 text-xs border hairline rounded bg-transparent focus-ring-quiet"
+                      className="w-full px-3 min-h-11 text-base border hairline rounded-lg bg-card focus-ring-quiet"
                       data-testid="input-must-exclude"
                     />
                   </div>
@@ -919,12 +849,12 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="dietary">
                 <button 
-                  onClick={() => toggleSection("dietary")}
+                  onClick={() => toggleSection("dietary")} aria-expanded={state.expandedSections.includes("dietary")}
                   className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-dietary"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.dietary")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("dietary") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.dietary")}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("dietary") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("dietary") && (
                   <div className="mt-3 space-y-2">
@@ -940,10 +870,10 @@ function WeeklyMealsContent() {
                             type="checkbox"
                             checked={state.filters.dietary.includes(diet)}
                             onChange={() => toggleArrayFilter("dietary", diet)}
-                            className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
+                            className="h-5 w-5 shrink-0 accent-primary"
                             data-testid={`filter-dietary-${diet.toLowerCase().replace(" ", "-")}`}
                           />
-                          <span className="text-xs text-muted-foreground">{dietTranslations[diet] || diet}</span>
+                          <span className="text-sm text-foreground">{dietTranslations[diet] || diet}</span>
                         </label>
                       );
                     })}
@@ -953,12 +883,12 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="method">
                 <button 
-                  onClick={() => toggleSection("method")}
+                  onClick={() => toggleSection("method")} aria-expanded={state.expandedSections.includes("method")}
                   className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-method"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.cookingMethod")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("method") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.cookingMethod")}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("method") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("method") && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -974,7 +904,7 @@ function WeeklyMealsContent() {
                         <button
                           key={method}
                           onClick={() => toggleArrayFilter("cookingMethod", method)}
-                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.cookingMethod.includes(method) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className="chip" aria-pressed={state.filters.cookingMethod.includes(method)}
                           data-testid={`filter-method-${method.toLowerCase().replace(" ", "-")}`}
                         >
                           {methodTranslations[method] || method}
@@ -987,12 +917,12 @@ function WeeklyMealsContent() {
 
               <div className="border-b hairline pb-3 mb-3" data-filter-section="source">
                 <button 
-                  onClick={() => toggleSection("source")}
+                  onClick={() => toggleSection("source")} aria-expanded={state.expandedSections.includes("source")}
                   className="flex items-center justify-between w-full text-left min-h-11"
                   data-testid="button-toggle-source"
                 >
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.source")}</span>
-                  <span className="text-xs text-muted-foreground">{state.expandedSections.includes("source") ? "-" : "+"}</span>
+                  <span className="text-sm font-medium text-foreground">{t("meals.source")}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("source") ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
                 {state.expandedSections.includes("source") && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -1007,7 +937,7 @@ function WeeklyMealsContent() {
                         <button
                           key={src}
                           onClick={() => toggleArrayFilter("source", src)}
-                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.source.includes(src) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className="chip" aria-pressed={state.filters.source.includes(src)}
                           data-testid={`filter-source-${src.toLowerCase().replace(" ", "-")}`}
                         >
                           {sourceTranslations[src] || src}
@@ -1020,8 +950,8 @@ function WeeklyMealsContent() {
 
               <button 
                 onClick={() => setState(prev => ({ ...prev, showMoreFilters: !prev.showMoreFilters }))}
-                className="text-xs min-h-11 px-2 text-muted-foreground hover:text-foreground mb-3"
-                data-testid="button-more-filters"
+                className="btn btn-text mb-3"
+                data-testid="button-more-filters" aria-expanded={state.showMoreFilters}
               >
                 {state.showMoreFilters ? t("meals.lessFilters") : t("meals.moreFilters")}
               </button>
@@ -1029,14 +959,13 @@ function WeeklyMealsContent() {
               {state.showMoreFilters && (
                 <>
                   <div className="border-b hairline pb-3 mb-3" data-filter-section="cuisine">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground block mb-2">{t("meals.cuisine")}</span>
+                    <span className="text-sm text-muted-foreground block mb-2">{t("meals.cuisine")}</span>
                     <div className="flex flex-wrap gap-2">
                       {cuisineOptions.map(cuisine => (
                         <button
                           key={cuisine}
                           onClick={() => toggleArrayFilter("cuisine", cuisine)}
-                          aria-pressed={state.filters.cuisine.includes(cuisine)}
-                          className={`px-3 py-2 min-h-11 text-xs rounded-full border hairline ${state.filters.cuisine.includes(cuisine) ? "bg-foreground/10 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                          className="chip" aria-pressed={state.filters.cuisine.includes(cuisine)}
                           data-testid={`filter-cuisine-${cuisine.toLowerCase().replace(/\s+/g, "-")}`}
                         >
                           {sText(`cuisine_${cuisine}`)}
@@ -1047,24 +976,24 @@ function WeeklyMealsContent() {
 
                   <div className="border-b hairline pb-3 mb-3">
                     <button 
-                      onClick={() => toggleSection("myPicks")}
+                      onClick={() => toggleSection("myPicks")} aria-expanded={state.expandedSections.includes("myPicks")}
                       className="flex items-center justify-between w-full text-left min-h-11"
                       data-testid="button-toggle-mypicks-section"
                     >
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground">{t("meals.myPicksFilter")}</span>
-                      <span className="text-xs text-muted-foreground">{state.expandedSections.includes("myPicks") ? "-" : "+"}</span>
+                      <span className="text-sm font-medium text-foreground">{t("meals.myPicksFilter")}</span>
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("myPicks") ? "rotate-180" : ""}`} aria-hidden="true" />
                     </button>
                     {state.expandedSections.includes("myPicks") && (
                       <div className="mt-3 space-y-3">
-                        <label className="flex items-center gap-2 cursor-pointer group">
+                        <label className="flex min-h-11 items-center gap-3 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={state.filters.myPicks}
                             onChange={() => updateFilters({ myPicks: !state.filters.myPicks })}
-                            className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
+                            className="h-5 w-5 shrink-0 accent-primary"
                             data-testid="checkbox-filter-mypicks"
                           />
-                          <span className="text-xs text-muted-foreground">{t("meals.showOnlyMyPicks")}</span>
+                          <span className="text-sm text-foreground">{t("meals.showOnlyMyPicks")}</span>
                         </label>
                         
                         {state.filters.myPicks && (
@@ -1093,45 +1022,111 @@ function WeeklyMealsContent() {
                   </div>
 
                   <div className="border-b hairline pb-3 mb-3 space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex min-h-11 items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={state.filters.withNotes}
                         onChange={() => updateFilters({ withNotes: !state.filters.withNotes })}
-                        className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
+                        className="h-5 w-5 shrink-0 accent-primary"
                         data-testid="filter-with-notes"
                       />
-                      <span className="text-xs text-muted-foreground">{t("meals.withMyNotes")}</span>
+                      <span className="text-sm text-foreground">{t("meals.withMyNotes")}</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex min-h-11 items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={state.filters.modifiedByMe}
                         onChange={() => updateFilters({ modifiedByMe: !state.filters.modifiedByMe })}
-                        className="w-3.5 h-3.5 rounded border-gray-300 accent-current"
+                        className="h-5 w-5 shrink-0 accent-primary"
                         data-testid="filter-modified"
                       />
-                      <span className="text-xs text-muted-foreground">{t("meals.modifiedByMe")}</span>
+                      <span className="text-sm text-foreground">{t("meals.modifiedByMe")}</span>
                     </label>
                   </div>
 
                 </>
               )}
-            </div>
+            </>
+  );
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+
+      <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
+        <header className="page-header">
+          <h1 className="page-title">{lang === "en" ? WEEK_EN.title : t("meals.step2Title")}</h1>
+          <p className="page-subtitle">{lang === "en" ? WEEK_EN.subtitle : t("meals.step2Desc")}</p>
+        </header>
+        {/* Sticky: the next step stays in reach while browsing. The app header is not sticky, so nothing overlaps. */}
+        <div className="sticky top-0 z-20 mb-4 flex items-center gap-3 border-b hairline bg-background/95 py-2 backdrop-blur" data-testid="weekly-meals-header">
+          <p id="continue-hint" className="min-w-0 flex-1 text-sm text-muted-foreground" aria-live="polite" data-testid="selected-count">
+            {canGenerate ? t("meals.selectedShort", { count: state.selectedIds.length }) : t("meals.minimum_meals_selection")}
+            {maxSelectionsHit && <span className="block text-foreground">{t("meals.max12")}</span>}
+          </p>
+          <button type="button" onClick={generatePlan} disabled={!canGenerate} aria-describedby="continue-hint"
+            className="btn btn-primary shrink-0" data-testid="button-generate-plan">
+            {t("meals.generateWeeklyPlan")} <span aria-hidden="true">→</span>
+          </button>
+        </div>
+        {/* Counts come from the exact lists rendered below: all → saved restrictions → page filters/search. */}
+        <ActivePreferences settings={settings} counts={recipes.length ? matchCounts(personalized, filteredRecipes) : null}
+          noDevices={devices.length === 0} onEdit={() => setLocation("/settings")} />
+        <form role="search" className="mb-4" data-testid="recipe-search" onSubmit={e => {
+          // Results update while typing; Enter takes you to them (they sit below the filters on phones).
+          e.preventDefault();
+          (document.activeElement as HTMLElement | null)?.blur();
+          document.getElementById("meal-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}>
+          <label htmlFor="recipe-search-input" className="mb-1.5 block text-base font-medium text-foreground">{generateCopy(lang, "searchLabel")}</label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <input id="recipe-search-input" type="search" value={search} onChange={e => setSearch(e.target.value)} maxLength={120}
+              placeholder={generateCopy(lang, "searchPlaceholder")} autoComplete="off" enterKeyHint="search" data-testid="recipe-search-input"
+              className="min-h-12 w-full rounded-full border border-border bg-white ps-10 pe-12 text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-search-cancel-button]:hidden" />
+            {search && <button type="button" onClick={() => setSearch("")} aria-label={generateCopy(lang, "searchClear")} data-testid="recipe-search-clear"
+              className="absolute end-1 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>}
+          </div>
+        </form>
+        {/* Phones and tablets: the same filters open in a sheet; desktop keeps the sidebar. */}
+        <div className="mb-4 flex flex-wrap items-center gap-3 lg:hidden" data-testid="mobile-filter-bar">
+          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <SheetTrigger asChild>
+              <button type="button" className="btn btn-secondary" data-testid="button-open-filters">
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />{t("filters.open", { count: activeFilterCount })}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="flex max-h-[90dvh] flex-col gap-0 rounded-t-2xl p-0 pb-[env(safe-area-inset-bottom)]" data-testid="filters-sheet">
+              <SheetHeader className="border-b hairline px-4 py-3 text-start">
+                <SheetTitle>{t("filters.title")}</SheetTitle>
+                <SheetDescription className="sr-only">{t("filters.title")}</SheetDescription>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-4 py-3">{filterPanel}</div>
+              <div className="flex gap-2 border-t hairline px-4 py-3">
+                <button type="button" onClick={clearAllFilters} disabled={activeFilterCount === 0} className="btn btn-secondary flex-1" data-testid="sheet-clear-filters">{t("filters.clearFilters")}</button>
+                <button type="button" onClick={() => setFiltersOpen(false)} className="btn btn-primary flex-1" data-testid="sheet-show-results">
+                  {filteredRecipes.length === 1 ? t("filters.showResultsOne") : t("filters.showResults", { count: filteredRecipes.length })}
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <span className="text-sm text-muted-foreground" aria-live="polite">{filteredRecipes.length === 1 ? t("meals.matchingCountOne") : t("meals.matchingCount", { count: filteredRecipes.length })}</span>
+        </div>
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+          
+          <aside id="meal-filters" className="hidden lg:block lg:w-[260px] lg:flex-shrink-0 scroll-mt-4" aria-label={t("filters.title")}>
+            <div className="lg:sticky lg:top-16">{filterPanel}</div>
           </aside>
 
           <main className="flex-1 min-w-0">
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">{t("meals.step2Desc")}</p>
-              {maxSelectionsHit && <p className="mobile-readable-xs text-muted-foreground mt-1">{t("meals.max12")}</p>}
-            </div>
 
             {state.selectedIds.length > 0 ? (
-              <div className="mb-6 p-3 bg-[#FAFAF8] rounded-xl border hairline" data-testid="panel-selected-recipes">
+              <div className="card mb-6 p-3" data-testid="panel-selected-recipes">
                 <div className="flex items-center justify-between mb-2 px-1">
-                    <h3 className="mobile-readable-xs uppercase tracking-wide text-muted-foreground">
+                    <h2 className="text-sm font-medium text-foreground">
                       {t("meals.selectedRecipesPanel")}
-                    </h3>
+                    </h2>
                   <span className="mobile-readable-xs text-muted-foreground" data-testid="selected-counter">{state.selectedIds.length} / 12</span>
                 </div>
                 <ul className="divide-y divide-foreground/5">
@@ -1145,17 +1140,14 @@ function WeeklyMealsContent() {
                         className={`flex items-center gap-2 px-1 py-1 ${fit.eligible ? "" : "rounded-lg bg-amber-50/60"}`}
                         data-testid={`selected-recipe-${recipe.id}`}
                       >
-                        <div className="w-7 h-7 rounded-md bg-foreground/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {recipe.image ? <img src={recipe.image} alt="" loading="lazy" className="w-full h-full object-cover" /> :
-                          <span className="text-[10px] font-medium text-muted-foreground/60">{getMonogram(recipe.title)}</span>}
-                        </div>
-                        <Link href={`/recipe/${recipe.id}`} className="min-w-0 flex-1 truncate text-sm text-foreground hover:underline" data-testid={`selected-recipe-link-${recipe.id}`}>
+                        {recipe.image && <img src={recipe.image} alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded-md object-cover" />}
+                        <Link href={`/recipe/${recipe.id}`} className="min-w-0 flex-1 break-words py-2 text-base text-foreground hover:underline" data-testid={`selected-recipe-link-${recipe.id}`}>
                           {recipe.title}
                         </Link>
-                        {diet && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground flex-shrink-0">{diet}</span>}
-                        <span className="mobile-readable-xs text-muted-foreground flex-shrink-0 tabular-nums" title={timeCopy("total")} data-testid={`meals-selected-total-${recipe.id}`}>
-                          {totalMinutes === null ? "—" : `${totalMinutes} ${timeCopy("minutesShort")}`}
-                        </span>
+                        {diet && <span className="tag hidden sm:inline-flex flex-shrink-0">{diet}</span>}
+                        {totalMinutes !== null && <span className="text-sm text-muted-foreground flex-shrink-0 tabular-nums" title={timeCopy("total")} data-testid={`meals-selected-total-${recipe.id}`}>
+                          {`${totalMinutes} ${timeCopy("minutesShort")}`}
+                        </span>}
                         <button
                           type="button"
                           onClick={() => toggleSelection(recipe.id)}
@@ -1181,13 +1173,13 @@ function WeeklyMealsContent() {
                 </ul>
                 {selectedRecipes.length > SELECTED_PREVIEW && (
                   <button type="button" onClick={() => setShowAllSelected(v => !v)} aria-expanded={showAllSelected} data-testid="button-toggle-selected"
-                    className="mt-1 min-h-11 px-1 text-sm text-[#42624e] hover:underline">
+                    className="btn btn-text mt-1">
                     {showAllSelected ? t("meals.showFewer") : t("meals.showAllSelected", { count: selectedRecipes.length })}
                   </button>
                 )}
               </div>
             ) : (
-              <div className="mb-6 p-5 bg-[#FAFAF8] rounded-xl border hairline text-center" data-testid="panel-selected-recipes-empty">
+              <div className="card mb-6 p-5 text-center" data-testid="panel-selected-recipes-empty">
                 <p className="mobile-readable-xs text-muted-foreground">
                   {t("meals.noRecipesSelected") || "No recipes selected yet"}
                 </p>
@@ -1211,114 +1203,76 @@ function WeeklyMealsContent() {
                     {limitingReasons(personalized.excluded, lang, memberName).map(reason => <li key={reason}>{reason}</li>)}
                   </ul>
                   <button type="button" onClick={() => setLocation("/settings")} data-testid="button-no-match-edit"
-                    className="mt-4 inline-flex min-h-11 items-center rounded-full bg-[#42624e] px-4 text-sm font-medium text-white hover:bg-[#385540]">{sText("editPrefs")}</button>
+                    className="btn btn-primary mt-4">{sText("editPrefs")}</button>
                 </div>
               ) : query && query.length >= 2 && filteredRecipes.length === 0 ? (
                 <RecipeSearchGeneration key={JSON.stringify(searchRequest.body)} query={query} request={searchRequest.body}
                   chips={searchChips} notApplied={searchRequest.notApplied.map(key => notAppliedLabel[key])} nameOnly={nameOnly}
                   violationLabel={violationLabel} onPublished={publishedFromSearch} onExisting={reloadRecipes}
-                  onEditFilters={() => document.getElementById("meal-filters")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+                  onEditFilters={() => window.matchMedia("(min-width: 1024px)").matches ? document.getElementById("meal-filters")?.scrollIntoView({ block: "start" }) : setFiltersOpen(true)} />
               ) : query && visibleFilteredRecipes.length === 0 ? null : visibleFilteredRecipes.length === 0 ? (
-                <GenerateRecipe request={generationRequest} variant="empty" onAccept={acceptGenerated} />
+                <>
+                  {activeFilterCount > 0 && (
+                    <div className="card mb-3 flex flex-wrap items-center justify-between gap-3 p-4" role="status" data-testid="filters-empty">
+                      <p className="text-base text-foreground">{t("meals.noRecipesMatch")}</p>
+                      <button type="button" onClick={clearAllFilters} className="btn btn-secondary" data-testid="button-reset-filters-empty">{t("filters.clearFilters")}</button>
+                    </div>
+                  )}
+                  <GenerateRecipe request={generationRequest} variant="empty" onAccept={acceptGenerated} />
+                </>
               ) : (
                 results.items.map(recipe => {
                   const meta = getMeta(recipe.id);
                   const isSelected = state.selectedIds.includes(recipe.id);
                   const isExpanded = expandedRecipe === recipe.id;
                   const isArranging = arrangingRecipe === recipe.id;
-                  const preparationMinutes = recipeStageMinutes(recipe, "preparation");
-                  const monogram = getMonogram(recipe.title);
-                  const displayTags = recipe.tags.map(tag => {
-                    if (tag === "vegetarian") return t("meals.vegetarian");
-                    if (tag === "kidFriendly") return t("meals.kidFriendly");
-                    if (tag === "glutenFree") return t("meals.glutenFree");
-                    return tagLabel(lang, tag);
-                  });
 
                   return (
-                    <div 
-                      key={recipe.id} 
-                      className="relative flex items-start gap-2 sm:gap-3 p-3 bg-white rounded-lg border hairline"
-                      data-testid={`recipe-card-${recipe.id}`}
-                    >
-                      <div className="absolute right-2 top-2 max-w-[40%] text-right text-[10px] text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
-                      <div className="w-10 h-10 rounded-lg bg-foreground/5 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
-                        {recipe.image ? <img src={recipe.image} alt="" loading="lazy" className="w-full h-full object-cover" /> :
-                        <span className="text-xs font-medium text-muted-foreground/50">{monogram}</span>}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="mobile-readable-xs font-medium text-foreground truncate">{recipe.title}</p>
-                              <RecipePriceSummary recipe={recipe} context="catalog" />
-                              <span className="mobile-readable-xs text-muted-foreground" title={timeCopy("preparation")} data-testid={`meals-catalog-title-preparation-${recipe.id}`}>
-                                {preparationMinutes === null
-                                  ? timeCopy("preparationTimeUnknown")
-                                  : `${preparationMinutes} ${timeCopy("minutesShort")}`}
-                              </span>
-                              {meta.isMyPick && <span className="text-[10px] text-yellow-600 font-medium bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">{`* ${t("meals.myPicks")}`}</span>}
+                    <article key={recipe.id} className="card p-4" aria-labelledby={`recipe-title-${recipe.id}`} data-testid={`recipe-card-${recipe.id}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <h3 id={`recipe-title-${recipe.id}`} className="break-words text-base font-medium leading-snug text-foreground">{recipe.title}</h3>
+                          <RecipeMeta recipe={recipe} mode={timeMode} testId={`meals-catalog-meta-${recipe.id}`} />
+                          {(meta.isMyPick || meta.rating || likedNote.has(recipe.id)) && (
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              {meta.isMyPick && <span className="tag">{`★ ${t("meals.myPicks")}`}</span>}
+                              {meta.rating && <span className="inline-flex items-center gap-1"><StarRating value={meta.rating} onChange={() => {}} readOnly size="sm" /><span className="text-muted-foreground">{meta.rating}/5</span></span>}
+                              {likedNote.has(recipe.id) && <span className="text-primary" data-testid={`recipe-liked-${recipe.id}`}>{likedNote.get(recipe.id)}</span>}
                             </div>
-                            {likedNote.has(recipe.id) && <p className="mt-0.5 text-[11px] text-[#42624e]" data-testid={`recipe-liked-${recipe.id}`}>{likedNote.get(recipe.id)}</p>}
-                            {meta.rating && (
-                              <div className="mt-1 flex items-center gap-1">
-                                <StarRating value={meta.rating} onChange={() => {}} readOnly size="sm" />
-                                <span className="text-[10px] text-muted-foreground">{meta.rating}/5</span>
-                              </div>
-                            )}
-                          </div>
+                          )}
+                          <DietaryTags tags={recipe.tags} testId={`meals-catalog-diet-${recipe.id}`} />
+                          {showNutrition && <NutritionRow recipe={recipe} testId={`meals-catalog-nutrition-${recipe.id}`} />}
                         </div>
-
-                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                        <MealRecipeFacts recipe={recipe} context="catalog" interactive={isArranging} actions={<>
-                          <button
-                            onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)}
-                            aria-expanded={isExpanded}
-                            className="px-3 py-2 text-xs min-h-11 rounded-full border border-foreground/20 text-muted-foreground hover:text-foreground"
-                            data-testid={`button-ingredients-${recipe.id}`}
-                          >
-                            {t("meals.ingredients")}
-                          </button>
-                          <button
-                            onClick={() => setArrangingRecipe(isArranging ? null : recipe.id)}
-                            aria-pressed={isArranging}
-                            className="px-2 py-1 text-xs min-h-11 rounded text-muted-foreground hover:text-foreground"
-                            data-testid={`button-arrange-${recipe.id}`}
-                          >
-                            {isArranging ? t("layout.done") : t("layout.arrange")}
-                          </button>
-                        </>} />
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground">{tagLabel(lang, recipe.mealType)}</span>
-                        {displayTags.map(tag => (
-                          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground">{tag}</span>
-                        ))}
+                        <button type="button" onClick={() => toggleSelection(recipe.id)} aria-pressed={isSelected}
+                          aria-label={`${isSelected ? t("meals.added") : t("meals.add")}: ${recipe.title}`}
+                          className="btn btn-secondary shrink-0" data-testid={`button-add-${recipe.id}`}>
+                          {isSelected ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
+                          {isSelected ? t("meals.added") : t("meals.add")}
+                        </button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Link href={`/recipe/${recipe.id}`} className="btn btn-text" data-testid={`button-open-${recipe.id}`}
+                          aria-label={`${t("card.viewRecipe")}: ${recipe.title}`}>{t("card.viewRecipe")}</Link>
+                        <button type="button" onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)} aria-expanded={isExpanded}
+                          aria-controls={`recipe-details-${recipe.id}`} className="btn btn-text" data-testid={`button-ingredients-${recipe.id}`}>
+                          {isExpanded ? t("card.hideDetails") : t("card.details")}
+                        </button>
                       </div>
 
                       {isExpanded && (
-                        <div className="mt-4 pt-4 border-t hairline" data-testid={`recipe-details-${recipe.id}`}>
-                          <p className="text-xs text-muted-foreground mb-2">{t("meals.source")}: {recipe.sourceType} · {tagLabel(lang, recipe.proteinType)}</p>
-                          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-xs font-medium text-foreground">{t("import.recipePreview")}</p>
-                            <NutritionDetailsToggle context={recipe.id} />
+                        <div id={`recipe-details-${recipe.id}`} className="mt-3 space-y-3 border-t hairline pt-3 text-sm" data-testid={`recipe-details-${recipe.id}`}>
+                          <MealRecipeFacts recipe={recipe} context="catalog" interactive={isArranging} showLink={false} actions={
+                            <button type="button" onClick={() => setArrangingRecipe(isArranging ? null : recipe.id)} aria-pressed={isArranging}
+                              className="btn btn-text" data-testid={`button-arrange-${recipe.id}`}>
+                              {isArranging ? t("layout.done") : t("layout.arrange")}
+                            </button>} />
+                          <div>
+                            <h4 className="mb-1 font-medium text-foreground">{t("meals.ingredients")}</h4>
+                            <RecipeIngredients recipe={recipe} compact mainOnly />
                           </div>
-                          {showNutrition && !usableNutrition(recipe.nutrition) && (
-                            <p className="mb-2 text-xs text-muted-foreground" data-testid={`nutrition-unavailable-${recipe.id}`}>
-                              {t(recipe.nutritionStatus === "unavailable" ? "nutrition.unavailable" : "nutrition.notAnalyzed")}
-                            </p>
-                          )}
-                          <RecipeIngredients recipe={recipe} compact mainOnly />
                         </div>
                       )}
-                      </div>
-                      <button
-                        onClick={() => toggleSelection(recipe.id)}
-                        className={`px-2 py-1 text-xs rounded border flex-shrink-0 min-h-11 self-center ${isSelected ? "bg-foreground/10 border-foreground/30 text-foreground" : "border-foreground/20 text-muted-foreground hover:text-foreground"}`}
-                        data-testid={`button-add-${recipe.id}`}
-                      >
-                        {isSelected ? t("meals.added") : t("meals.add")}
-                      </button>
-                    </div>
+                    </article>
                   );
                 })
               )}
@@ -1334,7 +1288,7 @@ function WeeklyMealsContent() {
                   ? <span key={`gap-${i}`} className="px-1 text-sm text-muted-foreground" aria-hidden="true">…</span>
                   : <button key={n} type="button" onClick={() => goToPage(n)} aria-current={n === results.page ? "page" : undefined}
                       aria-label={t("meals.pageN", { n })} data-testid={`page-${n}`}
-                      className={`min-h-11 min-w-11 rounded-full text-sm tabular-nums ${n === results.page ? "bg-foreground text-background" : "text-foreground hover:bg-foreground/5"}`}>{n}</button>)}
+                      className={`min-h-11 min-w-11 rounded-full text-sm tabular-nums ${n === results.page ? "bg-primary font-semibold text-primary-foreground" : "text-foreground hover:bg-accent"}`}>{n}</button>)}
                 <button type="button" onClick={() => goToPage(results.page + 1)} disabled={results.page === results.pageCount} data-testid="page-next"
                   className="min-h-11 rounded-full px-3 text-sm text-foreground hover:bg-foreground/5 disabled:opacity-40 disabled:hover:bg-transparent">
                   {t("meals.next")} <span aria-hidden="true">→</span>

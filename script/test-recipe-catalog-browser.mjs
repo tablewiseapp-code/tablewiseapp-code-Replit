@@ -57,8 +57,8 @@ try {
       ok(await ev(`document.querySelectorAll('[data-testid^="text-step-"]').length`) === r.steps.length, `${label} ${r.slug}: step count`);
       ok(await ev(`${q("text-step-0")}.textContent.includes(${JSON.stringify(r.steps[0].slice(0, 40))})`), `${label} ${r.slug}: first step text`);
       ok(await ev(`${q("text-prep-time")}?.textContent.includes("${r.prepTime}") && ${q("text-cook-time")}?.textContent.includes("${r.cookTime}")`), `${label} ${r.slug}: prep/cook time`);
-      ok(await ev(`!!${q("img-recipe-placeholder")}`), `${label} ${r.slug}: no-image fallback`);
-      ok(await ev(`!!${q(`tag-${r.category}`)}`), `${label} ${r.slug}: category tag`);
+      ok(await ev(`!${q("img-recipe-placeholder")} && !${q("img-recipe-hero")}`), `${label} ${r.slug}: no empty image placeholder`);
+      ok(await ev(`!/source-verified|ai-generated|meal:/i.test(document.querySelector("main, #root").innerText)`), `${label} ${r.slug}: no internal tags`);
       if (await ev(`!!${q("button-servings-increase")}`)) {
         const before = await ev(`${q("text-ingredient-0")}.textContent`);
         await ev(`${q("button-servings-increase")}.click()`);

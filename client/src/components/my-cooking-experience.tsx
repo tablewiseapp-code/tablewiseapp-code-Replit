@@ -11,7 +11,7 @@ import {
   newCookingId, recordCooking, updateCooking, type CookingSession,
 } from "@/lib/cooking-history";
 
-const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]";
+const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium ${focus}`;
 const NOTES_DEBOUNCE_MS = 700;
 
@@ -33,7 +33,7 @@ export function CookedBadge({ recipeId }: { recipeId: string }) {
   const { data } = useCookingSessions(recipeId);
   if (!data?.length) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-[#42624e]/10 px-2 py-0.5 text-xs font-medium text-[#42624e]" data-testid="badge-cooked">
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary" data-testid="badge-cooked">
       <Check className="h-3.5 w-3.5" aria-hidden="true" />{t("madeBadge", { count: data.length })}
     </span>
   );
@@ -89,14 +89,14 @@ export function MyCookingExperience({ recipeId }: { recipeId: string }) {
       ) : query.isError ? (
         <div className="flex flex-wrap items-center gap-2">
           <p role="alert" className="text-sm text-muted-foreground">{t("historyFailed")}</p>
-          <button type="button" onClick={() => void query.refetch()} className={`${pill} border border-[#d9dfd4]`}>{t("retry")}</button>
+          <button type="button" onClick={() => void query.refetch()} className={`${pill} border border-border`}>{t("retry")}</button>
         </div>
       ) : !latest ? (
         <div className="text-center sm:text-start">
           <p className="text-lg font-medium text-foreground">{t("madeItTitle")}</p>
           <p className="text-sm text-muted-foreground">{t("madeItSubtitle")}</p>
           <button type="button" onClick={() => void record()} disabled={saving} aria-busy={saving} data-testid="button-made-it"
-            className={`${pill} mt-3 w-full bg-[#42624e] text-base text-white shadow-sm transition hover:bg-[#385540] active:scale-[0.98] disabled:opacity-70 sm:w-auto sm:px-6`}>
+            className={`${pill} mt-3 w-full bg-primary text-base text-white shadow-sm transition hover:bg-primary-hover active:scale-[0.98] disabled:opacity-70 sm:w-auto sm:px-6`}>
             {saving ? t("saving") : t("madeItCta")}
           </button>
         </div>
@@ -116,7 +116,7 @@ export function MyCookingExperience({ recipeId }: { recipeId: string }) {
             )}
             {justMade === latest.id && (
               <button type="button" onClick={() => void undo()} disabled={saving} data-testid="button-undo-cooked"
-                className={`min-h-11 rounded px-2 text-sm font-medium text-[#42624e] underline underline-offset-2 disabled:opacity-50 ${focus}`}>{t("undo")}</button>
+                className={`min-h-11 rounded px-2 text-sm font-medium text-primary underline underline-offset-2 disabled:opacity-50 ${focus}`}>{t("undo")}</button>
             )}
           </div>
           <div className="mt-4" data-testid="cooking-session-latest">
@@ -125,7 +125,7 @@ export function MyCookingExperience({ recipeId }: { recipeId: string }) {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t hairline pt-3">
             <p className="text-xs text-muted-foreground">{t("privateNote")}</p>
             <button type="button" onClick={() => void record()} disabled={saving} data-testid="button-made-again"
-              className={`${pill} border border-[#42624e] text-[#42624e] hover:bg-[#f2f6ef] disabled:opacity-50`}>{saving && !justMade ? t("saving") : t("madeAgain")}</button>
+              className={`${pill} border border-primary text-primary hover:bg-accent disabled:opacity-50`}>{saving && !justMade ? t("saving") : t("madeAgain")}</button>
           </div>
           {earlier.length > 0 && (
             <div className="mt-3 border-t hairline pt-3">
@@ -262,7 +262,7 @@ function Photos({ session, onPatch, date }: { session: CookingSession; onPatch: 
           ))}
         </ul>
       )}
-      <label className={`${pill} cursor-pointer border border-[#d9dfd4] bg-white text-[#42624e] hover:bg-[#f2f6ef] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#496c5a] ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+      <label className={`${pill} cursor-pointer border border-border bg-white text-primary hover:bg-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${uploading ? "pointer-events-none opacity-60" : ""}`}>
         <ImagePlus className="h-4 w-4" aria-hidden="true" />
         <span aria-live="polite">{uploading ? t("addingPhoto") : t("addPhoto")}</span>
         <input type="file" accept="image/*" multiple className="sr-only" disabled={uploading} data-testid="input-cooking-photo"

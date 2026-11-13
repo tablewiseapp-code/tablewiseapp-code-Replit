@@ -86,45 +86,45 @@ export function RecipeSearchGeneration({ query, request, chips, notApplied, name
 
   const field = (key: keyof Form, label: string, props: Record<string, unknown> = {}) => (
     <div className="space-y-1">
-      <Label htmlFor={`draft-${key}`} className="text-xs text-[#45594c]">{label}</Label>
+      <Label htmlFor={`draft-${key}`} className="text-xs text-foreground">{label}</Label>
       <Input id={`draft-${key}`} value={form![key]} onChange={e => setForm({ ...form!, [key]: e.target.value })} data-testid={`draft-edit-${key}`} {...props} />
     </div>
   );
   const area = (key: "description" | "ingredients" | "steps", label: string, rows: number) => (
     <div className="space-y-1">
-      <Label htmlFor={`draft-${key}`} className="text-xs text-[#45594c]">{label}</Label>
+      <Label htmlFor={`draft-${key}`} className="text-xs text-foreground">{label}</Label>
       <Textarea id={`draft-${key}`} rows={rows} value={form![key]} onChange={e => setForm({ ...form!, [key]: e.target.value })} data-testid={`draft-edit-${key}`} />
     </div>
   );
 
   return (
     <>
-      <div role="status" data-testid="recipe-search-no-match" className="rounded-2xl border border-dashed border-[#d5dcd1] bg-[#fbfbf7] p-5">
-        <h3 className="text-base font-semibold text-[#34443a]">{t("noMatchTitle")}</h3>
-        <p className="mt-1 text-sm text-[#68756a]">{t("noMatchBody")}</p>
-        {nameOnly.length > 0 && <div className="mt-3 rounded-lg bg-[#f2f3ec] p-3 text-sm text-[#45594c]" data-testid="recipe-search-name-only">
+      <div role="status" data-testid="recipe-search-no-match" className="rounded-2xl border border-dashed border-border bg-background p-5">
+        <h3 className="text-base font-semibold text-foreground">{t("noMatchTitle")}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{t("noMatchBody")}</p>
+        {nameOnly.length > 0 && <div className="mt-3 rounded-lg bg-background p-3 text-sm text-foreground" data-testid="recipe-search-name-only">
           <p className="font-medium">{t("nameOnlyTitle")}</p>
           <ul className="mt-1 list-disc ps-5">
             {nameOnly.map(recipe => <li key={recipe.id}><Link href={`/recipe/${encodeURIComponent(recipe.id)}`} className="underline underline-offset-2">{recipe.title}</Link></li>)}
           </ul>
-          <p className="mt-1 text-xs text-[#68756a]">{t("nameOnlyHint")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("nameOnlyHint")}</p>
         </div>}
         <div className="mt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-xs font-medium uppercase tracking-wide text-[#68756a]">{t("preferences")}</h4>
-            <button type="button" onClick={onEditFilters} className="min-h-11 px-2 text-xs font-medium text-[#42624e] underline underline-offset-2" data-testid="recipe-search-change-filters">{t("changeFilters")}</button>
+            <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("preferences")}</h4>
+            <button type="button" onClick={onEditFilters} className="min-h-11 px-2 text-xs font-medium text-primary underline underline-offset-2" data-testid="recipe-search-change-filters">{t("changeFilters")}</button>
           </div>
           {chips.length ? (
             <ul className="mt-1 flex flex-wrap gap-1.5" data-testid="recipe-search-chips">
               {chips.map(c => <li key={c.label} className={`${chip} items-center gap-1 pe-1`}>
                 {c.label}
-                <button type="button" onClick={c.remove} aria-label={`${t("removeFilter")}: ${c.label}`} className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-[#e2e6dd]">
+                <button type="button" onClick={c.remove} aria-label={`${t("removeFilter")}: ${c.label}`} className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-border">
                   <X className="h-3 w-3" aria-hidden="true" />
                 </button>
               </li>)}
             </ul>
-          ) : <p className="mt-1 text-xs text-[#798279]">{t("noPreferences")}</p>}
-          {notApplied.length > 0 && <p className="mt-2 text-xs text-[#798279]" data-testid="recipe-search-not-applied">{t("notApplied")}: {notApplied.join(", ")}</p>}
+          ) : <p className="mt-1 text-xs text-muted-foreground">{t("noPreferences")}</p>}
+          {notApplied.length > 0 && <p className="mt-2 text-xs text-muted-foreground" data-testid="recipe-search-not-applied">{t("notApplied")}: {notApplied.join(", ")}</p>}
         </div>
         <button type="button" onClick={start} disabled={busy !== null} className={`${primary} mt-4 w-full sm:w-auto`} data-testid="recipe-search-create">
           <Sparkles className="h-4 w-4" aria-hidden="true" />{draft ? t("continueDraft") : t("createWithAI")}
@@ -132,16 +132,16 @@ export function RecipeSearchGeneration({ query, request, chips, notApplied, name
       </div>
 
       <Dialog open={open} onOpenChange={next => { if (!next) close(); }}>
-        <DialogContent dir={dir} className="max-h-[90dvh] overflow-y-auto rounded-2xl border-[#d9dfd4] bg-[#fbfbf7] sm:max-w-xl" data-testid="recipe-draft-dialog">
-          {(busy === "generate" || busy === "regenerate") && <div role="status" className="flex items-center gap-3 py-6 text-sm text-[#45594c]">
+        <DialogContent dir={dir} className="max-h-[90dvh] overflow-y-auto rounded-2xl border-border bg-background sm:max-w-xl" data-testid="recipe-draft-dialog">
+          {(busy === "generate" || busy === "regenerate") && <div role="status" className="flex items-center gap-3 py-6 text-sm text-foreground">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             <DialogTitle className="text-sm font-medium">{busy === "generate" ? t("creating") : t("regenerating")}</DialogTitle>
             <DialogDescription className="sr-only">{t("draftBadge")}</DialogDescription>
           </div>}
 
           {error && !draft && busy === null && <div role="alert" data-testid="recipe-draft-error">
-            <DialogTitle className="text-base font-semibold text-[#34443a]">{error.matches.length ? t("existsTitle") : t("failedTitle")}</DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-[#68756a]">{error.matches.length ? t("existsBody") : error.message}</DialogDescription>
+            <DialogTitle className="text-base font-semibold text-foreground">{error.matches.length ? t("existsTitle") : t("failedTitle")}</DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-muted-foreground">{error.matches.length ? t("existsBody") : error.message}</DialogDescription>
             {error.matches.length > 0 && <ul className="mt-2 list-disc ps-5 text-sm">
               {error.matches.map(m => <li key={m.id}><Link href={`/recipe/${encodeURIComponent(m.id)}`} className="underline underline-offset-2">{m.title}</Link></li>)}
             </ul>}
@@ -156,7 +156,7 @@ export function RecipeSearchGeneration({ query, request, chips, notApplied, name
               <Sparkles className="h-3 w-3" aria-hidden="true" />{t("draftBadge")}
             </p>
             {form ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); void saveEdit(); }} data-testid="recipe-draft-edit">
-              <DialogTitle className="text-base font-semibold text-[#34443a]">{t("edit")}</DialogTitle>
+              <DialogTitle className="text-base font-semibold text-foreground">{t("edit")}</DialogTitle>
               <DialogDescription className="sr-only">{t("edit")}</DialogDescription>
               {field("title", t("recipeName"), { required: true, maxLength: 200 })}
               {area("description", t("description"), 2)}
@@ -173,8 +173,8 @@ export function RecipeSearchGeneration({ query, request, chips, notApplied, name
                 <button type="button" className={secondary} disabled={busy !== null} onClick={() => { setForm(null); setError(null); }}>{t("cancelEdits")}</button>
               </div>
             </form> : <>
-              <DialogTitle className="pe-6 text-xl font-semibold text-[#27342e]">{draft.recipe.title}</DialogTitle>
-              <DialogDescription className="mt-1 text-sm text-[#68756a]">{draft.description}</DialogDescription>
+              <DialogTitle className="pe-6 text-xl font-semibold text-foreground">{draft.recipe.title}</DialogTitle>
+              <DialogDescription className="mt-1 text-sm text-muted-foreground">{draft.description}</DialogDescription>
               {draft.violations.length > 0 && <div role="status" className="mt-3 rounded-lg border border-[#e7d2bf] bg-[#fbf3ea] p-3 text-sm text-[#6e4f3a]" data-testid="recipe-draft-violations">
                 <p className="font-medium">{t("violationsTitle")}</p>
                 <ul className="mt-1 list-disc ps-5 text-xs leading-5">{draft.violations.map((v, i) => <li key={i}>{violationLabel(v)}</li>)}</ul>
@@ -185,7 +185,7 @@ export function RecipeSearchGeneration({ query, request, chips, notApplied, name
                     .map(tag => <li key={tag} className={chip}>{violationLabel({ filter: "dietary", value: { vegetarian: "Vegetarian", glutenFree: "Gluten-free", kidFriendly: "Kid friendly" }[tag]! })}</li>)}
                 </ul>}
               <GeneratedRecipeBody recipe={draft.recipe} />
-              <p className="mt-3 text-xs text-[#68756a]">{t("publishNote")}</p>
+              <p className="mt-3 text-xs text-muted-foreground">{t("publishNote")}</p>
               {error && <p role="alert" className="mt-2 text-xs text-[#815b49]" data-testid="recipe-draft-action-error">{error.message}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
                 <button type="button" className={primary} disabled={busy !== null} onClick={approve} data-testid="recipe-draft-approve">{busy === "approve" ? t("approving") : t("approve")}</button>

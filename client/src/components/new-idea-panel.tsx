@@ -86,8 +86,8 @@ export function IdeaFilterChips({ value, onChange, testId }: { value: IdeaFilter
 
 type Phase = { kind: "form" } | { kind: "loading" } | { kind: "error"; detail: string }
   | { kind: "preview"; result: GeneratedRecipe; ideaId: string | null; favorite: boolean };
-const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#42624e] px-4 text-sm font-medium text-white transition-colors hover:bg-[#365041] disabled:opacity-45";
-const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d9dfd4] bg-white px-4 text-sm font-medium text-[#45594c] transition-colors hover:bg-[#f4f7f1] disabled:opacity-45";
+const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary disabled:opacity-45";
+const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-45";
 
 export function NewIdeaPanel({ open, onOpenChange, onAddToWeek }: {
   open: boolean; onOpenChange: (open: boolean) => void; onAddToWeek: (ideaId: string) => void;
@@ -134,24 +134,24 @@ export function NewIdeaPanel({ open, onOpenChange, onAddToWeek }: {
 
   return (
     <Sheet open={open} onOpenChange={next => { if (!next) close(); }}>
-      <SheetContent side={dir === "rtl" ? "left" : "right"} dir={dir} className="bg-[#fbfbf7] sm:max-w-lg" data-testid="new-idea-panel">
+      <SheetContent side={dir === "rtl" ? "left" : "right"} dir={dir} className="bg-background sm:max-w-lg" data-testid="new-idea-panel">
         {phase.kind === "form" && <>
-          <SheetTitle className="pr-8 text-lg font-semibold text-[#27342e]">{t("title")}</SheetTitle>
-          <SheetDescription className="mt-1 text-sm text-[#68756a]">{t("body")}</SheetDescription>
+          <SheetTitle className="pr-8 text-lg font-semibold text-foreground">{t("title")}</SheetTitle>
+          <SheetDescription className="mt-1 text-sm text-muted-foreground">{t("body")}</SheetDescription>
           <div className="mt-6"><IdeaFilterChips value={filters} onChange={setFilters} testId="new-idea-filters" /></div>
-          <h3 className="mt-8 text-sm font-semibold text-[#34443a]">{t("styleTitle")}</h3>
-          <p className="mt-1 text-sm text-[#68756a]">{t("styleBody")}</p>
+          <h3 className="mt-8 text-sm font-semibold text-foreground">{t("styleTitle")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("styleBody")}</p>
           <div role="radiogroup" aria-label={t("styleTitle")} className="mt-3 grid gap-2">
             {generationStyles.map(key => {
               const on = style === key;
               return (
                 <button key={key} type="button" role="radio" aria-checked={on} onClick={() => setStyle(key)} data-testid={`style-${key}`}
-                  className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 text-start transition-colors ${on ? "border-[#42624e]" : "border-[#e2e6dd] hover:border-[#c9d2c4]"}`}>
+                  className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 text-start transition-colors ${on ? "border-primary" : "border-border hover:border-border"}`}>
                   <span>
-                    <span className="block text-sm font-medium text-[#27342e]">{t(key)}</span>
-                    <span className="block text-xs text-[#68756a]">{t(`${key}_sub` as Key)}</span>
+                    <span className="block text-sm font-medium text-foreground">{t(key)}</span>
+                    <span className="block text-xs text-muted-foreground">{t(`${key}_sub` as Key)}</span>
                   </span>
-                  {on && <Check className="h-4 w-4 flex-shrink-0 text-[#42624e]" aria-hidden="true" />}
+                  {on && <Check className="h-4 w-4 flex-shrink-0 text-primary" aria-hidden="true" />}
                 </button>
               );
             })}
@@ -161,15 +161,15 @@ export function NewIdeaPanel({ open, onOpenChange, onAddToWeek }: {
           </button>
         </>}
 
-        {phase.kind === "loading" && <div role="status" className="flex items-center gap-3 py-10 text-sm text-[#45594c]" data-testid="new-idea-loading">
+        {phase.kind === "loading" && <div role="status" className="flex items-center gap-3 py-10 text-sm text-foreground" data-testid="new-idea-loading">
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
           <SheetTitle className="text-sm font-medium">{t("generating")}</SheetTitle>
           <SheetDescription className="sr-only">{t("body")}</SheetDescription>
         </div>}
 
         {phase.kind === "error" && <div role="alert" className="py-6" data-testid="new-idea-error">
-          <SheetTitle className="text-base font-semibold text-[#34443a]">{t("failed")}</SheetTitle>
-          <SheetDescription className="mt-1 text-xs text-[#68756a]">{phase.detail}</SheetDescription>
+          <SheetTitle className="text-base font-semibold text-foreground">{t("failed")}</SheetTitle>
+          <SheetDescription className="mt-1 text-xs text-muted-foreground">{phase.detail}</SheetDescription>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" className={primary} onClick={generate} data-testid="button-new-idea-retry">{t("retry")}</button>
             <button type="button" className={secondary} onClick={() => setPhase({ kind: "form" })}>{t("back")}</button>
@@ -177,11 +177,11 @@ export function NewIdeaPanel({ open, onOpenChange, onAddToWeek }: {
         </div>}
 
         {phase.kind === "preview" && <div data-testid="new-idea-preview">
-          <SheetTitle className="pr-8 text-xl font-semibold text-[#27342e]">{phase.result.recipe.title}</SheetTitle>
-          <SheetDescription className="mt-1 text-sm text-[#68756a]">{phase.result.description}</SheetDescription>
+          <SheetTitle className="pr-8 text-xl font-semibold text-foreground">{phase.result.recipe.title}</SheetTitle>
+          <SheetDescription className="mt-1 text-sm text-muted-foreground">{phase.result.description}</SheetDescription>
           <GeneratedRecipeBody recipe={phase.result.recipe} />
-          {phase.result.tip && <p className="mt-3 text-sm text-[#45594c]" data-testid="new-idea-tip"><span className="font-medium">{t("tip")}:</span> {phase.result.tip}</p>}
-          {phase.ideaId && <p className="mt-2 text-xs text-[#68756a]">{t("saved")}</p>}
+          {phase.result.tip && <p className="mt-3 text-sm text-foreground" data-testid="new-idea-tip"><span className="font-medium">{t("tip")}:</span> {phase.result.tip}</p>}
+          {phase.ideaId && <p className="mt-2 text-xs text-muted-foreground">{t("saved")}</p>}
           <div className="mt-5 flex flex-wrap gap-2">
             <button type="button" className={primary} disabled={!phase.ideaId} onClick={() => { const id = phase.ideaId!; close(); onAddToWeek(id); }} data-testid="button-new-idea-add-to-week">{t("addToWeek")}</button>
             <button type="button" className={secondary} onClick={generate} data-testid="button-new-idea-another">{t("another")}</button>

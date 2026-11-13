@@ -79,7 +79,7 @@ try {
   // 1. Route, navigation and empty state.
   await until(el("my-ideas-empty"), "empty state");
   assert.match(await text("my-ideas-empty"), /Your next favorite recipe starts here.*Create a recipe that fits your taste, time, and cooking style\./);
-  assert.ok(await ev(`[...document.querySelectorAll('a[href="/my-ideas"]')].some(a => a.textContent.includes('My Ideas'))`), "nav link");
+  assert.ok(await ev(`[...document.querySelectorAll('a[href="/my-ideas"][aria-current="page"]')].some(a => a.textContent.trim() === 'Ideas')`), "nav link");
   await shot("1-empty");
 
   // 2. Panel: Meals filters + one style, Surprise me by default; no free text.

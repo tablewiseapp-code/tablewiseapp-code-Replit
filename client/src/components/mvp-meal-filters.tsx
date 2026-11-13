@@ -16,8 +16,8 @@ type Props = {
 
 type IngredientKind = "mustInclude" | "mustExclude";
 
-const controlClass = "min-h-11 rounded-xl border border-[#d9dfd4] bg-white px-3 text-sm text-[#45594c] focus:border-[#8ea58c] focus:outline-none focus:ring-2 focus:ring-[#dce8d8]";
-const chipClass = "inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full border border-[#d9dfd4] bg-[#f1f4ed] px-3 py-1.5 text-start text-xs leading-5 text-[#45594c]";
+const controlClass = "min-h-11 rounded-xl border border-border bg-white px-3 text-sm text-foreground focus:border-[#8ea58c] focus:outline-none focus:ring-2 focus:ring-[#dce8d8]";
+const chipClass = "inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full border border-border bg-accent px-3 py-1.5 text-start text-xs leading-5 text-foreground";
 
 export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, resultCount }: Props) {
   const { lang, dir } = useI18n();
@@ -113,7 +113,7 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
     const terms = filters[kind];
     return (
       <div className="min-w-0">
-        <label htmlFor={id} className="mb-2 block text-sm font-medium text-[#45594c]">{t(kind)}</label>
+        <label htmlFor={id} className="mb-2 block text-sm font-medium text-foreground">{t(kind)}</label>
         <div className="flex min-w-0 gap-2">
           <input
             id={id}
@@ -128,11 +128,11 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
             aria-describedby={`${id}-hint`}
             data-testid={`mvp-ingredient-input-${kind}`}
           />
-          <button type="button" onClick={() => addTerm(kind)} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border border-[#d9dfd4] bg-[#f8f8f2] px-3 text-sm font-medium text-[#45594c] hover:bg-[#edf2e9]" data-testid={`mvp-ingredient-add-${kind}`}>
+          <button type="button" onClick={() => addTerm(kind)} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-[#f8f8f2] px-3 text-sm font-medium text-foreground hover:bg-[#edf2e9]" data-testid={`mvp-ingredient-add-${kind}`}>
             <Plus className="h-4 w-4" aria-hidden="true" />{t("add")}
           </button>
         </div>
-        <p id={`${id}-hint`} className="mt-1.5 text-xs text-[#798279]">{t("pressEnter")}</p>
+        <p id={`${id}-hint`} className="mt-1.5 text-xs text-muted-foreground">{t("pressEnter")}</p>
         {terms.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2" aria-label={t(kind)}>
             {terms.map(term => (
@@ -158,14 +158,14 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
           aria-controls={panelId}
           aria-label={`${open ? t("closeFilters") : t("openFilters")}${activeCount ? `, ${t("activeFilters", { count: activeCount })}` : ""}`}
           onClick={() => setOpen(value => !value)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#d9dfd4] bg-[#fbfbf7] px-4 text-sm font-medium text-[#42624e] transition-colors hover:bg-[#f0f4ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a]"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-medium text-primary transition-colors hover:bg-[#f0f4ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           data-testid="mvp-filters-toggle"
         >
           {t("filters")}
           {activeCount > 0 && <span className="rounded-full bg-[#e3eadf] px-2 py-0.5 text-xs tabular-nums">{activeCount}</span>}
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
-        <p className="text-sm text-[#68756a]" aria-live="polite" data-testid="mvp-filter-result-count">
+        <p className="text-sm text-muted-foreground" aria-live="polite" data-testid="mvp-filter-result-count">
           {t("matchingRecipes", { count: resultCount })}
         </p>
       </div>
@@ -178,7 +178,7 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
               type="button"
               onClick={() => removeChip(chip.kind, chip.value)}
               aria-label={t("removeFilter", { label: chip.label })}
-              className={`${chipClass} max-w-full hover:border-[#a9bba5] hover:bg-[#e8eee4]`}
+              className={`${chipClass} max-w-full hover:border-[#a9bba5] hover:bg-accent`}
             >
               <span className="break-words">{chip.label}</span>
               <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -193,20 +193,20 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
       )}
 
       {open && (
-        <section id={panelId} className="absolute inset-x-0 z-30 mt-3 max-h-[min(78dvh,46rem)] overflow-y-auto rounded-2xl border border-[#d9dfd4] bg-[#fbfbf7] p-4 shadow-[0_18px_48px_-28px_rgba(39,52,46,0.42)] sm:p-5" data-testid="mvp-filters-panel">
+        <section id={panelId} className="absolute inset-x-0 z-30 mt-3 max-h-[min(78dvh,46rem)] overflow-y-auto rounded-2xl border border-border bg-background p-4 shadow-[0_18px_48px_-28px_rgba(39,52,46,0.42)] sm:p-5" data-testid="mvp-filters-panel">
           <div className="grid gap-5 sm:grid-cols-2">
-            <fieldset className="min-w-0 rounded-xl border border-[#e2e6dd] p-3 sm:p-4">
-              <legend className="px-1 text-sm font-semibold text-[#34443a]">{t("time")}</legend>
+            <fieldset className="min-w-0 rounded-xl border border-border p-3 sm:p-4">
+              <legend className="px-1 text-sm font-semibold text-foreground">{t("time")}</legend>
               <div role="group" aria-label={t("timeDisplay")} className="mt-1 flex flex-wrap gap-2">
                 {(["preparation", "total"] as const).map(mode => (
                   <button key={mode} type="button" aria-pressed={timeMode === mode} onClick={() => onTimeModeChange(mode)}
                     data-testid={`mvp-time-${mode}`}
-                    className={`min-h-11 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#496c5a] ${timeMode === mode ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
+                    className={`min-h-11 rounded-full border px-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${timeMode === mode ? "border-primary bg-primary text-white" : "border-border bg-white text-muted-foreground"}`}>
                     {t(mode)}
                   </button>
                 ))}
               </div>
-              <label htmlFor={`${panelId}-max-time`} className="mb-2 mt-4 block text-xs font-medium text-[#68756a]">{t("maxTime")}</label>
+              <label htmlFor={`${panelId}-max-time`} className="mb-2 mt-4 block text-xs font-medium text-muted-foreground">{t("maxTime")}</label>
               <span className="relative block">
                 <select id={`${panelId}-max-time`} value={filters.maxMinutes ?? ""}
                   onChange={event => update({ maxMinutes: event.target.value ? Number(event.target.value) as MealFilters["maxMinutes"] : null })}
@@ -214,24 +214,24 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
                   <option value="">{t("anyTime")}</option>
                   {timeCaps.map(cap => <option key={cap} value={cap}>{t("minutes", { count: cap })}</option>)}
                 </select>
-                <ChevronDown className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#738076]" aria-hidden="true" />
+                <ChevronDown className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               </span>
             </fieldset>
 
-            <fieldset className="min-w-0 rounded-xl border border-[#e2e6dd] p-3 sm:p-4 sm:col-span-2">
-              <legend className="px-1 text-sm font-semibold text-[#34443a]">{t("ingredients")}</legend>
+            <fieldset className="min-w-0 rounded-xl border border-border p-3 sm:p-4 sm:col-span-2">
+              <legend className="px-1 text-sm font-semibold text-foreground">{t("ingredients")}</legend>
               <div className="grid gap-4 md:grid-cols-2">
                 {renderIngredientField("mustInclude", includeDraft, setIncludeDraft)}
                 {renderIngredientField("mustExclude", excludeDraft, setExcludeDraft)}
               </div>
-              <p className="mt-3 rounded-lg bg-[#f2f3ec] p-3 text-xs leading-5 text-[#737c72]">{t("ingredientNotice")}</p>
+              <p className="mt-3 rounded-lg bg-background p-3 text-xs leading-5 text-muted-foreground">{t("ingredientNotice")}</p>
             </fieldset>
 
-            <fieldset className="min-w-0 rounded-xl border border-[#e2e6dd] p-3 sm:p-4">
-              <legend className="px-1 text-sm font-semibold text-[#34443a]">{t("mealType")}</legend>
+            <fieldset className="min-w-0 rounded-xl border border-border p-3 sm:p-4">
+              <legend className="px-1 text-sm font-semibold text-foreground">{t("mealType")}</legend>
               <div className="mt-1 flex flex-wrap gap-2" role="group" aria-label={t("mealType")}>
                 <button type="button" aria-pressed={filters.mealTypes.length === 0} onClick={() => update({ mealTypes: [] })}
-                  className={`min-h-11 rounded-full border px-3 text-xs font-medium ${filters.mealTypes.length === 0 ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
+                  className={`min-h-11 rounded-full border px-3 text-xs font-medium ${filters.mealTypes.length === 0 ? "border-primary bg-primary text-white" : "border-border bg-white text-muted-foreground"}`}>
                   {t("all")}
                 </button>
                 {mealTypes.map(type => {
@@ -240,7 +240,7 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
                     <button key={type} type="button" aria-pressed={selected} onClick={() => update({
                       mealTypes: selected ? filters.mealTypes.filter(value => value !== type) : [...filters.mealTypes, type],
                     })}
-                      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-medium ${selected ? "border-[#42624e] bg-[#42624e] text-white" : "border-[#d9dfd4] bg-white text-[#52665a]"}`}>
+                      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-medium ${selected ? "border-primary bg-primary text-white" : "border-border bg-white text-muted-foreground"}`}>
                       {selected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}{t(type)}
                     </button>
                   );
@@ -248,8 +248,8 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
               </div>
             </fieldset>
 
-            <fieldset className="min-w-0 rounded-xl border border-[#e2e6dd] p-3 sm:p-4 sm:col-span-2">
-              <legend className="px-1 text-sm font-semibold text-[#34443a]">{t("lunchboxSuitability")}</legend>
+            <fieldset className="min-w-0 rounded-xl border border-border p-3 sm:p-4 sm:col-span-2">
+              <legend className="px-1 text-sm font-semibold text-foreground">{t("lunchboxSuitability")}</legend>
               <label htmlFor={`${panelId}-lunchbox`} className="sr-only">{t("lunchboxSuitability")}</label>
               <span className="relative mt-1 block max-w-md">
                 <select id={`${panelId}-lunchbox`} value={filters.lunchbox} onChange={event => update({ lunchbox: event.target.value as MealFilters["lunchbox"] })}
@@ -258,9 +258,9 @@ export function MvpMealFilters({ filters, onChange, timeMode, onTimeModeChange, 
                   <option value="lunchbox">{t("lunchbox")}</option>
                   <option value="school-lunchbox">{t("schoolLunchbox")}</option>
                 </select>
-                <ChevronDown className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#738076]" aria-hidden="true" />
+                <ChevronDown className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               </span>
-              <p className="mt-3 rounded-lg bg-[#f2f3ec] p-3 text-xs leading-5 text-[#737c72]">{t("schoolNotice")}</p>
+              <p className="mt-3 rounded-lg bg-background p-3 text-xs leading-5 text-muted-foreground">{t("schoolNotice")}</p>
             </fieldset>
           </div>
         </section>
