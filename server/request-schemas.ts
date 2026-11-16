@@ -59,6 +59,7 @@ export const audioInput = z.object({
 
 // My Cooking Experience. Photos arrive already resized by the browser, as canonical base64 JPEG.
 export const cookingSessionId = z.string().uuid();
+export const groceryExtraCreate = z.object({ text: z.string().trim().min(1).max(80) }).strict();
 export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
 export const cookingSessionPatch = z.object({
   rating: z.number().int().min(1).max(5).nullable(),

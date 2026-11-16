@@ -7,7 +7,7 @@ import { plannedServingsFactor } from "@/lib/meal-plan";
 import { baseServings, scaleIngredient } from "@/lib/ingredient-scale";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
-import { Share2 } from "lucide-react";
+import { Plus, Share2, X } from "lucide-react";
 import { loadSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
@@ -95,15 +95,22 @@ export default function GroceryListScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [recipesError, setRecipesError] = useState<string | null>(null);
+  // Products the user added by hand ("I'm out of onion"), stored per owner on the server.
+  const [extras, setExtras] = useState<{ id: string; text: string }[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const [draft, setDraft] = useState("");
   const state = loadState();
   const planAssignments = state?.planAssignments || [];
 
   useEffect(() => {
     let active = true;
     setIsLoadingRecipes(true);
-    fetchRecipes()
-      .then((data) => {
+    // The recipe list still works if the hand-added items cannot be loaded.
+    const loadExtras = fetch("/api/grocery-extras").then(res => res.ok ? res.json() : []).catch(() => []);
+    Promise.all([fetchRecipes(), loadExtras])
+      .then(([data, added]) => {
         if (!active) return;
+        setExtras(added);
         setRecipes(toPlannerRecipes(data));
         setRecipesError(null);
       })
@@ -121,7 +128,7 @@ export default function GroceryListScreen() {
   const groceryData = useMemo(() => {
     const usedRecipeIds = new Set([...(state?.selectedIds ?? []), ...planAssignments.map(a => a.recipeId)]); // shortlisted dishes count even before they get a slot
     const usedRecipes = recipes.filter(r => usedRecipeIds.has(r.id));
-    const ingredientMap = new Map<string, { ingredient: string; recipes: string[] }>();
+    const ingredientMap = new Map<string, { ingredient: string; recipes: string[]; extraId?: string }>();
     usedRecipes.forEach(recipe => {
       // Planned servings (chosen in the recipe view) scale quantities; unparseable lines stay as written.
       const factor = plannedServingsFactor(planAssignments, recipe.id, baseServings(recipe.servings));
@@ -136,7 +143,12 @@ export default function GroceryListScreen() {
         }
       });
     });
-    const categorized: Record<string, { ingredient: string; recipes: string[]; key: string }[]> = {};
+    extras.forEach(extra => {
+      const key = extra.text.toLowerCase();
+      const item = ingredientMap.get(key);
+      if (item) item.extraId = extra.id; else ingredientMap.set(key, { ingredient: extra.text, recipes: [], extraId: extra.id });
+    });
+    const categorized: Record<string, { ingredient: string; recipes: string[]; key: string; extraId?: string }[]> = {};
     ingredientMap.forEach((data, key) => {
       const category = categorizeIngredient(data.ingredient);
       if (!categorized[category]) categorized[category] = [];
@@ -144,7 +156,7 @@ export default function GroceryListScreen() {
     });
     Object.values(categorized).forEach(items => items.sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
     return { categorized, usedRecipes, totalItems: ingredientMap.size };
-  }, [planAssignments, recipes]);
+  }, [planAssignments, recipes, extras]);
 
   const allKeys = useMemo(() => Object.values(groceryData.categorized).flatMap(items => items.map(item => item.key)), [groceryData]);
   // Persist only after the real list is known, and only items still on it.
@@ -167,6 +179,33 @@ export default function GroceryListScreen() {
       setTimeout(() => document.getElementById(`grocery-toggle-${category.replace(/[^a-z]+/gi, "-").toLowerCase()}`)?.focus(), 0);
     } else if (!nowComplete) setCompletionNote("");
   };
+
+  const addExtra = async () => {
+    const text = draft.trim();
+    if (!text) return;
+    try {
+      const res = await fetch("/api/grocery-extras", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      if (!res.ok) throw new Error();
+      const extra: { id: string; text: string } = await res.json();
+      setExtras(previous => previous.some(item => item.id === extra.id) ? previous : [...previous, extra]);
+      // "I'm out of it again": a product added again must not stay ticked from the last shop.
+      setCheckedItems(previous => { const next = new Set(previous); next.delete(extra.text.toLowerCase()); return next; });
+      setDraft("");
+    } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); }
+  };
+  const removeExtra = async (id: string) => {
+    try {
+      if (!(await fetch(`/api/grocery-extras/${id}`, { method: "DELETE" })).ok) throw new Error();
+      setExtras(previous => previous.filter(item => item.id !== id));
+    } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); }
+  };
+  const addForm = (
+    <form className="grocery-add" onSubmit={event => { event.preventDefault(); void addExtra(); }}>
+      <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={80} autoFocus
+        placeholder={t("grocery.addItemPlaceholder")} aria-label={t("grocery.addItem")} data-testid="input-add-item" />
+      <button type="submit" className="grocery-share-button" data-testid="button-add-item-submit">{t("grocery.add")}</button>
+    </form>
+  );
 
   const categoryTranslations: Record<string, string> = {
     "Produce": t("grocery.produce"),
@@ -297,13 +336,18 @@ export default function GroceryListScreen() {
     );
   }
 
-  if (groceryData.usedRecipes.length === 0) {
+  if (groceryData.totalItems === 0) {
     return (
       <main className="grocery-page">
         <section className="grocery-shell grocery-state">
           <h1>A little room for this week.</h1>
           <p>{t("grocery.noMeals")}</p>
           <button className="grocery-primary" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>
+          {addOpen ? addForm : (
+            <p><button type="button" className="grocery-share-button" onClick={() => setAddOpen(true)} data-testid="button-add-item">
+              <Plus aria-hidden="true" />{t("grocery.addItem")}
+            </button></p>
+          )}
         </section>
       </main>
     );
@@ -349,10 +393,14 @@ export default function GroceryListScreen() {
             <span style={{ transform: `scaleX(${progress / 100})` }} />
           </div>
           <div className="grocery-heading-foot">
+            <button type="button" className="grocery-share-button" aria-expanded={addOpen} onClick={() => setAddOpen(open => !open)} data-testid="button-add-item">
+              <Plus aria-hidden="true" />{t("grocery.addItem")}
+            </button>
             <button type="button" className="grocery-share-button" onClick={() => setShareOpen(true)} data-testid="button-share-export">
               <Share2 aria-hidden="true" />{t("grocery.shareExportTitle")}
             </button>
           </div>
+          {addOpen && addForm}
           <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} pantryLabel={settingsText(lang, "pantryBadge")} />
         </header>
 
@@ -460,6 +508,12 @@ export default function GroceryListScreen() {
                           <span className="grocery-recipes" data-testid="grocery-item-recipes">
                             <span className="grocery-sr-only">Used in: </span>{item.recipes.join(" · ")}
                           </span>
+                        )}
+                        {item.extraId && (
+                          <button type="button" className="grocery-remove" aria-label={t("grocery.removeItem", { item: item.ingredient })}
+                            onClick={() => void removeExtra(item.extraId!)} data-testid="button-remove-item">
+                            <X aria-hidden="true" />
+                          </button>
                         )}
                       </li>
                     );

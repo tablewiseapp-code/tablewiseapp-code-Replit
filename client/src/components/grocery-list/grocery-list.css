@@ -153,6 +153,17 @@
 .grocery-share-button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px; border: 1px solid var(--ml-line); border-radius: 999px; background: var(--card); color: var(--ml-ink); font: inherit; font-size: var(--text-support); font-weight: 550; cursor: pointer; transition: border-color .16s ease, background .16s ease; }
 .grocery-share-button:hover { border-color: var(--ml-leaf); background: var(--accent); }
 .grocery-share-button svg { width: 15px; height: 15px; }
+.grocery-heading-foot { flex-wrap: wrap; }
+.grocery-add { display: flex; gap: 8px; margin-top: 12px; }
+.grocery-add input { flex: 1; min-width: 0; min-height: 44px; padding: 0 16px; border: 1px solid var(--ml-line); border-radius: 999px; background: var(--card); color: var(--ml-ink); font: inherit; font-size: var(--text-body); }
+.grocery-add input:focus-visible, .grocery-remove:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.grocery-remove { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 999px; background: none; color: var(--ml-muted); cursor: pointer; }
+.grocery-remove:hover { color: var(--ml-ink); background: var(--accent); }
+.grocery-remove svg { width: 16px; height: 16px; }
+@media (max-width: 520px) {
+  .grocery-item:has(.grocery-remove) { padding-inline-end: 44px; }
+  .grocery-remove { position: absolute; inset-inline-end: 0; top: 0; }
+}
 .grocery-share-scopes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .grocery-share-scope { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; font-size: var(--text-support); cursor: pointer; }
 .grocery-share-scope input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
