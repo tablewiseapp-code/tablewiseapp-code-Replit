@@ -3,6 +3,9 @@ import { Copy, Download, Facebook, FileText, Mail, MessageCircle, Share2 } from 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { ShareRole } from "@shared/schema";
 import { countItems, facebookUrl, formatText, mailtoUrl, printableHtml, scopeList, toCsv, whatsappUrl, type ShareCategory, type ShareScope } from "@/lib/grocery-share";
 
 function download(name: string, content: string, type: string) {
@@ -14,11 +17,17 @@ function download(name: string, content: string, type: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Read-only view of the list: sharing never touches checked state or progress. */
-export function GroceryShareDialog({ open, onOpenChange, categories, pantryLabel }: {
+export type LinkItem = { category: string; text: string; recipes: string; checked: boolean; note: string | null };
+type ShareLink = { token: string; role: ShareRole; createdAt: string };
+export const shareRoles: ShareRole[] = ["view", "add", "edit"];
+export const roleLabelKey = (role: ShareRole) => `grocery.role${role[0].toUpperCase()}${role.slice(1)}`;
+
+/** Read-only view of the list: sharing never touches checked state or progress. A share link saves a copy. */
+export function GroceryShareDialog({ open, onOpenChange, categories, linkItems, pantryLabel }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categories: ShareCategory[];
+  linkItems: LinkItem[];
   pantryLabel: string;
 }) {
   const { t, lang, dir } = useI18n();
@@ -56,6 +65,31 @@ export function GroceryShareDialog({ open, onOpenChange, categories, pantryLabel
     win.print();
   };
 
+  // Share links: a saved copy on the server, opened by link with the chosen role.
+  const [role, setRole] = useState<ShareRole>("add");
+  const [creating, setCreating] = useState(false);
+  const { data: links = [] } = useQuery<ShareLink[]>({ queryKey: ["/api/shared-lists"], enabled: open, staleTime: 0 });
+  const linkUrl = (token: string) => `${window.location.origin}/shared/${token}`;
+  const copyLink = async (url: string) => {
+    try { await navigator.clipboard.writeText(url); toast({ description: t("grocery.linkCopied") }); }
+    catch { /* the link stays in the list below, ready to send */ }
+  };
+  const sendLink = async (url: string) => {
+    if (typeof navigator.share !== "function") return copyLink(url);
+    try { await navigator.share({ title, url }); }
+    catch (error) { if ((error as Error)?.name !== "AbortError") await copyLink(url); }
+  };
+  const createLink = async () => {
+    setCreating(true);
+    try {
+      // ponytail: the first 300 items; raise the server cap if real lists get longer.
+      const { token } = await (await apiRequest("POST", "/api/shared-lists", { role, items: linkItems.slice(0, 300) })).json();
+      await queryClient.invalidateQueries({ queryKey: ["/api/shared-lists"] });
+      await copyLink(linkUrl(token));
+    } catch { toast({ description: t("grocery.linkFailed"), variant: "destructive" }); }
+    finally { setCreating(false); }
+  };
+
   const stamp = new Date().toISOString().slice(0, 10);
   const actions = [
     { id: "whatsapp", icon: MessageCircle, label: "WhatsApp", run: () => window.open(whatsappUrl(text), "_blank", "noopener") },
@@ -70,7 +104,7 @@ export function GroceryShareDialog({ open, onOpenChange, categories, pantryLabel
     { id: "pdf", label: "PDF", run: exportPdf },
     { id: "txt", label: "TXT", run: () => download(`tablewise-grocery-${stamp}.txt`, text + "\n", "text/plain;charset=utf-8") },
     { id: "csv", label: "CSV", run: () => download(`tablewise-grocery-${stamp}.csv`, toCsv(list, [
-      t("grocery.csvCategory"), t("grocery.csvIngredient"), t("grocery.csvQuantity"), t("grocery.csvUnit"), t("grocery.csvChecked"), t("grocery.csvPantry"),
+      t("grocery.csvCategory"), t("grocery.csvIngredient"), t("grocery.csvQuantity"), t("grocery.csvUnit"), t("grocery.csvChecked"), t("grocery.csvPantry"), t("grocery.csvNote"),
     ]), "text/csv;charset=utf-8") },
   ];
 
@@ -89,6 +123,31 @@ export function GroceryShareDialog({ open, onOpenChange, categories, pantryLabel
           <DialogTitle>{t("grocery.shareExportTitle")}</DialogTitle>
           <DialogDescription>{t("grocery.shareScopeLabel")}</DialogDescription>
         </DialogHeader>
+        <section className="grocery-share-link" aria-labelledby="grocery-share-link-title">
+          <h3 id="grocery-share-link-title">{t("grocery.linkTitle")}</h3>
+          <p>{t("grocery.linkHint")}</p>
+          <div className="grocery-link-actions">
+            <select value={role} onChange={event => setRole(event.target.value as ShareRole)} aria-label={t("grocery.linkRole")} data-testid="select-link-role">
+              {shareRoles.map(value => <option key={value} value={value}>{t(roleLabelKey(value))}</option>)}
+            </select>
+            <button type="button" className="grocery-share-button" disabled={creating || linkItems.length === 0} onClick={createLink} data-testid="button-create-link">
+              {t("grocery.linkCreate")}
+            </button>
+          </div>
+          {links.length > 0 && (
+            <ul aria-label={t("grocery.linkYours")} data-testid="share-links">
+              {links.map(link => (
+                <li key={link.token}>
+                  <span>{t(roleLabelKey(link.role))} · {new Date(link.createdAt).toLocaleDateString(lang)}</span>
+                  <span className="grocery-link-actions">
+                    <button type="button" className="grocery-share-button" onClick={() => sendLink(linkUrl(link.token))} data-testid="button-send-link">{t("grocery.linkSend")}</button>
+                    <a className="grocery-share-button" href={linkUrl(link.token)} data-testid="link-open-shared">{t("grocery.linkOpen")}</a>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
         <div className="grocery-share-scopes" role="radiogroup" aria-label={t("grocery.shareScopeLabel")}>
           {scopeOption("remaining", t("grocery.shareRemaining"))}
           {scopeOption("all", t("grocery.shareAll"))}

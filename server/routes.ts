@@ -24,6 +24,9 @@ import { databaseDraftStore, draftView, type RecipeDraftStore } from "./recipe-d
 import { draftEdit, groceryExtraCreate, cookingSessionId, cookingSessionCreate, cookingSessionPatch, cookingPhotoInput } from "./request-schemas";
 import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cooking-history";
 import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
+import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
+import { databaseGroceryStore, type GroceryStore } from "./shared-grocery";
+import { can, type Access } from "../shared/grocery-access";
 import { RequestBudget } from "./security";
 import { matchesPlannerFilters, noPersonalFilters, recipeNameMatches } from "../client/src/lib/planner-filters";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
@@ -43,6 +46,7 @@ export type RouteDependencies = {
   drafts?: RecipeDraftStore;
   cooking?: CookingStore;
   groceryExtras?: GroceryExtraStore;
+  grocery?: GroceryStore;
 };
 // Per-owner AI generation quota (first generation + regenerations), on top of the shared AI budget.
 export const OWNER_DAILY_GENERATIONS = 10;
@@ -662,6 +666,88 @@ Rules:
       if (!owner || !await cooking.removePhoto(owner, id.data)) return res.status(404).json({ error: "Photo not found." });
       res.status(204).end();
     } catch { cookingFailed(res, "cooking_photo_delete"); }
+  });
+
+  // Grocery share links. A link carries a role (view < add < edit); the owner who made it can do everything.
+  // The role is checked here on every request: the client only hides what a role cannot do.
+  const grocery = dependencies.grocery ?? databaseGroceryStore();
+  type SharedHandler = (req: express.Request, res: express.Response, list: { id: string; role: Access }, access: Access) => Promise<unknown>;
+  const shared = (needed: Access, operation: string, handler: SharedHandler) => async (req: express.Request, res: express.Response) => {
+    try {
+      const token = shareToken.safeParse(req.params.token);
+      const list = token.success ? await grocery.find(token.data) : undefined;
+      if (!list) return res.status(404).json({ error: "This list is no longer shared." });
+      const access: Access = security.owner(req, res, false) === list.ownerId ? "owner" : list.role;
+      const itemId = req.params.itemId === undefined ? undefined : cookingSessionId.safeParse(req.params.itemId);
+      if (itemId && !itemId.success) return res.status(400).json({ error: "Invalid item." });
+      // Changing an item's text is an edit; ticking and notes only need "add".
+      const editsText = itemId !== undefined && req.method === "PATCH" && req.body?.text !== undefined;
+      if (!can(access, needed) || (editsText && !can(access, "edit"))) {
+        return res.status(403).json({ error: "This link does not allow that." });
+      }
+      await handler(req, res, list, access);
+    } catch { cookingFailed(res, operation); }
+  };
+  app.post("/api/shared-lists", async (req, res) => {
+    const input = sharedListCreate.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid grocery list." });
+    try {
+      const token = await grocery.create(security.owner(req, res, true)!, input.data.role, input.data.items);
+      if (!token) return res.status(409).json({ error: "Too many shared lists. Turn one off first." });
+      res.status(201).json({ token });
+    } catch { cookingFailed(res, "shared_list_create"); }
+  });
+  app.get("/api/shared-lists", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await grocery.links(owner) : []); }
+    catch { cookingFailed(res, "shared_list_links"); }
+  });
+  app.get("/api/shared-lists/:token", shared("view", "shared_list_get", async (_req, res, list, access) => {
+    res.json({ access, role: list.role, items: await grocery.items(list.id) });
+  }));
+  app.patch("/api/shared-lists/:token", shared("owner", "shared_list_role", async (req, res, list) => {
+    const input = sharedListPatch.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid role." });
+    await grocery.setRole(list.id, input.data.role);
+    res.status(204).end();
+  }));
+  app.delete("/api/shared-lists/:token", shared("owner", "shared_list_delete", async (_req, res, list) => {
+    await grocery.remove(list.id);
+    res.status(204).end();
+  }));
+  app.post("/api/shared-lists/:token/items", shared("add", "shared_item_add", async (req, res, list) => {
+    const input = sharedItemCreate.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid item." });
+    const item = await grocery.addItem(list.id, input.data);
+    if (!item) return res.status(409).json({ error: "This list is full." });
+    res.status(201).json(item);
+  }));
+  app.patch("/api/shared-lists/:token/items/:itemId", shared("add", "shared_item_patch", async (req, res, list) => {
+    const input = sharedItemPatch.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid change." });
+    const item = await grocery.patchItem(list.id, req.params.itemId, input.data);
+    if (!item) return res.status(404).json({ error: "Item not found." });
+    res.json(item);
+  }));
+  app.delete("/api/shared-lists/:token/items/:itemId", shared("edit", "shared_item_delete", async (req, res, list) => {
+    if (!await grocery.removeItem(list.id, req.params.itemId)) return res.status(404).json({ error: "Item not found." });
+    res.status(204).end();
+  }));
+  // Notes on the owner's own grocery list.
+  app.get("/api/grocery-notes", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await grocery.notes(owner) : {}); }
+    catch { cookingFailed(res, "grocery_notes_get"); }
+  });
+  app.put("/api/grocery-notes", async (req, res) => {
+    const input = groceryNoteInput.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid note." });
+    try {
+      if (!await grocery.setNote(security.owner(req, res, true)!, input.data.key, input.data.note)) {
+        return res.status(409).json({ error: "Too many notes." });
+      }
+      res.status(204).end();
+    } catch { cookingFailed(res, "grocery_note_set"); }
   });
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "API route not found." }));

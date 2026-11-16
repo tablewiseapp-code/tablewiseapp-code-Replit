@@ -16,6 +16,7 @@ import GroceryList from "@/pages/grocery-list";
 import NotFound from "@/pages/not-found";
 import MyIdeas from "@/pages/my-ideas";
 import BasicSettings from "@/pages/basic-settings";
+import SharedGrocery from "@/pages/shared-grocery";
 
 function GroceryEntry() {
   return new URLSearchParams(useSearch()).get("source") === "mvp" ? <MvpGrocery /> : <GroceryList />;
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/import" component={ImportRecipe}/>
       <Route path="/grocery-list" component={GroceryEntry}/>
       <Route path="/settings" component={BasicSettings}/>
+      <Route path="/shared/:token" component={SharedGrocery}/>
       <Route component={NotFound} />
     </Switch>
   );

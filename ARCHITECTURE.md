@@ -34,7 +34,7 @@ server/
   security.ts          operator sessions, owner cookie, access gates, rate limits, AI budget
   storage.ts           data access (Drizzle)
   request-schemas.ts   Zod schemas for request bodies
-  recipe-*.ts, cooking-history.ts, grocery-extras.ts, pilot-analytics.ts   feature logic
+  recipe-*.ts, cooking-history.ts, grocery-extras.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
 shared/                types and schemas used by both sides; schema.ts is the database schema
 migrations/            reviewed SQL, applied by hand
 db/init/               seed dump for the local Docker database
@@ -53,6 +53,7 @@ docs/                  product definition and per-feature notes
 | `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (operator) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
 | `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list |
+| `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
 | `/settings` | `pages/basic-settings.tsx` | Basic Settings |
 | `/operator` | server-rendered in `server/security.ts` | operator sign-in |
 
@@ -68,6 +69,9 @@ Tables are defined in `shared/schema.ts`.
 | `cooking_sessions` | "I made it", rating, notes | per owner |
 | `cooking_photos` | JPEG and thumbnail as `bytea` | per owner |
 | `grocery_extras` | products a person added to their grocery list by hand | per owner |
+| `grocery_notes` | a note on an item of the owner's own grocery list | per owner |
+| `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
+| `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
@@ -78,6 +82,7 @@ Browser `localStorage` still holds the week plan (`weeklyMealsState`), grocery p
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
 - **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history.
+- **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
 - **Operator only:** import, edit and delete recipes; read the analytics summary.
 
 ## Environment flags
