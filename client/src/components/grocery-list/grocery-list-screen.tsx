@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { categorizeIngredient } from "@/lib/grocery-categories";
+import { GroceryItemPicture } from "./grocery-item-picture";
 import { GroceryAddItem } from "./grocery-add-item";
 import { groceryProductText } from "@/lib/grocery-product-copy";
 import { GroceryNote } from "./grocery-note";
@@ -90,6 +91,11 @@ export default function GroceryListScreen() {
   usePilotPage("grocery_list_opened", currentWeek(), planAssignments.length > 0);
   // Notes per item, stored per owner on the server. The list still works if they cannot be loaded.
   const { data: notes = {} } = useQuery<Record<string, string>>({ queryKey: ["/api/grocery-notes"] });
+  const { data: pictures = {}, isPending: picturesLoading, isError: picturesError, refetch: reloadPictures } = useQuery<Record<string, string | null>>({ queryKey: ["/api/grocery-item-photos"] });
+  const savePicture = async (key: string, image: string | null) => {
+    await apiRequest("PUT", "/api/grocery-item-photos", { key, image });
+    queryClient.setQueryData<Record<string, string | null>>(["/api/grocery-item-photos"], previous => ({ ...previous, [key]: image }));
+  };
   const saveNote = (key: string, note: string) => {
     queryClient.setQueryData(["/api/grocery-notes"], { ...notes, [key]: note });
     apiRequest("PUT", "/api/grocery-notes", { key, note }).catch(() => {
@@ -182,6 +188,9 @@ export default function GroceryListScreen() {
       if (!res.ok) throw new Error();
       const extra: { id: string; text: string; image?: string | null } = await res.json();
       setExtras(previous => previous.some(item => item.id === extra.id) ? previous.map(item => item.id === extra.id ? extra : item) : [...previous, extra]);
+      if (image) queryClient.setQueryData<Record<string, string | null>>(["/api/grocery-item-photos"], previous => {
+        const next = { ...previous }; delete next[extra.text.toLowerCase()]; return next;
+      });
       // "I'm out of it again": a product added again must not stay ticked from the last shop.
       setCheckedItems(previous => { const next = new Set(previous); next.delete(extra.text.toLowerCase()); return next; });
       return true;
@@ -397,6 +406,8 @@ export default function GroceryListScreen() {
           <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} linkItems={linkItems} pantryLabel={settingsText(lang, "pantryBadge")} />
         </header>
 
+        {picturesError && <p role="alert">{groceryProductText(lang, "loadError")} <button type="button" className="grocery-reset" onClick={() => void reloadPictures()}>{groceryProductText(lang, "retry")}</button></p>}
+
         {listComplete && (
           <div className="grocery-success" role="status" data-testid="grocery-shopping-complete">
             <strong>{t("grocery.shoppingComplete")}</strong>
@@ -497,7 +508,9 @@ export default function GroceryListScreen() {
                           {isPantry(item.ingredient) &&
                             <span className="ms-2 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
                         </label>
-                        {item.image && <img className="grocery-product-photo" src={item.image} alt={groceryProductText(lang, "preview")} loading="lazy" />}
+                        <GroceryItemPicture item={item.ingredient}
+                          image={Object.prototype.hasOwnProperty.call(pictures, item.key) ? pictures[item.key] : item.image}
+                          disabled={picturesLoading || picturesError} onSave={image => savePicture(item.key, image)} />
                         {item.recipes.length > 0 && (
                           <span className="grocery-recipes" data-testid="grocery-item-recipes">
                             <span className="grocery-sr-only">Used in: </span>{item.recipes.join(" · ")}
