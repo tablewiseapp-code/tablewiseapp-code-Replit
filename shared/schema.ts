@@ -207,3 +207,24 @@ export const groceryNotes = pgTable("grocery_notes", {
   itemKey: varchar("item_key", { length: 300 }).notNull(),
   note: varchar("note", { length: 500 }).notNull(),
 }, table => [primaryKey({ columns: [table.ownerId, table.itemKey] })]);
+
+// Where an imported recipe came from. Kept apart from the recipe's content so real extraction can replace the mock.
+export type RecipeSourceStatus = "mock" | "pending" | "ready" | "failed";
+export const recipeSources = pgTable("recipe_sources", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  recipeId: varchar("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  provider: varchar("provider", { length: 16 }).$type<"youtube">().notNull(),
+  originalUrl: text("original_url").notNull(),
+  canonicalUrl: text("canonical_url").notNull(),
+  externalVideoId: varchar("external_video_id", { length: 32 }).notNull(),
+  status: varchar("status", { length: 8 }).$type<RecipeSourceStatus>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  check("recipe_sources_provider", sql`${table.provider} IN ('youtube')`),
+  check("recipe_sources_status", sql`${table.status} IN ('mock','pending','ready','failed')`),
+  unique("recipe_sources_recipe_unique").on(table.recipeId),
+  unique("recipe_sources_owner_video_unique").on(table.ownerId, table.provider, table.externalVideoId),
+]);
+export type RecipeSource = typeof recipeSources.$inferSelect;

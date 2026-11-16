@@ -73,6 +73,7 @@ Tables are defined in `shared/schema.ts`.
 | `grocery_notes` | a note on an item of the owner's own grocery list | per owner |
 | `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
 | `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |
+| `recipe_sources` | where an imported recipe came from (YouTube link, video id, status `mock` until real extraction exists); one per recipe, one per owner and video | per owner (operator-only writes, like recipes) |
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 

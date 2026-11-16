@@ -27,6 +27,8 @@ import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-ext
 import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
 import { databaseGroceryStore, type GroceryStore } from "./shared-grocery";
 import { can, type Access } from "../shared/grocery-access";
+import { parseYouTubeUrl } from "../shared/youtube";
+import { databaseYouTubeImportStore, type YouTubeImportStore } from "./youtube-import";
 import { RequestBudget } from "./security";
 import { matchesPlannerFilters, noPersonalFilters, recipeNameMatches } from "../client/src/lib/planner-filters";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
@@ -47,6 +49,7 @@ export type RouteDependencies = {
   cooking?: CookingStore;
   groceryExtras?: GroceryExtraStore;
   grocery?: GroceryStore;
+  youtube?: YouTubeImportStore;
 };
 // Per-owner AI generation quota (first generation + regenerations), on top of the shared AI budget.
 export const OWNER_DAILY_GENERATIONS = 10;
@@ -198,6 +201,29 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("api_failure operation=recipe_list");
       res.status(500).json({ error: "Failed to fetch recipes" });
+    }
+  });
+
+  // YouTube import (MVP: mock content). Writes are operator-only like every recipe write; the source row is owner-scoped.
+  const youtube = dependencies.youtube ?? databaseYouTubeImportStore();
+  app.post("/api/recipe-sources/youtube", async (req, res) => {
+    const video = typeof req.body?.url === "string" ? parseYouTubeUrl(req.body.url) : undefined;
+    if (!video) return res.status(400).json({ error: "Enter a valid YouTube video link." });
+    try {
+      const result = await youtube.importVideo(security.owner(req, res, true)!, req.body.url.trim().slice(0, 2048), video);
+      res.status(result.existing ? 200 : 201).json(result);
+    } catch {
+      console.error("api_failure operation=youtube_import");
+      res.status(500).json({ error: "Unable to save the import. Nothing was saved." });
+    }
+  });
+  app.get("/api/recipes/:id/source", async (req, res) => {
+    try {
+      const source = await youtube.forRecipe(req.params.id);
+      source ? res.json(source) : res.status(404).json({ error: "No source" });
+    } catch {
+      console.error("api_failure operation=recipe_source_get");
+      res.status(500).json({ error: "Failed to fetch source" });
     }
   });
 

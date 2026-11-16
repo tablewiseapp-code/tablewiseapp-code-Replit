@@ -61,6 +61,7 @@
     "test:meal-filters": "tsx script/test-meal-filters.ts",
     "test:recipe-search": "tsx script/test-recipe-search.ts",
     "test:recipe-drafts": "tsx script/test-recipe-drafts.ts",
+    "test:youtube-import": "tsx script/test-youtube-import.ts",
     "test:cooking-experience": "tsx script/test-cooking-experience.ts",
     "test:shared-grocery": "tsx script/test-shared-grocery.ts",
     "test:shared-grocery-browser": "node script/test-shared-grocery-browser.mjs",

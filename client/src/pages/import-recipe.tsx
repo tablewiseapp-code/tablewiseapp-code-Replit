@@ -4,6 +4,7 @@ import { createRecipe } from "@/lib/storage";
 import { useI18n, type Language } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { timingContext, timingContextSchema, stepAnalysisSchema, type StepAnalysis, type TimingContext } from "@shared/step-timing";
+import { YouTubeImport } from "@/components/youtube-import";
 import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step-timing";
 
 function isValidUrl(str: string): boolean {
@@ -430,6 +431,8 @@ export default function ImportRecipe() {
           <h1 className="page-title">{t("import.title")}</h1>
           <p className="page-subtitle">{t("import.subtitle")}</p>
         </header>
+
+        <YouTubeImport />
 
         <fieldset disabled={isSaving} className="space-y-6">
           <div>

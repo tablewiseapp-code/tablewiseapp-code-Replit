@@ -16,6 +16,7 @@ import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit";
 import { RecipeNutritionPanel } from "@/components/recipe-nutrition";
 import { DietaryTags } from "@/components/recipe-summary";
+import { RecipeVideo } from "@/components/youtube-import";
 import { CookingMode } from "@/components/cooking-mode";
 import { hasCookingProgress } from "@/lib/cooking-session";
 import { AddToMealPlanDialog } from "@/components/add-to-meal-plan";
@@ -251,6 +252,8 @@ export default function RecipeDetail() {
             className="btn btn-primary">{hasCookingProgress(recipe.id) ? view("resumeCooking") : view("startCooking")}</button>}
           <button type="button" onClick={() => setPlanOpen(true)} data-testid="button-add-to-plan" className="btn btn-secondary">{view("addToPlan")}</button>
         </div>
+
+        <RecipeVideo recipeId={recipe.id} />
 
         <section className="card mt-6 p-4 sm:p-5" aria-labelledby="ingredients-heading">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
