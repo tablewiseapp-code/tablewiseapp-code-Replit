@@ -134,6 +134,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     });
   app.get("/api/operator/session", (req, res) => res.json({
     operator: authorized(req), aiEnabled: config.aiEnabled && authorized(req),
+    generation: config.aiEnabled && (config.publicAI === true || authorized(req)),
   }));
   app.post("/api/operator/logout", requireOperator, (req, res) => {
     const cookie = req.get("cookie")?.split(";").map(v => v.trim())

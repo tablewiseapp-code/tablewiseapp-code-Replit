@@ -271,7 +271,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "import.label": "Import",
     "import.title": "Bring your recipe",
-    "import.subtitle": "Type or dictate a recipe, review step times, then save to the recipe library. Operator access and enabled AI are required.",
+    "import.subtitle": "Type or dictate a recipe, review step times, then save to the recipe library.",
     "import.photo": "Photo (optional)",
     "import.takePhoto": "Take a photo or upload",
     "import.sourceLink": "Source link (optional)",
@@ -389,8 +389,8 @@ const translations: Record<Language, Record<string, string>> = {
     "grocery.sharedOffConfirm": "Turn off this link? Everyone will lose access to this list.",
     "grocery.editItem": "Edit {item}",
 
-    "notFound.title": "404 Page Not Found",
-    "notFound.message": "Did you forget to add the page to the router?",
+    "notFound.title": "Page not found",
+    "notFound.message": "This page does not exist. Check the address or go back to your week.",
   },
 
   ru: {
@@ -617,7 +617,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "import.label": "Импорт",
     "import.title": "Добавьте свой рецепт",
-    "import.subtitle": "Введите или продиктуйте рецепт, проверьте время шагов и сохраните в библиотеку. Нужны доступ оператора и включённый ИИ.",
+    "import.subtitle": "Введите или продиктуйте рецепт, проверьте время шагов и сохраните в библиотеку.",
     "import.photo": "Фото (необязательно)",
     "import.takePhoto": "Сделать фото или загрузить",
     "import.sourceLink": "Ссылка на источник (необязательно)",
@@ -735,8 +735,8 @@ const translations: Record<Language, Record<string, string>> = {
     "grocery.sharedOffConfirm": "Отключить ссылку? Все потеряют доступ к этому списку.",
     "grocery.editItem": "Изменить: {item}",
 
-    "notFound.title": "404 Страница не найдена",
-    "notFound.message": "Вы забыли добавить страницу в маршрутизатор?",
+    "notFound.title": "Страница не найдена",
+    "notFound.message": "Такой страницы нет. Проверьте адрес или вернитесь к меню недели.",
   },
 
   he: {
@@ -963,7 +963,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "import.label": "ייבוא",
     "import.title": "הוסף את המתכון שלך",
-    "import.subtitle": "הזינו או הכתיבו מתכון, בדקו זמני שלבים ושמרו בספרייה. נדרשות הרשאת מפעיל והפעלת AI.",
+    "import.subtitle": "הזינו או הכתיבו מתכון, בדקו זמני שלבים ושמרו בספרייה.",
     "import.photo": "תמונה (אופציונלי)",
     "import.takePhoto": "צלם או העלה תמונה",
     "import.sourceLink": "קישור למקור (אופציונלי)",
@@ -1081,8 +1081,8 @@ const translations: Record<Language, Record<string, string>> = {
     "grocery.sharedOffConfirm": "לכבות את הקישור? כולם יאבדו גישה לרשימה.",
     "grocery.editItem": "עריכת {item}",
 
-    "notFound.title": "404 הדף לא נמצא",
-    "notFound.message": "שכחת להוסיף את הדף לנתב?",
+    "notFound.title": "הדף לא נמצא",
+    "notFound.message": "הדף הזה לא קיים. בדקו את הכתובת או חזרו לשבוע שלכם.",
   },
 };
 

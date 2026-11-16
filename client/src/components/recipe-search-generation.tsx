@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useCanGenerate } from "@/hooks/use-can-generate";
 import { Link } from "wouter";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -36,6 +37,7 @@ const minutes = (text: string) => text.trim() === "" ? null : Number(text);
 /** Search → no match → review preferences → generate → review / edit / regenerate → approve (publish). */
 export function RecipeSearchGeneration({ query, request, chips, notApplied, nameOnly, violationLabel, onEditFilters, onPublished, onExisting }: Props) {
   const { lang, dir } = useI18n();
+  const canGenerate = useCanGenerate();
   const t = (key: GenerateCopyKey) => generateCopy(lang, key).replace("{name}", `“${query}”`);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<RecipeDraft | null>(null);
@@ -97,6 +99,7 @@ export function RecipeSearchGeneration({ query, request, chips, notApplied, name
     </div>
   );
 
+  if (!canGenerate) return null;
   return (
     <>
       <div role="status" data-testid="recipe-search-no-match" className="rounded-2xl border border-dashed border-border bg-background p-5">

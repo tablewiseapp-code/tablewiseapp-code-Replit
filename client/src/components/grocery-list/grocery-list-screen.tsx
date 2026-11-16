@@ -10,6 +10,8 @@ import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
 import { categoryProgress, countChecked, isCategoryCollapsed, isListComplete, readGroceryPrefs, saveGroceryPrefs, toggleCategory, toggleItem as toggleChecked, type Expansion } from "@/lib/grocery-progress";
 import { plannedServingsFactor } from "@/lib/meal-plan";
+import { usePilotPage } from "@/hooks/use-pilot-page";
+import { currentWeek } from "@/lib/week-plan";
 import { baseServings, scaleIngredient } from "@/lib/ingredient-scale";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
@@ -85,6 +87,7 @@ export default function GroceryListScreen() {
   const [addOpen, setAddOpen] = useState(false);
   const state = loadState();
   const planAssignments = state?.planAssignments || [];
+  usePilotPage("grocery_list_opened", currentWeek(), planAssignments.length > 0);
   // Notes per item, stored per owner on the server. The list still works if they cannot be loaded.
   const { data: notes = {} } = useQuery<Record<string, string>>({ queryKey: ["/api/grocery-notes"] });
   const saveNote = (key: string, note: string) => {

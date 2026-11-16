@@ -65,7 +65,7 @@ Do not build these unless the product owner asks: payments or plans, recipe shar
 
 These are accepted facts today, not features. Do not build on top of them as if they work.
 
-- **The live flow is not measured.** Pilot events fire only from the legacy MVP pages, not from `/meals` or the current grocery screen.
+- **The plan is not dated.** Pilot events from `/meals` and the grocery screen use the calendar week they happen in. A week left locked across two weeks records no return; the person must unlock and lock again.
 - **No accounts.** A person's data is tied to one browser cookie and does not move across devices.
 - **Plan, Ideas and Basic Settings live in browser storage only.** New per-user data must go in Postgres (see ARCHITECTURE.md).
 - **Photo and link import do not parse anything.** A photo is attached as an image; a link is stored as the source URL. Only typed and dictated text is turned into a recipe.
