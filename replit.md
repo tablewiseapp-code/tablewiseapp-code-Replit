@@ -1,5 +1,7 @@
 # Recipe View Application
 
+> **Read first:** `AGENTS.md`, `docs/PRODUCT.md` and `ARCHITECTURE.md`. They are the source of truth; where this file disagrees with them, they win.
+
 ## Overview
 
 A calm, professional cooking workspace application designed for focus and clarity. The app displays recipes with a minimalist interface inspired by Steve Jobs' design philosophy - simplicity, restraint, and letting the interface "disappear while cooking." Features include recipe import (manual + AI voice), ingredient scaling by servings, unit conversion (grams/ml/cups), step-by-step cooking guidance, and persistent recipe storage in PostgreSQL.
