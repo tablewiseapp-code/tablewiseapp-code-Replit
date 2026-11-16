@@ -21,8 +21,9 @@ import {
 } from "./recipe-generation";
 import { recipeGenerationRequest, type RecipeGenerationRequest } from "../shared/recipe-generation-request";
 import { databaseDraftStore, draftView, type RecipeDraftStore } from "./recipe-drafts";
-import { draftEdit, cookingSessionId, cookingSessionCreate, cookingSessionPatch, cookingPhotoInput } from "./request-schemas";
+import { draftEdit, groceryExtraCreate, cookingSessionId, cookingSessionCreate, cookingSessionPatch, cookingPhotoInput } from "./request-schemas";
 import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cooking-history";
+import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
 import { RequestBudget } from "./security";
 import { matchesPlannerFilters, noPersonalFilters, recipeNameMatches } from "../client/src/lib/planner-filters";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
@@ -41,6 +42,7 @@ export type RouteDependencies = {
   analytics?: Pick<PilotEventStore, "record" | "summary">;
   drafts?: RecipeDraftStore;
   cooking?: CookingStore;
+  groceryExtras?: GroceryExtraStore;
 };
 // Per-owner AI generation quota (first generation + regenerations), on top of the shared AI budget.
 export const OWNER_DAILY_GENERATIONS = 10;
@@ -561,6 +563,32 @@ Rules:
     console.error(`api_failure operation=${operation}`);
     res.status(500).json({ error: "Something went wrong. Please try again." });
   };
+  // Groceries: products the owner added by hand. Owner-scoped like cooking sessions.
+  const groceryExtras = dependencies.groceryExtras ?? databaseGroceryExtraStore();
+  app.get("/api/grocery-extras", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await groceryExtras.list(owner) : []); }
+    catch { cookingFailed(res, "grocery_extra_list"); }
+  });
+  app.post("/api/grocery-extras", async (req, res) => {
+    const input = groceryExtraCreate.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid item." });
+    const owner = security.owner(req, res, true)!;
+    try {
+      const extra = await groceryExtras.add(owner, input.data.text);
+      if (!extra) return res.status(409).json({ error: "Your list is full." });
+      res.status(201).json(extra);
+    } catch { cookingFailed(res, "grocery_extra_add"); }
+  });
+  app.delete("/api/grocery-extras/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid item." });
+    const owner = security.owner(req, res, false);
+    try {
+      if (owner) await groceryExtras.remove(owner, id.data);
+      res.status(204).end(); // already gone is fine
+    } catch { cookingFailed(res, "grocery_extra_delete"); }
+  });
   app.get("/api/cooking-sessions", async (req, res) => {
     const recipe = recipeId.safeParse(req.query.recipeId);
     if (!recipe.success) return res.status(400).json({ error: "Invalid recipe identifier." });

@@ -158,7 +158,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   const isDraftWrite = (req: Request) => ["POST", "PATCH"].includes(req.method) &&
     /^\/(?:recipe-generations|recipe-drafts\/[^/]+(?:\/(?:regenerate|approve))?)\/?$/.test(req.path);
   const isCookingWrite = (req: Request) => ["POST", "PATCH", "DELETE"].includes(req.method) &&
-    /^\/(?:cooking-sessions(?:\/[^/]+(?:\/photos)?)?|cooking-photos\/[^/]+)\/?$/.test(req.path);
+    /^\/(?:cooking-sessions(?:\/[^/]+(?:\/photos)?)?|cooking-photos\/[^/]+|grocery-extras(?:\/[^/]+)?)\/?$/.test(req.path);
   const isEventIngest =(req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
   // Only this exact anonymous write is exempt; all other mutations and ALL
   // analytics inspection remain fail-closed. No IPs are retained for budgets.

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, unique, index, check, jsonb, customType } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, unique, index, uniqueIndex, check, jsonb, customType } from "drizzle-orm/pg-core";
 import type { RecipeNutrition } from "./recipe-nutrition";
 import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
 import type { RecipeGenerationRequest, RecipeGenerationStatus } from "./recipe-generation-request";
@@ -139,6 +139,18 @@ export const cookingSessions = pgTable("cooking_sessions", {
   check("cooking_sessions_notes", sql`${table.notes} IS NULL OR length(${table.notes}) <= 4000`),
 ]);
 export type CookingSession = typeof cookingSessions.$inferSelect;
+
+// Groceries: products the owner added by hand ("I'm out of onion"). Private to the owner, like cooking sessions.
+export const groceryExtras = pgTable("grocery_extras", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  text: text("text").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  // Plain columns on purpose: drizzle-kit push re-creates expression indexes on every start. The store matches letter case itself.
+  uniqueIndex("grocery_extras_owner_text").on(table.ownerId, table.text),
+  check("grocery_extras_text", sql`length(${table.text}) BETWEEN 1 AND 80`),
+]);
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
 // ponytail: JPEG bytes in Postgres (no object storage in this project); move to object storage if volume grows.

@@ -34,7 +34,7 @@ server/
   security.ts          operator sessions, owner cookie, access gates, rate limits, AI budget
   storage.ts           data access (Drizzle)
   request-schemas.ts   Zod schemas for request bodies
-  recipe-*.ts, cooking-history.ts, pilot-analytics.ts   feature logic
+  recipe-*.ts, cooking-history.ts, grocery-extras.ts, pilot-analytics.ts   feature logic
 shared/                types and schemas used by both sides; schema.ts is the database schema
 migrations/            reviewed SQL, applied by hand
 db/init/               seed dump for the local Docker database
@@ -67,6 +67,7 @@ Tables are defined in `shared/schema.ts`.
 | `recipe_generations` | AI drafts and their status | per owner |
 | `cooking_sessions` | "I made it", rating, notes | per owner |
 | `cooking_photos` | JPEG and thumbnail as `bytea` | per owner |
+| `grocery_extras` | products a person added to their grocery list by hand | per owner |
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
