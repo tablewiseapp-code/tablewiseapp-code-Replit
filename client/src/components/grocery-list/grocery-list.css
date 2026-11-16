@@ -229,3 +229,23 @@
 .grocery-product-options { position: absolute; inset-inline: 0; top: 100%; z-index: 20; margin: 4px 0; padding: 4px; list-style: none; border: 1px solid var(--border); border-radius: 12px; background: var(--background); max-height: 264px; overflow-y: auto; }
 .grocery-product-options li { padding: 12px; min-height: 44px; cursor: pointer; border-radius: 8px; }
 .grocery-product-options li:hover, .grocery-product-options li[aria-selected="true"] { background: var(--muted); }
+
+.grocery-photo-actions { flex: none; }
+.grocery-photo-thumbnail { flex: none; border: 0; padding: 0; background: none; border-radius: 8px; cursor: pointer; }
+.grocery-photo-thumbnail:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.grocery-icon-button:disabled { opacity: .5; cursor: wait; }
+.grocery-picture-status { flex-basis: 100%; margin-block: 4px 8px; font-size: .875rem; color: var(--muted-foreground); }
+.grocery-picture-overlay { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--foreground) 65%, transparent); }
+.grocery-picture-dialog { position: fixed; inset-inline-start: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 51; width: min(640px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; display: grid; gap: 16px; padding: 24px; border-radius: 16px; background: var(--background); color: var(--foreground); }
+.grocery-picture-dialog[dir="rtl"] { transform: translate(50%, -50%); }
+.grocery-picture-dialog h2 { font-weight: 600; overflow-wrap: anywhere; }
+.grocery-picture-dialog img { width: 100%; max-height: 70dvh; object-fit: contain; }
+.grocery-picture-dialog button { justify-self: end; min-height: 44px; }
+@media (max-width: 520px) {
+  .grocery-item:has(.grocery-photo-actions) { padding-inline-end: 88px; }
+  .grocery-item:has(.grocery-photo-actions):has(.grocery-remove) { padding-inline-end: 132px; }
+  .grocery-photo-actions { position: absolute; inset-inline-end: 44px; top: 0; }
+  .grocery-item:has(.grocery-remove) .grocery-photo-actions { inset-inline-end: 88px; }
+  .grocery-item:has(.grocery-photo-actions) .grocery-recipes { margin-top: 0; padding-inline-start: 27px; padding-inline-end: 0; text-align: start; }
+  .grocery-photo-thumbnail { margin-inline-start: 27px; margin-block: 4px; }
+}

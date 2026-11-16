@@ -66,6 +66,10 @@ export const groceryExtraCreate = z.object({
       return bytes.length <= 210000 && bytes.toString("base64") === data && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
     }).optional(),
 }).strict();
+export const groceryItemPhotoInput = z.object({
+  key: z.string().min(1).max(12000).refine(value => value === value.toLowerCase() && value.trim().length > 0),
+  image: groceryExtraCreate.shape.image.unwrap().nullable(),
+}).strict();
 export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
 export const cookingSessionPatch = z.object({
   rating: z.number().int().min(1).max(5).nullable(),

@@ -83,7 +83,8 @@
     "timing:setup:local": "tsx script/setup-local-preparation-time.ts",
     "dev:test-catalog": "tsx script/local-test-app.ts",
     "db:push": "drizzle-kit push",
-    "test:grocery-products-browser": "node script/test-grocery-products-browser.mjs"
+    "test:grocery-products-browser": "node script/test-grocery-products-browser.mjs",
+    "test:grocery-item-photos": "tsx script/test-grocery-item-photos.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

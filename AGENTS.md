@@ -14,3 +14,11 @@ Then follow these rules:
 - If your change makes either file wrong, update that file in the same change.
 - If a request conflicts with either file, say so before you build.
 - `README.md` and `replit.md` are older and less accurate. Where they disagree with the two files above, the two files win.
+
+## Repository access
+
+- Do not clone or download repositories automatically.
+- Use only source code already available in the current workspace.
+- If the code is unavailable, explain what is missing and ask how to proceed.
+- Read-only GitHub inspection is allowed, but do not download a local copy.
+- Clone or download a repository only when the user explicitly asks you to do so.

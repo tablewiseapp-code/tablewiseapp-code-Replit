@@ -228,3 +228,15 @@ export const recipeSources = pgTable("recipe_sources", {
   unique("recipe_sources_owner_video_unique").on(table.ownerId, table.provider, table.externalVideoId),
 ]);
 export type RecipeSource = typeof recipeSources.$inferSelect;
+
+// Private reference pictures for any grocery row, keyed like grocery notes.
+// A null image hides a legacy picture stored on a hand-added item.
+export const groceryItemPhotos = pgTable("grocery_item_photos", {
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  itemKey: text("item_key").notNull(),
+  image: text("image"),
+}, table => [
+  primaryKey({ columns: [table.ownerId, table.itemKey] }),
+  check("grocery_item_photos_key", sql`length(${table.itemKey}) BETWEEN 1 AND 12000`),
+  check("grocery_item_photos_image", sql`${table.image} IS NULL OR length(${table.image}) <= 280023`),
+]);

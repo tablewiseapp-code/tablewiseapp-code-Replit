@@ -21,8 +21,9 @@ import {
 } from "./recipe-generation";
 import { recipeGenerationRequest, type RecipeGenerationRequest } from "../shared/recipe-generation-request";
 import { databaseDraftStore, draftView, type RecipeDraftStore } from "./recipe-drafts";
-import { draftEdit, groceryExtraCreate, cookingSessionId, cookingSessionCreate, cookingSessionPatch, cookingPhotoInput } from "./request-schemas";
+import { draftEdit, groceryExtraCreate, groceryItemPhotoInput, cookingSessionId, cookingSessionCreate, cookingSessionPatch, cookingPhotoInput } from "./request-schemas";
 import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cooking-history";
+import { databaseGroceryItemPhotoStore, type GroceryItemPhotoStore } from "./grocery-item-photos/store";
 import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
 import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
 import { databaseGroceryStore, type GroceryStore } from "./shared-grocery";
@@ -48,6 +49,7 @@ export type RouteDependencies = {
   drafts?: RecipeDraftStore;
   cooking?: CookingStore;
   groceryExtras?: GroceryExtraStore;
+  groceryItemPhotos?: GroceryItemPhotoStore;
   grocery?: GroceryStore;
   youtube?: YouTubeImportStore;
 };
@@ -129,7 +131,7 @@ export async function registerRoutes(
       return res.status(415).json({ error: "Use application/json." });
     }
     if (/^\/transcribe-audio\/?$/i.test(req.path) || /^\/cooking-sessions\/[^/]+\/photos\/?$/.test(req.path)) return next();
-    if (/^\/grocery-extras\/?$/i.test(req.path) && req.method === "POST") return express.json({ limit: "300kb", inflate: false })(req, res, next);
+    if ((/^\/grocery-extras\/?$/i.test(req.path) && req.method === "POST") || (/^\/grocery-item-photos\/?$/i.test(req.path) && req.method === "PUT")) return express.json({ limit: "300kb", inflate: false })(req, res, next);
     if (/^\/analytics\/events\/?$/i.test(req.path)) return express.json({ limit: "16kb", inflate: false })(req, res, next);
     express.json({ limit: "64kb", inflate: false })(req, res, next);
   });
@@ -601,6 +603,23 @@ Rules:
   });
   // Groceries: products the owner added by hand. Owner-scoped like cooking sessions.
   const groceryExtras = dependencies.groceryExtras ?? databaseGroceryExtraStore();
+  const groceryItemPhotos = dependencies.groceryItemPhotos ?? databaseGroceryItemPhotoStore();
+  app.get("/api/grocery-item-photos", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await groceryItemPhotos.list(owner) : {}); }
+    catch { cookingFailed(res, "grocery_item_photos_list"); }
+  });
+  app.put("/api/grocery-item-photos", async (req, res) => {
+    const input = groceryItemPhotoInput.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid picture." });
+    const owner = security.owner(req, res, true)!;
+    try {
+      if (!await groceryItemPhotos.save(owner, input.data.key, input.data.image)) {
+        return res.status(409).json({ error: "Picture limit reached." });
+      }
+      res.status(204).end();
+    } catch { cookingFailed(res, "grocery_item_photo_save"); }
+  });
   app.get("/api/grocery-extras", async (req, res) => {
     const owner = security.owner(req, res, false);
     try { res.json(owner ? await groceryExtras.list(owner) : []); }
@@ -613,6 +632,7 @@ Rules:
     try {
       const extra = await groceryExtras.add(owner, input.data.text, input.data.image);
       if (!extra) return res.status(409).json({ error: "Your list is full." });
+      if (input.data.image) await groceryItemPhotos.remove(owner, extra.text.toLowerCase());
       res.status(201).json(extra);
     } catch { cookingFailed(res, "grocery_extra_add"); }
   });
