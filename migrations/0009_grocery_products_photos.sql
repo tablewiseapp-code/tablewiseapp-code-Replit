@@ -1,5 +1,6 @@
 -- Additive: private item reference photos and a shared suggestion catalog.
 ALTER TABLE public.grocery_extras ADD COLUMN IF NOT EXISTS image text;
+ALTER TABLE public.grocery_extras DROP CONSTRAINT IF EXISTS grocery_extras_image;
 ALTER TABLE public.grocery_extras ADD CONSTRAINT grocery_extras_image CHECK (image IS NULL OR length(image) <= 280023);
 CREATE TABLE IF NOT EXISTS public.household_products (
  id text PRIMARY KEY, category text NOT NULL, names jsonb NOT NULL, aliases jsonb NOT NULL
