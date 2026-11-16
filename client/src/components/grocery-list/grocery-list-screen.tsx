@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { categorizeIngredient } from "@/lib/grocery-categories";
+import { GroceryAddItem } from "./grocery-add-item";
+import { groceryProductText } from "@/lib/grocery-product-copy";
 import { GroceryNote } from "./grocery-note";
 import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
@@ -79,9 +81,8 @@ export default function GroceryListScreen() {
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [recipesError, setRecipesError] = useState<string | null>(null);
   // Products the user added by hand ("I'm out of onion"), stored per owner on the server.
-  const [extras, setExtras] = useState<{ id: string; text: string }[]>([]);
+  const [extras, setExtras] = useState<{ id: string; text: string; image?: string | null }[]>([]);
   const [addOpen, setAddOpen] = useState(false);
-  const [draft, setDraft] = useState("");
   const state = loadState();
   const planAssignments = state?.planAssignments || [];
   // Notes per item, stored per owner on the server. The list still works if they cannot be loaded.
@@ -120,7 +121,7 @@ export default function GroceryListScreen() {
   const groceryData = useMemo(() => {
     const usedRecipeIds = new Set([...(state?.selectedIds ?? []), ...planAssignments.map(a => a.recipeId)]); // shortlisted dishes count even before they get a slot
     const usedRecipes = recipes.filter(r => usedRecipeIds.has(r.id));
-    const ingredientMap = new Map<string, { ingredient: string; recipes: string[]; extraId?: string }>();
+    const ingredientMap = new Map<string, { ingredient: string; recipes: string[]; image?: string | null; extraId?: string }>();
     usedRecipes.forEach(recipe => {
       // Planned servings (chosen in the recipe view) scale quantities; unparseable lines stay as written.
       const factor = plannedServingsFactor(planAssignments, recipe.id, baseServings(recipe.servings));
@@ -138,9 +139,9 @@ export default function GroceryListScreen() {
     extras.forEach(extra => {
       const key = extra.text.toLowerCase();
       const item = ingredientMap.get(key);
-      if (item) item.extraId = extra.id; else ingredientMap.set(key, { ingredient: extra.text, recipes: [], extraId: extra.id });
+      if (item) { item.extraId = extra.id; item.image = extra.image; } else ingredientMap.set(key, { ingredient: extra.text, recipes: [], image: extra.image, extraId: extra.id });
     });
-    const categorized: Record<string, { ingredient: string; recipes: string[]; key: string; extraId?: string }[]> = {};
+    const categorized: Record<string, { ingredient: string; recipes: string[]; key: string; image?: string | null; extraId?: string }[]> = {};
     ingredientMap.forEach((data, key) => {
       const category = categorizeIngredient(data.ingredient);
       if (!categorized[category]) categorized[category] = [];
@@ -172,18 +173,16 @@ export default function GroceryListScreen() {
     } else if (!nowComplete) setCompletionNote("");
   };
 
-  const addExtra = async () => {
-    const text = draft.trim();
-    if (!text) return;
+  const addExtra = async (text: string, image?: string): Promise<boolean> => {
     try {
-      const res = await fetch("/api/grocery-extras", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      const res = await fetch("/api/grocery-extras", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, image }) });
       if (!res.ok) throw new Error();
-      const extra: { id: string; text: string } = await res.json();
-      setExtras(previous => previous.some(item => item.id === extra.id) ? previous : [...previous, extra]);
+      const extra: { id: string; text: string; image?: string | null } = await res.json();
+      setExtras(previous => previous.some(item => item.id === extra.id) ? previous.map(item => item.id === extra.id ? extra : item) : [...previous, extra]);
       // "I'm out of it again": a product added again must not stay ticked from the last shop.
       setCheckedItems(previous => { const next = new Set(previous); next.delete(extra.text.toLowerCase()); return next; });
-      setDraft("");
-    } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); }
+      return true;
+    } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); return false; }
   };
   const removeExtra = async (id: string) => {
     try {
@@ -191,13 +190,7 @@ export default function GroceryListScreen() {
       setExtras(previous => previous.filter(item => item.id !== id));
     } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); }
   };
-  const addForm = (
-    <form className="grocery-add" onSubmit={event => { event.preventDefault(); void addExtra(); }}>
-      <input value={draft} onChange={event => setDraft(event.target.value)} maxLength={80} autoFocus
-        placeholder={t("grocery.addItemPlaceholder")} aria-label={t("grocery.addItem")} data-testid="input-add-item" />
-      <button type="submit" className="grocery-share-button" data-testid="button-add-item-submit">{t("grocery.add")}</button>
-    </form>
-  );
+  const addForm = <GroceryAddItem onAdd={addExtra} />;
 
   const categoryTranslations: Record<string, string> = {
     "Produce": t("grocery.produce"),
@@ -501,6 +494,7 @@ export default function GroceryListScreen() {
                           {isPantry(item.ingredient) &&
                             <span className="ms-2 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
                         </label>
+                        {item.image && <img className="grocery-product-photo" src={item.image} alt={groceryProductText(lang, "preview")} loading="lazy" />}
                         {item.recipes.length > 0 && (
                           <span className="grocery-recipes" data-testid="grocery-item-recipes">
                             <span className="grocery-sr-only">Used in: </span>{item.recipes.join(" · ")}

@@ -126,6 +126,7 @@ export async function registerRoutes(
       return res.status(415).json({ error: "Use application/json." });
     }
     if (/^\/transcribe-audio\/?$/i.test(req.path) || /^\/cooking-sessions\/[^/]+\/photos\/?$/.test(req.path)) return next();
+    if (/^\/grocery-extras\/?$/i.test(req.path) && req.method === "POST") return express.json({ limit: "300kb", inflate: false })(req, res, next);
     if (/^\/analytics\/events\/?$/i.test(req.path)) return express.json({ limit: "16kb", inflate: false })(req, res, next);
     express.json({ limit: "64kb", inflate: false })(req, res, next);
   });
@@ -567,6 +568,11 @@ Rules:
     console.error(`api_failure operation=${operation}`);
     res.status(500).json({ error: "Something went wrong. Please try again." });
   };
+  app.get("/api/household-products", async (_req, res) => {
+    try { const { db } = await import("./db"); const { householdProducts } = await import("@shared/schema");
+      res.json(await db.select().from(householdProducts));
+    } catch { cookingFailed(res, "household_products_list"); }
+  });
   // Groceries: products the owner added by hand. Owner-scoped like cooking sessions.
   const groceryExtras = dependencies.groceryExtras ?? databaseGroceryExtraStore();
   app.get("/api/grocery-extras", async (req, res) => {
@@ -579,7 +585,7 @@ Rules:
     if (!input.success) return res.status(400).json({ error: "Invalid item." });
     const owner = security.owner(req, res, true)!;
     try {
-      const extra = await groceryExtras.add(owner, input.data.text);
+      const extra = await groceryExtras.add(owner, input.data.text, input.data.image);
       if (!extra) return res.status(409).json({ error: "Your list is full." });
       res.status(201).json(extra);
     } catch { cookingFailed(res, "grocery_extra_add"); }

@@ -215,3 +215,17 @@
   .grocery-note, .grocery-note-input { margin-top: 4px; }
 }
 .grocery-item-actions { display: flex; flex: none; }
+
+.grocery-add-product { margin-block: 12px; }
+.grocery-photo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-block: 10px; color: var(--muted-foreground); font-size: .875rem; }
+.grocery-photo-controls label { position: relative; overflow: hidden; cursor: pointer; }
+.grocery-photo-controls input[type="file"] { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.grocery-photo-controls label:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+.grocery-product-photo { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; flex-shrink: 0; }
+.grocery-add-product button:disabled { opacity: .6; cursor: wait; }
+
+.grocery-product-search { position: relative; flex: 1; min-width: 0; }
+.grocery-product-search input { width: 100%; }
+.grocery-product-options { position: absolute; inset-inline: 0; top: 100%; z-index: 20; margin: 4px 0; padding: 4px; list-style: none; border: 1px solid var(--border); border-radius: 12px; background: var(--background); max-height: 264px; overflow-y: auto; }
+.grocery-product-options li { padding: 12px; min-height: 44px; cursor: pointer; border-radius: 8px; }
+.grocery-product-options li:hover, .grocery-product-options li[aria-selected="true"] { background: var(--muted); }
