@@ -68,7 +68,8 @@ Tables are defined in `shared/schema.ts`.
 | `recipe_generations` | AI drafts and their status | per owner |
 | `cooking_sessions` | "I made it", rating, notes | per owner |
 | `cooking_photos` | JPEG and thumbnail as `bytea` | per owner |
-| `grocery_extras` | products a person added to their grocery list by hand | per owner |
+| `household_products` | seeded household product suggestions, translated names and aliases | global |
+| `grocery_extras` | products a person added by hand, with an optional resized JPEG reference photo | per owner |
 | `grocery_notes` | a note on an item of the owner's own grocery list | per owner |
 | `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
 | `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |

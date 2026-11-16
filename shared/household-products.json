@@ -1,0 +1,1054 @@
+[
+  {
+    "id": "potatoes",
+    "category": "Produce",
+    "names": {
+      "en": "Potatoes",
+      "ru": "Картофель",
+      "he": "תפוחי אדמה"
+    },
+    "aliases": [
+      "potato"
+    ]
+  },
+  {
+    "id": "onions",
+    "category": "Produce",
+    "names": {
+      "en": "Onions",
+      "ru": "Лук",
+      "he": "בצל"
+    },
+    "aliases": [
+      "onion"
+    ]
+  },
+  {
+    "id": "carrots",
+    "category": "Produce",
+    "names": {
+      "en": "Carrots",
+      "ru": "Морковь",
+      "he": "גזר"
+    },
+    "aliases": [
+      "carrot"
+    ]
+  },
+  {
+    "id": "tomatoes",
+    "category": "Produce",
+    "names": {
+      "en": "Tomatoes",
+      "ru": "Помидоры",
+      "he": "עגבניות"
+    },
+    "aliases": [
+      "tomato"
+    ]
+  },
+  {
+    "id": "cucumbers",
+    "category": "Produce",
+    "names": {
+      "en": "Cucumbers",
+      "ru": "Огурцы",
+      "he": "מלפפונים"
+    },
+    "aliases": [
+      "cucumber"
+    ]
+  },
+  {
+    "id": "garlic",
+    "category": "Produce",
+    "names": {
+      "en": "Garlic",
+      "ru": "Чеснок",
+      "he": "שום"
+    },
+    "aliases": []
+  },
+  {
+    "id": "lettuce",
+    "category": "Produce",
+    "names": {
+      "en": "Lettuce",
+      "ru": "Салат",
+      "he": "חסה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "spinach",
+    "category": "Produce",
+    "names": {
+      "en": "Spinach",
+      "ru": "Шпинат",
+      "he": "תרד"
+    },
+    "aliases": []
+  },
+  {
+    "id": "broccoli",
+    "category": "Produce",
+    "names": {
+      "en": "Broccoli",
+      "ru": "Брокколи",
+      "he": "ברוקולי"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cauliflower",
+    "category": "Produce",
+    "names": {
+      "en": "Cauliflower",
+      "ru": "Цветная капуста",
+      "he": "כרובית"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cabbage",
+    "category": "Produce",
+    "names": {
+      "en": "Cabbage",
+      "ru": "Капуста",
+      "he": "כרוב"
+    },
+    "aliases": []
+  },
+  {
+    "id": "bell-peppers",
+    "category": "Produce",
+    "names": {
+      "en": "Bell peppers",
+      "ru": "Сладкий перец",
+      "he": "פלפלים"
+    },
+    "aliases": [
+      "pepper"
+    ]
+  },
+  {
+    "id": "zucchini",
+    "category": "Produce",
+    "names": {
+      "en": "Zucchini",
+      "ru": "Кабачки",
+      "he": "קישואים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "mushrooms",
+    "category": "Produce",
+    "names": {
+      "en": "Mushrooms",
+      "ru": "Грибы",
+      "he": "פטריות"
+    },
+    "aliases": []
+  },
+  {
+    "id": "apples",
+    "category": "Produce",
+    "names": {
+      "en": "Apples",
+      "ru": "Яблоки",
+      "he": "תפוחים"
+    },
+    "aliases": [
+      "apple"
+    ]
+  },
+  {
+    "id": "bananas",
+    "category": "Produce",
+    "names": {
+      "en": "Bananas",
+      "ru": "Бананы",
+      "he": "בננות"
+    },
+    "aliases": [
+      "banana"
+    ]
+  },
+  {
+    "id": "oranges",
+    "category": "Produce",
+    "names": {
+      "en": "Oranges",
+      "ru": "Апельсины",
+      "he": "תפוזים"
+    },
+    "aliases": [
+      "orange"
+    ]
+  },
+  {
+    "id": "lemons",
+    "category": "Produce",
+    "names": {
+      "en": "Lemons",
+      "ru": "Лимоны",
+      "he": "לימונים"
+    },
+    "aliases": [
+      "lemon"
+    ]
+  },
+  {
+    "id": "avocados",
+    "category": "Produce",
+    "names": {
+      "en": "Avocados",
+      "ru": "Авокадо",
+      "he": "אבוקדו"
+    },
+    "aliases": []
+  },
+  {
+    "id": "strawberries",
+    "category": "Produce",
+    "names": {
+      "en": "Strawberries",
+      "ru": "Клубника",
+      "he": "תותים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "blueberries",
+    "category": "Produce",
+    "names": {
+      "en": "Blueberries",
+      "ru": "Черника",
+      "he": "אוכמניות"
+    },
+    "aliases": []
+  },
+  {
+    "id": "grapes",
+    "category": "Produce",
+    "names": {
+      "en": "Grapes",
+      "ru": "Виноград",
+      "he": "ענבים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "milk",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Milk",
+      "ru": "Молоко",
+      "he": "חלב"
+    },
+    "aliases": []
+  },
+  {
+    "id": "eggs",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Eggs",
+      "ru": "Яйца",
+      "he": "ביצים"
+    },
+    "aliases": [
+      "egg"
+    ]
+  },
+  {
+    "id": "butter",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Butter",
+      "ru": "Сливочное масло",
+      "he": "חמאה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cheese",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Cheese",
+      "ru": "Сыр",
+      "he": "גבינה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "yogurt",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Yogurt",
+      "ru": "Йогурт",
+      "he": "יוגורט"
+    },
+    "aliases": [
+      "yoghurt"
+    ]
+  },
+  {
+    "id": "sour-cream",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Sour cream",
+      "ru": "Сметана",
+      "he": "שמנת חמוצה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cream",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Cream",
+      "ru": "Сливки",
+      "he": "שמנת"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cottage-cheese",
+    "category": "Dairy & Eggs",
+    "names": {
+      "en": "Cottage cheese",
+      "ru": "Творог",
+      "he": "קוטג׳"
+    },
+    "aliases": []
+  },
+  {
+    "id": "chicken",
+    "category": "Meat & Poultry",
+    "names": {
+      "en": "Chicken",
+      "ru": "Курица",
+      "he": "עוף"
+    },
+    "aliases": []
+  },
+  {
+    "id": "ground-beef",
+    "category": "Meat & Poultry",
+    "names": {
+      "en": "Ground beef",
+      "ru": "Говяжий фарш",
+      "he": "בשר בקר טחון"
+    },
+    "aliases": [
+      "minced beef"
+    ]
+  },
+  {
+    "id": "turkey",
+    "category": "Meat & Poultry",
+    "names": {
+      "en": "Turkey",
+      "ru": "Индейка",
+      "he": "הודו"
+    },
+    "aliases": []
+  },
+  {
+    "id": "beef",
+    "category": "Meat & Poultry",
+    "names": {
+      "en": "Beef",
+      "ru": "Говядина",
+      "he": "בקר"
+    },
+    "aliases": []
+  },
+  {
+    "id": "salmon",
+    "category": "Seafood",
+    "names": {
+      "en": "Salmon",
+      "ru": "Лосось",
+      "he": "סלמון"
+    },
+    "aliases": []
+  },
+  {
+    "id": "white-fish",
+    "category": "Seafood",
+    "names": {
+      "en": "White fish",
+      "ru": "Белая рыба",
+      "he": "דג לבן"
+    },
+    "aliases": []
+  },
+  {
+    "id": "canned-tuna",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Canned tuna",
+      "ru": "Тунец консервированный",
+      "he": "טונה בשימורים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "chickpeas",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Chickpeas",
+      "ru": "Нут",
+      "he": "חומוס"
+    },
+    "aliases": []
+  },
+  {
+    "id": "beans",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Beans",
+      "ru": "Фасоль",
+      "he": "שעועית"
+    },
+    "aliases": []
+  },
+  {
+    "id": "lentils",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Lentils",
+      "ru": "Чечевица",
+      "he": "עדשים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "canned-tomatoes",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Canned tomatoes",
+      "ru": "Томаты консервированные",
+      "he": "עגבניות משומרות"
+    },
+    "aliases": []
+  },
+  {
+    "id": "tomato-paste",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Tomato paste",
+      "ru": "Томатная паста",
+      "he": "רסק עגבניות"
+    },
+    "aliases": []
+  },
+  {
+    "id": "corn",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Corn",
+      "ru": "Кукуруза",
+      "he": "תירס"
+    },
+    "aliases": []
+  },
+  {
+    "id": "peanut-butter",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Peanut butter",
+      "ru": "Арахисовая паста",
+      "he": "חמאת בוטנים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "jam",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Jam",
+      "ru": "Варенье",
+      "he": "ריבה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "honey",
+    "category": "Canned & Jarred",
+    "names": {
+      "en": "Honey",
+      "ru": "Мёд",
+      "he": "דבש"
+    },
+    "aliases": []
+  },
+  {
+    "id": "bread",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Bread",
+      "ru": "Хлеб",
+      "he": "לחם"
+    },
+    "aliases": []
+  },
+  {
+    "id": "rice",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Rice",
+      "ru": "Рис",
+      "he": "אורז"
+    },
+    "aliases": []
+  },
+  {
+    "id": "pasta",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Pasta",
+      "ru": "Макароны",
+      "he": "פסטה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "oats",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Oats",
+      "ru": "Овсянка",
+      "he": "שיבולת שועל"
+    },
+    "aliases": [
+      "oatmeal"
+    ]
+  },
+  {
+    "id": "flour",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Flour",
+      "ru": "Мука",
+      "he": "קמח"
+    },
+    "aliases": []
+  },
+  {
+    "id": "gluten-free-flour",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Gluten-free flour",
+      "ru": "Безглютеновая мука",
+      "he": "קמח ללא גלוטן"
+    },
+    "aliases": []
+  },
+  {
+    "id": "gluten-free-bread",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Gluten-free bread",
+      "ru": "Безглютеновый хлеб",
+      "he": "לחם ללא גלוטן"
+    },
+    "aliases": []
+  },
+  {
+    "id": "gluten-free-pasta",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Gluten-free pasta",
+      "ru": "Безглютеновые макароны",
+      "he": "פסטה ללא גלוטן"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cereal",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Cereal",
+      "ru": "Хлопья",
+      "he": "דגני בוקר"
+    },
+    "aliases": []
+  },
+  {
+    "id": "tortillas",
+    "category": "Grains & Pasta",
+    "names": {
+      "en": "Tortillas",
+      "ru": "Тортильи",
+      "he": "טורטיות"
+    },
+    "aliases": []
+  },
+  {
+    "id": "salt",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Salt",
+      "ru": "Соль",
+      "he": "מלח"
+    },
+    "aliases": []
+  },
+  {
+    "id": "black-pepper",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Black pepper",
+      "ru": "Чёрный перец",
+      "he": "פלפל שחור"
+    },
+    "aliases": []
+  },
+  {
+    "id": "paprika",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Paprika",
+      "ru": "Паприка",
+      "he": "פפריקה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cumin",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Cumin",
+      "ru": "Кумин",
+      "he": "כמון"
+    },
+    "aliases": []
+  },
+  {
+    "id": "cinnamon",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Cinnamon",
+      "ru": "Корица",
+      "he": "קינמון"
+    },
+    "aliases": []
+  },
+  {
+    "id": "olive-oil",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Olive oil",
+      "ru": "Оливковое масло",
+      "he": "שמן זית"
+    },
+    "aliases": []
+  },
+  {
+    "id": "vegetable-oil",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Vegetable oil",
+      "ru": "Растительное масло",
+      "he": "שמן צמחי"
+    },
+    "aliases": []
+  },
+  {
+    "id": "vinegar",
+    "category": "Spices & Seasonings",
+    "names": {
+      "en": "Vinegar",
+      "ru": "Уксус",
+      "he": "חומץ"
+    },
+    "aliases": []
+  },
+  {
+    "id": "sugar",
+    "category": "Other",
+    "names": {
+      "en": "Sugar",
+      "ru": "Сахар",
+      "he": "סוכר"
+    },
+    "aliases": []
+  },
+  {
+    "id": "baking-powder",
+    "category": "Other",
+    "names": {
+      "en": "Baking powder",
+      "ru": "Разрыхлитель",
+      "he": "אבקת אפייה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "baking-soda",
+    "category": "Other",
+    "names": {
+      "en": "Baking soda",
+      "ru": "Пищевая сода",
+      "he": "סודה לשתייה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "coffee",
+    "category": "Other",
+    "names": {
+      "en": "Coffee",
+      "ru": "Кофе",
+      "he": "קפה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "tea",
+    "category": "Other",
+    "names": {
+      "en": "Tea",
+      "ru": "Чай",
+      "he": "תה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "juice",
+    "category": "Other",
+    "names": {
+      "en": "Juice",
+      "ru": "Сок",
+      "he": "מיץ"
+    },
+    "aliases": []
+  },
+  {
+    "id": "water",
+    "category": "Other",
+    "names": {
+      "en": "Water",
+      "ru": "Вода",
+      "he": "מים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "oat-milk",
+    "category": "Other",
+    "names": {
+      "en": "Oat milk",
+      "ru": "Овсяное молоко",
+      "he": "חלב שיבולת שועל"
+    },
+    "aliases": []
+  },
+  {
+    "id": "almond-milk",
+    "category": "Other",
+    "names": {
+      "en": "Almond milk",
+      "ru": "Миндальное молоко",
+      "he": "חלב שקדים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "frozen-peas",
+    "category": "Other",
+    "names": {
+      "en": "Frozen peas",
+      "ru": "Замороженный горошек",
+      "he": "אפונה קפואה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "frozen-vegetables",
+    "category": "Other",
+    "names": {
+      "en": "Frozen vegetables",
+      "ru": "Замороженные овощи",
+      "he": "ירקות קפואים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "nuts",
+    "category": "Other",
+    "names": {
+      "en": "Nuts",
+      "ru": "Орехи",
+      "he": "אגוזים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "crackers",
+    "category": "Other",
+    "names": {
+      "en": "Crackers",
+      "ru": "Крекеры",
+      "he": "קרקרים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "toothbrush",
+    "category": "Other",
+    "names": {
+      "en": "Toothbrush",
+      "ru": "Зубная щётка",
+      "he": "מברשת שיניים"
+    },
+    "aliases": [
+      "tooth brush"
+    ]
+  },
+  {
+    "id": "toothpaste",
+    "category": "Other",
+    "names": {
+      "en": "Toothpaste",
+      "ru": "Зубная паста",
+      "he": "משחת שיניים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "dental-floss",
+    "category": "Other",
+    "names": {
+      "en": "Dental floss",
+      "ru": "Зубная нить",
+      "he": "חוט דנטלי"
+    },
+    "aliases": []
+  },
+  {
+    "id": "soap",
+    "category": "Other",
+    "names": {
+      "en": "Soap",
+      "ru": "Мыло",
+      "he": "סבון"
+    },
+    "aliases": []
+  },
+  {
+    "id": "shampoo",
+    "category": "Other",
+    "names": {
+      "en": "Shampoo",
+      "ru": "Шампунь",
+      "he": "שמפו"
+    },
+    "aliases": []
+  },
+  {
+    "id": "conditioner",
+    "category": "Other",
+    "names": {
+      "en": "Conditioner",
+      "ru": "Кондиционер для волос",
+      "he": "מרכך שיער"
+    },
+    "aliases": []
+  },
+  {
+    "id": "body-wash",
+    "category": "Other",
+    "names": {
+      "en": "Body wash",
+      "ru": "Гель для душа",
+      "he": "סבון רחצה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "deodorant",
+    "category": "Other",
+    "names": {
+      "en": "Deodorant",
+      "ru": "Дезодорант",
+      "he": "דאודורנט"
+    },
+    "aliases": []
+  },
+  {
+    "id": "toilet-paper",
+    "category": "Other",
+    "names": {
+      "en": "Toilet paper",
+      "ru": "Туалетная бумага",
+      "he": "נייר טואלט"
+    },
+    "aliases": []
+  },
+  {
+    "id": "tissues",
+    "category": "Other",
+    "names": {
+      "en": "Tissues",
+      "ru": "Бумажные платки",
+      "he": "ממחטות נייר"
+    },
+    "aliases": []
+  },
+  {
+    "id": "paper-towels",
+    "category": "Other",
+    "names": {
+      "en": "Paper towels",
+      "ru": "Бумажные полотенца",
+      "he": "מגבות נייר"
+    },
+    "aliases": []
+  },
+  {
+    "id": "dish-soap",
+    "category": "Other",
+    "names": {
+      "en": "Dish soap",
+      "ru": "Средство для мытья посуды",
+      "he": "סבון כלים"
+    },
+    "aliases": [
+      "washing up liquid"
+    ]
+  },
+  {
+    "id": "dishwasher-tablets",
+    "category": "Other",
+    "names": {
+      "en": "Dishwasher tablets",
+      "ru": "Таблетки для посудомоечной машины",
+      "he": "טבליות למדיח"
+    },
+    "aliases": []
+  },
+  {
+    "id": "laundry-detergent",
+    "category": "Other",
+    "names": {
+      "en": "Laundry detergent",
+      "ru": "Средство для стирки",
+      "he": "חומר כביסה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "fabric-softener",
+    "category": "Other",
+    "names": {
+      "en": "Fabric softener",
+      "ru": "Кондиционер для белья",
+      "he": "מרכך כביסה"
+    },
+    "aliases": []
+  },
+  {
+    "id": "all-purpose-cleaner",
+    "category": "Other",
+    "names": {
+      "en": "All-purpose cleaner",
+      "ru": "Универсальное чистящее средство",
+      "he": "חומר ניקוי כללי"
+    },
+    "aliases": []
+  },
+  {
+    "id": "sponges",
+    "category": "Other",
+    "names": {
+      "en": "Sponges",
+      "ru": "Губки",
+      "he": "ספוגים"
+    },
+    "aliases": []
+  },
+  {
+    "id": "garbage-bags",
+    "category": "Other",
+    "names": {
+      "en": "Garbage bags",
+      "ru": "Мусорные пакеты",
+      "he": "שקיות אשפה"
+    },
+    "aliases": [
+      "trash bags",
+      "bin bags"
+    ]
+  },
+  {
+    "id": "aluminum-foil",
+    "category": "Other",
+    "names": {
+      "en": "Aluminum foil",
+      "ru": "Фольга",
+      "he": "נייר אלומיניום"
+    },
+    "aliases": [
+      "aluminium foil",
+      "tin foil"
+    ]
+  },
+  {
+    "id": "baking-paper",
+    "category": "Other",
+    "names": {
+      "en": "Baking paper",
+      "ru": "Бумага для выпечки",
+      "he": "נייר אפייה"
+    },
+    "aliases": [
+      "parchment paper"
+    ]
+  },
+  {
+    "id": "food-storage-bags",
+    "category": "Other",
+    "names": {
+      "en": "Food storage bags",
+      "ru": "Пакеты для хранения продуктов",
+      "he": "שקיות מזון"
+    },
+    "aliases": []
+  },
+  {
+    "id": "diapers",
+    "category": "Other",
+    "names": {
+      "en": "Diapers",
+      "ru": "Подгузники",
+      "he": "חיתולים"
+    },
+    "aliases": [
+      "nappies"
+    ]
+  },
+  {
+    "id": "baby-wipes",
+    "category": "Other",
+    "names": {
+      "en": "Baby wipes",
+      "ru": "Детские влажные салфетки",
+      "he": "מגבונים לתינוקות"
+    },
+    "aliases": []
+  },
+  {
+    "id": "batteries",
+    "category": "Other",
+    "names": {
+      "en": "Batteries",
+      "ru": "Батарейки",
+      "he": "סוללות"
+    },
+    "aliases": []
+  }
+]

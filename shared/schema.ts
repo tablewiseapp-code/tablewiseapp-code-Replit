@@ -140,8 +140,16 @@ export const cookingSessions = pgTable("cooking_sessions", {
 ]);
 export type CookingSession = typeof cookingSessions.$inferSelect;
 
+export const householdProducts = pgTable("household_products", {
+  id: text("id").primaryKey(),
+  category: text("category").notNull(),
+  names: jsonb("names").$type<Record<string, string>>().notNull(),
+  aliases: jsonb("aliases").$type<string[]>().notNull(),
+});
+
 // Groceries: products the owner added by hand ("I'm out of onion"). Private to the owner, like cooking sessions.
 export const groceryExtras = pgTable("grocery_extras", {
+  image: text("image"),
   id: uuid("id").primaryKey().defaultRandom(),
   ownerId: varchar("owner_id", { length: 64 }).notNull(),
   text: text("text").notNull(),
@@ -149,6 +157,7 @@ export const groceryExtras = pgTable("grocery_extras", {
 }, table => [
   // Plain columns on purpose: drizzle-kit push re-creates expression indexes on every start. The store matches letter case itself.
   uniqueIndex("grocery_extras_owner_text").on(table.ownerId, table.text),
+  check("grocery_extras_image", sql`${table.image} IS NULL OR length(${table.image}) <= 280023`),
   check("grocery_extras_text", sql`length(${table.text}) BETWEEN 1 AND 80`),
 ]);
 

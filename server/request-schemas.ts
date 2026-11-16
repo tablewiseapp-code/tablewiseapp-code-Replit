@@ -59,7 +59,13 @@ export const audioInput = z.object({
 
 // My Cooking Experience. Photos arrive already resized by the browser, as canonical base64 JPEG.
 export const cookingSessionId = z.string().uuid();
-export const groceryExtraCreate = z.object({ text: z.string().trim().min(1).max(80) }).strict();
+export const groceryExtraCreate = z.object({
+  text: z.string().trim().min(1).max(80),
+  image: z.string().max(280023).regex(/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/)
+    .refine(value => { const data = value.slice(23); const bytes = Buffer.from(data, "base64");
+      return bytes.length <= 210000 && bytes.toString("base64") === data && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+    }).optional(),
+}).strict();
 export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
 export const cookingSessionPatch = z.object({
   rating: z.number().int().min(1).max(5).nullable(),
