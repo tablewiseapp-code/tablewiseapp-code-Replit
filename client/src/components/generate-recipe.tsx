@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useCanGenerate } from "@/hooks/use-can-generate";
 import { Loader2, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { RecipeIngredients } from "@/components/recipe-ingredients";
@@ -35,6 +36,7 @@ export const secondary = "inline-flex min-h-11 items-center justify-center gap-2
 export const chip = "inline-flex max-w-full rounded-full border border-border bg-accent px-2.5 py-1 text-xs text-muted-foreground";
 
 export function GenerateRecipe({ filters, timeMode, request, variant, disabled, label, onAccept }: Props) {
+  const canGenerate = useCanGenerate();
   const { lang, dir } = useI18n();
   const t = (key: GenerateCopyKey) => generateCopy(lang, key);
   const f = (key: Parameters<typeof mealFilterCopy>[1], values?: Record<string, string | number>) => mealFilterCopy(lang, key, values);
@@ -112,6 +114,7 @@ export function GenerateRecipe({ filters, timeMode, request, variant, disabled, 
   );
 
   const recipe = state.kind === "preview" ? state.result.recipe : null;
+  if (!canGenerate) return null;
   return (
     <>
       {trigger}

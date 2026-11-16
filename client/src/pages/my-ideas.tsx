@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useCanGenerate } from "@/hooks/use-can-generate";
 import { useLocation } from "wouter";
 import { Heart, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -126,7 +127,8 @@ export default function MyIdeas() {
     trackRecipeEvent("recipe_viewed", idea.id);
     if (idea.recipeId) navigate(`/recipe/${idea.recipeId}`); else setViewing(idea);
   };
-  const newIdea = <button type="button" className={primary} onClick={() => setPanelOpen(true)} data-testid="button-new-idea">
+  const canGenerate = useCanGenerate();
+  const newIdea = canGenerate && <button type="button" className={primary} onClick={() => setPanelOpen(true)} data-testid="button-new-idea">
     <Sparkles className="h-4 w-4" aria-hidden="true" />{t("newIdea")}
   </button>;
 
@@ -145,9 +147,9 @@ export default function MyIdeas() {
           <div className="mt-8 rounded-2xl border border-dashed border-border bg-background p-8 text-center" data-testid="my-ideas-empty">
             <h2 className="text-base font-semibold text-foreground">{t("emptyTitle")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{t("emptyBody")}</p>
-            <button type="button" className={`${primary} mt-4`} onClick={() => setPanelOpen(true)} data-testid="button-create-first-idea">
+            {canGenerate && <button type="button" className={`${primary} mt-4`} onClick={() => setPanelOpen(true)} data-testid="button-create-first-idea">
               <Sparkles className="h-4 w-4" aria-hidden="true" />{t("createFirst")}
-            </button>
+            </button>}
           </div>
         ) : <>
           <div role="tablist" className="mt-6 flex flex-wrap gap-2">
@@ -177,7 +179,7 @@ export default function MyIdeas() {
                 <p className="text-sm text-foreground">{t("noMatches")}</p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                   <button type="button" className={outline} onClick={clearFilters} data-testid="button-clear-idea-filters">{t("clearFilters")}</button>
-                  <button type="button" className={primary} onClick={() => setPanelOpen(true)}>{t("createNew")}</button>
+                  {canGenerate && <button type="button" className={primary} onClick={() => setPanelOpen(true)}>{t("createNew")}</button>}
                 </div>
               </div>
             ) : <p className="mt-6 text-sm text-muted-foreground" data-testid="my-ideas-tab-empty">{t("noMatches")}</p>

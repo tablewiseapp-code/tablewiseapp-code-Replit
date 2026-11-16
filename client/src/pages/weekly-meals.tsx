@@ -1,4 +1,7 @@
-﻿import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
+﻿import { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from "react";
+import { usePilotPage } from "@/hooks/use-pilot-page";
+import { recordPilotEvent } from "@/lib/pilot-analytics";
+import { currentWeek } from "@/lib/week-plan";
 import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
@@ -166,6 +169,18 @@ function WeeklyMealsContent() {
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [recipesError, setRecipesError] = useState<string | null>(null);
   const [weekLocked, setWeekLocked] = useLocalStorageState<boolean>("week_locked_v1", false);
+  // Pilot funnel (docs/phase-5-analytics.md). Only changes made on this page count, not a plan restored from storage.
+  // ponytail: the plan is not dated, so events use the calendar week they happen in; a week left locked
+  // across weeks records no return. Date the plan when it moves to Postgres.
+  const pilotWeek = currentWeek();
+  usePilotPage("planner_opened", pilotWeek);
+  const pilotSeen = useRef({ ids: state.selectedIds, locked: weekLocked });
+  useEffect(() => {
+    const seen = pilotSeen.current;
+    state.selectedIds.filter(id => !seen.ids.includes(id)).forEach(id => recordPilotEvent("meal_selected", pilotWeek, id));
+    if (weekLocked && !seen.locked) recordPilotEvent("plan_completed", pilotWeek);
+    pilotSeen.current = { ids: state.selectedIds, locked: weekLocked };
+  }, [state.selectedIds, weekLocked, pilotWeek]);
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
