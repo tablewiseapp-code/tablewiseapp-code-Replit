@@ -1,6 +1,6 @@
 // Grocery list export & share: pure formatting helpers (no DOM), tested in script/test-grocery-share.ts.
 export type ShareScope = "remaining" | "all";
-export type ShareItem = { text: string; checked: boolean; pantry: boolean };
+export type ShareItem = { text: string; checked: boolean; pantry: boolean; note?: string | null };
 export type ShareCategory = { name: string; items: ShareItem[] };
 
 /** Keeps category order; "remaining" drops checked items; empty categories disappear. */
@@ -12,7 +12,7 @@ export function scopeList(categories: ShareCategory[], scope: ShareScope): Share
 
 export const countItems = (categories: ShareCategory[]) => categories.reduce((n, c) => n + c.items.length, 0);
 
-const line = (i: ShareItem, pantryLabel: string) => `${i.checked ? "✓" : "-"} ${i.text}${i.pantry ? ` (${pantryLabel})` : ""}`;
+const line = (i: ShareItem, pantryLabel: string) => `${i.checked ? "✓" : "-"} ${i.text}${i.pantry ? ` (${pantryLabel})` : ""}${i.note ? ` — ${i.note}` : ""}`;
 
 export function formatText(title: string, categories: ShareCategory[], pantryLabel: string): string {
   return [title, ...categories.map(c => `\n${c.name}\n${c.items.map(i => line(i, pantryLabel)).join("\n")}`)].join("\n");
@@ -21,8 +21,8 @@ export function formatText(title: string, categories: ShareCategory[], pantryLab
 const csvCell = (v: string) => /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 
 /** Items are raw recipe lines, so quantity/unit stay empty rather than guessed. BOM keeps Excel on UTF-8. */
-export function toCsv(categories: ShareCategory[], headers: [string, string, string, string, string, string]): string {
-  const rows = [headers, ...categories.flatMap(c => c.items.map(i => [c.name, i.text, "", "", i.checked ? "yes" : "no", i.pantry ? "yes" : "no"]))];
+export function toCsv(categories: ShareCategory[], headers: [string, string, string, string, string, string, string]): string {
+  const rows = [headers, ...categories.flatMap(c => c.items.map(i => [c.name, i.text, "", "", i.checked ? "yes" : "no", i.pantry ? "yes" : "no", i.note ?? ""]))];
   return "﻿" + rows.map(r => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
 
@@ -38,7 +38,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, ch => `&#${ch.charCodeAt(0)};`)
 export function printableHtml(title: string, categories: ShareCategory[], pantryLabel: string, lang: string, dir: "ltr" | "rtl"): string {
   const body = categories.map(c =>
     `<section><h2>${esc(c.name)}</h2><ul>${c.items.map(i =>
-      `<li${i.checked ? ' class="done"' : ""}>${i.checked ? "✓" : "☐"} ${esc(i.text)}${i.pantry ? ` <small>(${esc(pantryLabel)})</small>` : ""}</li>`).join("")}</ul></section>`).join("");
+      `<li${i.checked ? ' class="done"' : ""}>${i.checked ? "✓" : "☐"} ${esc(i.text)}${i.pantry ? ` <small>(${esc(pantryLabel)})</small>` : ""}${i.note ? ` <small>— ${esc(i.note)}</small>` : ""}</li>`).join("")}</ul></section>`).join("");
   return `<!doctype html><html lang="${esc(lang)}" dir="${dir}"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
 body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#242923;margin:24px}
 h1{font-size:22px;margin:0 0 12px}h2{font-size:14px;margin:16px 0 4px;border-bottom:1px solid #ddd;break-after:avoid}

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, unique, index, uniqueIndex, check, jsonb, customType } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, unique, index, uniqueIndex, check, jsonb, customType, boolean, primaryKey } from "drizzle-orm/pg-core";
 import type { RecipeNutrition } from "./recipe-nutrition";
 import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
 import type { RecipeGenerationRequest, RecipeGenerationStatus } from "./recipe-generation-request";
@@ -165,3 +165,36 @@ export const cookingPhotos = pgTable("cooking_photos", {
   index("cooking_photos_session").on(table.sessionId, table.createdAt),
   index("cooking_photos_owner").on(table.ownerId),
 ]);
+
+// Grocery share links: a saved copy of one grocery list, opened by a link that carries a role.
+// There are no accounts, so the role belongs to the link; the owner (cookie) can always do everything.
+export type ShareRole = "view" | "add" | "edit";
+export const sharedGroceryLists = pgTable("shared_grocery_lists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  // ponytail: stored as is so the owner can get their link back; hash it if these lists ever hold sensitive data.
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  role: varchar("role", { length: 8 }).$type<ShareRole>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  index("shared_grocery_lists_owner").on(table.ownerId, table.createdAt),
+  check("shared_grocery_lists_role", sql`${table.role} IN ('view','add','edit')`),
+]);
+export const sharedGroceryItems = pgTable("shared_grocery_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  listId: uuid("list_id").notNull().references(() => sharedGroceryLists.id, { onDelete: "cascade" }),
+  category: varchar("category", { length: 40 }).notNull(),
+  text: varchar("text", { length: 300 }).notNull(),
+  recipes: varchar("recipes", { length: 300 }).default("").notNull(),
+  checked: boolean("checked").default(false).notNull(),
+  note: varchar("note", { length: 500 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [index("shared_grocery_items_list").on(table.listId)]);
+export type SharedGroceryItem = typeof sharedGroceryItems.$inferSelect;
+
+// Notes on the owner's own grocery list, keyed by the list's item key (the lowercased ingredient line).
+export const groceryNotes = pgTable("grocery_notes", {
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  itemKey: varchar("item_key", { length: 300 }).notNull(),
+  note: varchar("note", { length: 500 }).notNull(),
+}, table => [primaryKey({ columns: [table.ownerId, table.itemKey] })]);

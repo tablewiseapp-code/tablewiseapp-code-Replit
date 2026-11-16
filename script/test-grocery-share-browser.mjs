@@ -95,7 +95,7 @@ try {
   assert.equal(txt.split("\n").filter(l => /^[-✓] /.test(l)).length, total, "TXT has the entire list");
   assert.ok(csv.startsWith("﻿Category,Ingredient,Quantity,Unit,Checked,In pantry"));
   assert.equal(csv.trim().split("\r\n").length, total + 1, "CSV row per item");
-  assert.equal((csv.match(/,yes,(yes|no)\r\n/g) ?? []).length, 2, "two checked rows");
+  assert.equal((csv.match(/,yes,(yes|no),[^\r\n]*\r\n/g) ?? []).length, 2, "two checked rows");
 
   // Sharing changed nothing on the list.
   await ev("document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))"); await sleep(300);

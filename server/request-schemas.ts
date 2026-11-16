@@ -74,3 +74,23 @@ const jpeg = (maxBytes: number) => z.string().min(4).max(Math.ceil(maxBytes / 3)
 export const cookingPhotoInput = z.object({
   image: jpeg(maxCookingPhotoBytes), thumbnail: jpeg(maxCookingThumbnailBytes),
 }).strict();
+
+// Grocery share links and per-item notes.
+export const shareToken = z.string().regex(/^[a-f0-9]{64}$/);
+export const shareRole = z.enum(["view", "add", "edit"]);
+const groceryText = z.string().trim().min(1).max(300);
+const groceryCategory = z.string().trim().min(1).max(40);
+const groceryNote = z.string().trim().max(500).transform(value => value || null);
+export const sharedListCreate = z.object({
+  role: shareRole,
+  items: z.array(z.object({
+    category: groceryCategory, text: groceryText, recipes: z.string().trim().max(300).default(""),
+    checked: z.boolean().default(false), note: groceryNote.nullable().default(null),
+  }).strict()).min(1).max(300),
+}).strict();
+export const sharedListPatch = z.object({ role: shareRole }).strict();
+export const sharedItemCreate = z.object({ category: groceryCategory, text: groceryText }).strict();
+export const sharedItemPatch = z.object({ checked: z.boolean(), note: groceryNote.nullable(), text: groceryText })
+  .partial().strict().refine(value => Object.keys(value).length > 0);
+// The key is the list's own item key, so it is matched exactly (no trimming).
+export const groceryNoteInput = z.object({ key: z.string().min(1).max(300), note: groceryNote }).strict();
