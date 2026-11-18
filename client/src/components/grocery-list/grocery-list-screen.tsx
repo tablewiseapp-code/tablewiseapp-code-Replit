@@ -1,21 +1,28 @@
-import { useState, useMemo, useEffect, useRef, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { categorizeIngredient } from "@/lib/grocery-categories";
 import { GroceryItemPicture } from "./grocery-item-picture";
+import { GroceryBulkAdd, type BulkItem } from "./grocery-bulk-add";
 import { GroceryAddItem } from "./grocery-add-item";
 import { groceryProductText } from "@/lib/grocery-product-copy";
 import { GroceryNote } from "./grocery-note";
 import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
-import { categoryProgress, countChecked, isCategoryCollapsed, isListComplete, readGroceryPrefs, saveGroceryPrefs, toggleCategory, toggleItem as toggleChecked, type Expansion } from "@/lib/grocery-progress";
-import { buildGroceryItems } from "@/lib/grocery-items";
+import { readGroceryPrefs, saveGroceryPrefs, toggleCategory } from "@/lib/grocery-progress";
+import { planStorageKey, readPlan, writePlan, type PlanAssignment } from "@/lib/meal-plan";
+import { assignmentKey, buildRecipeGroceryRows, groceryMeasure, groceryPlanVersion, groceryQuantityText, remainingGroceryText, removeGroceryMeals, restoreGroceryMeals } from "@/lib/grocery-meal-removal";
+import { buildShoppingList, groceryShoppingQueryKey as shoppingQuery, type Extra, type ShoppingPreference, type ShoppingRow } from "@/lib/grocery-items";
+import { shoppingCopy } from "@/lib/grocery-shopping-copy";
+import { parseIngredientLine, parseQuantity } from "@shared/ingredient-parse";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { currentWeek } from "@/lib/week-plan";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
-import { Plus, Share2, X } from "lucide-react";
+import { Ellipsis, Plus, Share2 } from "lucide-react";
 import { loadSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
@@ -25,41 +32,10 @@ import "./grocery-list.css";
 
 type Recipe = PlannerRecipe;
 
-interface PlanAssignment {
-  recipeId: string;
-  mealType: "Breakfast" | "Lunch" | "Dinner";
-  startDay: number;
-  spanDays: number;
-  servings?: number;
-}
-
-interface WeeklyMealsState {
-  filters: Record<string, unknown>;
-  selectedIds: string[];
-  expandedSections: string[];
-  showMoreFilters: boolean;
-  planAssignments: PlanAssignment[];
-}
-
-function loadState(): WeeklyMealsState | null {
-  try {
-    const saved = localStorage.getItem("weeklyMealsState");
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {
-    console.error("Failed to load state:", e);
-  }
-  return null;
-}
-
-type CategoryPointerDrag = {
-  pointerId: number;
-  category: string;
-  startX: number;
-  startY: number;
-  active: boolean;
-};
+const categories = [
+  "Produce", "Meat & Poultry", "Seafood", "Dairy & Eggs",
+  "Grains & Pasta", "Canned & Jarred", "Spices & Seasonings", "Other", "Manually Added",
+];
 
 export default function GroceryListScreen() {
   const [, setLocation] = useLocation();
@@ -68,25 +44,47 @@ export default function GroceryListScreen() {
   const pantry = useMemo(() => loadSettings().shopping.pantry, []); // My Basic Settings: "Ingredients I usually have"
   const [initialPrefs] = useState(readGroceryPrefs);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(initialPrefs.checked);
-  const [expansion, setExpansion] = useState<Expansion>(initialPrefs.expansion);
-  const [completionNote, setCompletionNote] = useState("");
-  const [categoryOrder, setCategoryOrder] = useState([
-    "Produce", "Meat & Poultry", "Seafood", "Dairy & Eggs",
-    "Grains & Pasta", "Canned & Jarred", "Spices & Seasonings", "Other",
-  ]);
-  const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ category: string; edge: "before" | "after" } | null>(null);
-  const [reorderAnnouncement, setReorderAnnouncement] = useState("");
+  const [expansion, setExpansion] = useState(initialPrefs.expansion);
   const [shareOpen, setShareOpen] = useState(false);
-  const categoryPointerDrag = useRef<CategoryPointerDrag | null>(null);
+  const [tab, setTab] = useState<"all" | "mine">("all");
+  const [priceCategory, setPriceCategory] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<ShoppingRow | null>(null);
+  const [mealKeys, setMealKeys] = useState<Set<string>>(new Set());
+  const [partial, setPartial] = useState<ShoppingRow | null>(null);
+  const [amount, setAmount] = useState("");
+  const [plan, setPlan] = useState(readPlan);
+  const [busy, setBusy] = useState(false);
+  const [priceEditor, setPriceEditor] = useState<ShoppingRow | null>(null);
+  const [priceInput, setPriceInput] = useState("");
+  const { data: shopping = [], isError: shoppingError, isPending: shoppingPending, refetch: reloadShopping } =
+    useQuery<ShoppingPreference[]>({ queryKey: shoppingQuery, refetchOnMount: "always" });
+  const preferences = new Map(shopping.map(row => [row.key, row]));
+  const skipped = new Set(shopping.filter(row => row.skipped).map(row => row.key));
+  const patchShopping = async (patch: { key: string; skipped: boolean } | { key: string; price: { cents: number; text: string } }) => {
+    const response = await apiRequest("PATCH", shoppingQuery[0], patch);
+    const saved: ShoppingPreference = await response.json();
+    queryClient.setQueryData<ShoppingPreference[]>(shoppingQuery, previous => [
+      ...(previous ?? []).filter(row => row.key !== saved.key), saved,
+    ]);
+  };
+  const copy = (key: Parameters<typeof shoppingCopy>[1]) => shoppingCopy(lang, key);
+  useEffect(() => {
+    const refresh = (event: StorageEvent) => {
+      if (event.key === planStorageKey || event.key === null) {
+        setPlan(readPlan());
+        setPendingRemoval(null);
+      }
+    };
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [recipesError, setRecipesError] = useState<string | null>(null);
   // Products the user added by hand ("I'm out of onion"), stored per owner on the server.
-  const [extras, setExtras] = useState<{ id: string; text: string; image?: string | null }[]>([]);
-  const [addOpen, setAddOpen] = useState(() => new URLSearchParams(window.location.search).has("add")); // Home links here with ?add
-  const state = loadState();
-  const planAssignments = state?.planAssignments || [];
+  const [extras, setExtras] = useState<Extra[]>([]);
+  const [addOpen, setAddOpen] = useState(() => new URLSearchParams(window.location.search).has("add"));
+  const { planAssignments } = plan;
   usePilotPage("grocery_list_opened", currentWeek(), planAssignments.length > 0);
   // Notes per item, stored per owner on the server. The list still works if they cannot be loaded.
   const { data: notes = {} } = useQuery<Record<string, string>>({ queryKey: ["/api/grocery-notes"] });
@@ -126,38 +124,51 @@ export default function GroceryListScreen() {
     return () => { active = false; };
   }, []);
 
-  const groceryData = useMemo(() => {
-    const { items: ingredientMap, usedRecipes } = buildGroceryItems(recipes, state?.selectedIds ?? [], planAssignments, extras);
-    const categorized: Record<string, { ingredient: string; recipes: string[]; key: string; image?: string | null; extraId?: string }[]> = {};
-    ingredientMap.forEach((data, key) => {
-      const category = categorizeIngredient(data.ingredient);
-      if (!categorized[category]) categorized[category] = [];
-      categorized[category].push({ ...data, key });
-    });
-    Object.values(categorized).forEach(items => items.sort((a, b) => a.ingredient.localeCompare(b.ingredient)));
-    return { categorized, usedRecipes, totalItems: ingredientMap.size };
-  }, [planAssignments, recipes, extras]);
+  const recipeRows = useMemo(() => buildRecipeGroceryRows(plan, recipes), [plan, recipes]);
+  const { activeRows, manualRows, purchasedRows, recipePurchases } = buildShoppingList(recipeRows, extras, checkedItems, skipped);
+  const categoryOf = (row: ShoppingRow) => {
+    if (row.category && categories.includes(row.category)) return row.category;
+    const category = categorizeIngredient(row.ingredient);
+    return category === "Other" && row.extraId ? "Manually Added" : category;
+  };
 
-  const allKeys = useMemo(() => Object.values(groceryData.categorized).flatMap(items => items.map(item => item.key)), [groceryData]);
-  // Persist only after the real list is known, and only items still on it.
   useEffect(() => {
-    if (isLoadingRecipes || recipesError || allKeys.length === 0) return;
-    const present = new Set(allKeys);
-    saveGroceryPrefs({ checked: new Set([...checkedItems].filter(key => present.has(key))), expansion });
-  }, [isLoadingRecipes, recipesError, allKeys, checkedItems, expansion]);
+    if (!isLoadingRecipes && !recipesError) saveGroceryPrefs({ checked: checkedItems, expansion });
+  }, [isLoadingRecipes, recipesError, checkedItems, expansion]);
 
-  const toggleItem = (key: string, category: string) => {
-    const keys = (groceryData.categorized[category] ?? []).map(item => item.key);
-    const wasComplete = categoryProgress(keys, checkedItems).complete;
-    const next = toggleChecked(checkedItems, expansion, key, category);
-    const nowComplete = categoryProgress(keys, next.checked).complete;
-    setCheckedItems(next.checked);
-    setExpansion(next.expansion);
-    if (nowComplete && !wasComplete) {
-      setCompletionNote(t("grocery.categoryComplete", { category: categoryTranslations[category] || category }));
-      // The ticked row is about to collapse away: keep keyboard focus on the category header.
-      setTimeout(() => document.getElementById(`grocery-toggle-${category.replace(/[^a-z]+/gi, "-").toLowerCase()}`)?.focus(), 0);
-    } else if (!nowComplete) setCompletionNote("");
+  const markPurchased = (row: ShoppingRow, quantity?: number) => {
+    const measure = groceryMeasure(row.ingredient);
+    const matchingKeys = (keys: Set<string>) => [...keys].filter(key => row.extraId
+      ? key === row.key || key.startsWith(`${row.key}:`)
+      : !key.startsWith("extra:") && groceryMeasure(key).identity === measure.identity);
+    const before = matchingKeys(checkedItems);
+    let purchasedKey = row.ingredient.toLowerCase();
+    if (row.extraId && quantity === undefined) purchasedKey = row.key;
+    else if (measure.quantity !== null) {
+      let total = quantity ?? measure.quantity;
+      for (const key of before) {
+        const text = row.extraId ? key.slice(row.key.length + 1) : key;
+        total += groceryMeasure(text).quantity ?? 0;
+      }
+      const text = groceryQuantityText(measure, total);
+      purchasedKey = row.extraId ? `${row.key}:${text}` : text.toLowerCase();
+    }
+    setCheckedItems(previous => new Set([...previous].filter(key => !before.includes(key)).concat(purchasedKey)));
+    toast({ title: `${copy("checked")} · ${row.ingredient}`, action: <ToastAction altText={t("undo")} onClick={() => {
+      setCheckedItems(previous => {
+        const current = matchingKeys(previous);
+        if (current.length !== 1 || current[0] !== purchasedKey) return previous;
+        return new Set([...previous].filter(key => key !== purchasedKey).concat(before));
+      });
+    }}>{t("undo")}</ToastAction> });
+  };
+
+  const uncheck = (row: { key: string; ingredient: string }) => {
+    setCheckedItems(previous => {
+      const next = new Set(previous);
+      next.delete(row.key);
+      return next;
+    });
   };
 
   const addExtra = async (text: string, image?: string): Promise<boolean> => {
@@ -170,7 +181,7 @@ export default function GroceryListScreen() {
         const next = { ...previous }; delete next[extra.text.toLowerCase()]; return next;
       });
       // "I'm out of it again": a product added again must not stay ticked from the last shop.
-      setCheckedItems(previous => { const next = new Set(previous); next.delete(extra.text.toLowerCase()); return next; });
+      setCheckedItems(previous => { const next = new Set(previous); if (!recipeRows.has(groceryMeasure(extra.text).identity)) next.delete(extra.text.toLowerCase()); next.delete(`extra:${extra.id}`); for (const key of next) if (key.startsWith(`extra:${extra.id}:`)) next.delete(key); return next; });
       return true;
     } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); return false; }
   };
@@ -178,9 +189,33 @@ export default function GroceryListScreen() {
     try {
       if (!(await fetch(`/api/grocery-extras/${id}`, { method: "DELETE" })).ok) throw new Error();
       setExtras(previous => previous.filter(item => item.id !== id));
-    } catch { toast({ title: t("grocery.addItemFailed"), variant: "destructive" }); }
+      setCheckedItems(previous => new Set([...previous].filter(key => !key.startsWith(`extra:${id}:`) && key !== `extra:${id}` && (key !== extras.find(item => item.id === id)?.text.toLowerCase() || recipeRows.has(groceryMeasure(key).identity)))));
+    } catch { throw new Error("Could not remove grocery extra"); }
   };
-  const addForm = <GroceryAddItem onAdd={addExtra} />;
+  const addBulk = async (items: BulkItem[]) => {
+    try {
+      const response = await apiRequest("POST", "/api/grocery-extras/bulk", items);
+      const added: Extra[] = await response.json();
+      setExtras(previous => {
+        const updated = new Set(added.map(row => row.id));
+        return [...previous.filter(row => !updated.has(row.id)), ...added];
+      });
+      setCheckedItems(previous => {
+        const next = new Set(previous);
+        for (const extra of added) {
+          next.delete(`extra:${extra.id}`);
+          for (const key of next) if (key.startsWith(`extra:${extra.id}:`)) next.delete(key);
+          const existing = extras.find(row => row.id === extra.id);
+          if (existing && !recipeRows.has(groceryMeasure(existing.text).identity)) next.delete(existing.text.toLowerCase());
+        }
+        return next;
+      });
+      return true;
+    } catch {
+      toast({ title: t("grocery.addItemFailed"), variant: "destructive" });
+      return false;
+    }
+  };
 
   const categoryTranslations: Record<string, string> = {
     "Produce": t("grocery.produce"),
@@ -193,98 +228,69 @@ export default function GroceryListScreen() {
     "Other": t("grocery.other"),
   };
 
-  const reorderCategory = (category: string, targetCategory: string, afterTarget = false) => {
-    const fromIndex = categoryOrder.indexOf(category);
-    const targetIndex = categoryOrder.indexOf(targetCategory);
-    if (fromIndex < 0 || targetIndex < 0 || fromIndex === targetIndex) return;
+  categoryTranslations["Manually Added"] = copy("uncategorized");
 
-    const insertionIndex = targetIndex + (afterTarget ? 1 : 0);
-    const nextOrder = [...categoryOrder];
-    nextOrder.splice(fromIndex, 1);
-    nextOrder.splice(insertionIndex > fromIndex ? insertionIndex - 1 : insertionIndex, 0, category);
-    setCategoryOrder(nextOrder);
-    setDraggedCategory(null);
-    setDropTarget(null);
-    setReorderAnnouncement(`${categoryTranslations[category] || category} moved to position ${nextOrder.indexOf(category) + 1} of ${nextOrder.length}.`);
-  };
-
-  const handleCategoryPointerDown = (event: ReactPointerEvent<HTMLButtonElement>, category: string) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    categoryPointerDrag.current = {
-      pointerId: event.pointerId,
-      category,
-      startX: event.clientX,
-      startY: event.clientY,
-      active: false,
-    };
-  };
-
-  const handleCategoryPointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    const drag = categoryPointerDrag.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    if (!drag.active && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 7) return;
-
-    if (!drag.active) {
-      drag.active = true;
-      setDraggedCategory(drag.category);
+  const affected = pendingRemoval ? planAssignments.filter(a => pendingRemoval.proteinRecipes?.has(a.recipeId)) : [];
+  const selectedMeals = affected.filter(a => mealKeys.has(assignmentKey(a)));
+  const nextPlan = removeGroceryMeals(plan, selectedMeals);
+  const preview = { dropped: [] as string[], reduced: [] as string[], kept: [] as string[] };
+  if (selectedMeals.length) {
+    const nextRows = buildRecipeGroceryRows(nextPlan, recipes);
+    for (const [key, row] of recipeRows) {
+      const after = nextRows.get(key);
+      if (after?.ingredient === row.ingredient || skipped.has(key)) continue;
+      const beforeText = remainingGroceryText(row.ingredient, recipePurchases);
+      const afterText = after && remainingGroceryText(after.ingredient, recipePurchases);
+      if (beforeText && !afterText) preview.dropped.push(beforeText);
+      if (beforeText && afterText && beforeText !== afterText) preview.reduced.push(`${beforeText} → ${afterText}`);
+      preview.kept.push(...recipePurchases.filter(text => groceryMeasure(text).identity === key));
     }
+  }
 
-    const targetElement = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-grocery-category]");
-    const targetCategory = targetElement?.dataset.groceryCategory;
-    if (!targetElement || !targetCategory || targetCategory === drag.category) {
-      setDropTarget(null);
-      return;
-    }
-
-    const rect = targetElement.getBoundingClientRect();
-    const deltaX = event.clientX - (rect.left + rect.width / 2);
-    const deltaY = event.clientY - (rect.top + rect.height / 2);
-    const horizontal = Math.abs(deltaX / rect.width) > Math.abs(deltaY / rect.height);
-    setDropTarget({
-      category: targetCategory,
-      edge: horizontal ? (deltaX > 0 ? "after" : "before") : (deltaY > 0 ? "after" : "before"),
-    });
+  const beginRemoval = (row: ShoppingRow) => {
+    const meals = planAssignments.filter(a => row.proteinRecipes?.has(a.recipeId));
+    setMealKeys(new Set(meals.length === 1 ? [assignmentKey(meals[0])] : []));
+    setPriceCategory(null);
+    setPendingRemoval(row);
   };
 
-  const finishCategoryPointerDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    const drag = categoryPointerDrag.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    categoryPointerDrag.current = null;
-    if (drag.active && dropTarget) {
-      reorderCategory(drag.category, dropTarget.category, dropTarget.edge === "after");
-    } else {
-      setDraggedCategory(null);
-      setDropTarget(null);
-    }
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
+  const confirmRemoval = async (withMeals: boolean) => {
+    if (!pendingRemoval || busy) return;
+    try {
+      if (withMeals) {
+        const current = readPlan();
+        if (groceryPlanVersion(current) !== groceryPlanVersion(plan)) {
+          setPlan(current);
+          setPendingRemoval(null);
+          toast({ title: copy("conflict"), variant: "destructive" });
+          return;
+        }
+        const removed = [...selectedMeals];
+        writePlan(nextPlan);
+        setPlan(nextPlan);
+        toast({ title: copy("removed"), action: <ToastAction altText={t("undo")} onClick={() => {
+          const restored = restoreGroceryMeals(readPlan(), removed, current);
+          if (!restored) { toast({ title: copy("undoConflict"), variant: "destructive" }); return; }
+          try { writePlan(restored); setPlan(restored); }
+          catch { toast({ title: t("grocery.changeFailed"), variant: "destructive" }); }
+        }}>{t("undo")}</ToastAction> });
+      } else if (pendingRemoval.extraId) {
+        setBusy(true);
+        await removeExtra(pendingRemoval.extraId);
+      } else {
+        const key = pendingRemoval.key;
+        setBusy(true);
+        await patchShopping({ key, skipped: true });
+        toast({ title: copy("remove"), action: <ToastAction altText={t("undo")} onClick={() => {
+          void patchShopping({ key, skipped: false }).catch(() => toast({ title: t("grocery.changeFailed"), variant: "destructive" }));
+        }}>{t("undo")}</ToastAction> });
+      }
+      setPendingRemoval(null);
+    } catch { toast({ title: t("grocery.changeFailed"), variant: "destructive" }); }
+    finally { setBusy(false); }
   };
 
-  const cancelCategoryPointerDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    const drag = categoryPointerDrag.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    categoryPointerDrag.current = null;
-    setDraggedCategory(null);
-    setDropTarget(null);
-  };
-
-  const handleCategoryReorderKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, category: string) => {
-    const delta = event.key === "ArrowUp" || event.key === "ArrowLeft"
-      ? -1
-      : event.key === "ArrowDown" || event.key === "ArrowRight"
-        ? 1
-        : 0;
-    if (!delta) return;
-    event.preventDefault();
-    const index = categoryOrder.indexOf(category);
-    const targetCategory = categoryOrder[index + delta];
-    if (targetCategory) reorderCategory(category, targetCategory, delta > 0);
-  };
-
-  if (isLoadingRecipes) {
+  if (isLoadingRecipes || shoppingPending) {
     return (
       <main className="grocery-page" aria-busy="true">
         <div className="grocery-shell">
@@ -303,217 +309,266 @@ export default function GroceryListScreen() {
     return (
       <main className="grocery-page">
         <section className="grocery-shell grocery-state" role="alert">
-          <h1>We couldn’t load your list.</h1>
-          <p>{recipesError}</p>
-          <button className="grocery-primary" onClick={() => window.location.reload()}>Try again</button>
+          <h1>{copy("loadFailed")}</h1>
+          <button className="grocery-primary" onClick={() => window.location.reload()}>{groceryProductText(lang, "retry")}</button>
         </section>
       </main>
     );
   }
 
-  if (groceryData.totalItems === 0) {
-    return (
-      <main className="grocery-page">
-        <section className="grocery-shell grocery-state">
-          <h1>A little room for this week.</h1>
-          <p>{t("grocery.noMeals")}</p>
-          <button className="grocery-primary" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>
-          {addOpen ? addForm : (
-            <p><button type="button" className="grocery-share-button" onClick={() => setAddOpen(true)} data-testid="button-add-item">
-              <Plus aria-hidden="true" />{t("grocery.addItem")}
-            </button></p>
-          )}
-        </section>
-      </main>
-    );
-  }
-
-  const completed = countChecked(allKeys, checkedItems);
-  const listComplete = isListComplete(allKeys, checkedItems);
-  const progress = groceryData.totalItems ? (completed / groceryData.totalItems) * 100 : 0;
   const isPantry = (ingredient: string) => pantry.some(term => mentionsTerm(term, [ingredient]));
-  const shareCategories = categoryOrder.flatMap(category => {
-    const items = groceryData.categorized[category];
-    return items?.length ? [{
+  // Keep photos and notes keyed to the original grocery text, even after a partial purchase.
+  const rowMetadataKey = (row: ShoppingRow) => row.extraId ? (extras.find(extra => extra.id === row.extraId)?.text ?? row.ingredient).toLowerCase()
+    : (recipeRows.get(row.key)?.ingredient ?? row.ingredient).toLowerCase();
+  const shareRows = [
+    ...activeRows.map(row => ({ ...row, checked: false })),
+    ...purchasedRows.map(row => ({ ...row, checked: true, recipes: recipeRows.get(groceryMeasure(row.ingredient).identity)?.recipes ?? [] })),
+  ];
+  const shareCategories = categories.flatMap(category => {
+    const items = shareRows.filter(row => categoryOf(row) === category);
+    return items.length ? [{
       name: categoryTranslations[category] || category,
-      items: items.map(item => ({ text: item.ingredient, checked: checkedItems.has(item.key), pantry: isPantry(item.ingredient), note: notes[item.key] })),
+      items: items.map(row => ({ text: row.ingredient, checked: row.checked, pantry: isPantry(row.ingredient), note: notes[rowMetadataKey(row)] })),
     }] : [];
   });
-  // What a share link saves: the whole list as it is now, under the fixed category names.
-  const linkItems = categoryOrder.flatMap(category => (groceryData.categorized[category] ?? []).map(item => ({
-    category, text: item.ingredient.slice(0, 300), recipes: item.recipes.join(" · ").slice(0, 300),
-    checked: checkedItems.has(item.key), note: notes[item.key] || null,
-  })));
+  const linkItems = shareRows.map(row => ({
+    category: categoryOf(row) === "Manually Added" ? "Other" : categoryOf(row),
+    text: row.ingredient.slice(0, 300), recipes: row.recipes.join(" · ").slice(0, 300),
+    checked: row.checked, note: notes[rowMetadataKey(row)] || null,
+  }));
+  const rows = tab === "mine" ? activeRows.filter(row => row.extraId) : activeRows;
+  const priceRows = activeRows.filter(row => categoryOf(row) === priceCategory);
+  const priceOf = (row: ShoppingRow) => {
+    const preference = preferences.get(row.key);
+    return preference?.priceText === row.ingredient ? preference.priceCents : null;
+  };
+  const prices = priceRows.map(priceOf);
+  const priced = prices.filter((value): value is number => value !== null);
+  const unpricedCount = priceRows.length - priced.length;
+  const cents = /^\d+(?:[.,]\d{1,2})?$/.test(priceInput.trim()) ? Math.round(Number(priceInput.trim().replace(",", ".")) * 100) : NaN;
+  const partialMeasure = partial ? groceryMeasure(partial.ingredient) : null;
+  const displayUnit = partial ? parseIngredientLine(partial.ingredient).unit : null;
+  const rawAmount = parseQuantity(amount);
+  const parsedAmount = rawAmount === null ? null : rawAmount * (displayUnit === "kg" || displayUnit === "l" ? 1000 : 1);
+  const validAmount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount > 0 &&
+    partialMeasure?.quantity != null && parsedAmount <= partialMeasure.quantity;
+  const locale = lang === "he" ? "he-IL" : lang === "ru" ? "ru-RU" : "en-CA";
+  const money = (value: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "CAD", currencyDisplay: "code" }).format(value / 100);
+  const renderRow = (row: ShoppingRow) => {
+    const metadataKey = rowMetadataKey(row);
+    return (
+      <li className="grocery-item" key={row.key} data-testid={`grocery-item-${metadataKey}`}>
+        <label className="grocery-item-label">
+          <input type="checkbox" checked={false} onChange={() => markPurchased(row)}
+            aria-label={row.ingredient} />
+          <span className="grocery-checkmark" aria-hidden="true">
+            <svg viewBox="0 0 16 16"><path d="m3.5 8.2 3 3 6-6.3" /></svg>
+          </span>
+          <span className="min-w-0">
+            <span className="grocery-ingredient block">{row.ingredient}</span>
+            {row.recipes.length > 0 && <span className="block text-xs text-muted-foreground" data-testid="grocery-item-recipes">{row.recipes.join(" · ")}</span>}
+          </span>
+          {isPantry(row.ingredient) && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
+        </label>
+        <GroceryItemPicture item={row.ingredient} image={Object.prototype.hasOwnProperty.call(pictures, metadataKey) ? pictures[metadataKey] : row.image}
+          disabled={picturesLoading || picturesError} onSave={image => savePicture(metadataKey, image)} />
+        <GroceryNote item={row.ingredient} value={notes[metadataKey]} canEdit onSave={note => saveNote(metadataKey, note)} />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" className="min-h-11 min-w-11" aria-label={`${copy("actions")} · ${row.ingredient}`}>
+              <Ellipsis className="mx-auto size-4" aria-hidden="true" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {groceryMeasure(row.ingredient).quantity !== null && <DropdownMenuItem className="min-h-11" onSelect={() => {
+              setAmount("");
+              setPartial(row);
+            }}>{copy("purchase")}</DropdownMenuItem>}
+            <DropdownMenuItem className="min-h-11" onSelect={() => beginRemoval(row)} data-testid="button-remove-item">
+              {copy("remove")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </li>
+    );
+  };
 
   return (
     <main className="grocery-page">
       <div className="grocery-shell">
         <header className="grocery-heading">
           <div className="grocery-title-row">
-            <div>
-              <h1>{t("grocery.groceryList")}</h1>
-              <p className="grocery-subtitle">{t("grocery.items", {total:groceryData.totalItems, recipes:groceryData.usedRecipes.length})}</p>
-            </div>
-            <div className="grocery-count" aria-live="polite">
-              <strong>{completed} / {groceryData.totalItems}</strong> checked
-              {completed > 0 && (
-                <button className="grocery-reset" onClick={() => {
-                  // Undo restores exactly what was checked and expanded before.
-                  const before = { checked: checkedItems, expansion, note: completionNote };
-                  setCheckedItems(new Set()); setExpansion({}); setCompletionNote("");
-                  toast({ title: t("grocery.uncheckAll"), action: <ToastAction altText={t("undo")} data-testid="button-undo-uncheck"
-                    onClick={() => { setCheckedItems(before.checked); setExpansion(before.expansion); setCompletionNote(before.note); }}>{t("undo")}</ToastAction> });
-                }} data-testid="button-uncheck-all">
-                  {t("grocery.uncheckAll")}
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="grocery-progress" role="progressbar" aria-label="Shopping progress" aria-valuemin={0} aria-valuemax={groceryData.totalItems} aria-valuenow={completed}>
-            <span style={{ transform: `scaleX(${progress / 100})` }} />
-          </div>
-          <div className="grocery-heading-foot">
-            <button type="button" className="grocery-share-button" aria-expanded={addOpen} onClick={() => setAddOpen(open => !open)} data-testid="button-add-item">
-              <Plus aria-hidden="true" />{t("grocery.addItem")}
+            <h1>{t("grocery.groceryList")}</h1>
+            <button type="button" className="grocery-primary" aria-expanded={addOpen} onClick={() => setAddOpen(open => !open)} data-testid="button-add-item">
+              <Plus className="inline h-4 w-4" aria-hidden="true" /> {t("grocery.addItem")}
             </button>
-            <button type="button" className="grocery-share-button" onClick={() => setShareOpen(true)} data-testid="button-share-export">
+          </div>
+          <div className="grocery-heading-foot !justify-start">
+            {(["all", "mine"] as const).map(value => (
+              <button key={value} className={tab === value ? "grocery-primary" : "grocery-share-button"}
+                aria-pressed={tab === value} onClick={() => setTab(value)}>{copy(value)}</button>
+            ))}
+            <button type="button" className="grocery-share-button ms-auto" onClick={() => setShareOpen(true)} data-testid="button-share-export">
               <Share2 aria-hidden="true" />{t("grocery.shareExportTitle")}
             </button>
           </div>
-          {addOpen && addForm}
-          <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} linkItems={linkItems} pantryLabel={settingsText(lang, "pantryBadge")} />
+          {addOpen && <>
+            <GroceryAddItem onAdd={addExtra} />
+            <GroceryBulkAdd categories={categoryTranslations} onSave={addBulk}
+              existing={[...manualRows.map(row => ({ text: row.ingredient, id: row.extraId })), ...activeRows.filter(row => !row.extraId).map(row => ({ text: row.ingredient }))]} />
+          </>}
+          <p aria-live="polite" className="mt-3 text-sm font-medium">{copy("left")} · {rows.length}</p>
         </header>
-
+        <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} linkItems={linkItems} pantryLabel={settingsText(lang, "pantryBadge")} />
+        {shoppingError && <p role="alert">{t("grocery.changeFailed")} <button type="button" className="grocery-reset" onClick={() => void reloadShopping()}>{groceryProductText(lang, "retry")}</button></p>}
         {picturesError && <p role="alert">{groceryProductText(lang, "loadError")} <button type="button" className="grocery-reset" onClick={() => void reloadPictures()}>{groceryProductText(lang, "retry")}</button></p>}
-
-        {listComplete && (
-          <div className="grocery-success" role="status" data-testid="grocery-shopping-complete">
-            <strong>{t("grocery.shoppingComplete")}</strong>
-            <p>{t("grocery.shoppingCompleteBody")}</p>
-          </div>
+        {!rows.length && (
+          <p className="grocery-success" role="status" data-testid="grocery-shopping-complete">
+            {tab === "mine" ? copy("emptyMine") : purchasedRows.length ? copy("done") : t("grocery.noMeals")}
+            {tab === "all" && !purchasedRows.length && <button className="grocery-share-button mt-2" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>}
+          </p>
         )}
-
-        <div className="grocery-list" aria-label="Shopping list by category">
-          {categoryOrder.map(category => {
-            const items = groceryData.categorized[category];
-            if (!items?.length) return null;
-            const progressInfo = categoryProgress(items.map(item => item.key), checkedItems);
-            const collapsed = isCategoryCollapsed(progressInfo.complete, expansion[category]);
+        <div className="grocery-list">
+          {tab === "mine" ? <ul>{rows.map(renderRow)}</ul> : categories.map(category => {
+            const items = rows.filter(row => categoryOf(row) === category);
+            if (!items.length) return null;
+            const collapsed = expansion[category] === "closed";
+            const title = categoryTranslations[category];
             const slug = category.replace(/[^a-z]+/gi, "-").toLowerCase();
-            const dropEdge = dropTarget?.category === category ? dropTarget.edge : null;
             return (
-              <section
-                className={`grocery-category${progressInfo.complete ? " is-complete" : ""}${draggedCategory === category ? " is-dragging" : ""}${dropEdge ? ` is-drop-${dropEdge}` : ""}`}
-                key={category}
-                data-grocery-category={category}
-                data-complete={progressInfo.complete}
-                data-collapsed={collapsed}
-                aria-labelledby={`grocery-${category.replace(/[^a-z]+/gi, "-").toLowerCase()}`}
-              >
+              <section key={category} className="grocery-category" data-grocery-category={category}>
                 <header className="grocery-category-head">
-                  <button
-                    type="button"
-                    id={`grocery-toggle-${slug}`}
-                    className="grocery-category-toggle"
-                    aria-expanded={!collapsed}
-                    aria-controls={`grocery-items-${slug}`}
-                    data-testid={`category-toggle-${slug}`}
-                    onClick={() => setExpansion(previous => toggleCategory(previous, category, collapsed))}
-                  >
-                    <span className="grocery-category-title">
-                      {progressInfo.complete && (
-                        <svg className="grocery-complete-icon" viewBox="0 0 20 20" aria-hidden="true" data-testid={`category-complete-icon-${slug}`}>
-                          <circle cx="10" cy="10" r="10" /><path d="m5.8 10.4 2.6 2.6 5.2-5.6" />
-                        </svg>
-                      )}
-                      <span className="grocery-category-text">
-                        <h2 id={`grocery-${slug}`}>{categoryTranslations[category] || category}</h2>
-                        {progressInfo.complete && <span className="grocery-category-sub" data-testid={`category-sub-${slug}`}>{t("grocery.allCollected")}</span>}
-                      </span>
-                      {!progressInfo.complete && <span className="grocery-category-count">{items.length}</span>}
-                    </span>
-                    {progressInfo.complete && <span className="grocery-complete-badge" data-testid={`category-complete-${slug}`}>{t("grocery.complete")}</span>}
-                    <svg
-                      className={`grocery-category-chevron${collapsed ? " is-collapsed" : ""}`}
-                      viewBox="0 0 16 16"
-                      aria-hidden="true"
-                    >
-                      <path d="m4 6 4 4 4-4" />
-                    </svg>
+                  <button className="grocery-category-toggle" aria-expanded={!collapsed} data-testid={`category-toggle-${slug}`}
+                    onClick={() => setExpansion(previous => toggleCategory(previous, category, collapsed))}>
+                    <span>{title} · {items.length}</span><span aria-hidden="true">{collapsed ? "▾" : "▴"}</span>
                   </button>
-                  <button
-                    type="button"
-                    className="grocery-drag-handle"
-                    aria-label={`Reorder ${categoryTranslations[category] || category}; use arrow keys to move`} title="Drag to reorder"
-                    aria-describedby="grocery-reorder-help"
-                    onKeyDown={(event) => handleCategoryReorderKeyDown(event, category)}
-                    onPointerDown={(event) => handleCategoryPointerDown(event, category)}
-                    onPointerMove={handleCategoryPointerMove}
-                    onPointerUp={finishCategoryPointerDrag}
-                    onPointerCancel={cancelCategoryPointerDrag}
-                    onLostPointerCapture={cancelCategoryPointerDrag}
-                    data-testid={`category-drag-${category.toLowerCase().replace(/[^a-z]+/g, "-")}`}
-                  >
-                    <svg viewBox="0 0 16 16" aria-hidden="true">
-                      <circle cx="5" cy="4" r="1.1" />
-                      <circle cx="11" cy="4" r="1.1" />
-                      <circle cx="5" cy="8" r="1.1" />
-                      <circle cx="11" cy="8" r="1.1" />
-                      <circle cx="5" cy="12" r="1.1" />
-                      <circle cx="11" cy="12" r="1.1" />
-                    </svg>
-                  </button>
+                  <button className="grocery-share-button" onClick={() => setPriceCategory(category)} aria-label={`${copy("prices")} · ${title}`}>$</button>
                 </header>
-                <ul
-                  id={`grocery-items-${slug}`}
-                  hidden={collapsed}
-                >
-                  {items.map(item => {
-                    const checked = checkedItems.has(item.key);
-                    return (
-                      <li key={item.key} className={`grocery-item${checked ? " is-checked" : ""}`} data-testid={`grocery-item-${item.key}`}>
-                        <label className="grocery-item-label">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleItem(item.key, category)}
-                            aria-label={`Mark ${item.ingredient} ${checked ? "not collected" : "collected"}`}
-                          />
-                          <span className="grocery-checkmark" aria-hidden="true">
-                            <svg viewBox="0 0 16 16"><path d="m3.5 8.2 3 3 6-6.3" /></svg>
-                          </span>
-                          <span className="grocery-ingredient">{item.ingredient}</span>
-                          {isPantry(item.ingredient) &&
-                            <span className="ms-2 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
-                        </label>
-                        <GroceryItemPicture item={item.ingredient}
-                          image={Object.prototype.hasOwnProperty.call(pictures, item.key) ? pictures[item.key] : item.image}
-                          disabled={picturesLoading || picturesError} onSave={image => savePicture(item.key, image)} />
-                        {item.recipes.length > 0 && (
-                          <span className="grocery-recipes" data-testid="grocery-item-recipes">
-                            <span className="grocery-sr-only">Used in: </span>{item.recipes.join(" · ")}
-                          </span>
-                        )}
-                        {item.extraId && (
-                          <button type="button" className="grocery-remove" aria-label={t("grocery.removeItem", { item: item.ingredient })}
-                            onClick={() => void removeExtra(item.extraId!)} data-testid="button-remove-item">
-                            <X aria-hidden="true" />
-                          </button>
-                        )}
-                        <GroceryNote item={item.ingredient} value={notes[item.key]} canEdit onSave={note => saveNote(item.key, note)} />
-                      </li>
-                    );
-                  })}
-                </ul>
+                {!collapsed && <ul>{items.map(renderRow)}</ul>}
               </section>
             );
           })}
+          {tab === "all" && purchasedRows.length > 0 && (
+            <details className="grocery-category">
+              <summary className="min-h-11 cursor-pointer p-3">{copy("checked")} ({purchasedRows.length})</summary>
+              <ul>{purchasedRows.map(row => (
+                <li className="grocery-item" key={row.key}>
+                  <label className="flex min-h-11 items-center gap-3">
+                    <input type="checkbox" checked onChange={() => uncheck(row)} /> {row.ingredient}
+                  </label>
+                </li>
+              ))}</ul>
+              <button className="grocery-share-button m-3" onClick={() => {
+                const before = [...checkedItems];
+                setCheckedItems(new Set());
+                toast({ title: t("grocery.uncheckAll"), action: <ToastAction altText={t("undo")}
+                  onClick={() => setCheckedItems(previous => new Set([...previous, ...before]))}>{t("undo")}</ToastAction> });
+              }}>{t("grocery.uncheckAll")}</button>
+            </details>
+          )}
         </div>
-        <span className="grocery-sr-only" id="grocery-reorder-help">Drag this handle to move the category. Keyboard: use the arrow keys to move it one position.</span>
-        <span className="grocery-sr-only" aria-live="polite" aria-atomic="true">{reorderAnnouncement}</span>
-        <span className="grocery-sr-only" role="status" aria-live="polite" aria-atomic="true">{completionNote}</span>
-        
       </div>
+
+      <Dialog open={priceCategory !== null} onOpenChange={open => { if (!open) setPriceCategory(null); }}>
+        <DialogContent className="max-h-[85dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg">
+          <DialogTitle>{priceCategory && categoryTranslations[priceCategory]}</DialogTitle>
+          <DialogDescription>{priced.length
+            ? `${copy("subtotal")} · ${money(priced.reduce((sum, value) => sum + value, 0))}`
+            : copy("unavailable")}</DialogDescription>
+          {!!priced.length && unpricedCount > 0 && <p className="text-sm text-muted-foreground">{copy("unpriced")} · {unpricedCount}</p>}
+          <ul className="divide-y">
+            {priceRows.map(row => {
+              const price = priceOf(row);
+              return <li key={row.key} className="py-2">
+                <div className="flex justify-between gap-2">
+                  <span>{row.ingredient}</span>
+                  <span className="shrink-0 text-sm">{price === null ? copy("unpriced") : money(price)}</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button className="grocery-share-button" onClick={() => {
+                    setPriceInput(price === null ? "" : (price / 100).toFixed(2));
+                    setPriceEditor(row);
+                    setPriceCategory(null);
+                  }}>{copy("setPrice")}</button>
+                  <button className="grocery-share-button" onClick={() => beginRemoval(row)}>{copy("remove")}</button>
+                </div>
+              </li>;
+            })}
+          </ul>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={priceEditor !== null} onOpenChange={open => { if (!open && !busy) setPriceEditor(null); }}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
+          <DialogTitle>{copy("setPrice")}</DialogTitle>
+          <DialogDescription>{priceEditor?.ingredient} · CAD</DialogDescription>
+          <form onSubmit={async event => {
+            event.preventDefault();
+            if (busy || !priceEditor || !Number.isFinite(cents) || cents > 10000000) return;
+            setBusy(true);
+            try {
+              await patchShopping({ key: priceEditor.key, price: { cents, text: priceEditor.ingredient } });
+              setPriceCategory(categoryOf(priceEditor));
+              setPriceEditor(null);
+            } catch { toast({ title: t("grocery.changeFailed"), variant: "destructive" }); }
+            finally { setBusy(false); }
+          }}>
+            <label className="block text-sm">CAD
+              <input className="my-2 block min-h-11 w-full rounded border bg-background px-3" inputMode="decimal"
+                value={priceInput} onChange={event => setPriceInput(event.target.value)} />
+            </label>
+            <button className="grocery-primary disabled:opacity-50" disabled={busy || !Number.isFinite(cents) || cents > 10000000}>{copy("save")}</button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={pendingRemoval !== null} onOpenChange={open => { if (!open && !busy) setPendingRemoval(null); }}>
+        <DialogContent className="max-h-[85dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg">
+          <DialogTitle>{copy("removeTitle")} {pendingRemoval?.ingredient}?</DialogTitle>
+          <DialogDescription>{affected.length ? copy("protein") : copy("only")}</DialogDescription>
+          {affected.length > 0 && <ul>
+            {affected.map(a => {
+              const day = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 4 + a.startDay)));
+              const key = assignmentKey(a);
+              return <li key={key}><label className="flex min-h-11 items-center gap-2">
+                <input type="checkbox" checked={mealKeys.has(key)} onChange={event => {
+                  const checked = event.target.checked;
+                  setMealKeys(previous => checked ? new Set([...previous, key]) : new Set([...previous].filter(value => value !== key)));
+                }} />
+                <span>{recipes.find(recipe => recipe.id === a.recipeId)?.title} · {day} · {t(`meals.${a.mealType.toLowerCase()}`)}</span>
+              </label></li>;
+            })}
+          </ul>}
+          {([["drops", preview.dropped], ["reduced", preview.reduced], ["kept", preview.kept]] as const).map(([key, items]) =>
+            items.length > 0 && <details key={key}><summary className="min-h-11 cursor-pointer py-2">{copy(key)} · {items.length}</summary>
+              <ul className="list-disc ps-5 text-sm">{items.map((item, index) => <li key={index}>{item}</li>)}</ul>
+            </details>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <button className="grocery-primary" disabled={busy} onClick={() => void confirmRemoval(false)}>{affected.length ? copy("only") : copy("remove")}</button>
+            {affected.length > 0 && <button className="grocery-share-button disabled:opacity-50" disabled={!selectedMeals.length || busy}
+              onClick={() => void confirmRemoval(true)}>{copy("meals")}</button>}
+            <button className="grocery-share-button" disabled={busy} onClick={() => setPendingRemoval(null)}>{t("cancel")}</button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={partial !== null} onOpenChange={open => { if (!open) setPartial(null); }}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
+          <DialogTitle>{copy("purchase")}</DialogTitle>
+          <DialogDescription>{partial?.ingredient}</DialogDescription>
+          <form onSubmit={event => {
+            event.preventDefault();
+            if (partial && validAmount && parsedAmount !== null) { markPurchased(partial, parsedAmount); setPartial(null); }
+          }}>
+            <label className="block text-sm">{copy("quantity")} {displayUnit}
+              <input className="my-2 block min-h-11 w-full rounded border bg-background px-3" inputMode="decimal"
+                value={amount} onChange={event => setAmount(event.target.value)} />
+            </label>
+            <button className="grocery-primary disabled:opacity-50" disabled={!validAmount}>{copy("save")}</button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

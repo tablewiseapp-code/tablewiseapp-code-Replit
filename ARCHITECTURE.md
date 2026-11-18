@@ -71,8 +71,9 @@ Tables are defined in `shared/schema.ts`.
 | `cooking_sessions` | "I made it", rating, notes | per owner |
 | `cooking_photos` | JPEG and thumbnail as `bytea` | per owner |
 | `household_products` | seeded household product suggestions, translated names and aliases | global |
-| `grocery_extras` | products a person added by hand, with an optional resized JPEG reference photo | per owner |
+| `grocery_extras` | products a person added by hand, with an optional category and resized JPEG reference photo | per owner |
 | `grocery_item_photos` | reference pictures on any grocery row, including recipe ingredients; a null image hides a legacy extra picture | per owner |
+| `grocery_shopping_items` | grocery item exclusions and quantity-specific CAD price estimates | per owner |
 | `grocery_notes` | a note on an item of the owner's own grocery list | per owner |
 | `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
 | `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |
@@ -83,7 +84,7 @@ Tables are defined in `shared/schema.ts`.
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
-The Week is stored in `week_plans`. The browser keeps a synchronous copy in `localStorage` (`weeklyMealsState`, `week_locked_v1`): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Browser `localStorage` alone still holds grocery progress, My Ideas, Basic Settings and planner filter state. This is legacy, not a pattern to copy.
+The Week is stored in `week_plans`. The browser keeps a synchronous copy in `localStorage` (`weeklyMealsState`, `week_locked_v1`): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Browser `localStorage` alone still holds grocery progress (including recorded purchase quantities), My Ideas, Basic Settings and planner filter state. This is legacy, not a pattern to copy.
 
 ## Identity and access
 

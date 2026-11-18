@@ -156,15 +156,30 @@ export const householdProducts = pgTable("household_products", {
 // Groceries: products the owner added by hand ("I'm out of onion"). Private to the owner, like cooking sessions.
 export const groceryExtras = pgTable("grocery_extras", {
   image: text("image"),
+  category: text("category"),
   id: uuid("id").primaryKey().defaultRandom(),
   ownerId: varchar("owner_id", { length: 64 }).notNull(),
   text: text("text").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, table => [
   // Plain columns on purpose: drizzle-kit push re-creates expression indexes on every start. The store matches letter case itself.
-  uniqueIndex("grocery_extras_owner_text").on(table.ownerId, table.text),
+  index("grocery_extras_owner_text").on(table.ownerId, table.text),
   check("grocery_extras_image", sql`${table.image} IS NULL OR length(${table.image}) <= 280023`),
   check("grocery_extras_text", sql`length(${table.text}) BETWEEN 1 AND 80`),
+]);
+
+export const groceryShoppingItems = pgTable("grocery_shopping_items", {
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  itemKey: text("item_key").notNull(),
+  skipped: boolean("skipped").notNull().default(false),
+  priceCents: integer("price_cents"),
+  priceText: text("price_text"),
+}, table => [
+  primaryKey({ columns: [table.ownerId, table.itemKey] }),
+  check("grocery_shopping_items_price_check", sql`
+    (${table.priceCents} IS NULL AND ${table.priceText} IS NULL) OR
+    (${table.priceCents} IS NOT NULL AND ${table.priceCents} BETWEEN 0 AND 10000000 AND ${table.priceText} IS NOT NULL)
+  `),
 ]);
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });

@@ -1,0 +1,46 @@
+import type { Language } from "./i18n";
+
+const copy = {
+  actions: ["Item actions", "Действия с товаром", "פעולות לפריט"],
+  loadFailed: ["We couldn’t load your list.", "Не удалось загрузить список.", "לא הצלחנו לטעון את הרשימה."],
+  paste: ["Paste a list", "Вставить список", "הדבקת רשימה"],
+  onePerLine: ["One product per line", "Один товар на строку", "מוצר אחד בכל שורה"],
+  preview: ["Preview items", "Проверить товары", "תצוגה מקדימה"],
+  duplicate: ["Matching item", "Похожий товар", "פריט תואם"],
+  keepBoth: ["Keep both", "Оставить оба", "שמירת שני הפריטים"],
+  update: ["Update existing item", "Обновить товар", "עדכון הפריט הקיים"],
+  skip: ["Skip", "Пропустить", "דילוג"],
+  category: ["Category", "Категория", "קטגוריה"],
+  item: ["Item", "Товар", "פריט"],
+  bulkLimit: ["Enter up to 50 items, with up to 80 characters each.", "До 50 товаров, не более 80 символов на товар.", "עד 50 פריטים, עד 80 תווים לפריט."],
+  subtotal: ["Estimated subtotal", "Примерная сумма", "סכום ביניים משוער"],
+  setPrice: ["Set estimated price", "Указать примерную цену", "הגדרת מחיר משוער"],
+  all: ["All Items", "Все товары", "כל הפריטים"],
+  mine: ["My Items", "Мои товары", "הפריטים שלי"],
+  left: ["Items left", "Осталось купить", "פריטים שנותרו"],
+  checked: ["Checked items", "Купленные товары", "פריטים שסומנו"],
+  uncategorized: ["Manually Added", "Добавлено вручную", "נוספו ידנית"],
+  emptyMine: ["Add groceries or household products to your list.", "Добавьте продукты или товары для дома.", "הוסיפו מצרכים או מוצרים לבית."],
+  prices: ["Estimated cost", "Примерная стоимость", "עלות משוערת"],
+  unavailable: ["Prices unavailable", "Цены недоступны", "אין מחירים זמינים"],
+  unpriced: ["Unpriced", "Без цены", "ללא מחיר"],
+  remove: ["Remove item", "Удалить товар", "הסרת פריט"],
+  removeTitle: ["Remove", "Удалить", "להסיר"],
+  protein: ["This item is the main protein for these meals. Choose which meals to remove from Week.", "Это основной источник белка для этих блюд. Выберите, какие блюда убрать из плана.", "זהו מקור החלבון העיקרי בארוחות האלה. בחרו אילו ארוחות להסיר מהשבוע."],
+  only: ["Remove item only", "Удалить только товар", "הסרת הפריט בלבד"],
+  meals: ["Remove item and selected meals", "Удалить товар и выбранные блюда", "הסרת הפריט והארוחות שנבחרו"],
+  removed: ["Meals removed", "Блюда удалены", "הארוחות הוסרו"],
+  drops: ["Items removed", "Товары будут удалены", "פריטים יוסרו"],
+  reduced: ["Quantities reduced", "Количество будет уменьшено", "כמויות יופחתו"],
+  kept: ["Purchased items kept", "Купленные товары сохранятся", "פריטים שנקנו יישמרו"],
+  conflict: ["The week changed. Review your selection and try again.", "План изменился. Проверьте выбор и повторите попытку.", "השבוע השתנה. בדקו את הבחירה ונסו שוב."],
+  undoConflict: ["An edited meal slot prevents Undo.", "Нельзя отменить: место в плане уже занято.", "לא ניתן לבטל כי אחד ממועדי הארוחות כבר תפוס."],
+  done: ["All items checked", "Все товары куплены", "כל הפריטים סומנו"],
+  purchase: ["Mark quantity purchased", "Указать купленное количество", "סימון כמות שנקנתה"],
+  quantity: ["Quantity", "Количество", "כמות"],
+  save: ["Save", "Сохранить", "שמירה"],
+} as const;
+
+export function shoppingCopy(lang: Language, key: keyof typeof copy) {
+  return copy[key][lang === "ru" ? 1 : lang === "he" ? 2 : 0];
+}
