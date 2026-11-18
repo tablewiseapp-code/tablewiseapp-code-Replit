@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { fetchRecipes, type Recipe } from "@/lib/storage";
+import { useQuery } from "@tanstack/react-query";
+import { fetchRecipes, myRecipesKey, type MyRecipes, type Recipe } from "@/lib/storage";
+import { RecipeLikeButton } from "@/components/recipe-like-button";
 import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { RecipeCreditLine } from "@/components/recipe-credit";
@@ -52,6 +54,16 @@ export default function RecipeList() {
       requestIdRef.current += 1;
     };
   }, [loadRecipes]);
+
+  // Liked and imported come first, newest first; every recipe stays under "All recipes" too.
+  const mine = useQuery<MyRecipes>({ queryKey: myRecipesKey }).data;
+  const byId = new Map(recipes.map(recipe => [recipe.id, recipe]));
+  const pick = (ids: string[] = []) => ids.map(id => byId.get(id)).filter((recipe): recipe is Recipe => !!recipe);
+  const sections = [
+    { key: "liked", recipes: pick(mine?.liked) },
+    { key: "imported", recipes: pick(mine?.imported) },
+    { key: "all", recipes },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,28 +126,14 @@ export default function RecipeList() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recipes.map((recipe) => (
-              <Link
-                key={recipe.id}
-                href={`/recipe/${recipe.id}`}
-                className="card flex flex-col p-4 transition-colors hover:border-input"
-                data-testid={`card-recipe-${recipe.id}`}
-              >
-                {recipe.image && (
-                  <img src={recipe.image} alt="" loading="lazy" decoding="async"
-                    className="image-fade-in mb-3 aspect-[16/9] w-full rounded-lg object-cover"
-                    onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
-                    onError={(e) => { e.currentTarget.hidden = true; }}
-                    data-testid={`img-recipe-${recipe.id}`} />
-                )}
-                <h2 className="text-base font-semibold leading-snug text-foreground break-words" data-testid={`text-recipe-title-${recipe.id}`}>
-                  {recipe.title}
+          <div className="space-y-10">
+            {sections.filter(section => section.recipes.length > 0).map(section => (
+              <section key={section.key} aria-labelledby={`recipes-${section.key}`} data-testid={`section-recipes-${section.key}`}>
+                <h2 id={`recipes-${section.key}`} className="mb-3 text-sm font-semibold text-muted-foreground">
+                  {t(`recipes.${section.key}`)} <span className="font-normal">({section.recipes.length})</span>
                 </h2>
-                <RecipeMeta recipe={recipe} className="mt-2" testId={`text-recipe-info-${recipe.id}`} />
-                <div className="mt-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
-                <div className="mt-3"><DietaryTags tags={recipe.tags} testId={`recipe-tags-${recipe.id}`} /></div>
-              </Link>
+                <RecipeGrid recipes={section.recipes} />
+              </section>
             ))}
           </div>
         )}
@@ -144,3 +142,34 @@ export default function RecipeList() {
   );
 }
 
+
+function RecipeGrid({ recipes }: { recipes: Recipe[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {recipes.map((recipe) => (
+        <div key={recipe.id} className="relative">
+          <Link
+            href={`/recipe/${recipe.id}`}
+            className="card flex h-full flex-col p-4 pe-14 transition-colors hover:border-input"
+            data-testid={`card-recipe-${recipe.id}`}
+          >
+            {recipe.image && (
+              <img src={recipe.image} alt="" loading="lazy" decoding="async"
+                className="image-fade-in mb-3 aspect-[16/9] w-full rounded-lg object-cover"
+                onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
+                onError={(e) => { e.currentTarget.hidden = true; }}
+                data-testid={`img-recipe-${recipe.id}`} />
+            )}
+            <h3 className="text-base font-semibold leading-snug text-foreground break-words" data-testid={`text-recipe-title-${recipe.id}`}>
+              {recipe.title}
+            </h3>
+            <RecipeMeta recipe={recipe} className="mt-2" testId={`text-recipe-info-${recipe.id}`} />
+            <div className="mt-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
+            <div className="mt-3"><DietaryTags tags={recipe.tags} testId={`recipe-tags-${recipe.id}`} /></div>
+          </Link>
+          <div className="absolute end-2 top-2"><RecipeLikeButton recipeId={recipe.id} /></div>
+        </div>
+      ))}
+    </div>
+  );
+}

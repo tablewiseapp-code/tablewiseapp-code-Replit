@@ -39,8 +39,8 @@ assert.deepEqual(names(groups.upcoming), ["upcoming high", "upcoming soon", "upc
 assert.deepEqual(names(groups.today), ["today high", "today normal", "today low"]);
 assert.deepEqual(names(groups.overdue), ["overdue"]);
 assert.deepEqual(names(groups.completed), ["done last", "done first"], "completed are not in open sections");
-assert.deepEqual(names(homePreview(tasks, today)), ["overdue", "today high", "today normal"]);
-assert.deepEqual(homePreview([task("anytime")], today), [], "Home shows only Overdue and Today");
+assert.deepEqual(names(homePreview(tasks, today)).slice(0, 3), ["overdue", "today high", "today normal"]);
+assert.deepEqual(names(homePreview([task("anytime"), task("soon", { dueDate: nextDay(today) })], today)), ["soon", "anytime"], "Home shows every open task: Upcoming before Anytime");
 
 const valid = { name: "  Fold laundry ", dueDate: null, priority: "normal", image: null, completedAt: null };
 assert.equal(homeTaskInput.parse(valid).name, "Fold laundry");

@@ -147,10 +147,16 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   // server only ever stores its SHA-256. The signed-in operator is the single owner "operator".
   const readCookie = (req: Request, name: string) => req.get("cookie")?.split(";").map(v => v.trim())
     .find(v => v.startsWith(`${name}=`))?.slice(name.length + 1);
+  // A signed-in account (res.locals.accountOwner, set by server/accounts.ts) replaces the guest owner.
+  const guestOwner = (req: Request) => {
+    const cookie = readCookie(req, ownerCookie);
+    return cookie && /^[a-f0-9]{64}$/.test(cookie) ? digest(cookie).toString("hex") : undefined;
+  };
   const owner = (req: Request, res: Response, mint: boolean): string | undefined => {
     if (authorized(req)) return "operator";
-    const cookie = readCookie(req, ownerCookie);
-    if (cookie && /^[a-f0-9]{64}$/.test(cookie)) return digest(cookie).toString("hex");
+    if (res.locals.accountOwner) return res.locals.accountOwner as string;
+    const guest = guestOwner(req);
+    if (guest) return guest;
     if (!mint) return undefined;
     const fresh = randomBytes(32).toString("hex");
     res.append("Set-Cookie", `${ownerCookie}=${fresh}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=31536000${config.production ? "; Secure" : ""}`);
@@ -164,6 +170,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     (req.method === "PUT" && /^\/grocery-item-photos\/?$/.test(req.path)) ||
     (["PUT", "DELETE"].includes(req.method) && /^\/home-tasks\/[^/]+\/?$/.test(req.path)) ||
     (req.method === "PUT" && /^\/week-plan\/?$/.test(req.path)) ||
+    (["PUT", "DELETE"].includes(req.method) && /^\/recipes\/[^/]+\/like\/?$/.test(req.path)) ||
     (["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
       /^\/(?:shared-lists(?:\/[^/]+(?:\/items(?:\/[^/]+)?)?)?|grocery-notes|grocery-shopping)\/?$/.test(req.path));
   const isEventIngest =(req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
@@ -189,8 +196,15 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       res.locals.publicAI = true;
       return next();
     }
-    // Manual recipe import ("Type or paste") is open to every visitor during the pilot (product owner, 2026-11-17).
-    // Same-origin only and budgeted; editing and deleting recipes stay operator-only.
+    // Accounts: sign in (a new email creates the account) and sign out. Same-origin only and budgeted;
+    // wrong passwords have a per-email limit in server/accounts.ts.
+    if (req.method === "POST" && /^\/auth\/(?:sign-in|sign-out)\/?$/.test(req.path)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (!consume(res, "sign-in:minute", 30, 60_000) || !consume(res, "sign-in:day", 2000, 86400_000)) return;
+      return next();
+    }
+    // Manual recipe import ("Type or paste"): signed-in accounts only; the route turns guests away (product owner,
+    // 2026-11-18). Same-origin only and budgeted; editing and deleting recipes stay operator-only.
     if (req.method === "POST" && !authorized(req) && /^\/import-recipe\/?$/.test(req.path)) {
       if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
       if (!consume(res, "public-imports:minute", 10, 60_000) || !consume(res, "public-imports:day", 200, 86400_000)) return;
@@ -261,7 +275,10 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     res.locals.releaseAI = () => { if (!released) { activeAI--; released = true; } };
     next();
   }));
-  return { aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, owner, config };
+  const cookie = (name: string, value: string, maxAge: number) =>
+    `${name}=${value}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${config.production ? "; Secure" : ""}`;
+  const forgetGuest = (res: Response) => res.append("Set-Cookie", cookie(ownerCookie, "", 0));
+  return { aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, owner, guestOwner, forgetGuest, readCookie, cookie, config };
 }
 
 export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {

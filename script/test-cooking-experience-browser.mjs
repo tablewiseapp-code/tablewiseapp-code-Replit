@@ -23,6 +23,7 @@ try {
   let n = 0; const waiting = {};
   ws.onmessage = m => { const d = JSON.parse(m.data); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
   ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r.result.value; };
   const el = (id, scope = "document") => `${scope}.querySelector('[data-testid="${id}"]')`;
   const latest = el("cooking-session-latest");

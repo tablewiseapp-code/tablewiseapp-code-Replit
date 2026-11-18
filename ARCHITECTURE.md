@@ -1,11 +1,11 @@
 # TableWise — Architecture
 
 > Source of truth for how the system is built. Product meaning and vocabulary live in [docs/PRODUCT.md](docs/PRODUCT.md).
-> Last reviewed: 2026-11-17. Feature-level detail lives in the other files under `docs/`.
+> Last reviewed: 2026-11-18. Feature-level detail lives in the other files under `docs/`.
 
 ## System in one paragraph
 
-One Node.js process serves both a REST API and a React single-page app on port 5000. Data lives in Postgres 16 through Drizzle ORM. There are no user accounts: a visitor is an anonymous **owner** cookie, and a single **operator** token unlocks admin actions. All AI calls go to OpenAI and are gated by environment flags.
+One Node.js process serves both a REST API and a React single-page app on port 5000. Data lives in Postgres 16 through Drizzle ORM. A visitor's private data belongs to an **owner**: an anonymous cookie for a guest, or the owner kept by an email and password **account**. A single **operator** token unlocks admin actions. All AI calls go to OpenAI and are gated by environment flags.
 
 ## Stack
 
@@ -34,6 +34,7 @@ server/
   security.ts          operator sessions, owner cookie, access gates, rate limits, AI budget
   storage.ts           data access (Drizzle)
   request-schemas.ts   Zod schemas for request bodies
+  accounts.ts          sign in, sign out, sessions; sets the request's owner for a signed-in account
   recipe-*.ts, cooking-history.ts, grocery-extras.ts, home-tasks.ts, week-plans.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
 shared/                types and schemas used by both sides; schema.ts is the database schema
 migrations/            reviewed SQL, applied by hand
@@ -46,6 +47,7 @@ docs/                  product definition and per-feature notes
 
 | Route | Page | Purpose |
 |---|---|---|
+| (first visit) | `pages/sign-in.tsx` | shown in place of any page until the person signs in or picks "Continue as guest" (remembered in `localStorage` `tablewise_guest_v1`); never on `/shared/:token` |
 | `/` | `pages/home.tsx` | Home: today's meals and what is left to buy |
 | `/plan` | redirect | → `/meals` |
 | `/home-tasks` | `pages/home-tasks.tsx` | Home Tasks |
@@ -81,6 +83,8 @@ Tables are defined in `shared/schema.ts`.
 | `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
 | `household_tasks` | seeded suggested task names in three languages | global |
 | `week_plans` | the Week: shortlisted recipe ids, slot assignments and the lock; one row per owner, replaced whole on each save (`GET`/`PUT /api/week-plan`) | per owner |
+| `accounts` | email (lowercase, unique), scrypt `password_hash` (nullable, for a future Google-only account), the `owner_id` every owner-scoped table uses | per account |
+| `account_sessions` | SHA-256 of a session cookie, its account and expiry (30 days) | per account |
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
@@ -89,6 +93,8 @@ The Week is stored in `week_plans`. The browser keeps a synchronous copy in `loc
 ## Identity and access
 
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
+- **Account:** `POST /api/auth/sign-in` (same-origin, budgeted, 10 attempts per email per 15 minutes) finds the account by email or, for a new email, creates it with the guest's owner and drops the guest cookie. It sets a `tablewise_session` HttpOnly cookie; only its SHA-256 is stored. Middleware in `server/accounts.ts` puts the session's owner in `res.locals.accountOwner`, and `owner()` prefers it over the guest cookie, so feature routes need no change. `POST /api/auth/sign-out` ends that session; `GET /api/auth/me` returns the email or null. On sign-in and sign-out the client drops the Week's browser copy and reloads.
+- **Google sign-in (not built):** add a `google_sub` column and two routes, one redirecting to Google and one callback that verifies the ID token, finds or creates the account by verified email, then starts a session the same way. The callback is a cross-site redirect, so the session cookie would need `SameSite=Lax`.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
 - **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).

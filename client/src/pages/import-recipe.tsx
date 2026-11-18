@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { createRecipe } from "@/lib/storage";
+import { setGuestChoice, useAccountCopy } from "@/lib/account-copy";
 import { useI18n, type Language } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { timingContext, timingContextSchema, stepAnalysisSchema, type StepAnalysis, type TimingContext } from "@shared/step-timing";
@@ -148,7 +149,12 @@ export default function ImportRecipe() {
   const stepLines = lines(steps);
   const [tried, setTried] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const aiEnabled = useQuery<{ aiEnabled?: boolean }>({ queryKey: ["/api/operator/session"] }).data?.aiEnabled === true;
+  const operatorSession = useQuery<{ aiEnabled?: boolean; operator?: boolean }>({ queryKey: ["/api/operator/session"] }).data;
+  const aiEnabled = operatorSession?.aiEnabled === true;
+  // Guests see the page but must sign in to save; the server enforces the same rule.
+  const me = useQuery<{ email: string | null }>({ queryKey: ["/api/auth/me"] }).data;
+  const guest = me?.email === null && operatorSession?.operator !== true;
+  const accountCopy = useAccountCopy();
   const fieldErrors = {
     title: !title.trim() ? t("import.nameRequired") : null,
     ingredients: parsedIngredients.length === 0 ? t("import.ingredientsRequired") : null,
@@ -663,9 +669,10 @@ export default function ImportRecipe() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || analyzing || isProcessing || isRecording}
+              disabled={guest || isSaving || analyzing || isProcessing || isRecording}
               className="btn btn-primary w-full sm:w-auto"
               aria-busy={isSaving}
+              aria-describedby={guest ? "import-sign-in-note" : undefined}
               data-testid="button-save"
             >
               {isSaving ? t("import.saving") : t("import.saveRecipe")}
@@ -681,6 +688,13 @@ export default function ImportRecipe() {
           </div>
           {saveError && <p role="alert" className="text-sm text-destructive" data-testid="save-error">{saveError}</p>}
         </fieldset>
+        {guest && (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p id="import-sign-in-note" className="text-sm text-muted-foreground" data-testid="text-sign-in-to-import">{t("import.signInToImport")}</p>
+            <button type="button" onClick={() => { setGuestChoice(false); window.location.assign("/"); }}
+              className="btn btn-secondary" data-testid="button-sign-in-to-import">{accountCopy("submit")}</button>
+          </div>
+        )}
 
         <div className="card mt-12 p-5">
           <h2 className="mb-3 text-base font-semibold text-foreground">{t("import.howItWorks")}</h2>

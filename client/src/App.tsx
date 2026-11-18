@@ -21,6 +21,8 @@ import MyIdeas from "@/pages/my-ideas";
 import BasicSettings from "@/pages/basic-settings";
 import SharedGrocery from "@/pages/shared-grocery";
 import HomeTasks from "@/pages/home-tasks";
+import SignIn from "@/pages/sign-in";
+import { choseGuest } from "@/lib/account-copy";
 
 function GroceryEntry() {
   return new URLSearchParams(useSearch()).get("source") === "mvp" ? <MvpGrocery /> : <GroceryList />;
@@ -52,16 +54,24 @@ function Router() {
 
 function App() {
   // Pages read the Week synchronously, so load the server copy first. Offline or failing: use the browser copy.
-  const [planReady, setPlanReady] = useState(false);
-  useEffect(() => { syncWeekPlan().catch(() => undefined).finally(() => setPlanReady(true)); }, []);
+  // First visit: offer sign-in or "Continue as guest" (remembered). Share links open without it.
+  const [ready, setReady] = useState(false);
+  const [askSignIn, setAskSignIn] = useState(false);
+  useEffect(() => {
+    const ask = choseGuest() || window.location.pathname.startsWith("/shared/") ? undefined
+      : fetch("/api/auth/me").then(r => r.ok ? r.json() : {}).then((me: { email?: string | null }) => setAskSignIn(me.email === null)).catch(() => undefined);
+    Promise.all([syncWeekPlan().catch(() => undefined), ask]).finally(() => setReady(true));
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nProvider>
           <RecipeDisplayProvider>
           <Toaster />
-          <AppNav />
-          {planReady && <Router />}
+          {ready && (askSignIn ? <SignIn onGuest={() => setAskSignIn(false)} /> : <>
+            <AppNav />
+            <Router />
+          </>)}
           </RecipeDisplayProvider>
         </I18nProvider>
       </TooltipProvider>

@@ -73,3 +73,11 @@ export async function deleteRecipe(id: string): Promise<void> {
   const res = await fetch(`/api/recipes/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete recipe");
 }
+
+export type MyRecipes = { liked: string[]; imported: string[] };
+export const myRecipesKey = ["/api/my-recipes"];
+
+export async function setRecipeLiked(id: string, liked: boolean): Promise<void> {
+  const res = await fetch(`/api/recipes/${encodeURIComponent(id)}/like`, { method: liked ? "PUT" : "DELETE" });
+  if (!res.ok) throw new Error("Failed to save like");
+}

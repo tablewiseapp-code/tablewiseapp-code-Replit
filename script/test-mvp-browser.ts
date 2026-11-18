@@ -96,6 +96,7 @@ async function main() {
   }
   try {
     await call("Page.enable"); await call("Runtime.enable");
+    await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     if (process.argv.includes("--planner-return-only")) {
       // Browser-only API mocks: this branch never sends mutations or analytics

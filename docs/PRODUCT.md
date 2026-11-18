@@ -15,7 +15,7 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 
 ## Stage and hypothesis
 
-- **Stage:** gated pilot. No customer accounts, no payments, no marketing site.
+- **Stage:** gated pilot. Optional email and password accounts (guests need none), no payments, no marketing site.
 - **Hypothesis under test:** people find the plan → groceries → cook loop valuable enough to come back and plan another week.
 - **Measure of success:** `next_week_plan_created` following a `plan_completed` for the same person.
 
@@ -28,9 +28,11 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 
 **Home** (`/`) is the landing page: today's meals from the Week and how many grocery items are left, with links into each step.
 
+**Sign in** (first visit, at any page except a share link): email and password, or "Continue as guest". There is no separate sign-up: the first sign-in with a new email creates the account with the password typed, and the guest's data becomes the account's. Basic Settings shows who is signed in, with Sign out (product owner, 2026-11-18).
+
 Supporting features: My Ideas (AI recipe ideas), Import (typed or dictated recipe), My Basic Settings (household, allergies, devices, budget, pantry).
 
-**Home Tasks** (`/home-tasks`, previewed on Home at `/`): add a household task by name in seconds, with suggestions from a seeded catalog, an optional due date, a priority (High, Normal, Low) and one optional photo. Open tasks are grouped Overdue, Today, Upcoming, Anytime; completed tasks are collapsed. Complete, Move to tomorrow and Delete all offer Undo. Home shows up to three Overdue or Today tasks. Not in this release: recurring tasks, reminders, assigning to family members, automatic expiry, calendar integration.
+**Home Tasks** (`/home-tasks`, previewed on Home at `/`): add a household task by name in seconds, with suggestions from a seeded catalog, an optional due date, a priority (High, Normal, Low) and one optional photo. Open tasks are grouped Overdue, Today, Upcoming, Anytime; completed tasks are collapsed. Complete, Move to tomorrow and Delete all offer Undo. Home shows every open task in the same order (changed by the product owner, 2026-11-18). Not in this release: recurring tasks, reminders, assigning to family members, automatic expiry, calendar integration.
 
 ## Vocabulary
 
@@ -38,7 +40,7 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 
 | Term | Meaning |
 |---|---|
-| **Home** | The landing page at `/`. Shows today's meals, the grocery count and up to three Overdue or Today Home tasks. Today means today's weekday in the Week, because the plan is not dated. |
+| **Home** | The landing page at `/`. Shows today's meals, the grocery count and every open Home task. Today means today's weekday in the Week, because the plan is not dated. |
 | **Home task** | One private household to-do: name, optional due date, priority, optional photo, created and completed times. The nav label is "Home Tasks" ("Tasks" in the phone bottom bar). |
 | **Week** | The plan for one calendar week. The nav label is "Week"; the route is `/meals`. |
 | **Catalog** | The shared recipe collection every visitor sees. The UI calls it "Recipes". It is not personal. |
@@ -47,7 +49,9 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 | **Idea** | An AI-generated recipe suggestion in My Ideas, before it is saved to the catalog. |
 | **Draft** | A server-side AI generation awaiting the person's approve / regenerate decision. |
 | **Cooking session** | One "I made it" record, with optional rating, notes and photos. Private to its owner. |
-| **Owner** | One anonymous visitor, identified by the `tablewise_owner` cookie. Stands in for a user account. |
+| **Owner** | The scope of one person's private data. A guest's owner comes from the `tablewise_owner` cookie; an account keeps the owner of the guest who created it. |
+| **Account** | An email and password that opens the same owner from any browser. UI words: "Sign in", "Sign out" (not "Login", "Register"). |
+| **Guest** | A person using TableWise without signing in. Their data is tied to one browser. |
 | **Operator** | The person running the pilot. Signs in at `/operator` with a shared token. Can edit and delete recipes and use YouTube import. |
 | **Basic Settings** | Household preferences that personalise planning and ideas. |
 | **Pilot event** | One of five funnel events: `planner_opened`, `meal_selected`, `plan_completed`, `grocery_list_opened`, `next_week_plan_created`. |
@@ -72,7 +76,7 @@ Do not build these unless the product owner asks: payments or plans, recipe shar
 These are accepted facts today, not features. Do not build on top of them as if they work.
 
 - **The plan is not dated.** Pilot events from `/meals` and the grocery screen use the calendar week they happen in. A week left locked across two weeks records no return; the person must unlock and lock again.
-- **No accounts.** A person's data is tied to one browser cookie and does not move across devices.
+- **Accounts are minimal.** Email and password only: no password reset (there is no email), no email verification, no Google sign-in yet. A forgotten password loses the account. Grocery progress, My Ideas and Basic Settings stay in browser storage and do not follow the account. Signing in on a browser that already has guest data leaves that data with the guest; it is not merged. A guest's data is still tied to one browser.
 - **Ideas and Basic Settings live in browser storage only.** The Week is stored in Postgres per owner (2026-11-18). New per-user data must go in Postgres (see ARCHITECTURE.md).
 - **Photo and link import do not parse anything.** A photo is attached as an image; a link is stored as the source URL. Only typed and dictated text is turned into a recipe.
 - **Four planner filters have no data source:** "With my notes", "Modified by me", "My picks", "Minimum rating".
@@ -85,4 +89,4 @@ These are accepted facts today, not features. Do not build on top of them as if 
 
 - Final one-line positioning and the public name shown in the page title and social preview.
 - Whether AI-generated recipes stay in the shared catalog or become private to their owner.
-- When to add accounts, and by which sign-in method.
+- When to add Google sign-in (email and password was chosen for the pilot, 2026-11-18).
