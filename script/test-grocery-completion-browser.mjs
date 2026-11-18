@@ -77,9 +77,15 @@ try {
   await clickText("All Items");
   assert.equal(await ev(`document.querySelector("main").innerText.includes("2 L milk")`), false, "bought item leaves the list (the Undo notice outside main may still name it)");
   await ev(`document.querySelector('[aria-label="100 g Greek yogurt"]').click()`);
-  await ev(`document.querySelector('[aria-label="Estimated cost · Meat & Poultry"]').click()`);
-  await until(hasText("Prices unavailable"), "category price view");
-  await clickText("Remove item", '[role="dialog"] button');
+  const priceToggle = `document.querySelector('[data-testid="category-prices-meat-poultry"]')`;
+  await ev(`${priceToggle}.click()`);
+  await until(`${priceToggle}.textContent.trim() === "Unpriced"`, "subtotal replaces $");
+  await ev(`${priceToggle}.click()`);
+  await until(`${priceToggle}.textContent.trim() === "$"`, "second click restores $");
+  const [x, y] = await ev(`(r => [r.x + r.width / 2, r.y + r.height / 2])(document.querySelector('[aria-label="Item actions · 10 chicken thighs"]').getBoundingClientRect())`);
+  for (const type of ["mousePressed", "mouseReleased"]) await call("Input.dispatchMouseEvent", { type, x, y, button: "left", clickCount: 1 });
+  await until(`!!document.querySelector('[data-testid="button-remove-item"]')`, "item menu");
+  await ev(`document.querySelector('[data-testid="button-remove-item"]').click()`);
   await until(hasText("Remove 10 chicken thighs?"), "protein removal prompt");
   await ev(`[...document.querySelectorAll('[role="dialog"] label')].find(el => el.textContent.includes("Easy chicken curry")).querySelector("input").click()`);
   await until(hasText("Purchased items kept · 1"), "purchase preservation preview");
@@ -95,7 +101,7 @@ try {
   assert.equal(await ev(hasText("2 tbsp curry paste")), true);
   assert.equal(await ev("document.documentElement.scrollWidth <= innerWidth"), true);
   ws.close();
-  console.log("Mobile grocery list, price panel, meal removal, purchased history, and Undo passed.");
+  console.log("Mobile grocery list, inline category prices, meal removal, purchased history, and Undo passed.");
 } finally {
   chrome.kill();
   await sleep(300);
