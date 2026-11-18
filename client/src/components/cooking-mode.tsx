@@ -24,6 +24,8 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
   const [step, setStep] = useState(() => readCookingStep(recipeId, total));
   const [zen, setZen] = useState(readCookingZen);
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const [done, setDone] = useState<Set<number>>(() => new Set()); // ingredients ticked off while cooking; kept across steps
+  const toggleDone = (i: number) => setDone(prev => { const next = new Set(prev); if (!next.delete(i)) next.add(i); return next; });
   const [timers, setTimers] = useState<TimerMap>(() => readTimers(recipeId));
   const [now, setNow] = useState(() => Date.now());
   const rootRef = useRef<HTMLDivElement>(null);
@@ -91,10 +93,17 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
   if (total === 0) return null;
   const currentText = cleanStep(steps[step]);
   const duration = stepDuration(steps[step], analysis?.steps[step]);
-  const allIngredients = (testId: string, summary: string) => (
-    <details className="rounded-lg border hairline bg-white p-3" data-testid={testId}>
+  const allIngredients = (testId: string, summary: string, open = false) => (
+    <details className="rounded-lg border hairline bg-white p-3" data-testid={testId} open={open}>
       <summary className={`min-h-11 cursor-pointer py-2 text-base font-medium ${focus}`}>{summary}</summary>
-      <ul className="list-disc space-y-1 ps-5 pb-2 text-base">{scaledIngredients.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
+      <ul className="pb-2 text-base">{scaledIngredients.map((text, i) => (
+        <li key={i}>
+          <button type="button" aria-pressed={done.has(i)} onClick={() => toggleDone(i)} data-testid={`cooking-ingredient-${i}`}
+            className={`flex min-h-11 w-full items-center rounded-md px-1 text-start break-words ${focus} ${done.has(i) ? "text-muted-foreground line-through" : ""}`}>
+            {text}
+          </button>
+        </li>
+      ))}</ul>
     </details>
   );
   // Step-level data only; without it, the full list (never a guessed subset). An empty list means the step uses none.
@@ -139,7 +148,7 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
                 <section aria-label={t("stepIngredients")} data-testid="cooking-step-ingredients">
                   <ul className="space-y-1 text-lg">{stepList.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
                 </section>
-              ) : scaledIngredients.length > 0 && allIngredients("cooking-view-recipe-ingredients", t("viewRecipeIngredients"))}
+              ) : scaledIngredients.length > 0 && allIngredients("cooking-view-recipe-ingredients", t("viewRecipeIngredients"), true)}
               <p className="break-words text-2xl leading-relaxed sm:text-3xl" data-testid="cooking-current-text">{currentText}</p>
               <StepTiming duration={duration ?? undefined} />
               {timerControl(step, steps[step], true)}
