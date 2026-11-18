@@ -47,9 +47,11 @@ try {
   await load("en");
 
   // Check two items, then open the dialog: remaining excludes them, all includes them.
+  const itemsLeft = () => ev("document.querySelector('main p[aria-live]').textContent").then(text => Number(text.split("·")[1]));
+  const total = await itemsLeft();
   await ev("[...document.querySelectorAll('.grocery-item input[type=checkbox]')].slice(0, 2).forEach(b => b.click())");
-  const counter = await ev("document.querySelector('.grocery-count strong').textContent.trim()");
-  const total = Number(counter.split("/")[1]);
+  await until(`document.querySelector('main p[aria-live]').textContent.endsWith("· ${total - 2}")`, "two items checked");
+  const counter = total - 2;
   await click("button-share-export");
   await until("Boolean(document.querySelector('[data-testid=grocery-share-dialog]'))", "dialog opens");
   assert.equal(await ev("document.querySelectorAll('.grocery-share-action').length"), 6, "six actions");
@@ -100,7 +102,7 @@ try {
 
   // Sharing changed nothing on the list.
   await ev("document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))"); await sleep(300);
-  assert.equal(await ev("document.querySelector('.grocery-count strong').textContent.trim()"), counter, "progress unchanged");
+  assert.equal(await itemsLeft(), counter, "progress unchanged");
 
   // Hebrew: RTL dialog and translated text; desktop: centered dialog.
   await call("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
