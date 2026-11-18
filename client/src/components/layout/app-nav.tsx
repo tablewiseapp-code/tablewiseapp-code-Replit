@@ -7,7 +7,7 @@ import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 // Fixed order by expected use. Never reorder at runtime.
 const PRIMARY = [
   { href: "/recipes", key: "nav.recipes", icon: BookOpen, id: "recipes" },
-  { href: "/meals", key: "nav.week", icon: CalendarDays, id: "meals" },
+  { href: "/meals?plan", key: "nav.week", icon: CalendarDays, id: "meals" },
   { href: "/grocery-list", key: "nav.groceries", icon: ShoppingBasket, id: "grocery-list" },
   { href: "/my-ideas", key: "nav.ideas", icon: Sparkles, id: "my-ideas" },
 ] as const;

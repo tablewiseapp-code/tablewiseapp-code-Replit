@@ -4,7 +4,7 @@ import { recordPilotEvent } from "@/lib/pilot-analytics";
 import { currentWeek } from "@/lib/week-plan";
 import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useLocalStorageState } from "@/hooks/use-local-storage-state";
 import { StarRating } from "@/components/ui/star-rating";
@@ -185,7 +185,9 @@ function WeeklyMealsContent() {
   const [excludeInput, setExcludeInput] = useState("");
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
   const [arrangingRecipe, setArrangingRecipe] = useState<string | null>(null);
-  const [planGenerated, setPlanGenerated] = useState(false);
+  // The plan view lives in the URL (/meals?plan), so the Week nav link, Back and reload all land in the right place.
+  const planGenerated = new URLSearchParams(useSearch()).has("plan");
+  const setPlanGenerated = (on: boolean) => setLocation(on ? "/meals?plan" : "/meals");
   const [maxSelectionsHit, setMaxSelectionsHit] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   // Recipe name search; works together with the filters. Deferred so typing stays responsive on long lists.

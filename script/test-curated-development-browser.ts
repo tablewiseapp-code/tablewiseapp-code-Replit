@@ -73,7 +73,7 @@ async function main() {
     await wait(el(`meals-catalog-facts-${recipes[0].id}`));
     assert.equal(await evaluate("document.querySelectorAll('[data-testid^=\"recipe-card-\"]').length"), 20);
     assert.equal(await evaluate("Boolean(document.querySelector('[data-testid=\"mvp-planner\"]'))"), false);
-    assert.deepEqual(await evaluate("Array.from(document.querySelectorAll('[data-testid=\"app-nav\"] a')).map(a => a.getAttribute('href'))"), ["/recipes", "/meals", "/grocery-list", "/my-ideas"]);
+    assert.deepEqual(await evaluate("Array.from(document.querySelectorAll('[data-testid=\"app-nav\"] a')).map(a => a.getAttribute('href'))"), ["/recipes", "/meals?plan", "/grocery-list", "/my-ideas"]);
     assert.equal(await evaluate("Boolean(document.querySelector('a[href=\"/plan\"]'))"), false);
     const legacyKey = "tablewise:mvp:plan:v1:2026-10-19";
     const legacyValue = JSON.stringify({ version: 1, weekStart: "2026-10-19",
