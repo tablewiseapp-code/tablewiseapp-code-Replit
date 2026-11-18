@@ -15,6 +15,7 @@ const recipeColumns = {
   creditName: sql<string | null>`to_jsonb(${recipes})->>'credit_name'`,
   stepAnalysis: sql<StepAnalysis | null>`to_jsonb(${recipes})->'step_analysis'`,
   ingredientParts: sql<IngredientPart[] | null>`to_jsonb(${recipes})->'ingredient_parts'`,
+  stepIngredients: sql<string[][] | null>`to_jsonb(${recipes})->'step_ingredients'`,
 };
 
 export function isMissingPreparationColumn(error: unknown): boolean {
@@ -84,7 +85,7 @@ export class DatabaseStorage implements IStorage {
     // supplied fields so untimed legacy creation remains migration-independent.
     const columns = getTableColumns(recipes);
     const fields = Object.entries(values).filter(([key, value]) =>
-      value !== undefined && !((key === "stepAnalysis" || key === "ingredientParts") && value === null));
+      value !== undefined && !((key === "stepAnalysis" || key === "ingredientParts" || key === "stepIngredients") && value === null));
     const names = fields.map(([key]) => sql.identifier(columns[key as keyof typeof columns].name));
     const parameters = fields.map(([key, value]) => sql.param(value, columns[key as keyof typeof columns]));
     const returning = Object.entries(recipeColumns).map(([key, column]) => sql`${column} AS ${sql.identifier(key)}`);
@@ -116,6 +117,8 @@ export class DatabaseStorage implements IStorage {
       if (existing?.stepAnalysis) values.stepAnalysis = null;
       // New ingredient text without new parts: drop the old parts rather than keep a stale breakdown.
       if (values.ingredients && values.ingredientParts === undefined && existing?.ingredientParts) values.ingredientParts = null;
+      // New step text without new step ingredients: drop them rather than show another step's ingredients.
+      if (values.steps && values.stepIngredients === undefined && existing?.stepIngredients) values.stepIngredients = null;
     }
     const db = await this.database();
     const [updated] = await db

@@ -11,6 +11,7 @@ export type Recipe = RecipeCredit & NutritionFields & {
   steps: string[];
   stepAnalysis?: StepAnalysis | null;
   ingredientParts?: IngredientPart[] | null;
+  stepIngredients?: string[][] | null;
   createdAt: string;
   updatedAt: string;
   image?: string | null;

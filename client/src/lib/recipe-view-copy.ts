@@ -4,7 +4,7 @@ const copy = {
   en: {
     back: "← Back", startTimer: "Start timer", pauseTimer: "Pause", resumeTimer: "Resume", resetTimer: "Reset", timerDone: "Time's up for this step", timerSetTo: "Set to {time}", startCooking: "Start cooking", resumeCooking: "Resume cooking", cookingMode: "Cooking mode", exitCooking: "Exit cooking", stepOf: "Step {current} of {total}",
     prevStep: "Previous step", nextStepLabel: "Next step", finishCooking: "Finish cooking", zenMode: "Zen mode", currentStep: "Current step", goToStep: "Go to step {n}",
-    restart: "Restart from step 1", confirmRestart: "Tap again to restart", showIngredients: "Ingredients for {count} servings", progressSaved: "Progress is saved while you're away.", more: "More actions", addToPlan: "Add to meal plan", servings: "{count} servings", servingsLabel: "Servings",
+    restart: "Restart from step 1", confirmRestart: "Tap again to restart", showIngredients: "Ingredients for {count} servings", stepIngredients: "Ingredients for this step", viewRecipeIngredients: "View recipe ingredients", progressSaved: "Progress is saved while you're away.", more: "More actions", addToPlan: "Add to meal plan", servings: "{count} servings", servingsLabel: "Servings",
     decrease: "Fewer servings", increase: "More servings", servingsNote: "Quantities scaled from {base} servings. The saved recipe is unchanged.",
     servingsFixed: "Servings can't be adjusted: the recipe has no serving count.", ingredients: "Ingredients", instructions: "Instructions",
     prep: "Prep", ingredientView: "Ingredient view", viewOrder: "Recipe order", viewCategory: "By category", cook: "Cook", checked: "{done} of {total} ingredients checked", resetChecks: "Clear checks", minutes: "min",
@@ -31,7 +31,7 @@ const copy = {
   ru: {
     back: "← Назад", startTimer: "Запустить таймер", pauseTimer: "Пауза", resumeTimer: "Продолжить", resetTimer: "Сбросить", timerDone: "Время для этого шага вышло", timerSetTo: "Установлено на {time}", startCooking: "Начать готовить", resumeCooking: "Продолжить готовку", cookingMode: "Режим готовки", exitCooking: "Выйти из режима", stepOf: "Шаг {current} из {total}",
     prevStep: "Предыдущий шаг", nextStepLabel: "Следующий шаг", finishCooking: "Завершить готовку", zenMode: "Дзен-режим", currentStep: "Текущий шаг", goToStep: "Перейти к шагу {n}",
-    restart: "Начать с шага 1", confirmRestart: "Нажмите ещё раз для сброса", showIngredients: "Ингредиенты на {count} порц.", progressSaved: "Прогресс сохраняется, пока вы отсутствуете.", more: "Ещё действия", addToPlan: "Добавить в план питания", servings: "{count} порц.", servingsLabel: "Порции",
+    restart: "Начать с шага 1", confirmRestart: "Нажмите ещё раз для сброса", showIngredients: "Ингредиенты на {count} порц.", stepIngredients: "Ингредиенты для этого шага", viewRecipeIngredients: "Все ингредиенты рецепта", progressSaved: "Прогресс сохраняется, пока вы отсутствуете.", more: "Ещё действия", addToPlan: "Добавить в план питания", servings: "{count} порц.", servingsLabel: "Порции",
     decrease: "Меньше порций", increase: "Больше порций", servingsNote: "Количества пересчитаны с {base} порц. Сохранённый рецепт не изменён.",
     servingsFixed: "Порции нельзя изменить: в рецепте не указано их число.", ingredients: "Ингредиенты", instructions: "Инструкция",
     prep: "Подготовка", ingredientView: "Вид ингредиентов", viewOrder: "Как в рецепте", viewCategory: "По категориям", cook: "Готовка", checked: "Отмечено {done} из {total}", resetChecks: "Снять отметки", minutes: "мин",
@@ -58,7 +58,7 @@ const copy = {
   he: {
     back: "→ חזרה", startTimer: "הפעלת טיימר", pauseTimer: "השהיה", resumeTimer: "המשך", resetTimer: "איפוס", timerDone: "הזמן לשלב הזה נגמר", timerSetTo: "מוגדר ל-{time}", startCooking: "התחלת בישול", resumeCooking: "המשך בישול", cookingMode: "מצב בישול", exitCooking: "יציאה ממצב בישול", stepOf: "שלב {current} מתוך {total}",
     prevStep: "שלב קודם", nextStepLabel: "שלב הבא", finishCooking: "סיום בישול", zenMode: "מצב זן", currentStep: "השלב הנוכחי", goToStep: "מעבר לשלב {n}",
-    restart: "התחלה מחדש משלב 1", confirmRestart: "לחצו שוב להתחלה מחדש", showIngredients: "מרכיבים ל-{count} מנות", progressSaved: "ההתקדמות נשמרת בזמן היעדרותכם.", more: "פעולות נוספות", addToPlan: "הוספה לתוכנית הארוחות", servings: "{count} מנות", servingsLabel: "מנות",
+    restart: "התחלה מחדש משלב 1", confirmRestart: "לחצו שוב להתחלה מחדש", showIngredients: "מרכיבים ל-{count} מנות", stepIngredients: "מרכיבים לשלב הזה", viewRecipeIngredients: "כל מרכיבי המתכון", progressSaved: "ההתקדמות נשמרת בזמן היעדרותכם.", more: "פעולות נוספות", addToPlan: "הוספה לתוכנית הארוחות", servings: "{count} מנות", servingsLabel: "מנות",
     decrease: "פחות מנות", increase: "יותר מנות", servingsNote: "הכמויות חושבו מחדש מתוך {base} מנות. המתכון השמור לא השתנה.",
     servingsFixed: "אי אפשר לשנות מנות: במתכון לא צוין מספר מנות.", ingredients: "מרכיבים", instructions: "הוראות הכנה",
     prep: "הכנה", ingredientView: "תצוגת מרכיבים", viewOrder: "לפי סדר המתכון", viewCategory: "לפי קטגוריה", cook: "בישול", checked: "סומנו {done} מתוך {total}", resetChecks: "ניקוי סימונים", minutes: "דק׳",

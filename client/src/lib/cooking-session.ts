@@ -22,8 +22,9 @@ export function clearCookingStep(recipeId: string) {
 export function hasCookingProgress(recipeId: string): boolean {
   try { return Number(sessionStorage.getItem(cookingStepKey(recipeId))) > 0; } catch { return false; }
 }
+/** Zen is the default; only an explicit switch to standard is remembered as off. */
 export function readCookingZen(): boolean {
-  try { return localStorage.getItem(cookingZenKey) === "true"; } catch { return false; }
+  try { return localStorage.getItem(cookingZenKey) !== "false"; } catch { return true; }
 }
 export function saveCookingZen(value: boolean) {
   try { localStorage.setItem(cookingZenKey, String(value)); } catch { /* preference only */ }

@@ -67,7 +67,7 @@ Tables are defined in `shared/schema.ts`.
 
 | Table | Purpose | Scope |
 |---|---|---|
-| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones) | global, shared by all visitors |
+| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones); `step_ingredients` holds one list per step of the ingredient lines that step uses (`[]` = none, NULL = no data; dropped when steps change without it) | global, shared by all visitors |
 | `recipe_nutrition` | cached nutrition | global |
 | `recipe_generations` | AI drafts and their status | per owner |
 | `cooking_sessions` | "I made it", rating, notes | per owner |
