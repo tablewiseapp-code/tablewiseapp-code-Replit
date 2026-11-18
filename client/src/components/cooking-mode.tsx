@@ -14,9 +14,9 @@ import type { StepAnalysis } from "@shared/step-timing";
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const btn = `inline-flex min-h-12 items-center justify-center gap-1 rounded-full px-5 text-base font-medium ${focus}`;
 
-export function CookingMode({ recipeId, title, steps, analysis, servings, scaledIngredients, onExit, onFinish }: {
+export function CookingMode({ recipeId, title, steps, analysis, servings, scaledIngredients, stepIngredients, onExit, onFinish }: {
   recipeId: string; title: string; steps: string[]; analysis?: StepAnalysis | null;
-  servings: number | null; scaledIngredients: string[]; onExit: () => void; onFinish: () => void;
+  servings: number | null; scaledIngredients: string[]; stepIngredients: string[][] | null; onExit: () => void; onFinish: () => void;
 }) {
   const { dir } = useI18n();
   const { t } = useRecipeViewCopy();
@@ -91,6 +91,14 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
   if (total === 0) return null;
   const currentText = cleanStep(steps[step]);
   const duration = stepDuration(steps[step], analysis?.steps[step]);
+  const allIngredients = (testId: string, summary: string) => (
+    <details className="rounded-lg border hairline bg-white p-3" data-testid={testId}>
+      <summary className={`min-h-11 cursor-pointer py-2 text-base font-medium ${focus}`}>{summary}</summary>
+      <ul className="list-disc space-y-1 ps-5 pb-2 text-base">{scaledIngredients.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
+    </details>
+  );
+  // Step-level data only; without it, the full list (never a guessed subset). An empty list means the step uses none.
+  const stepList = stepIngredients?.[step];
 
   return (
     <div ref={rootRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${t("cookingMode")}: ${title}`} dir={dir}
@@ -127,18 +135,18 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
         <div className="mx-auto max-w-3xl">
           {zen ? (
             <div className="space-y-6 py-4" data-testid="cooking-zen-step">
+              {stepList ? stepList.length > 0 && (
+                <section aria-label={t("stepIngredients")} data-testid="cooking-step-ingredients">
+                  <ul className="space-y-1 text-lg">{stepList.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
+                </section>
+              ) : scaledIngredients.length > 0 && allIngredients("cooking-view-recipe-ingredients", t("viewRecipeIngredients"))}
               <p className="break-words text-2xl leading-relaxed sm:text-3xl" data-testid="cooking-current-text">{currentText}</p>
               <StepTiming duration={duration ?? undefined} />
               {timerControl(step, steps[step], true)}
             </div>
           ) : (
             <>
-              {scaledIngredients.length > 0 && (
-                <details className="mb-5 rounded-lg border hairline bg-white p-3" data-testid="cooking-ingredients">
-                  <summary className={`min-h-11 cursor-pointer py-2 text-base font-medium ${focus}`}>{t("showIngredients", { count: servings ?? "" })}</summary>
-                  <ul className="list-disc space-y-1 ps-5 pb-2 text-base">{scaledIngredients.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
-                </details>
-              )}
+              {scaledIngredients.length > 0 && <div className="mb-5">{allIngredients("cooking-ingredients", t("showIngredients", { count: servings ?? "" }))}</div>}
               <ol className="space-y-3" data-testid="cooking-steps">
                 {steps.map((raw, i) => {
                   const active = i === step;

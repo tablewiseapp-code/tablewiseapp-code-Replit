@@ -26,6 +26,9 @@ const PRIMARY = [
   { href: "/my-ideas", key: "nav.ideas", icon: Sparkles, id: "my-ideas" },
   { href: "/home-tasks", key: "nav.homeTasks", short: "nav.homeTasksShort", icon: ListChecks, id: "home-tasks" },
 ] as const;
+// Phone bottom bar: Home, Groceries, Tasks (product owner, 2026-11-18). The rest sit in the phone Menu sheet.
+const BOTTOM = ["home", "grocery-list", "home-tasks"].map(id => PRIMARY.find(item => item.id === id)!);
+const MENU_ONLY = PRIMARY.filter(item => !BOTTOM.includes(item));
 
 /** Which destination owns a URL. A recipe opened from the planner (?week) belongs to Week. */
 export function activeSection(path: string, search: string): string | null {
@@ -118,6 +121,12 @@ export function AppNav() {
                   <Menu className="h-4 w-4" aria-hidden="true" />{t("nav.menu")}
                 </button>
               }>
+              {MENU_ONLY.map(item => (
+                <Link key={item.id} href={item.href} aria-current={current(item.id)} onClick={() => setMenuOpen(false)} data-testid={`app-nav-menu-link-${item.id}`}
+                  className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm ${focus} ${active === item.id ? "bg-accent font-semibold text-foreground" : "text-foreground hover:bg-foreground/5"}`}>
+                  <item.icon className="h-4 w-4" aria-hidden="true" />{t(item.key)}
+                </Link>
+              ))}
               <Link href="/settings" aria-current={current("settings")} onClick={() => setMenuOpen(false)} data-testid="app-nav-menu-link-settings"
                 className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm ${focus} ${active === "settings" ? "bg-accent font-semibold text-foreground" : "text-foreground hover:bg-foreground/5"}`}>
                 {settingsIcon}{t("nav.settings")}
@@ -138,8 +147,8 @@ export function AppNav() {
 
       <nav aria-label={t("nav.main")} data-testid="app-nav-bottom"
         className="app-nav fixed inset-x-0 bottom-0 z-40 border-t hairline bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
-        <div className="grid grid-cols-6">
-          {PRIMARY.map(item => (
+        <div className="grid grid-cols-3">
+          {BOTTOM.map(item => (
             <Link key={item.id} href={item.href} aria-current={current(item.id)} data-testid={`app-nav-bottom-link-${item.id}`}
               className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] ${focus} focus-visible:-outline-offset-2 ${active === item.id
                 ? "font-semibold text-foreground before:absolute before:inset-x-4 before:top-0 before:h-[3px] before:rounded-b before:bg-primary"

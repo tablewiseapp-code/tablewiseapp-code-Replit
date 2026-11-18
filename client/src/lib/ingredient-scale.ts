@@ -37,3 +37,9 @@ export function baseServings(servings?: string | null): number | null {
 }
 export const servingLimits = { min: 1, max: 99 } as const;
 export const servingFactor = (selected: number, base: number | null) => base ? selected / base : 1;
+
+/** Scaled step ingredients, one list per step; null when the recipe has no step-level data or it no longer matches the steps. */
+export function scaledStepIngredients(steps: string[], stepIngredients: string[][] | null | undefined, factor: number): string[][] | null {
+  if (!stepIngredients || stepIngredients.length !== steps.length) return null;
+  return stepIngredients.map(lines => lines.map(text => scaleIngredient(text, factor)));
+}

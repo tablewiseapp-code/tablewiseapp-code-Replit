@@ -19,7 +19,8 @@ try {
   const ws = new WebSocket(tabs.find(t => t.type === "page").webSocketDebuggerUrl);
   await new Promise(r => (ws.onopen = r));
   let n = 0; const waiting = {};
-  ws.onmessage = m => { const d = JSON.parse(m.data); waiting[d.id]?.(d); };
+  let onPaused = null; // Fetch.requestPaused handler, set while a recipe response is rewritten
+  ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Fetch.requestPaused") onPaused?.(d.params); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
   await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r.exceptionDetails) throw new Error(r.exceptionDetails.text); return r.result.value; };
@@ -42,7 +43,12 @@ try {
   assert.equal(await ev(`${el("cooking-title")}.textContent`), await ev(`${el("text-recipe-title")}.textContent`));
   assert.equal(await label(), `Step 1 of ${total}`);
   assert.equal(await ev(`${el("cooking-prev")}.disabled`), true, "first step: no previous");
-  assert.equal(await ev(`${el("cooking-mode")}.dataset.zen`), "false", "Standard mode by default");
+  assert.equal(await ev(`${el("cooking-mode")}.dataset.zen`), "true", "Start cooking opens Zen by default");
+  // This recipe has no step-level ingredient data: Zen links to the full list instead of guessing.
+  assert.equal(await ev(`Boolean(${el("cooking-step-ingredients")})`), false, "no guessed step ingredients");
+  assert.match(await ev(`${el("cooking-view-recipe-ingredients")}.textContent`), /View recipe ingredients.*200 g canned chopped tomatoes/s, "full scaled list behind View recipe ingredients");
+  await click("cooking-zen-toggle");
+  assert.equal(await ev(`${el("cooking-mode")}.dataset.zen`), "false", "standard mode after switching");
   assert.equal(await ev(`document.querySelectorAll('[data-testid^="cooking-step-"][data-active]').length`), total, "all steps visible");
   assert.equal(await ev(`${el("cooking-step-0")}.getAttribute('aria-current')`), "step");
   assert.match(await ev(`${el("cooking-ingredients")}.textContent`), /2 servings/);
@@ -125,7 +131,32 @@ try {
   await click("cooking-finish"); await until(`!${el("cooking-mode")}`, "finish closes");
   assert.equal(await ev(`sessionStorage.getItem(${JSON.stringify(`tablewise:cooking:v1:${ID}`)})`), null, "Finish clears progress");
   assert.match(await ev(`${el("button-start-cooking")}.textContent`), /Start cooking/);
-  console.log("PASS cooking mode browser: start/exit, standard/zen with step kept, prev/next/click boundaries, progress + Zen preference preserved across exit and reload, restart confirm, finish clears, servings/title/scaled ingredients, no 'Time unspecified', no horizontal scroll at 390px.");
+  // Step-level ingredients (injected into the recipe response; nothing is written): the list follows Next and Back,
+  // an empty list hides the section, and quantities are the step's own.
+  await ev("localStorage.removeItem('tablewise:cooking-zen:v1')"); // back to the default
+  const stepData = [["1 tbsp sunflower oil", "1 onion, thinly sliced"], []];
+  onPaused = async ({ requestId }) => {
+    const { result } = await call("Fetch.getResponseBody", { requestId });
+    const recipe = JSON.parse(result.base64Encoded ? Buffer.from(result.body, "base64").toString() : result.body);
+    recipe.stepIngredients = recipe.steps.map((_, i) => stepData[i] ?? ["4 tbsp curry paste"]);
+    await call("Fetch.fulfillRequest", { requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "application/json" }], body: Buffer.from(JSON.stringify(recipe)).toString("base64") });
+  };
+  await call("Fetch.enable", { patterns: [{ urlPattern: `*/api/recipes/${encodeURIComponent(ID)}`, requestStage: "Response" }] });
+  await open(); await click("button-start-cooking"); await until(`Boolean(${el("cooking-mode")})`, "open with step data");
+  const stepItems = () => ev(`[...document.querySelectorAll('[data-testid="cooking-step-ingredients"] li')].map(li => li.textContent)`);
+  assert.equal(await label(), `Step 1 of ${total}`);
+  assert.equal(await ev(`${el("cooking-mode")}.dataset.zen`), "true");
+  assert.deepEqual(await stepItems(), stepData[0], "step 1: its own ingredients and quantities (1 of 2 tbsp oil)");
+  assert.ok(await ev(`Boolean(${el("cooking-step-ingredients")}.compareDocumentPosition(${el("cooking-current-text")}) & Node.DOCUMENT_POSITION_FOLLOWING)`), "ingredients above the instruction");
+  assert.equal(await ev(`Boolean(${el("cooking-view-recipe-ingredients")})`), false, "no full-list link when step data exists");
+  await click("cooking-next");
+  assert.equal(await ev(`Boolean(${el("cooking-step-ingredients")}) || Boolean(${el("cooking-view-recipe-ingredients")})`), false, "step 2 uses none: section hidden");
+  await click("cooking-next"); assert.deepEqual(await stepItems(), ["4 tbsp curry paste"], "step 3 updates with Next");
+  await click("cooking-prev"); await click("cooking-prev");
+  assert.deepEqual(await stepItems(), stepData[0], "Back restores step 1 ingredients");
+  await click("cooking-exit"); await call("Fetch.disable"); onPaused = null;
+
+  console.log("PASS cooking mode browser: Zen by default at step 1, step ingredients follow Next/Back (with data, empty, none), start/exit, standard/zen with step kept, prev/next/click boundaries, progress + Zen preference preserved across exit and reload, restart confirm, finish clears, servings/title/scaled ingredients, no 'Time unspecified', no horizontal scroll at 390px.");
 } finally {
   chrome.kill(); await sleep(300); rmSync(profile, { recursive: true, force: true });
 }

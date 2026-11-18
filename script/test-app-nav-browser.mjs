@@ -87,30 +87,34 @@ try {
   // ---- Mobile
   await size(390, true);
   await go("/recipes", `document.querySelectorAll('[data-testid^="card-recipe-"]').length > 0`);
-  eq(await hrefs('[data-testid="app-nav-bottom"] a'), ORDER, "mobile order");
-  eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Recipes", "Week", "Groceries", "Ideas", "Tasks"], "mobile labels");
+  eq(await hrefs('[data-testid="app-nav-bottom"] a'), ["/", "/grocery-list", "/home-tasks"], "mobile order");
+  eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Groceries", "Tasks"], "mobile labels");
+  eq(await current('[data-testid="app-nav-bottom"]'), null, "Recipes is not a bottom tab");
   ok(await ev(`getComputedStyle(${q("app-nav")}).display === "none"`), "desktop links hidden on mobile");
   ok(await ev(`Array.from(document.querySelectorAll('[data-testid="app-nav-bottom"] a, [data-testid="app-nav-header"] a, [data-testid="app-nav-header"] button')).filter(e => e.offsetParent).every(e => { const r = e.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })`), "touch targets ≥ 44px");
   const sel = `document.querySelector('[data-testid="app-nav-bottom"] [aria-current="page"]')`;
+  await go("/", `Boolean(${sel})`);
   ok(await ev(`(s => Number(s.fontWeight) >= 600)(getComputedStyle(${sel})) && getComputedStyle(${sel}, "::before").height === "3px"`), "selected state not color-only");
+  await go("/recipes", `document.querySelectorAll('[data-testid^="card-recipe-"]').length > 0`);
   await ev(`window.scrollTo(0, document.documentElement.scrollHeight)`); await sleep(200);
   ok(await ev(`(() => { const cards = document.querySelectorAll('[data-testid^="card-recipe-"]'); return cards[cards.length - 1].getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top; })()`), "last recipe not covered");
   ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
   await ev(`${q("app-nav-menu-trigger")}.click()`); await until(`Boolean(document.querySelector('[role="dialog"]'))`, "menu");
-  eq(await hrefs('[role="dialog"] a'), ["/settings"], "Settings in header menu");
-  await ev(`document.querySelector('[role="dialog"] a').click()`);
+  eq(await hrefs('[role="dialog"] a'), ["/recipes", "/meals?plan", "/my-ideas", "/settings"], "Recipes, Week, Ideas and Settings in header menu");
+  eq(await current('[role="dialog"]'), "/recipes", "Recipes current in the menu");
+  await ev(`${q("app-nav-menu-link-settings")}.click()`);
   await until(`location.pathname === "/settings" && !document.querySelector('[role="dialog"]')`, "settings from menu");
   eq(await current('[data-testid="app-nav-bottom"]'), null, "no bottom item current on Settings");
 
   // Week: plan's sticky action bar sits above the bottom nav.
-  await ev(`${q("app-nav-bottom-link-meals")}.click()`); // Week opens the plan view; go back to choosing recipes
+  await ev(`${q("app-nav-menu-trigger")}.click()`); await until(`Boolean(${q("app-nav-menu-link-meals")})`, "menu for Week");
+  await ev(`${q("app-nav-menu-link-meals")}.click()`); // Week opens the plan view; go back to choosing recipes
   await until(`Boolean(${q("button-back-to-selection")})`, "plan view"); await ev(`${q("button-back-to-selection")}.click()`);
-  await until(`document.querySelectorAll('[data-testid^="button-add-"]').length > 0`, "meals");
-  eq(await current('[data-testid="app-nav-bottom"]'), "/meals?plan", "Week active during selection");
-  await ev(`document.querySelector('[data-testid^="button-add-"]').click()`);
+  await until(`document.querySelectorAll('[data-testid^="button-add-"]:not([data-testid="button-add-deal-category"])').length > 0`, "meals");
+  eq(await current('[data-testid="app-nav-bottom"]'), null, "Week has no bottom tab");
+  await ev(`document.querySelector('[data-testid^="button-add-"]:not([data-testid="button-add-deal-category"])').click()`);
   await until(`!${q("button-generate-plan")}.disabled`, "selected");
   await ev(`${q("button-generate-plan")}.click()`); await until(`Boolean(${q("button-create-grocery-list")})`, "plan view");
-  eq(await current('[data-testid="app-nav-bottom"]'), "/meals?plan", "Week active during planning");
   const bar = `${q("button-create-grocery-list")}.parentElement`;
   ok(await ev(`${bar}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top + 0.5`), "sticky plan actions above bottom nav");
 

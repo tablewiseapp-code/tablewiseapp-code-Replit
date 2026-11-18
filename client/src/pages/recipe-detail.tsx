@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { recipePlannerURL } from "@/lib/week-plan";
 import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
 import { recipeToolKeys } from "@/lib/recipe-tools";
-import { baseServings, scaleIngredient, servingFactor, servingLimits } from "@/lib/ingredient-scale";
+import { baseServings, scaleIngredient, scaledStepIngredients, servingFactor, servingLimits } from "@/lib/ingredient-scale";
 import { cleanStep, stepDuration } from "@/lib/recipe-steps";
 import { ingredientRows, ingredientSections, ingredientViews, readIngredientView, saveIngredientView, type IngredientRow, type IngredientView } from "@/lib/ingredient-view";
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
@@ -319,7 +319,8 @@ export default function RecipeDetail() {
       </PageContainer>
 
       {cooking && <CookingMode key={recipe.id} recipeId={recipe.id} title={recipe.title} steps={recipe.steps} analysis={analysis}
-        servings={selectedServings} scaledIngredients={scaledIngredients} onExit={() => setCooking(false)} onFinish={() => setCooking(false)} />}
+        servings={selectedServings} scaledIngredients={scaledIngredients}
+        stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => setCooking(false)} />}
 
       <AddToMealPlanDialog open={planOpen} onOpenChange={setPlanOpen} recipe={recipe} servings={selectedServings} plannerHref="/meals" />
 

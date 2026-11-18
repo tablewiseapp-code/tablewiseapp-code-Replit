@@ -17,6 +17,7 @@ const recipeBase = z.object({
   steps: z.array(z.string().trim().min(1).max(2000)).min(1).max(100),
   stepAnalysis: stepAnalysisSchema.nullable().optional(),
   ingredientParts: z.array(ingredientPartSchema).max(100).nullable().optional(),
+  stepIngredients: z.array(z.array(line).max(100)).max(100).nullable().optional(),
   image: safeURL.nullable().optional(),
   sourceUrl: safeURL.nullable().optional(),
   cookTime: z.number().int().min(0).max(10080).nullable().optional(),
@@ -29,6 +30,9 @@ export const recipeInput = recipeBase.extend({
 }).superRefine((value, ctx) => {
   if (value.ingredientParts && value.ingredientParts.length !== value.ingredients.length) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["ingredientParts"], message: "One part per ingredient line." });
+  }
+  if (value.stepIngredients && value.stepIngredients.length !== value.steps.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["stepIngredients"], message: "One ingredient list per step." });
   }
   if (value.stepAnalysis && !analysisMatches(value, value.stepAnalysis)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["stepAnalysis"], message: "Timing analysis is stale or incomplete." });
@@ -48,7 +52,8 @@ export const draftEdit = recipeBase.pick({ title: true, ingredients: true, steps
   .refine(value => Object.keys(value).length > 0);
 // Attribution is changed atomically through its bounded, separate endpoint.
 export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0)
-  .refine(value => !value.ingredientParts || value.ingredientParts.length === value.ingredients?.length, "Send parts with their ingredient lines.");
+  .refine(value => !value.ingredientParts || value.ingredientParts.length === value.ingredients?.length, "Send parts with their ingredient lines.")
+  .refine(value => !value.stepIngredients || value.stepIngredients.length === value.steps?.length, "Send step ingredients with their steps.");
 export const recipeId = z.string().min(1).max(150).regex(/^[a-zA-Z0-9:_-]+$/);
 export const parseInput = z.object({
   transcript: z.string().trim().min(1).max(12000),

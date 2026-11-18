@@ -76,6 +76,37 @@ try {
     ok(await ev(`${q("home-meals")}.getBoundingClientRect().bottom <= ${q("home-groceries")}.getBoundingClientRect().top`), "meals above groceries");
     ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
     await go("/plan", `location.pathname === "/meals"`); // deep link still redirects to Week
+
+    // ---- Small phone, long task list: meals, a task preview and the bottom tabs on one screen.
+    await ev("localStorage.setItem('tablewise_language','en')");
+    await ev(`Promise.all(Array.from({ length: 15 }, (_, i) => fetch("/api/home-tasks/" + crypto.randomUUID(), { method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Home browser task " + (i + 1), dueDate: null, priority: "normal", image: null, completedAt: null }) })))`);
+    const rows = () => ev(`document.querySelectorAll('[data-testid="home-task"]').length`);
+    const navTop = `${q("app-nav-bottom")}.getBoundingClientRect().top`;
+    for (const [width, height] of [[375, 667], [360, 640]]) {
+      await call("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: true });
+      await go("/", `document.querySelectorAll('[data-testid="home-task"]').length > 0 && Boolean(${q("home-grocery-count")})`); await sleep(300);
+      const shown = await rows();
+      ok(shown >= 1 && shown < 15, `${width}px: only the rows that fit (${shown} of 15)`);
+      eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Groceries", "Tasks"], `${width}px: bottom tabs`);
+      ok(await ev(`${q("home-meals")}.getBoundingClientRect().bottom <= ${navTop}`), `${width}px: today's meals above the tabs`);
+      ok(await ev(`[...document.querySelectorAll('[data-testid="home-task"]')].every(li => li.getBoundingClientRect().bottom <= ${navTop})`), `${width}px: every shown task above the tabs`);
+      ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), `${width}px: no horizontal scroll`);
+    }
+    ok(await ev(`Boolean(${q("link-view-all-tasks")})`), "View all tasks when some are hidden");
+    // Smaller than supported (320 × 568): one task, and Home scrolls to it.
+    await call("Emulation.setDeviceMetricsOverride", { width: 320, height: 568, deviceScaleFactor: 1, mobile: true }); await sleep(400);
+    ok(await rows() === 1 && await ev(`document.documentElement.scrollHeight > innerHeight`), "320px: one task, Home scrolls");
+    // Enlarged text (rem-based layout, as with browser text scaling): still at least one task, page scrolls, targets readable.
+    await ev(`document.documentElement.style.fontSize = "200%"`); await sleep(400);
+    ok(await rows() >= 1, "large text: a task still shows");
+    ok(await ev(`document.documentElement.scrollHeight > innerHeight`), "large text: Home scrolls");
+    ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "large text: no horizontal scroll");
+    ok(await ev(`[...document.querySelectorAll('[data-testid="home-task-check"]')].every(e => { const r = e.parentElement.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })`), "large text: 44px task targets");
+    await ev(`${q("link-view-all-tasks")}.click()`);
+    await until(`location.pathname === "/home-tasks"`, "View all tasks opens Tasks");
+    eq(await current('[data-testid="app-nav-bottom"]'), "/home-tasks", "Tasks tab active");
+    await ev(`fetch("/api/home-tasks").then(r => r.json()).then(list => Promise.all(list.map(t => fetch("/api/home-tasks/" + t.id, { method: "DELETE" }))))`);
   } finally {
     await ev(`Promise.all(${JSON.stringify(extras)}.map(id => fetch("/api/grocery-extras/" + id, { method: "DELETE" })))`);
   }
