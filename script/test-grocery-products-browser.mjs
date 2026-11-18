@@ -57,7 +57,7 @@ try {
   await call("Page.reload");
   await until("Boolean(document.querySelector('[data-testid=\"grocery-item-my custom product\"] img'))", "photo persists after reload");
   assert.equal(await ev("document.documentElement.scrollWidth > innerWidth"), false, "mobile fits viewport");
-  // Edit an existing row after creation, without changing its checked state.
+  // Edit an existing row after creation. (Ticking an item moves it to Checked items, which has no picture controls.)
   const row = key => `document.querySelector('[data-testid=' + CSS.escape(${JSON.stringify("grocery-item-" + key)}) + ']')`;
   const choosePhoto = async (key, color = 'purple', invalid = false) => ev(`(async () => {
     const canvas = document.createElement('canvas'); canvas.width = 900; canvas.height = 600;
@@ -72,14 +72,10 @@ try {
     await call("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", windowsVirtualKeyCode: 13 });
     await until("Boolean(document.querySelector('[data-testid=menu-item-picture-upload]'))", "picture menu opens with keyboard");
   };
-  await ev(`${row('toothbrush')}.querySelector('input[type=checkbox]').click()`);
   await choosePhoto('toothbrush');
   await until(`Boolean(${row('toothbrush')}.querySelector('img'))`, "add picture after creating item");
-  assert.equal(await ev(`${row('toothbrush')}.querySelector('input[type=checkbox]').checked`), true, "picture edit preserves checked state");
   await call("Page.reload");
   await until(`Boolean(${row('toothbrush')}?.querySelector('img'))`, "later picture survives reload");
-  // Completed categories can be expanded to edit their checked rows.
-  await ev(`${row('toothbrush')}.closest('section').querySelector('[aria-expanded=false]')?.click()`);
   const firstPhoto = await ev(`${row('toothbrush')}.querySelector('img').src`);
   await choosePhoto('toothbrush', 'blue');
   await until(`${row('toothbrush')}.querySelector('img').src !== ${JSON.stringify(firstPhoto)}`, "change picture");
@@ -104,7 +100,6 @@ try {
   await until("Boolean(document.querySelector('[role=dialog] img'))", "larger preview");
   await call("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", windowsVirtualKeyCode: 27 });
   await until("!document.querySelector('[role=dialog]')", "preview closes with Escape");
-  assert.equal(await ev(`${row('toothbrush')}.querySelector('input[type=checkbox]').checked`), true);
   await openPictureMenu('toothbrush');
   await ev("document.querySelector('[data-testid=menu-item-picture-remove]').click()");
   await until(`!${row('toothbrush')}.querySelector('img')`, "remove picture keeps row");
@@ -141,6 +136,6 @@ try {
   await call("Page.captureScreenshot", { format: "png" }).then(async response => {
     const { writeFileSync } = await import('node:fs'); writeFileSync('/tmp/tw-grocery-preview.png', Buffer.from(response.result.data,'base64'));
   });
-  console.log("grocery products browser: autocomplete, photos at creation/later, replace/remove/reload, checked state, retry, preview, recipe ingredients, privacy and multilingual mobile layout ok");
+  console.log("grocery products browser: autocomplete, photos at creation/later, replace/remove/reload, retry, preview, recipe ingredients, privacy and multilingual mobile layout ok");
   ws.close();
 } finally { chrome.kill(); await sleep(300); rmSync(profile, { recursive: true, force: true }); }
