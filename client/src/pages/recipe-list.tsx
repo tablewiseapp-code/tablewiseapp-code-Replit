@@ -6,7 +6,7 @@ import { RecipeLikeButton } from "@/components/recipe-like-button";
 import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { RecipeCreditLine } from "@/components/recipe-credit";
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { DietaryTags, RecipeMeta } from "@/components/recipe-summary";
 
 export default function RecipeList() {
@@ -129,10 +129,15 @@ export default function RecipeList() {
           <div className="space-y-10">
             {sections.filter(section => section.recipes.length > 0).map(section => (
               <section key={section.key} aria-labelledby={`recipes-${section.key}`} data-testid={`section-recipes-${section.key}`}>
-                <h2 id={`recipes-${section.key}`} className="mb-3 text-sm font-semibold text-muted-foreground">
-                  {t(`recipes.${section.key}`)} <span className="font-normal">({section.recipes.length})</span>
-                </h2>
-                <RecipeGrid recipes={section.recipes} />
+                <details open className="group">
+                  <summary className="mb-3 flex min-h-11 cursor-pointer list-none items-center gap-2 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+                    <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-[:not([open])]:-rotate-90 rtl:group-[:not([open])]:rotate-90" />
+                    <h2 id={`recipes-${section.key}`} className="text-sm font-semibold text-muted-foreground">
+                      {t(`recipes.${section.key}`)} <span className="font-normal">({section.recipes.length})</span>
+                    </h2>
+                  </summary>
+                  <RecipeGrid recipes={section.recipes} />
+                </details>
               </section>
             ))}
           </div>
