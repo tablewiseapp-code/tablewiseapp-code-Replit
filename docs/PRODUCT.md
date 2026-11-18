@@ -44,6 +44,7 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 | **Home task** | One private household to-do: name, optional due date, priority, optional photo, created and completed times. The nav label is "Home Tasks" ("Tasks" in the phone bottom bar). |
 | **Week** | The plan for one calendar week. The nav label is "Week"; the route is `/meals`. |
 | **Catalog** | The shared recipe collection every visitor sees. The UI calls it "Recipes". It is not personal. |
+| **Liked recipe** | A catalog recipe the person marked with the heart. Private to its owner. On Recipes, "Liked" and "Imported by me" sit above "All recipes" (product owner, 2026-11-18). |
 | **Recipe** | A catalog entry: title, ingredients, steps, times, credit, tags. |
 | **Credit** | Who a recipe is attributed to (TableWise, a named source, or AI-generated). Always shown. |
 | **Idea** | An AI-generated recipe suggestion in My Ideas, before it is saved to the catalog. |
@@ -81,7 +82,8 @@ These are accepted facts today, not features. Do not build on top of them as if 
 - **Photo and link import do not parse anything.** A photo is attached as an image; a link is stored as the source URL. Only typed and dictated text is turned into a recipe.
 - **Four planner filters have no data source:** "With my notes", "Modified by me", "My picks", "Minimum rating".
 - **Anonymous visitors can add AI-generated recipes to the shared catalog** without review when public AI is on.
-- **Anyone can add a typed or pasted recipe to the shared catalog** without review (opened for pilot testing, 2026-11-17). Only the operator can remove it.
+- **Any signed-in account can add a typed or pasted recipe to the shared catalog** without review (opened 2026-11-17; guests see the import page with saving disabled and a note to sign in, product owner, 2026-11-18). Only the operator can remove it.
+- **"Imported by me" starts on 2026-11-18.** Recipes imported earlier have no recorded importer and appear only under "All recipes".
 - **Catalog recipes have no images**, and only a few have nutrition data.
 - **README.md and replit.md describe an older product** ("recipe manager from photos, links and voice", "Recipe View"). This file supersedes them.
 

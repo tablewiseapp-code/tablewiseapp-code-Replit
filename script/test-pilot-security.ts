@@ -115,6 +115,10 @@ async function main() {
       await status(f.request("/api/recipes", "POST", sample, { Cookie: "operator=true", "X-Operator": "true", "X-Forwarded-For": "127.0.0.1" }), 403);
       assert.equal(f.writes, 0); assert.equal(f.aiCalls, 0);
     });
+    await check("guests cannot import a recipe; they must sign in first", async f => {
+      await status(f.request("/api/import-recipe", "POST", sample, { Origin: f.base }), 401);
+      assert.equal(f.writes, 0);
+    });
     await check("without operator configuration, writes stay disabled even in development", async f => {
       await status(f.request("/api/recipes", "POST", sample, auth), 403);
       assert.equal(f.writes, 0);
