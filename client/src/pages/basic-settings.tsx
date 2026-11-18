@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Check, Minus, Plus, X } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
@@ -6,6 +6,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion";
 import { useI18n } from "@/lib/i18n";
 import { useSettingsCopy } from "@/lib/settings-copy";
+import { setGuestChoice, switchPerson, useAccountCopy } from "@/lib/account-copy";
 import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
 import { mealSlots, type MealSlot } from "@/lib/meal-plan";
@@ -219,6 +220,36 @@ function MemberCard({ member, index, onChange, onRemove }: { member: Member; ind
   );
 }
 
+/** Who is signed in, with Sign out; a guest gets Sign in, which reopens the sign-in screen. */
+function AccountCard() {
+  const t = useAccountCopy();
+  const [email, setEmail] = useState<string | null>();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { fetch("/api/auth/me").then(r => r.json()).then(me => setEmail(me.email)).catch(() => undefined); }, []);
+  if (email === undefined) return null;
+  const signOut = async () => {
+    setFailed(false);
+    try {
+      const response = await fetch("/api/auth/sign-out", { method: "POST" });
+      if (!response.ok) throw new Error();
+      setGuestChoice(false);
+      switchPerson();
+    } catch { setFailed(true); }
+  };
+  return (
+    <section className="card mt-5 flex flex-wrap items-center justify-between gap-3 p-4" aria-labelledby="account-title" data-testid="section-account">
+      <div className="min-w-0">
+        <h2 id="account-title" className="text-base font-semibold text-foreground">{t("account")}</h2>
+        <p className="break-all text-sm text-muted-foreground" data-testid="account-status">{email ? t("signedInAs", { email }) : t("guestNote")}</p>
+        {failed && <p role="alert" className="text-sm font-medium text-destructive">{t("signOutFailed")}</p>}
+      </div>
+      {email
+        ? <button type="button" onClick={signOut} className="btn btn-secondary" data-testid="button-sign-out">{t("signOut")}</button>
+        : <button type="button" onClick={() => { setGuestChoice(false); window.location.assign("/"); }} className="btn btn-secondary" data-testid="button-sign-in">{t("submit")}</button>}
+    </section>
+  );
+}
+
 export default function BasicSettingsPage() {
   const { dir, t: app } = useI18n();
   const t = useSettingsCopy();
@@ -280,6 +311,7 @@ export default function BasicSettingsPage() {
           </div>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">{t("rulesExplain")}</p>
+        <AccountCard />
 
         <Accordion type="multiple" defaultValue={["household"]} className="mt-5">
           {section("household", t("household"), members.length ? t("householdSummary", { adults, children: members.length - adults }) : t("householdSummaryNone"), <>

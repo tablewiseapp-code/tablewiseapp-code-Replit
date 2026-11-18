@@ -295,3 +295,32 @@ export const householdTasks = pgTable("household_tasks", {
   id: text("id").primaryKey(),
   names: jsonb("names").$type<Record<string, string>>().notNull(),
 });
+
+// Accounts: email and password sign-in. An account points at one owner, so every owner-scoped table follows it.
+// The legacy `users` table is not used.
+export const accounts = pgTable("accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: varchar("email", { length: 254 }).notNull().unique(),
+  /** scrypt "salt:key" in hex. Null leaves room for a sign-in without a password (Google). */
+  passwordHash: text("password_hash"),
+  ownerId: varchar("owner_id", { length: 64 }).notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Signed-in browsers. Only the SHA-256 of the session cookie is stored.
+export const accountSessions = pgTable("account_sessions", {
+  tokenHash: varchar("token_hash", { length: 64 }).primaryKey(),
+  accountId: uuid("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+}, table => [index("account_sessions_account").on(table.accountId)]);
+
+// My recipes on /recipes: catalog recipes an owner liked or imported. Private to the owner; the recipe stays shared.
+export const recipeMarks = pgTable("recipe_marks", {
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  recipeId: varchar("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
+  kind: varchar("kind", { length: 8 }).$type<"liked" | "imported">().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  primaryKey({ columns: [table.ownerId, table.recipeId, table.kind] }),
+  check("recipe_marks_kind", sql`${table.kind} IN ('liked','imported')`),
+]);

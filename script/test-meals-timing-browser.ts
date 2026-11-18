@@ -77,6 +77,7 @@ async function main() {
   try {
     await call("Page.enable");
     await call("Runtime.enable");
+    await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
     await call("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1000, deviceScaleFactor: 1, mobile: false });
     await navigate("/meals");
     await wait(element("meals-time-total"));

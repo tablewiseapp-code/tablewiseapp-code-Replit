@@ -62,6 +62,7 @@ async function main() {
   try {
     await send("Page.enable");
     await send("Runtime.enable");
+    await send("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
     await send("Page.addScriptToEvaluateOnNewDocument", {
       source: `
         window.__catalogMode = 'error';

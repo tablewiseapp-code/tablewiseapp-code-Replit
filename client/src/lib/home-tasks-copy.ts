@@ -12,7 +12,7 @@ const copy = {
     actions: "Task options", edit: "Edit", moveTomorrow: "Move to tomorrow", delete: "Delete",
     doneToast: "Task completed", deletedToast: "Task deleted", movedToast: "Moved to tomorrow", undo: "Undo",
     markDone: "Mark “{name}” done", markOpen: "Mark “{name}” not done", due: "Due {date}",
-    viewAll: "View all tasks", nothingDue: "Nothing overdue or due today.",
+    viewAll: "View all tasks", nothingDue: "No open tasks.",
   },
   ru: {
     title: "Дела по дому", intro: "Что нужно сделать по дому.", add: "+ Добавить дело", empty: "Пока нет дел. Добавьте первое.",
@@ -27,7 +27,7 @@ const copy = {
     actions: "Действия с делом", edit: "Изменить", moveTomorrow: "Перенести на завтра", delete: "Удалить",
     doneToast: "Дело выполнено", deletedToast: "Дело удалено", movedToast: "Перенесено на завтра", undo: "Отменить",
     markDone: "Отметить «{name}» выполненным", markOpen: "Отметить «{name}» невыполненным", due: "Срок {date}",
-    viewAll: "Все дела", nothingDue: "Нет просроченных дел и дел на сегодня.",
+    viewAll: "Все дела", nothingDue: "Нет открытых дел.",
   },
   he: {
     title: "משימות בית", intro: "מה צריך לעשות בבית.", add: "+ הוספת משימה", empty: "אין עדיין משימות. הוסיפו את הראשונה.",
@@ -42,7 +42,7 @@ const copy = {
     actions: "אפשרויות משימה", edit: "עריכה", moveTomorrow: "העברה למחר", delete: "מחיקה",
     doneToast: "המשימה הושלמה", deletedToast: "המשימה נמחקה", movedToast: "הועבר למחר", undo: "ביטול פעולה",
     markDone: "סימון „{name}” כבוצעה", markOpen: "סימון „{name}” כלא בוצעה", due: "עד {date}",
-    viewAll: "כל המשימות", nothingDue: "אין משימות באיחור או להיום.",
+    viewAll: "כל המשימות", nothingDue: "אין משימות פתוחות.",
   },
 };
 export type HomeTaskCopyKey = keyof typeof copy.en;

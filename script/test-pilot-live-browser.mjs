@@ -21,6 +21,7 @@ try {
   await new Promise(r => (ws.onopen = r));
   let n = 0, generation = true; const waiting = {}, sent = [];
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
   const fulfill = (requestId, body) => call("Fetch.fulfillRequest", {
     requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "application/json" }],
     body: Buffer.from(JSON.stringify(body)).toString("base64"),

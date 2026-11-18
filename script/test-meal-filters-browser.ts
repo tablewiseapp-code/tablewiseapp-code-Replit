@@ -73,6 +73,7 @@ async function main() {
   let fixtureScript = "";
   try {
     await call("Page.enable"); await call("Runtime.enable");
+    await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
     await call("Page.bringToFront");
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     fixtureScript = (await call("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {

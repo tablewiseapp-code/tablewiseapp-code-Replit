@@ -30,6 +30,8 @@ import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-ext
 import { databaseHomeTaskStore, type HomeTaskStore } from "./home-tasks";
 import { homeTaskInput, weekPlanInput } from "./request-schemas";
 import { databaseWeekPlanStore, type WeekPlanStore } from "./week-plans";
+import { databaseRecipeMarkStore, type RecipeMarkStore } from "./recipe-marks";
+import { databaseAccountStore, installAccounts, type AccountStore } from "./accounts";
 import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
 import { databaseGroceryStore, type GroceryStore } from "./shared-grocery";
 import { can, type Access } from "../shared/grocery-access";
@@ -57,6 +59,8 @@ export type RouteDependencies = {
   groceryItemPhotos?: GroceryItemPhotoStore;
   homeTasks?: HomeTaskStore;
   weekPlans?: WeekPlanStore;
+  recipeMarks?: RecipeMarkStore;
+  accounts?: AccountStore;
   grocery?: GroceryStore;
   youtube?: YouTubeImportStore;
 };
@@ -116,7 +120,10 @@ export async function registerRoutes(
   const config = dependencies.config ?? pilotConfig();
   const developmentCredits = developmentCatalogEnabled() && !config.production;
   const security = installPilotSecurity(app, config, dependencies.now, developmentCredits);
+  // Before every route: a signed-in session decides the owner.
+  installAccounts(app, security, dependencies.accounts ?? databaseAccountStore(), dependencies.now);
   const storage = dependencies.storage ?? (await import("./storage")).storage;
+  const recipeMarks = dependencies.recipeMarks ?? databaseRecipeMarkStore();
   // Development-only saved reads. No model calls, migrations or public paid endpoint.
   // Custom storage adapters must supply their own corresponding nutrition reader.
   const nutrition = developmentCredits
@@ -306,8 +313,13 @@ export async function registerRoutes(
         : res.status(400).json({ error: "Check the recipe name, ingredients and steps." });
     }
     if (parsed.data.stepAnalysis && !analyzeRecipe.isValidated(parsed.data, parsed.data.stepAnalysis)) return stale();
+    // Guests can see the import page but must sign in to save (product owner, 2026-11-18).
+    const owner = security.owner(req, res, false);
+    if (!res.locals.accountOwner && owner !== "operator") return res.status(401).json({ error: "Sign in to import a recipe." });
     try {
-      res.status(201).json(await storage.createRecipe(parsed.data));
+      const recipe = await storage.createRecipe(parsed.data);
+      await recipeMarks.add(owner!, recipe.id, "imported").catch(() => console.error("api_failure operation=recipe_mark_import"));
+      res.status(201).json(recipe);
     } catch (error) {
       console.error("api_failure operation=recipe_import");
       res.status(isMissingPreparationColumn(error) ? 503 : 500).json({
@@ -720,6 +732,26 @@ Rules:
       if (owner) await homeTasks.remove(owner, id.data);
       res.status(204).end(); // already gone is fine
     } catch { cookingFailed(res, "home_task_delete"); }
+  });
+  // My recipes on /recipes: liked and imported recipe ids. Private to the owner.
+  app.get("/api/my-recipes", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await recipeMarks.list(owner) : { liked: [], imported: [] }); }
+    catch { cookingFailed(res, "my_recipes_list"); }
+  });
+  app.put("/api/recipes/:id/like", async (req, res) => {
+    const id = recipeId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid recipe identifier." });
+    const owner = security.owner(req, res, true)!;
+    try { await recipeMarks.add(owner, id.data, "liked"); res.status(204).end(); }
+    catch (error) { isUnknownRecipe(error) ? res.status(404).json({ error: "Recipe not found." }) : cookingFailed(res, "recipe_like"); }
+  });
+  app.delete("/api/recipes/:id/like", async (req, res) => {
+    const id = recipeId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid recipe identifier." });
+    const owner = security.owner(req, res, false);
+    try { if (owner) await recipeMarks.remove(owner, id.data, "liked"); res.status(204).end(); }
+    catch { cookingFailed(res, "recipe_unlike"); }
   });
   // The Week plan. Private to the owner; null until the first save.
   const weekPlans = dependencies.weekPlans ?? databaseWeekPlanStore();

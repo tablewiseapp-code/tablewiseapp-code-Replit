@@ -142,3 +142,9 @@ export const bulkGroceryExtras = z.array(z.object({
     "Canned & Jarred", "Spices & Seasonings", "Other", "Manually Added"]),
   existingId: cookingSessionId.optional(),
 }).strict()).min(1).max(50);
+
+// Sign in. A new email creates the account with this password.
+export const signInInput = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(8).max(200),
+}).strict();

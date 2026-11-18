@@ -41,8 +41,8 @@ export function groupTasks(tasks: HomeTask[], today: string) {
   return { ...groups, completed };
 }
 
-/** Up to three open tasks for Home: Overdue first, then Today. */
+/** Every open task for Home, in the Home Tasks page order: Overdue, Today, Upcoming, Anytime. */
 export function homePreview(tasks: HomeTask[], today: string) {
   const groups = groupTasks(tasks, today);
-  return [...groups.overdue, ...groups.today].slice(0, 3);
+  return HOME_TASK_SECTIONS.flatMap(section => groups[section]);
 }

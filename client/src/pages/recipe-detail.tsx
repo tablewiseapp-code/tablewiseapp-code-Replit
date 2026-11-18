@@ -14,6 +14,7 @@ import { cleanStep, stepDuration } from "@/lib/recipe-steps";
 import { ingredientRows, ingredientSections, ingredientViews, readIngredientView, saveIngredientView, type IngredientRow, type IngredientView } from "@/lib/ingredient-view";
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit";
+import { RecipeLikeButton } from "@/components/recipe-like-button";
 import { RecipeNutritionPanel } from "@/components/recipe-nutrition";
 import { DietaryTags } from "@/components/recipe-summary";
 import { RecipeVideo } from "@/components/youtube-import";
@@ -226,7 +227,10 @@ export default function RecipeDetail() {
         )}
 
         <header>
-          <h1 className="page-title break-words" data-testid="text-recipe-title">{recipe.title}</h1>
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="page-title break-words" data-testid="text-recipe-title">{recipe.title}</h1>
+            <RecipeLikeButton recipeId={recipe.id} />
+          </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /><CookedBadge recipeId={recipe.id} /></div>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-base text-foreground">
             {recipe.prepTime != null && <span className={meta} data-testid="text-prep-time"><Clock3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />{view("prep")}: {recipe.prepTime} {view("minutes")}</span>}
