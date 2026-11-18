@@ -85,6 +85,16 @@ export const homeTaskInput = z.object({
   completedAt: z.string().datetime({ offset: true }).nullable(),
   createdAt: z.string().datetime({ offset: true }).optional(),
 }).strict();
+// The Week: the whole plan in one PUT. Caps match /meals (12 recipes, 21 slots, 7 days).
+export const weekPlanInput = z.object({
+  selectedIds: z.array(recipeId).max(12),
+  planAssignments: z.array(z.object({
+    recipeId, mealType: z.enum(["Breakfast", "Lunch", "Dinner"]),
+    startDay: z.number().int().min(0).max(6), spanDays: z.number().int().min(1).max(7),
+    servings: z.number().positive().max(100).optional(),
+  }).strict().refine(a => a.startDay + a.spanDays <= 7)).max(21),
+  locked: z.boolean(),
+}).strict();
 export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
 export const cookingSessionPatch = z.object({
   rating: z.number().int().min(1).max(5).nullable(),

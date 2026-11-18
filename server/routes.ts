@@ -26,7 +26,8 @@ import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cook
 import { databaseGroceryItemPhotoStore, type GroceryItemPhotoStore } from "./grocery-item-photos/store";
 import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
 import { databaseHomeTaskStore, type HomeTaskStore } from "./home-tasks";
-import { homeTaskInput } from "./request-schemas";
+import { homeTaskInput, weekPlanInput } from "./request-schemas";
+import { databaseWeekPlanStore, type WeekPlanStore } from "./week-plans";
 import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
 import { databaseGroceryStore, type GroceryStore } from "./shared-grocery";
 import { can, type Access } from "../shared/grocery-access";
@@ -53,6 +54,7 @@ export type RouteDependencies = {
   groceryExtras?: GroceryExtraStore;
   groceryItemPhotos?: GroceryItemPhotoStore;
   homeTasks?: HomeTaskStore;
+  weekPlans?: WeekPlanStore;
   grocery?: GroceryStore;
   youtube?: YouTubeImportStore;
 };
@@ -691,6 +693,20 @@ Rules:
       if (owner) await homeTasks.remove(owner, id.data);
       res.status(204).end(); // already gone is fine
     } catch { cookingFailed(res, "home_task_delete"); }
+  });
+  // The Week plan. Private to the owner; null until the first save.
+  const weekPlans = dependencies.weekPlans ?? databaseWeekPlanStore();
+  app.get("/api/week-plan", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await weekPlans.get(owner) : null); }
+    catch { cookingFailed(res, "week_plan_get"); }
+  });
+  app.put("/api/week-plan", async (req, res) => {
+    const input = weekPlanInput.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid plan." });
+    const owner = security.owner(req, res, true)!;
+    try { await weekPlans.save(owner, input.data); res.status(204).end(); }
+    catch { cookingFailed(res, "week_plan_save"); }
   });
   app.get("/api/cooking-sessions", async (req, res) => {
     const recipe = recipeId.safeParse(req.query.recipeId);

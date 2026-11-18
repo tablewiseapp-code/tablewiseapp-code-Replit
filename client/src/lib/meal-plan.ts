@@ -1,4 +1,5 @@
 // Writes to the same "weeklyMealsState" the /meals planner and the grocery list already read.
+// Postgres (week_plans) is the source of truth; localStorage is the synchronous copy every page reads.
 export const mealSlots = ["Breakfast", "Lunch", "Dinner"] as const;
 export type MealSlot = typeof mealSlots[number];
 export type PlanAssignment = { recipeId: string; mealType: MealSlot; startDay: number; spanDays: number; servings?: number };
@@ -46,7 +47,30 @@ export function readPlan(): PlanState {
 }
 export const isWeekLocked = () => { try { return JSON.parse(localStorage.getItem(lockStorageKey) ?? "false") === true; } catch { return false; } };
 /** Throws when the browser refuses the write, so the caller can show an error. */
-export function writePlan(plan: PlanState) { localStorage.setItem(planStorageKey, JSON.stringify(plan)); }
+export function writePlan(plan: PlanState) { localStorage.setItem(planStorageKey, JSON.stringify(plan)); pushWeekPlan(); }
+
+// ---- Server copy ----
+const synced = () => { const { selectedIds, planAssignments } = readPlan(); return JSON.stringify({ selectedIds, planAssignments, locked: isWeekLocked() }); };
+let lastQueued = "", queue = Promise.resolve();
+/** Sends the browser copy to the server when the plan or lock changed. Requests go one at a time, in order. */
+export function pushWeekPlan() {
+  const body = synced();
+  if (body === lastQueued) return;
+  lastQueued = body;
+  queue = queue.then(() => fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: true }))
+    .then(r => { if (!r.ok) throw new Error(); })
+    .catch(() => { if (lastQueued === body) lastQueued = ""; }); // retried on the next change
+}
+/** Run once before pages read the plan. The server copy wins; a browser plan with no server copy is uploaded once. */
+export async function syncWeekPlan() {
+  const response = await fetch("/api/week-plan");
+  if (!response.ok) return;
+  const server: { selectedIds: string[]; planAssignments: PlanAssignment[]; locked: boolean } | null = await response.json();
+  if (!server) { const local = readPlan(); if (local.selectedIds.length || local.planAssignments.length || isWeekLocked()) pushWeekPlan(); return; }
+  localStorage.setItem(planStorageKey, JSON.stringify({ ...readPlan(), selectedIds: server.selectedIds, planAssignments: server.planAssignments }));
+  localStorage.setItem(lockStorageKey, JSON.stringify(server.locked));
+  lastQueued = synced();
+}
 
 /** Grocery scale for a recipe: planned servings / original servings. Several assignments: the largest wins. */
 export function plannedServingsFactor(assignments: PlanAssignment[], recipeId: string, original: number | null): number {

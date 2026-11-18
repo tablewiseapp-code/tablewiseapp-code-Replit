@@ -34,7 +34,7 @@ server/
   security.ts          operator sessions, owner cookie, access gates, rate limits, AI budget
   storage.ts           data access (Drizzle)
   request-schemas.ts   Zod schemas for request bodies
-  recipe-*.ts, cooking-history.ts, grocery-extras.ts, home-tasks.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
+  recipe-*.ts, cooking-history.ts, grocery-extras.ts, home-tasks.ts, week-plans.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
 shared/                types and schemas used by both sides; schema.ts is the database schema
 migrations/            reviewed SQL, applied by hand
 db/init/               seed dump for the local Docker database
@@ -79,16 +79,17 @@ Tables are defined in `shared/schema.ts`.
 | `recipe_sources` | where an imported recipe came from (YouTube link, video id, status `mock` until real extraction exists); one per recipe, one per owner and video | per owner (operator-only writes, like recipes) |
 | `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
 | `household_tasks` | seeded suggested task names in three languages | global |
+| `week_plans` | the Week: shortlisted recipe ids, slot assignments and the lock; one row per owner, replaced whole on each save (`GET`/`PUT /api/week-plan`) | per owner |
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
-Browser `localStorage` still holds the week plan (`weeklyMealsState`), grocery progress, My Ideas, Basic Settings and filter state. This is legacy, not a pattern to copy.
+The Week is stored in `week_plans`. The browser keeps a synchronous copy in `localStorage` (`weeklyMealsState`, `week_locked_v1`): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Browser `localStorage` alone still holds grocery progress, My Ideas, Basic Settings and planner filter state. This is legacy, not a pattern to copy.
 
 ## Identity and access
 
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
-- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin), and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
+- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
 - **Operator only:** YouTube import, edit and delete recipes; read the analytics summary.
 

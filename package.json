@@ -92,6 +92,7 @@
     "test:grocery-item-photos": "tsx script/test-grocery-item-photos.ts",
     "test:home-tasks": "tsx script/test-home-tasks.ts",
     "test:home-tasks-db": "tsx script/test-home-tasks-db.ts",
+    "test:week-plan-db": "tsx script/test-week-plan-db.ts",
     "test:home-tasks-browser": "node script/test-home-tasks-browser.mjs"
   },
   "dependencies": {

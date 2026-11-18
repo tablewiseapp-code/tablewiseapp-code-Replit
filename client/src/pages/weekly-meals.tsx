@@ -38,7 +38,7 @@ import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { PlannerBoard } from "@/components/planner-board";
 import { usePlannerCopy } from "@/lib/planner-copy";
-import { mealSlots, plannedSlotCount, totalSlots, writePlan, type MealSlot, type PlanState } from "@/lib/meal-plan";
+import { mealSlots, plannedSlotCount, pushWeekPlan, totalSlots, writePlan, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -267,6 +267,7 @@ function WeeklyMealsContent() {
   useEffect(() => {
     saveState(state);
   }, [state]);
+  useEffect(() => pushWeekPlan(), [state, weekLocked]); // after both localStorage writes; skips unchanged plans
 
   const notify = useCallback((title: string, destructive = false) => toast({ title, variant: destructive ? "destructive" : "default" }), [toast]);
   /** Persists first; the UI only changes once the browser accepted the write, so a failed save never looks saved. */

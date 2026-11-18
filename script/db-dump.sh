@@ -5,5 +5,5 @@ set -eu
 docker compose exec -T db pg_dump -U tablewise --no-owner --no-privileges \
   --exclude-table-data=pilot_events --exclude-table-data=users \
   --exclude-table-data=grocery_item_photos --exclude-table-data=grocery_extras --exclude-table-data=cooking_sessions --exclude-table-data=cooking_photos \
-  --exclude-table-data=shared_grocery_lists --exclude-table-data=shared_grocery_items --exclude-table-data=grocery_notes --exclude-table-data=recipe_sources --exclude-table-data=home_tasks tablewise | gzip -9 > db/init/tablewise.sql.gz
+  --exclude-table-data=shared_grocery_lists --exclude-table-data=shared_grocery_items --exclude-table-data=grocery_notes --exclude-table-data=recipe_sources --exclude-table-data=home_tasks --exclude-table-data=week_plans tablewise | gzip -9 > db/init/tablewise.sql.gz
 echo "Wrote db/init/tablewise.sql.gz ($(du -h db/init/tablewise.sql.gz | cut -f1))"

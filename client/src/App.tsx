@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Switch, Route, Redirect, useSearch } from "wouter";
+import { syncWeekPlan } from "@/lib/meal-plan";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -49,6 +51,9 @@ function Router() {
 }
 
 function App() {
+  // Pages read the Week synchronously, so load the server copy first. Offline or failing: use the browser copy.
+  const [planReady, setPlanReady] = useState(false);
+  useEffect(() => { syncWeekPlan().catch(() => undefined).finally(() => setPlanReady(true)); }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -56,7 +61,7 @@ function App() {
           <RecipeDisplayProvider>
           <Toaster />
           <AppNav />
-          <Router />
+          {planReady && <Router />}
           </RecipeDisplayProvider>
         </I18nProvider>
       </TooltipProvider>

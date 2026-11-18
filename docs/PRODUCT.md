@@ -1,7 +1,7 @@
 # TableWise — Product Definition
 
 > Source of truth for what the product is. If code or another doc disagrees with this file, raise it; do not silently pick one.
-> Last reviewed: 2026-11-17.
+> Last reviewed: 2026-11-18.
 
 ## What it is
 
@@ -73,7 +73,7 @@ These are accepted facts today, not features. Do not build on top of them as if 
 
 - **The plan is not dated.** Pilot events from `/meals` and the grocery screen use the calendar week they happen in. A week left locked across two weeks records no return; the person must unlock and lock again.
 - **No accounts.** A person's data is tied to one browser cookie and does not move across devices.
-- **Plan, Ideas and Basic Settings live in browser storage only.** New per-user data must go in Postgres (see ARCHITECTURE.md).
+- **Ideas and Basic Settings live in browser storage only.** The Week is stored in Postgres per owner (2026-11-18). New per-user data must go in Postgres (see ARCHITECTURE.md).
 - **Photo and link import do not parse anything.** A photo is attached as an image; a link is stored as the source URL. Only typed and dictated text is turned into a recipe.
 - **Four planner filters have no data source:** "With my notes", "Modified by me", "My picks", "Minimum rating".
 - **Anonymous visitors can add AI-generated recipes to the shared catalog** without review when public AI is on.
