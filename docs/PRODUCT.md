@@ -28,7 +28,7 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 
 **Home** (`/`) is the landing page: today's meals from the Week and how many grocery items are left, with links into each step.
 
-**Sign in** (first visit, at any page except a share link): email and password, or "Continue as guest". There is no separate sign-up: the first sign-in with a new email creates the account with the password typed, and the guest's data becomes the account's. Basic Settings shows who is signed in, with Sign out (product owner, 2026-11-18).
+**Sign in** (first visit, at any page except a share link): email and password, or "Continue as guest". There is no separate sign-up: the first sign-in with a new email creates the account with the password typed, and the guest's data becomes the account's. Basic Settings shows who is signed in, with Sign out (product owner, 2026-11-18). A signed-in account can add an optional name and photo there; the photo (or the first letter of the name or email) replaces the Settings icon in the header (2026-11-18).
 
 Supporting features: My Ideas (AI recipe ideas), Import (typed or dictated recipe), My Basic Settings (household, allergies, devices, budget, pantry).
 
@@ -51,7 +51,7 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 | **Draft** | A server-side AI generation awaiting the person's approve / regenerate decision. |
 | **Cooking session** | One "I made it" record, with optional rating, notes and photos. Private to its owner. |
 | **Owner** | The scope of one person's private data. A guest's owner comes from the `tablewise_owner` cookie; an account keeps the owner of the guest who created it. |
-| **Account** | An email and password that opens the same owner from any browser. UI words: "Sign in", "Sign out" (not "Login", "Register"). |
+| **Account** | An email and password that opens the same owner from any browser, with an optional name and photo. UI words: "Sign in", "Sign out" (not "Login", "Register"). |
 | **Guest** | A person using TableWise without signing in. Their data is tied to one browser. |
 | **Operator** | The person running the pilot. Signs in at `/operator` with a shared token. Can edit and delete recipes and use YouTube import. |
 | **Basic Settings** | Household preferences that personalise planning and ideas. |

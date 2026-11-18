@@ -1,14 +1,15 @@
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { accounts, accountSessions } from "@shared/schema";
-import { signInInput } from "./request-schemas";
+import { profileInput, signInInput } from "./request-schemas";
 import { RequestBudget, type installPilotSecurity } from "./security";
 
 type Database = Omit<typeof import("./db").db, "$client">;
 type Security = ReturnType<typeof installPilotSecurity>;
 type Account = { id: string; email: string; passwordHash: string | null; ownerId: string };
+export type SignedIn = { id: string; email: string; ownerId: string; name: string | null; hasPhoto: boolean; photoVersion: number };
 
 const sessionCookie = "tablewise_session";
 const sessionDays = 30;
@@ -33,8 +34,11 @@ export type AccountStore = {
   create(email: string, passwordHash: string, ownerId: string): Promise<Account | null>;
   startSession(accountId: string, tokenHash: string, expiresAt: Date): Promise<void>;
   /** The signed-in account for a live session. */
-  session(tokenHash: string): Promise<{ email: string; ownerId: string } | null>;
+  session(tokenHash: string): Promise<SignedIn | null>;
   endSession(tokenHash: string): Promise<void>;
+  photo(accountId: string): Promise<string | null>;
+  /** Only the fields given change; a new photo (or none) gets a new version. */
+  updateProfile(accountId: string, profile: { name?: string | null; photo?: string | null }): Promise<void>;
 };
 
 export function databaseAccountStore(connection?: Database): AccountStore {
@@ -52,13 +56,25 @@ export function databaseAccountStore(connection?: Database): AccountStore {
       await (await database()).insert(accountSessions).values({ accountId, tokenHash, expiresAt });
     },
     async session(tokenHash) {
-      const [row] = await (await database()).select({ email: accounts.email, ownerId: accounts.ownerId })
+      const [row] = await (await database()).select({ id: accounts.id, email: accounts.email, ownerId: accounts.ownerId,
+        name: accounts.displayName, hasPhoto: sql<boolean>`${accounts.photo} IS NOT NULL`, photoVersion: accounts.photoVersion })
         .from(accountSessions).innerJoin(accounts, eq(accounts.id, accountSessions.accountId))
         .where(and(eq(accountSessions.tokenHash, tokenHash), gt(accountSessions.expiresAt, new Date())));
       return row ?? null;
     },
     async endSession(tokenHash) {
       await (await database()).delete(accountSessions).where(eq(accountSessions.tokenHash, tokenHash));
+    },
+    async photo(accountId) {
+      const [row] = await (await database()).select({ photo: accounts.photo }).from(accounts).where(eq(accounts.id, accountId));
+      return row?.photo ?? null;
+    },
+    async updateProfile(accountId, { name, photo }) {
+      if (name === undefined && photo === undefined) return;
+      await (await database()).update(accounts).set({
+        ...(name === undefined ? {} : { displayName: name }),
+        ...(photo === undefined ? {} : { photo, photoVersion: sql`${accounts.photoVersion} + 1` }),
+      }).where(eq(accounts.id, accountId));
     },
   };
 }
@@ -81,7 +97,7 @@ export function installAccounts(app: Express, security: Security, store: Account
     if (!tokenHash) return next();
     try {
       const account = await store.session(tokenHash);
-      if (account) { res.locals.accountOwner = account.ownerId; res.locals.accountEmail = account.email; }
+      if (account) { res.locals.accountOwner = account.ownerId; res.locals.account = account; }
       else res.append("Set-Cookie", security.cookie(sessionCookie, "", 0));
       next();
     } catch {
@@ -97,7 +113,38 @@ export function installAccounts(app: Express, security: Security, store: Account
     res.json({ email: account.email });
   };
 
-  app.get("/api/auth/me", (_req, res) => res.json({ email: res.locals.accountEmail ?? null }));
+  app.get("/api/auth/me", (_req, res) => {
+    const account = res.locals.account as SignedIn | undefined;
+    if (!account) return res.json({ email: null });
+    res.json({ email: account.email, name: account.name, photo: account.hasPhoto ? `/api/auth/photo?v=${account.photoVersion}` : null });
+  });
+
+  // The profile photo behind the versioned link /me returns. JPEG only.
+  app.get("/api/auth/photo", async (_req, res) => {
+    const account = res.locals.account as SignedIn | undefined;
+    try {
+      const photo = account && (await store.photo(account.id))?.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/);
+      if (!photo) return res.status(404).json({ error: "No photo" });
+      res.set("Cache-Control", "private, max-age=31536000, immutable").type("image/jpeg").send(Buffer.from(photo[1], "base64"));
+    } catch {
+      console.error("api_failure operation=account_photo_get");
+      res.status(500).json({ error: "failed" });
+    }
+  });
+
+  app.put("/api/auth/profile", express.json({ limit: "300kb", inflate: false }), async (req, res) => {
+    const account = res.locals.account as SignedIn | undefined;
+    if (!account) return res.status(401).json({ error: "sign_in" });
+    const input = profileInput.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "invalid" });
+    try {
+      await store.updateProfile(account.id, input.data);
+      res.status(204).end();
+    } catch {
+      console.error("api_failure operation=account_profile");
+      res.status(500).json({ error: "failed" });
+    }
+  });
 
   app.post("/api/auth/sign-in", express.json({ limit: "2kb", inflate: false }), async (req, res) => {
     const input = signInInput.safeParse(req.body);

@@ -144,6 +144,11 @@ export const bulkGroceryExtras = z.array(z.object({
 }).strict()).min(1).max(50);
 
 // Sign in. A new email creates the account with this password.
+// Account profile: send only what changes; null clears it.
+export const profileInput = z.object({
+  name: z.string().trim().min(1).max(60).nullable().optional(),
+  photo: groceryExtraCreate.shape.image.unwrap().nullable().optional(),
+}).strict();
 export const signInInput = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(8).max(200),
