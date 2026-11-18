@@ -2,6 +2,7 @@ import type { Language } from "./i18n";
 
 const copy = {
   actions: ["Item actions", "Действия с товаром", "פעולות לפריט"],
+  editNote: ["Edit note", "Изменить заметку", "עריכת הערה"],
   loadFailed: ["We couldn’t load your list.", "Не удалось загрузить список.", "לא הצלחנו לטעון את הרשימה."],
   paste: ["Paste a list", "Вставить список", "הדבקת רשימה"],
   onePerLine: ["One product per line", "Один товар на строку", "מוצר אחד בכל שורה"],
@@ -13,8 +14,10 @@ const copy = {
   category: ["Category", "Категория", "קטגוריה"],
   item: ["Item", "Товар", "פריט"],
   bulkLimit: ["Enter up to 50 items, with up to 80 characters each.", "До 50 товаров, не более 80 символов на товар.", "עד 50 פריטים, עד 80 תווים לפריט."],
-  all: ["All Items", "Все товары", "כל הפריטים"],
-  mine: ["My Items", "Мои товары", "הפריטים שלי"],
+  all: ["All", "Все", "הכול"],
+  recipes: ["From recipes", "Из рецептов", "מהמתכונים"],
+  mine: ["Added by me", "Добавлено мной", "נוספו על ידיי"],
+  notOnDay: ["Not on a day yet", "Ещё не на дне недели", "עדיין לא שובץ ליום"],
   left: ["Items left", "Осталось купить", "פריטים שנותרו"],
   checked: ["Checked items", "Купленные товары", "פריטים שסומנו"],
   uncategorized: ["Manually Added", "Добавлено вручную", "נוספו ידנית"],

@@ -250,3 +250,20 @@
   .grocery-photo-thumbnail { margin-inline-start: 27px; margin-block: 4px; }
 }
 .grocery-price-toggle[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+/* Item price sits in the same column as the category "$" button (44px, the last control in both rows). */
+.grocery-price-toggle { width: 44px; padding: 0; justify-content: center; }
+.grocery-item-price { flex: none; width: 44px; display: flex; justify-content: center; white-space: nowrap; font-size: var(--text-support); font-variant-numeric: tabular-nums; }
+.grocery-picture-status { order: 2; }
+@media (max-width: 520px) {
+  .grocery-item-price { position: absolute; inset-inline-end: 0; top: 0; height: 44px; align-items: center; }
+}
+/* All · From recipes · Added by me: one segmented toggle. */
+.grocery-toggle { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--ml-line); border-radius: 999px; background: var(--card); }
+.grocery-toggle button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--ml-muted); font: inherit; font-size: var(--text-support); font-weight: 550; white-space: nowrap; cursor: pointer; transition: background .16s ease, color .16s ease; }
+.grocery-toggle button:hover { color: var(--ml-ink); }
+.grocery-toggle button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.grocery-toggle button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (max-width: 520px) {
+  .grocery-toggle { display: flex; width: 100%; }
+  .grocery-toggle button { flex: 1; padding: 0 8px; }
+}

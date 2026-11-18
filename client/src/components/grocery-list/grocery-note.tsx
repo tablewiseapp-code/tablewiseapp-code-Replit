@@ -2,21 +2,26 @@ import { useState } from "react";
 import { StickyNote } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
-/** A short note on one grocery item. An empty note removes it. Used on the owner's list and on shared lists. */
-export function GroceryNote({ item, value, canEdit, onSave }: {
+/** A short note on one grocery item. An empty note removes it. Used on the owner's list and on shared lists.
+ * With `onEditingChange` the parent opens editing (from a row menu) and no note button is shown. */
+export function GroceryNote({ item, value, canEdit, onSave, editing: openEditing, onEditingChange }: {
   item: string;
   value?: string | null;
   canEdit: boolean;
   onSave: (note: string) => void;
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }) {
   const { t } = useI18n();
-  const [editing, setEditing] = useState(false);
+  const [ownEditing, setOwnEditing] = useState(false);
+  const editing = onEditingChange ? Boolean(openEditing) : ownEditing;
+  const setEditing = onEditingChange ?? setOwnEditing;
   const label = t("grocery.noteFor", { item });
   return (
     <>
-      {canEdit && (
+      {canEdit && !onEditingChange && (
         <button type="button" className={`grocery-note-toggle${value ? " has-note" : ""}`} aria-label={label} title={label}
-          aria-expanded={editing} onClick={() => setEditing(open => !open)} data-testid="button-item-note">
+          aria-expanded={editing} onClick={() => setOwnEditing(open => !open)} data-testid="button-item-note">
           <StickyNote aria-hidden="true" />
         </button>
       )}

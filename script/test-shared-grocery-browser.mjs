@@ -26,6 +26,13 @@ try {
   const until = async (expr, what) => { for (let i = 0; i < 100; i++) { if (await ev(expr)) return; await sleep(150); } throw new Error(`timeout: ${what}; page says: ${String(await ev('document.body.innerText')).slice(0, 300).replace(/\n/g, ' | ')}`); };
   const has = id => `Boolean(document.querySelector('[data-testid=${id}]'))`;
   const click = id => ev(`document.querySelector('[data-testid=${id}]').click()`);
+  // On the owner's list the note is an action in the first row's "…" menu.
+  const ownNote = async () => {
+    await ev("document.querySelector('.grocery-item [data-testid=button-item-picture-menu]').focus()");
+    await call("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", windowsVirtualKeyCode: 13 });
+    await until(has("button-item-note"), "row menu opens");
+    await click("button-item-note");
+  };
   // React reads values through the native setter.
   const type = (selector, text, event = "input") => ev(`(() => { const el = document.querySelector(${JSON.stringify(selector)});
     Object.getOwnPropertyDescriptor(el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype, 'value').set.call(el, ${JSON.stringify(text)});
@@ -48,7 +55,7 @@ try {
   // A note on an item saves, shows under the item and survives a reload.
   const total = await ev("document.querySelectorAll('.grocery-item').length");
   const firstItem = await ev("document.querySelector('.grocery-item .grocery-ingredient').textContent");
-  await click("button-item-note");
+  await ownNote();
   await until(has("input-item-note"), "note input opens");
   await type("[data-testid=input-item-note]", "the ripe ones");
   await ev("document.querySelector('[data-testid=input-item-note]').blur()");
@@ -144,7 +151,7 @@ try {
   await shot("9-shared-gone");
   // Leave no test note behind.
   await list();
-  await click("button-item-note");
+  await ownNote();
   await until(has("input-item-note"), "note input opens");
   await type("[data-testid=input-item-note]", "");
   await ev("document.querySelector('[data-testid=input-item-note]').blur()");
