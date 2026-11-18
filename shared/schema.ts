@@ -305,7 +305,12 @@ export const accounts = pgTable("accounts", {
   passwordHash: text("password_hash"),
   ownerId: varchar("owner_id", { length: 64 }).notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+  /** Optional name shown instead of the email. */
+  displayName: varchar("display_name", { length: 60 }),
+  /** Optional resized JPEG data URL; photoVersion changes with it so its link can be cached. */
+  photo: text("photo"),
+  photoVersion: integer("photo_version").default(0).notNull(),
+}, table => [check("accounts_photo", sql`${table.photo} IS NULL OR length(${table.photo}) <= 280023`)]);
 
 // Signed-in browsers. Only the SHA-256 of the session cookie is stored.
 export const accountSessions = pgTable("account_sessions", {

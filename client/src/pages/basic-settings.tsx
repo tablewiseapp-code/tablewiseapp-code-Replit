@@ -1,4 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { groceryPhoto } from "@/components/grocery-list/grocery-add-item";
+import { AccountAvatar } from "@/components/layout/app-nav";
 import { Check, Minus, Plus, X } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
@@ -6,7 +10,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion";
 import { useI18n } from "@/lib/i18n";
 import { useSettingsCopy } from "@/lib/settings-copy";
-import { setGuestChoice, switchPerson, useAccountCopy } from "@/lib/account-copy";
+import { setGuestChoice, switchPerson, useAccountCopy, type Me } from "@/lib/account-copy";
 import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
 import { mealSlots, type MealSlot } from "@/lib/meal-plan";
@@ -220,32 +224,74 @@ function MemberCard({ member, index, onChange, onRemove }: { member: Member; ind
   );
 }
 
-/** Who is signed in, with Sign out; a guest gets Sign in, which reopens the sign-in screen. */
+/** Who is signed in, with their name, photo and Sign out; a guest gets Sign in, which reopens the sign-in screen. */
 function AccountCard() {
   const t = useAccountCopy();
-  const [email, setEmail] = useState<string | null>();
-  const [failed, setFailed] = useState(false);
-  useEffect(() => { fetch("/api/auth/me").then(r => r.json()).then(me => setEmail(me.email)).catch(() => undefined); }, []);
-  if (email === undefined) return null;
+  const me = useQuery<Me>({ queryKey: ["/api/auth/me"] }).data;
+  const [name, setName] = useState<string>();
+  const [status, setStatus] = useState<"" | "busy" | "saved" | "profileFailed" | "photoFailed" | "signOutFailed">("");
+  const photoInput = useRef<HTMLInputElement>(null);
+  if (!me) return null;
   const signOut = async () => {
-    setFailed(false);
+    setStatus("");
     try {
       const response = await fetch("/api/auth/sign-out", { method: "POST" });
       if (!response.ok) throw new Error();
       setGuestChoice(false);
       switchPerson();
-    } catch { setFailed(true); }
+    } catch { setStatus("signOutFailed"); }
   };
+  const save = async (profile: { name?: string | null; photo?: string | null }) => {
+    setStatus("busy");
+    try {
+      const response = await fetch("/api/auth/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
+      if (!response.ok) throw new Error();
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setStatus("saved");
+    } catch { setStatus("profileFailed"); }
+  };
+  const pickPhoto = async (file?: File) => {
+    if (!file) return;
+    let photo: string;
+    try { photo = await groceryPhoto(file); } catch { return setStatus("photoFailed"); }
+    await save({ photo });
+  };
+  const typed = name ?? me.name ?? "";
+  const busy = status === "busy";
   return (
-    <section className="card mt-5 flex flex-wrap items-center justify-between gap-3 p-4" aria-labelledby="account-title" data-testid="section-account">
-      <div className="min-w-0">
-        <h2 id="account-title" className="text-base font-semibold text-foreground">{t("account")}</h2>
-        <p className="break-all text-sm text-muted-foreground" data-testid="account-status">{email ? t("signedInAs", { email }) : t("guestNote")}</p>
-        {failed && <p role="alert" className="text-sm font-medium text-destructive">{t("signOutFailed")}</p>}
+    <section className="card mt-5 p-4" aria-labelledby="account-title" data-testid="section-account">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          {me.email && <AccountAvatar me={me} className="h-14 w-14 text-lg" />}
+          <div className="min-w-0">
+            <h2 id="account-title" className="text-base font-semibold text-foreground">{me.name || t("account")}</h2>
+            <p className="break-all text-sm text-muted-foreground" data-testid="account-status">{me.email ? t("signedInAs", { email: me.email }) : t("guestNote")}</p>
+          </div>
+        </div>
+        {me.email
+          ? <button type="button" onClick={signOut} className="btn btn-secondary" data-testid="button-sign-out">{t("signOut")}</button>
+          : <button type="button" onClick={() => { setGuestChoice(false); window.location.assign("/"); }} className="btn btn-secondary" data-testid="button-sign-in">{t("submit")}</button>}
       </div>
-      {email
-        ? <button type="button" onClick={signOut} className="btn btn-secondary" data-testid="button-sign-out">{t("signOut")}</button>
-        : <button type="button" onClick={() => { setGuestChoice(false); window.location.assign("/"); }} className="btn btn-secondary" data-testid="button-sign-in">{t("submit")}</button>}
+      {me.email && (
+        <div className="mt-4 flex flex-wrap items-end gap-3 border-t hairline pt-4">
+          <form className="flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); save({ name: typed.trim() || null }); }}>
+            <label className="text-sm font-medium text-foreground">{t("name")}
+              <input value={typed} onChange={e => { setName(e.target.value); setStatus(""); }} maxLength={60} autoComplete="name"
+                className={field} data-testid="input-account-name" />
+            </label>
+            <button type="submit" disabled={busy || typed.trim() === (me.name ?? "")} className="btn btn-secondary" data-testid="button-account-name-save">{t("save")}</button>
+          </form>
+          <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true"
+            onChange={e => { pickPhoto(e.target.files?.[0]); e.target.value = ""; }} data-testid="input-account-photo" />
+          <button type="button" disabled={busy} onClick={() => photoInput.current?.click()} className="btn btn-secondary" data-testid="button-account-photo">
+            {t(me.photo ? "changePhoto" : "addPhoto")}
+          </button>
+          {me.photo && <button type="button" disabled={busy} onClick={() => save({ photo: null })} className="btn btn-text" data-testid="button-account-photo-remove">{t("removePhoto")}</button>}
+        </div>
+      )}
+      <p role="status" aria-live="polite" className={`mt-2 text-sm ${status === "saved" ? "text-muted-foreground" : "font-medium text-destructive"}`} data-testid="account-message">
+        {status && status !== "busy" ? t(status) : ""}
+      </p>
     </section>
   );
 }

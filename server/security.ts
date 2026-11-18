@@ -203,6 +203,12 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       if (!consume(res, "sign-in:minute", 30, 60_000) || !consume(res, "sign-in:day", 2000, 86400_000)) return;
       return next();
     }
+    // Account profile (name and photo): the route turns guests away. Same-origin only and budgeted.
+    if (req.method === "PUT" && /^\/auth\/profile\/?$/.test(req.path)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (!consume(res, "profile-writes", 60, 60_000)) return;
+      return next();
+    }
     // Manual recipe import ("Type or paste"): signed-in accounts only; the route turns guests away (product owner,
     // 2026-11-18). Same-origin only and budgeted; editing and deleting recipes stay operator-only.
     if (req.method === "POST" && !authorized(req) && /^\/import-recipe\/?$/.test(req.path)) {

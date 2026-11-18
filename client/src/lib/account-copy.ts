@@ -11,6 +11,8 @@ const copy = {
     tooMany: "Too many attempts. Try again in 15 minutes.", failed: "Couldn’t sign in. Try again.",
     account: "Account", signedInAs: "Signed in as {email}", guestNote: "You are using TableWise as a guest.",
     signOut: "Sign out", signOutFailed: "Couldn’t sign out. Try again.",
+    name: "Your name", save: "Save", saved: "Saved", addPhoto: "Add photo", changePhoto: "Change photo", removePhoto: "Remove photo",
+    profileFailed: "Couldn’t save. Try again.", photoFailed: "Use a JPEG, PNG or WebP picture under 10 MB.",
   },
   ru: {
     title: "Вход", intro: "Ваша неделя, дела по дому и история готовки на любом устройстве.",
@@ -21,6 +23,8 @@ const copy = {
     tooMany: "Слишком много попыток. Попробуйте через 15 минут.", failed: "Не удалось войти. Попробуйте ещё раз.",
     account: "Аккаунт", signedInAs: "Вы вошли как {email}", guestNote: "Вы пользуетесь TableWise как гость.",
     signOut: "Выйти", signOutFailed: "Не удалось выйти. Попробуйте ещё раз.",
+    name: "Ваше имя", save: "Сохранить", saved: "Сохранено", addPhoto: "Добавить фото", changePhoto: "Сменить фото", removePhoto: "Удалить фото",
+    profileFailed: "Не удалось сохранить. Попробуйте ещё раз.", photoFailed: "Выберите JPEG, PNG или WebP до 10 МБ.",
   },
   he: {
     title: "כניסה", intro: "השבוע, משימות הבית והיסטוריית הבישול שלכם בכל מכשיר.",
@@ -31,6 +35,8 @@ const copy = {
     tooMany: "יותר מדי ניסיונות. נסו שוב בעוד 15 דקות.", failed: "לא ניתן להיכנס. נסו שוב.",
     account: "חשבון", signedInAs: "מחוברים בתור {email}", guestNote: "אתם משתמשים ב־TableWise כאורחים.",
     signOut: "יציאה", signOutFailed: "לא ניתן לצאת. נסו שוב.",
+    name: "השם שלכם", save: "שמירה", saved: "נשמר", addPhoto: "הוספת תמונה", changePhoto: "החלפת תמונה", removePhoto: "הסרת תמונה",
+    profileFailed: "לא ניתן לשמור. נסו שוב.", photoFailed: "בחרו תמונת JPEG, PNG או WebP עד 10MB.",
   },
 };
 export type AccountCopyKey = keyof typeof copy.en;
@@ -44,6 +50,9 @@ export function useAccountCopy() {
 const guestKey = "tablewise_guest_v1";
 export const choseGuest = () => { try { return localStorage.getItem(guestKey) === "1"; } catch { return false; } };
 export const setGuestChoice = (on: boolean) => { try { on ? localStorage.setItem(guestKey, "1") : localStorage.removeItem(guestKey); } catch {} };
+
+/** Who is signed in; email is null for a guest. */
+export type Me = { email: string | null; name?: string | null; photo?: string | null };
 
 /** The Week's browser copy belongs to whoever was signed in; drop it so the next person loads their own. */
 export function switchPerson() {

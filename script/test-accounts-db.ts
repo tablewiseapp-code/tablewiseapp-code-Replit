@@ -38,6 +38,7 @@ async function main() {
     const pushed = await describe();
     await pool.query("DROP TABLE account_sessions; DROP TABLE accounts;");
     await pool.query(readFileSync("migrations/0015_accounts.sql", "utf8"));
+    await pool.query(readFileSync("migrations/0017_account_profile.sql", "utf8"));
     assert.deepEqual(await describe(), pushed, "migration matches Drizzle schema");
 
     const db = drizzle(pool, { schema });
@@ -69,7 +70,8 @@ async function main() {
     assert.deepEqual(created.data, { email: "ann@example.com" });
     assert.equal(created.cookies.tablewise_owner, "", "guest cookie dropped: it now opens the account's data");
     const session = `tablewise_session=${created.cookies.tablewise_session}`;
-    assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, { email: "ann@example.com" });
+    const ann = { email: "ann@example.com", name: null, photo: null };
+    assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, ann);
     assert.deepEqual((await request("GET", "/api/week-plan", undefined, session)).data, plan, "guest Week came along");
 
     // Another browser: wrong password, then the right one opens the same Week.
@@ -83,10 +85,27 @@ async function main() {
     assert.deepEqual((await request("GET", "/api/week-plan", undefined, `${session2}; tablewise_owner=${other}`)).data, plan);
     assert.equal((await request("GET", "/api/week-plan", undefined, `tablewise_owner=${other}`)).data.locked, false);
 
+    // Profile: name and photo belong to the account, so every signed-in browser sees them; a guest has none.
+    const jpeg = `data:image/jpeg;base64,${Buffer.from([255, 216, 255, 224, 0, 16]).toString("base64")}`;
+    assert.equal((await request("PUT", "/api/auth/profile", { name: "Ann" })).status, 401, "guest has no profile");
+    assert.equal((await request("PUT", "/api/auth/profile", { name: "Ann" }, session2, false)).status, 403, "same-origin only");
+    assert.equal((await request("PUT", "/api/auth/profile", { photo: "data:image/png;base64,AAAA" }, session2)).status, 400, "JPEG only");
+    assert.equal((await request("PUT", "/api/auth/profile", { owner: "x" }, session2)).status, 400, "unknown fields rejected");
+    assert.equal((await request("PUT", "/api/auth/profile", { name: "  Ann  ", photo: jpeg }, session2)).status, 204);
+    assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, { ...ann, name: "Ann", photo: "/api/auth/photo?v=1" });
+    const served = await fetch(`${base}/api/auth/photo?v=1`, { headers: { cookie: session } });
+    assert.equal(served.headers.get("content-type"), "image/jpeg");
+    assert.deepEqual([...new Uint8Array(await served.arrayBuffer())], [255, 216, 255, 224, 0, 16]);
+    assert.equal((await request("GET", "/api/auth/photo")).status, 404, "a guest gets no photo");
+    assert.equal((await request("PUT", "/api/auth/profile", { photo: null }, session2)).status, 204);
+    assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, { ...ann, name: "Ann" }, "photo removed, name kept");
+    await assert.rejects(pool.query("UPDATE accounts SET photo = repeat('a', 280024)"), /accounts_photo/);
+    await request("PUT", "/api/auth/profile", { name: null }, session2);
+
     // Sign out ends that session only.
     assert.equal((await request("POST", "/api/auth/sign-out", undefined, session2)).status, 204);
     assert.deepEqual((await request("GET", "/api/auth/me", undefined, session2)).data, { email: null });
-    assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, { email: "ann@example.com" });
+    assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, ann);
 
     // Expired sessions do not open anything.
     await pool.query("UPDATE account_sessions SET expires_at = now() - interval '1 second'");

@@ -66,6 +66,23 @@ try {
   await go("/settings", `Boolean(${q("button-sign-out")})`);
   eq(await ev(`${q("account-status")}.textContent`), `Signed in as ${email}`, "signed-in status");
 
+  // ---- Profile: a name and a photo, shown on the card and in the nav (first letter until a photo is set).
+  eq(await ev(`${q("account-avatar")}.textContent`), email[0].toUpperCase(), "avatar falls back to the first letter");
+  await ev(`(() => { const el = ${q("input-account-name")};
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, "Robin");
+    el.dispatchEvent(new Event("input", { bubbles: true })); ${q("button-account-name-save")}.click(); })()`);
+  await until(`${q("account-message")}.textContent === "Saved" && document.querySelector("#account-title").textContent === "Robin"`, "name saved");
+  await ev(`new Promise(done => { const c = document.createElement("canvas"); c.width = c.height = 32;
+    c.getContext("2d").fillRect(0, 0, 32, 32);
+    c.toBlob(blob => { const t = new DataTransfer(); t.items.add(new File([blob], "me.png", { type: "image/png" }));
+      const input = ${q("input-account-photo")}; input.files = t.files; input.dispatchEvent(new Event("change", { bubbles: true })); done(); }, "image/png"); })`);
+  await until(`Boolean(${q("button-account-photo-remove")}) && [...document.querySelectorAll('[data-testid="app-nav-header"] img')].some(i => i.complete && i.naturalWidth > 0)`, "photo in the nav");
+  await go("/settings", `Boolean(${q("button-account-photo-remove")})`);
+  eq(await ev(`document.querySelector("#account-title").textContent`), "Robin", "name kept after reload");
+  await ev(`${q("button-account-photo-remove")}.click()`);
+  await until(`!${q("button-account-photo-remove")} && Boolean(${q("button-account-photo")})`, "photo removed");
+  ok(await ev("document.documentElement.scrollWidth <= innerWidth"), "account card fits a phone");
+
   // ---- Sign out → sign-in screen; wrong password shows an error; right one signs in.
   await ev(`${q("button-sign-out")}.click()`);
   await until(onSignIn, "signed out shows sign-in");

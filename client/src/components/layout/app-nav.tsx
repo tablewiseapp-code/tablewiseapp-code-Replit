@@ -3,6 +3,19 @@ import { Link, useLocation, useSearch } from "wouter";
 import { BookOpen, CalendarDays, Home, ListChecks, Menu, Settings, ShoppingBasket, Sparkles } from "lucide-react";
 import { LANGUAGES, useI18n } from "@/lib/i18n";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
+import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Me } from "@/lib/account-copy";
+
+/** The signed-in person's photo, or the first letter of their name or email. Decorative: the name is always beside it. */
+export function AccountAvatar({ me, className = "h-6 w-6 text-xs" }: { me: Me; className?: string }) {
+  return (
+    <Avatar className={className} aria-hidden="true" data-testid="account-avatar">
+      {me.photo && <AvatarImage src={me.photo} alt="" className="object-cover" />}
+      <AvatarFallback className="bg-accent font-semibold text-foreground">{(me.name || me.email || "?").charAt(0).toLocaleUpperCase()}</AvatarFallback>
+    </Avatar>
+  );
+}
 
 // Fixed order by expected use. Never reorder at runtime.
 const PRIMARY = [
@@ -67,6 +80,8 @@ export function AppNav() {
   const { t, lang, setLang } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const active = activeSection(path, search);
+  const me = useQuery<Me>({ queryKey: ["/api/auth/me"] }).data;
+  const settingsIcon = me?.email ? <AccountAvatar me={me} /> : <Settings className="h-4 w-4" aria-hidden="true" />;
   const current = (id: string) => (active === id ? ("page" as const) : undefined);
 
   return (
@@ -91,7 +106,7 @@ export function AppNav() {
               className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm ${focus} ${active === "settings"
                 ? "border-primary bg-accent font-semibold text-foreground"
                 : "border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground"}`}>
-              <Settings className="h-4 w-4" aria-hidden="true" />{t("nav.settings")}
+              {settingsIcon}{t("nav.settings")}
             </Link>
             <LanguageSelector />
           </div>
@@ -105,7 +120,7 @@ export function AppNav() {
               }>
               <Link href="/settings" aria-current={current("settings")} onClick={() => setMenuOpen(false)} data-testid="app-nav-menu-link-settings"
                 className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm ${focus} ${active === "settings" ? "bg-accent font-semibold text-foreground" : "text-foreground hover:bg-foreground/5"}`}>
-                <Settings className="h-4 w-4" aria-hidden="true" />{t("nav.settings")}
+                {settingsIcon}{t("nav.settings")}
               </Link>
               <div className="flex flex-wrap gap-2 border-t hairline pt-3">
                 {LANGUAGES.map(l => (
