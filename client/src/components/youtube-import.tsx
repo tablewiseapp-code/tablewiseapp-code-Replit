@@ -24,7 +24,7 @@ export function YouTubeImport() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body.recipeId) throw new Error(res.status === 400 ? t("youtube.invalid") : t("youtube.failed"));
+      if (!res.ok || !body.recipeId) throw new Error(res.status === 400 ? t("youtube.invalid") : res.status === 403 ? t("youtube.operator") : t("youtube.failed"));
       setLocation(`/recipe/${body.recipeId}`);
     } catch (err: any) {
       setError(err.message || t("youtube.failed"));

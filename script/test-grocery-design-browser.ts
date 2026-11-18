@@ -81,7 +81,7 @@ try {
     assert.ok(await tab.evaluate(`document.documentElement.scrollWidth<=window.innerWidth`),`Overflow at ${width}`);
   }
   // Shared app navigation on mobile: four bottom items in fixed order, Settings + language in the header menu.
-  assert.deepEqual(await tab.evaluate(`Array.from(document.querySelectorAll('[data-testid="app-nav-bottom"] a')).map(a=>a.getAttribute("href"))`),["/recipes","/meals","/grocery-list","/my-ideas"]);
+  assert.deepEqual(await tab.evaluate(`Array.from(document.querySelectorAll('[data-testid="app-nav-bottom"] a')).map(a=>a.getAttribute("href"))`),["/recipes","/meals?plan","/grocery-list","/my-ideas"]);
   assert.equal(await tab.evaluate(`document.querySelector('[data-testid="app-nav-bottom"] [aria-current="page"]').getAttribute("href")`),"/grocery-list");
   await tab.evaluate(`document.querySelector('[data-testid="app-nav-menu-trigger"]').click()`);
   await tab.wait(`Boolean(document.querySelector('[role="dialog"]'))`);

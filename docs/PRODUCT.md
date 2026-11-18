@@ -42,7 +42,7 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 | **Draft** | A server-side AI generation awaiting the person's approve / regenerate decision. |
 | **Cooking session** | One "I made it" record, with optional rating, notes and photos. Private to its owner. |
 | **Owner** | One anonymous visitor, identified by the `tablewise_owner` cookie. Stands in for a user account. |
-| **Operator** | The person running the pilot. Signs in at `/operator` with a shared token. Can import, edit and delete recipes. |
+| **Operator** | The person running the pilot. Signs in at `/operator` with a shared token. Can edit and delete recipes and use YouTube import. |
 | **Basic Settings** | Household preferences that personalise planning and ideas. |
 | **Pilot event** | One of five funnel events: `planner_opened`, `meal_selected`, `plan_completed`, `grocery_list_opened`, `next_week_plan_created`. |
 | **MVP planner / MVP grocery** | The earlier three-dinner flow (`mvp-planner.tsx`, `/grocery-list?source=mvp`). Legacy; do not extend. |
@@ -71,6 +71,7 @@ These are accepted facts today, not features. Do not build on top of them as if 
 - **Photo and link import do not parse anything.** A photo is attached as an image; a link is stored as the source URL. Only typed and dictated text is turned into a recipe.
 - **Four planner filters have no data source:** "With my notes", "Modified by me", "My picks", "Minimum rating".
 - **Anonymous visitors can add AI-generated recipes to the shared catalog** without review when public AI is on.
+- **Anyone can add a typed or pasted recipe to the shared catalog** without review (opened for pilot testing, 2026-11-17). Only the operator can remove it.
 - **Catalog recipes have no images**, and only a few have nutrition data.
 - **README.md and replit.md describe an older product** ("recipe manager from photos, links and voice", "Recipe View"). This file supersedes them.
 

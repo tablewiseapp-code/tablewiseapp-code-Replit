@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { creditKind, creditName, recipeCreditInput } from "../shared/recipe-credit";
 import { analysisMatches, stepAnalysisSchema } from "../shared/step-timing";
+import { ingredientPartSchema } from "../shared/ingredient-parse";
 
 const line = z.string().trim().min(1).max(1000);
 const safeURL = z.string().max(2048).url().refine(value => {
@@ -15,6 +16,7 @@ const recipeBase = z.object({
   ingredients: z.array(line).min(1).max(100),
   steps: z.array(z.string().trim().min(1).max(2000)).min(1).max(100),
   stepAnalysis: stepAnalysisSchema.nullable().optional(),
+  ingredientParts: z.array(ingredientPartSchema).max(100).nullable().optional(),
   image: safeURL.nullable().optional(),
   sourceUrl: safeURL.nullable().optional(),
   cookTime: z.number().int().min(0).max(10080).nullable().optional(),
@@ -25,6 +27,9 @@ const recipeBase = z.object({
 export const recipeInput = recipeBase.extend({
   creditKind: creditKind.nullable().optional(), creditName,
 }).superRefine((value, ctx) => {
+  if (value.ingredientParts && value.ingredientParts.length !== value.ingredients.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["ingredientParts"], message: "One part per ingredient line." });
+  }
   if (value.stepAnalysis && !analysisMatches(value, value.stepAnalysis)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["stepAnalysis"], message: "Timing analysis is stale or incomplete." });
   }
@@ -42,7 +47,8 @@ export const draftEdit = recipeBase.pick({ title: true, ingredients: true, steps
   .extend({ description: z.string().trim().max(400).optional() }).partial().strict()
   .refine(value => Object.keys(value).length > 0);
 // Attribution is changed atomically through its bounded, separate endpoint.
-export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0);
+export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0)
+  .refine(value => !value.ingredientParts || value.ingredientParts.length === value.ingredients?.length, "Send parts with their ingredient lines.");
 export const recipeId = z.string().min(1).max(150).regex(/^[a-zA-Z0-9:_-]+$/);
 export const parseInput = z.object({
   transcript: z.string().trim().min(1).max(12000),

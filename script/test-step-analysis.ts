@@ -125,7 +125,10 @@ async function main() {
     f.advance();
     assert.equal((await f.request("/api/analyze-recipe", example)).status, 200);
     assert.equal(f.calls, 1, "Unchanged analysis reused");
-    assert.equal((await f.request("/api/import-recipe", example)).status, 409);
+    // Analysis is optional: a typed import without it saves (manual import works with AI off).
+    assert.equal((await f.request("/api/import-recipe", example)).status, 201);
+    assert.equal(f.writes, 1);
+    assert.equal((await f.request("/api/import-recipe", { ...example, title: "" })).status, 400);
     const forged = structuredClone(analysis); forged.steps[0].max = 9;
     assert.equal((await f.request("/api/import-recipe", { ...example, stepAnalysis: forged })).status, 409);
     assert.equal((await f.request("/api/import-recipe", { ...example, stepAnalysis: analysis, tags: ["seafood"] })).status, 201);
@@ -135,13 +138,13 @@ async function main() {
     assert.deepEqual(saved.tags, ["seafood"]);
     assert.equal(saved.prepTime, 10); assert.equal(saved.cookTime, 15);
     assert.equal(recipeStageMinutes(saved, "total"), 25);
-    assert.equal(f.writes, 1);
+    assert.equal(f.writes, 2);
     f.mode("storage");
     const failedSave = await f.request("/api/import-recipe", { ...example, stepAnalysis: analysis });
-    assert.equal(failedSave.status, 503); assert.equal(f.writes, 1);
+    assert.equal(failedSave.status, 503); assert.equal(f.writes, 2);
     f.advance(600001);
     assert.equal((await f.request("/api/import-recipe", { ...example, stepAnalysis: analysis })).status, 409);
-    console.log("PASS analysis coverage, supplied inconsistency, stale context, server-validated import, persisted mock round trip, safe storage errors, expiry, unchanged totals");
+    console.log("PASS analysis coverage, supplied inconsistency, stale context, server-validated import, optional analysis, persisted mock round trip, safe storage errors, expiry, unchanged totals");
   } finally { await f.close(); }
   const disabled = await fixture(false);
   try {

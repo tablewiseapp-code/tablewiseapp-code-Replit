@@ -55,23 +55,25 @@ async function main() {
       body: JSON.stringify({ token: ${JSON.stringify(f.token)} })
     }).then(r => r.status)`);
     assert.equal(loginStatus, 200); // fetch follows the 303 to /recipes.
+    await tab.navigate(`${f.base}/import`);
+    await tab.wait("document.querySelector('[data-testid=\"button-analyze\"]')");
     await fill("input-title", example.title);
     await fill("textarea-ingredients", example.ingredients.join("\n"));
     await fill("textarea-steps", example.steps.join("\n"));
     f.mode("timeout");
-    await click("button-save");
+    await click("button-analyze");
     await tab.wait("document.querySelector('[data-testid=\"timing-review\"] [role=\"alert\"]')");
     assert.equal(await tab.evaluate("document.querySelector('[data-testid=\"input-title\"]').value"), example.title);
     assert.equal(f.writes, 0);
     f.mode("ok");
-    await click("button-save");
+    await click("button-analyze");
     await tab.wait("document.querySelectorAll('[data-testid=\"step-duration\"]').length === 4");
     assert.match(await tab.evaluate("document.querySelector('[data-testid=\"analysis-warnings\"]').textContent"), /crawfish.*fish fillets/);
     const before = f.calls;
     await fill("input-title", `${example.title} edited`);
     await tab.wait("document.querySelectorAll('[data-testid=\"step-duration\"]').length === 0");
     await tab.evaluate(`(() => {
-      const button = document.querySelector('[data-testid="button-save"]');
+      const button = document.querySelector('[data-testid="button-analyze"]');
       button.click(); button.click();
     })()`);
     await tab.wait("document.querySelectorAll('[data-testid=\"step-duration\"]').length === 4");
@@ -106,7 +108,7 @@ async function main() {
     await fill("textarea-steps", ["Stir 30 seconds.", "Cook 5–8 minutes.", "Rest 1 to 2 hours.", "Serve."].join("\n"));
     f.mode("hold");
     const callsBefore = f.calls;
-    await click("button-save");
+    await click("button-analyze");
     for (let i = 0; i < 100 && f.calls === callsBefore; i++) await new Promise(resolve => setTimeout(resolve, 5));
     assert.equal(f.calls, callsBefore + 1);
     await fill("input-title", "Edited while analyzing");
@@ -114,7 +116,7 @@ async function main() {
     await tab.wait("!document.querySelector('[data-testid=\"button-save\"]').disabled");
     assert.equal(await tab.evaluate("document.querySelectorAll('[data-testid=\"step-duration\"]').length"), 0);
     assert.equal(f.writes, 2);
-    await click("button-save");
+    await click("button-analyze");
     await tab.wait("document.querySelectorAll('[data-testid=\"step-duration\"]').length === 4");
     const badges: string[] = await tab.evaluate("[...document.querySelectorAll('[data-testid=\"step-duration\"]')].map(el => el.textContent)");
     assert.match(badges[0], /30 sec.*Source-stated/);

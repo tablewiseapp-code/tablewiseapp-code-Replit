@@ -143,6 +143,8 @@ try {
   await ev(`${q("diet-vegetarian")}.click()`);
   await until(`${q("settings-status")}.dataset.status === "saved"`, "saved");
   await ev(`${q("app-nav-link-meals")}.click()`);
+  // Week opens the generated plan; go back to the recipe selection where the chips and cards are.
+  await until(q("button-back-to-selection"), "plan view"); await ev(`${q("button-back-to-selection")}.click()`);
   await until(`${q("preference-chip-diet-vegetarian")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "vegetarian chip on return");
   const vegetarian = await cards();
   ok(vegetarian.length < baseline.length && vegetarian.every(id => baseline.includes(id)), "returning applies the new restriction");

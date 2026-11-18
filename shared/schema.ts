@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, unique, index, uniqueIndex, check, jsonb, customType, boolean, primaryKey } from "drizzle-orm/pg-core";
 import type { RecipeNutrition } from "./recipe-nutrition";
 import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
+import { ingredientPartSchema, type IngredientPart } from "./ingredient-parse";
 import type { RecipeGenerationRequest, RecipeGenerationStatus } from "./recipe-generation-request";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -26,6 +27,8 @@ export const recipes = pgTable("recipes", {
   ingredients: text("ingredients").array().notNull(),
   steps: text("steps").array().notNull(),
   stepAnalysis: jsonb("step_analysis").$type<StepAnalysis>(),
+  // Parsed manual-import lines, same order as `ingredients`. Null for recipes saved before manual import.
+  ingredientParts: jsonb("ingredient_parts").$type<IngredientPart[]>(),
   image: text("image"),
   sourceUrl: text("source_url"),
   cookTime: integer("cook_time"),
@@ -38,6 +41,7 @@ export const recipes = pgTable("recipes", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, table => [
   check("recipes_prep_time_check", sql`${table.prepTime} IS NULL OR ${table.prepTime} BETWEEN 0 AND 10080`),
+  check("recipes_ingredient_parts_check", sql`${table.ingredientParts} IS NULL OR jsonb_typeof(${table.ingredientParts}) = 'array'`),
   check("recipes_credit_check", sql`(${table.creditKind} IS NULL AND ${table.creditName} IS NULL) OR
     (${table.creditKind} IS NOT NULL AND ${table.creditKind} IN ('chef', 'mine') AND
       (${table.creditName} IS NULL OR (length(btrim(${table.creditName})) BETWEEN 1 AND 120 AND ${table.creditName} = btrim(${table.creditName}))) AND
@@ -46,6 +50,7 @@ export const recipes = pgTable("recipes", {
 
 export const insertRecipeSchema = createInsertSchema(recipes, {
   stepAnalysis: stepAnalysisSchema.nullable().optional(),
+  ingredientParts: z.array(ingredientPartSchema).nullable().optional(),
   creditKind: z.enum(["chef", "mine"]).nullable().optional(),
 }).omit({
   id: true,
@@ -64,8 +69,8 @@ export const recipeNutrition = pgTable("recipe_nutrition", {
   check("recipe_nutrition_data_check", sql`jsonb_typeof(${table.data}) = 'object'`),
 ]);
 // Optional for compatibility with recipes created before preparation-time metadata.
-export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName" | "stepAnalysis"> & {
-  stepAnalysis?: StepAnalysis | null;
+export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName" | "stepAnalysis" | "ingredientParts"> & {
+  stepAnalysis?: StepAnalysis | null; ingredientParts?: IngredientPart[] | null;
   prepTime?: number | null; creditKind?: "chef" | "mine" | null; creditName?: string | null;
 };
 
