@@ -11,6 +11,7 @@ import MvpGrocery from "@/pages/mvp-grocery";
 import RecipeList from "@/pages/recipe-list";
 import RecipeDetail from "@/pages/recipe-detail";
 import WeeklyMeals from "@/pages/weekly-meals";
+import Home from "@/pages/home";
 import ImportRecipe from "@/pages/import-recipe";
 import GroceryList from "@/pages/grocery-list";
 import NotFound from "@/pages/not-found";
@@ -29,7 +30,7 @@ function MealsHome() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={MealsHome}/>
+      <Route path="/" component={Home}/>
       <Route path="/plan" component={MealsHome}/>
       <Route path="/recipe-view" component={RecipeView}/>
       <Route path="/recipes" component={RecipeList}/>
