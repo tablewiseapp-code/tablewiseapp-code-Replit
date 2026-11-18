@@ -266,6 +266,15 @@ export const homeTasks = pgTable("home_tasks", {
   check("home_tasks_image", sql`${table.image} IS NULL OR length(${table.image}) <= 280023`),
 ]);
 
+// The Week (/meals): one plan per owner. The browser keeps a copy in localStorage for synchronous reads.
+export const weekPlans = pgTable("week_plans", {
+  ownerId: varchar("owner_id", { length: 64 }).primaryKey(),
+  selectedIds: jsonb("selected_ids").$type<string[]>().notNull(),
+  planAssignments: jsonb("plan_assignments").$type<{ recipeId: string; mealType: "Breakfast" | "Lunch" | "Dinner"; startDay: number; spanDays: number; servings?: number }[]>().notNull(),
+  locked: boolean("locked").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // Suggested household task names, seeded by migration, like household_products.
 export const householdTasks = pgTable("household_tasks", {
   id: text("id").primaryKey(),

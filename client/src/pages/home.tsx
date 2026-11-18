@@ -12,6 +12,7 @@ import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 
 const mealKey = { Breakfast: "meals.breakfast", Lunch: "meals.lunch", Dinner: "meals.dinner" } as const;
+const addKey = { Breakfast: "addBreakfast", Lunch: "addLunch", Dinner: "addDinner" } as const;
 
 function SectionState({ error, retry, text }: { error: boolean; retry: () => void; text: (k: "loading" | "loadError" | "retry") => string }) {
   return error
@@ -62,20 +63,20 @@ export default function Home() {
               <h2 id="home-meals" className="text-base font-semibold">{text("todaysMeals")}</h2>
               <Link href="/meals?plan" className="btn btn-text">{text("viewWeek")}</Link>
             </div>
-            {today.length === 0 ? (
-              <div className="flex flex-col items-start gap-3">
-                <p className="text-sm text-muted-foreground">{text("noMeals")}</p>
-                <Link href="/meals" className="btn btn-primary" data-testid="home-plan-meals">{text("planMeals")}</Link>
-              </div>
-            ) : catalog.isPending || catalog.isError ? (
+            {today.length > 0 && (catalog.isPending || catalog.isError) ? (
               <SectionState error={catalog.isError} retry={() => catalog.refetch()} text={text} />
             ) : (
               mealSlots.map(slot => {
                 const rows = today.filter(a => a.mealType === slot && recipes.has(a.recipeId));
-                if (!rows.length) return null;
                 return (
-                  <div key={slot} className="mt-2 first:mt-0">
+                  <div key={slot} className="mt-2 first:mt-0" data-testid={`home-slot-${slot.toLowerCase()}`}>
                     <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t(mealKey[slot])}</h3>
+                    {rows.length === 0 ? (
+                      <Link href="/meals?plan" data-testid={`home-add-${slot.toLowerCase()}`}
+                        className="flex min-h-11 items-center rounded-md py-1 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                        {text(addKey[slot])}
+                      </Link>
+                    ) : (
                     <ul>
                       {rows.map(a => {
                         const recipe = recipes.get(a.recipeId)!;
@@ -90,6 +91,7 @@ export default function Home() {
                         );
                       })}
                     </ul>
+                    )}
                   </div>
                 );
               })

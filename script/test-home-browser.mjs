@@ -34,16 +34,16 @@ try {
   await call("Runtime.enable");
   const text = sel => ev(`${q(sel)}?.innerText ?? null`);
 
-  // ---- First visit: everything empty, Plan meals is the one primary action.
+  // ---- First visit: everything empty, each meal slot offers "+ Add".
   await size(1280, false);
   await go("/");
   await ev("localStorage.clear(); localStorage.setItem('tablewise_language','en')");
   await go("/", `Boolean(${q("home-meals")})`);
   eq(await text("text-page-title"), "Home", "title");
   eq(await text("text-home-date"), await ev(`new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })`), "local date");
-  eq(await ev(`${q("home-plan-meals")}.getAttribute("href")`), "/meals", "Plan meals");
+  for (const slot of ["breakfast", "lunch", "dinner"]) eq(await ev(`${q(`home-add-${slot}`)}.getAttribute("href")`), "/meals?plan", `+ Add ${slot}`);
+  eq(await text("home-add-dinner"), "+ Add dinner", "add dinner copy");
   await until(`Boolean(${q("home-add-item")})`, "empty groceries");
-  ok(await ev(`document.querySelectorAll('[data-testid^="home-"] .btn-primary').length === 1`), "one primary action");
   eq(await current('[data-testid="app-nav-header"]'), "/", "Home active");
   await ev(`${q("home-add-item")}.click()`);
   await until(`location.pathname === "/grocery-list" && Boolean(${q("input-add-item")})`, "Add item opens the add form");
@@ -58,7 +58,7 @@ try {
   try {
     await go("/", `Boolean(${q("home-grocery-count")}) && Boolean(${q(`home-meal-${recipe.id}`)})`);
     ok((await text("home-meals")).includes("DINNER") || (await text("home-meals")).includes("Dinner"), "grouped under Dinner");
-    ok(!(await text("home-meals")).match(/breakfast|lunch/i), "empty groups hidden");
+    ok(Boolean(await text("home-add-breakfast")) && Boolean(await text("home-add-lunch")) && !(await text("home-add-dinner")), "empty slots offer + Add, filled slot does not");
     const expected = new Set(recipe.ingredients.map(i => i.toLowerCase())).size + 1;
     eq(await text("home-grocery-count"), `${expected} items to buy`, "manual item matching an ingredient counted once");
     await ev(`localStorage.setItem("tablewise:grocery-list:v1", JSON.stringify({ checked: [...${JSON.stringify(recipe.ingredients)}.map(i => i.toLowerCase()), "home test product"], expansion: {} }))`);

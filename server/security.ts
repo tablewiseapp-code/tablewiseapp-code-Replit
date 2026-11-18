@@ -163,6 +163,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   const isGroceryWrite = (req: Request) =>
     (req.method === "PUT" && /^\/grocery-item-photos\/?$/.test(req.path)) ||
     (["PUT", "DELETE"].includes(req.method) && /^\/home-tasks\/[^/]+\/?$/.test(req.path)) ||
+    (req.method === "PUT" && /^\/week-plan\/?$/.test(req.path)) ||
     (["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
       /^\/(?:shared-lists(?:\/[^/]+(?:\/items(?:\/[^/]+)?)?)?|grocery-notes)\/?$/.test(req.path));
   const isEventIngest =(req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
@@ -210,7 +211,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       if (req.method === "POST" && /\/photos\/?$/.test(req.path) && !consume(res, "cooking-photos:day", 1000, 86400_000)) return;
       return next();
     }
-    // Grocery share links and notes, and Home Tasks: the route checks the link's role or the owner on every write.
+    // Grocery share links and notes, Home Tasks and the Week plan: the route checks the link's role or the owner on every write.
     // Same-origin only and budgeted; saving a new shared copy has its own smaller budget.
     if (isGroceryWrite(req)) {
       if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
