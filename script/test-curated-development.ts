@@ -14,7 +14,7 @@ const visible = curateDevelopmentCatalog(stored);
   assert.ok(ids.includes(added.id), "added recipe visible");
   assert.ok(!ids.includes(seed.id), "synthetic seed hidden");
 }
-assert.equal(stored.length, 112);
+assert.equal(stored.length, 32); // 12 researched dinners + 20 curated fixtures
 assert.equal(visible.length, 20);
 assert.equal(new Set(visible.map(r => r.id)).size, 20);
 assert.equal(visible.filter(r => "metadataEstimated" in r && r.metadataEstimated).length, 8);
