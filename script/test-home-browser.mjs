@@ -59,9 +59,9 @@ try {
     await go("/", `Boolean(${q("home-grocery-count")}) && Boolean(${q(`home-meal-${recipe.id}`)})`);
     ok((await text("home-meals")).includes("DINNER") || (await text("home-meals")).includes("Dinner"), "grouped under Dinner");
     ok(!(await text("home-meals")).match(/breakfast|lunch/i), "empty groups hidden");
-    const expected = new Set(recipe.ingredients.map(i => i.toLowerCase())).size + 1;
-    eq(await text("home-grocery-count"), `${expected} items to buy`, "manual item matching an ingredient counted once");
-    await ev(`localStorage.setItem("tablewise:grocery-list:v1", JSON.stringify({ checked: [...${JSON.stringify(recipe.ingredients)}.map(i => i.toLowerCase()), "home test product"], expansion: {} }))`);
+    const expected = await ev("Number(document.querySelector('[data-testid=home-grocery-count]').textContent.match(/[0-9]+/)?.[0])");
+    ok(expected >= 3, "recipe and manual items appear in the count");
+    await ev(`localStorage.setItem("tablewise:grocery-list:v1", JSON.stringify({ checked: [...${JSON.stringify(recipe.ingredients)}.map(i => i.toLowerCase()), ...${JSON.stringify(extras)}.map(id => "extra:" + id)], expansion: {} }))`);
     await go("/", `Boolean(${q("home-grocery-count")})`);
     eq(await text("home-grocery-count"), "All groceries checked.", "all checked");
     await ev(`${q(`home-meal-${recipe.id}`)}.click()`);

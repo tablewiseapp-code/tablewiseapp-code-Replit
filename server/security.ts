@@ -164,7 +164,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     (req.method === "PUT" && /^\/grocery-item-photos\/?$/.test(req.path)) ||
     (["PUT", "DELETE"].includes(req.method) && /^\/home-tasks\/[^/]+\/?$/.test(req.path)) ||
     (["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
-      /^\/(?:shared-lists(?:\/[^/]+(?:\/items(?:\/[^/]+)?)?)?|grocery-notes)\/?$/.test(req.path));
+      /^\/(?:shared-lists(?:\/[^/]+(?:\/items(?:\/[^/]+)?)?)?|grocery-notes|grocery-shopping)\/?$/.test(req.path));
   const isEventIngest =(req: Request) => req.method === "POST" && /^\/analytics\/events\/?$/i.test(req.path);
   // Only this exact anonymous write is exempt; all other mutations and ALL
   // analytics inspection remain fail-closed. No IPs are retained for budgets.

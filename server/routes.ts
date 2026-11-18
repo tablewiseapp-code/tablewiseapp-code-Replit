@@ -1,3 +1,5 @@
+import { readGroceryShopping, patchGroceryShopping } from "./grocery-shopping";
+import { groceryShoppingPatch, bulkGroceryExtras } from "./request-schemas";
 import "dotenv/config";
 import express, { type Express } from "express";
 import { developmentCatalogEnabled, developmentRecipeReadOnly, curateDevelopmentCatalog, curateDevelopmentRecipe } from "./seeds/curated-development-catalog";
@@ -635,6 +637,31 @@ Rules:
       }
       res.status(204).end();
     } catch { cookingFailed(res, "grocery_item_photo_save"); }
+  });
+  app.get("/api/grocery-shopping", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await readGroceryShopping(owner) : []); }
+    catch { cookingFailed(res, "grocery_shopping_read"); }
+  });
+  app.patch("/api/grocery-shopping", async (req, res) => {
+    const input = groceryShoppingPatch.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid shopping item." });
+    const owner = security.owner(req, res, true)!;
+    try {
+      const item = await patchGroceryShopping(owner, input.data);
+      if (!item) return res.status(409).json({ error: "Shopping item limit reached." });
+      res.json(item);
+    } catch { cookingFailed(res, "grocery_shopping_save"); }
+  });
+  app.post("/api/grocery-extras/bulk", async (req, res) => {
+    const input = bulkGroceryExtras.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid items." });
+    const owner = security.owner(req, res, true)!;
+    try {
+      const items = await groceryExtras.addBatch?.(owner, input.data);
+      if (!items) return res.status(409).json({ error: "Grocery items changed or list is full." });
+      res.status(201).json(items);
+    } catch { cookingFailed(res, "grocery_extra_bulk"); }
   });
   app.get("/api/grocery-extras", async (req, res) => {
     const owner = security.owner(req, res, false);

@@ -71,8 +71,9 @@ Tables are defined in `shared/schema.ts`.
 | `cooking_sessions` | "I made it", rating, notes | per owner |
 | `cooking_photos` | JPEG and thumbnail as `bytea` | per owner |
 | `household_products` | seeded household product suggestions, translated names and aliases | global |
-| `grocery_extras` | products a person added by hand, with an optional resized JPEG reference photo | per owner |
+| `grocery_extras` | products a person added by hand, with an optional category and resized JPEG reference photo | per owner |
 | `grocery_item_photos` | reference pictures on any grocery row, including recipe ingredients; a null image hides a legacy extra picture | per owner |
+| `grocery_shopping_items` | grocery item exclusions and quantity-specific CAD price estimates | per owner |
 | `grocery_notes` | a note on an item of the owner's own grocery list | per owner |
 | `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
 | `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |
@@ -82,7 +83,7 @@ Tables are defined in `shared/schema.ts`.
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
-Browser `localStorage` still holds the week plan (`weeklyMealsState`), grocery progress, My Ideas, Basic Settings and filter state. This is legacy, not a pattern to copy.
+Browser `localStorage` still holds the week plan (`weeklyMealsState`), grocery progress (including recorded purchase quantities for the browser-held plan), My Ideas, Basic Settings and filter state. This is legacy, not a pattern to copy.
 
 ## Identity and access
 

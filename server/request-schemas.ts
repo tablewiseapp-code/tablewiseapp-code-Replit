@@ -119,3 +119,16 @@ export const sharedItemPatch = z.object({ checked: z.boolean(), note: groceryNot
   .partial().strict().refine(value => Object.keys(value).length > 0);
 // The key is the list's own item key, so it is matched exactly (no trimming).
 export const groceryNoteInput = z.object({ key: z.string().min(1).max(300), note: groceryNote }).strict();
+
+export const groceryShoppingPatch = z.object({
+  key: z.string().min(1).max(12000),
+  skipped: z.boolean().optional(),
+  price: z.object({ cents: z.number().int().min(0).max(10000000), text: z.string().min(1).max(12000) }).strict().optional(),
+}).strict().refine(input => (input.skipped === undefined) !== (input.price === undefined));
+
+export const bulkGroceryExtras = z.array(z.object({
+  text: groceryExtraCreate.shape.text,
+  category: z.enum(["Produce", "Meat & Poultry", "Seafood", "Dairy & Eggs", "Grains & Pasta",
+    "Canned & Jarred", "Spices & Seasonings", "Other", "Manually Added"]),
+  existingId: cookingSessionId.optional(),
+}).strict()).min(1).max(50);

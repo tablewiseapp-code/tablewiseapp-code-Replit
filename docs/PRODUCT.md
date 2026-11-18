@@ -22,7 +22,7 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 ## Core loop
 
 1. **Plan** (`/meals`) — search and filter the catalog, pick 1–12 recipes, or use "Fill my week". Lock the week.
-2. **Shop** (`/grocery-list`) — one list built from the locked plan, grouped by category, with pantry items marked. Share or export it. Add household products using translated suggestions or a custom name, with an optional private reference picture. Add, change or remove pictures later on any grocery item, including recipe ingredients.
+2. **Shop** (`/grocery-list`) — one list built from the locked plan, grouped by category, with pantry items marked. Share or export it. Add household products using translated suggestions or a custom name, with an optional private reference picture. Add products individually or paste a list, review estimated category costs, and record full or partial purchases. Removing a main protein can also remove its meal from the Week. Check the impact before confirming and use Undo to restore removed meals. Purchased quantities stay available under Checked items.
 3. **Cook** (`/recipe/:id`) — scale servings, check off ingredients, run cooking mode with per-step timers.
 4. **Remember** (My Cooking Experience on the recipe page) — "I made it", rating, notes, photos.
 

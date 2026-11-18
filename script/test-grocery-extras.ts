@@ -24,11 +24,12 @@ async function main() {
   execFileSync("npx", ["drizzle-kit", "push", "--force"], { env: { ...process.env, DATABASE_URL: url }, stdio: "ignore" });
   // The hand-written migration must recreate exactly what the Drizzle schema declares.
   const pushed = await describe(pool);
-  await pool.query("DROP TABLE grocery_extras");
+  await pool.query("DROP TABLE grocery_extras, grocery_shopping_items");
   await pool.query(readFileSync("migrations/0007_grocery_extras.sql", "utf8"));
   await pool.query("DROP TABLE household_products");
   await pool.query(readFileSync("migrations/0009_grocery_products_photos.sql", "utf8"));
-  assert.deepEqual(await describe(pool), pushed, "migration 0007 differs from shared/schema.ts");
+  await pool.query(readFileSync("migrations/0013_grocery_shopping.sql", "utf8"));
+  assert.deepEqual(await describe(pool), pushed, "grocery extras migrations differ from shared/schema.ts");
 
   const store = databaseGroceryExtraStore(drizzle(pool, { schema }));
   const onion = await store.add("owner-a", "Onion");
@@ -47,6 +48,19 @@ async function main() {
   assert.equal(photographed?.image, photo);
   assert.equal((await store.add("owner-a", "milk"))?.image, photo, "re-adding without a photo preserves it");
   assert.equal((await store.list("owner-b")).some(item => item.image === photo), false, "photos are private");
+  const batch = await store.addBatch!("owner-a", [
+    { text: "2 L Milk", category: "Dairy & Eggs", existingId: photographed!.id },
+    { text: "Cleaning stuff", category: "Manually Added" },
+  ]);
+  assert.equal(batch?.[0].id, photographed?.id);
+  assert.equal(batch?.[0].image, photo);
+  assert.equal(batch?.[0].category, "Dairy & Eggs");
+  assert.equal((await store.list("owner-a")).filter(item => item.text === "Cleaning stuff").length, 2);
+  assert.equal(await store.addBatch!("owner-b", [
+    { text: "Coffee", category: "Other" },
+    { text: "1 L Milk", category: "Dairy & Eggs", existingId: photographed!.id },
+  ]), null);
+  assert.equal((await store.list("owner-b")).some(item => item.text === "Coffee"), false);
   const catalog = (await pool.query("SELECT * FROM household_products")).rows;
   assert.equal(catalog.length, 101);
   const seed = JSON.parse(readFileSync("shared/household-products.json", "utf8"));

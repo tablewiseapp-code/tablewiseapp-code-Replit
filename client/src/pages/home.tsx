@@ -5,7 +5,8 @@ import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { mealSlots, mealsOnDay, readPlan } from "@/lib/meal-plan";
-import { buildGroceryItems, type GroceryExtra } from "@/lib/grocery-items";
+import { buildShoppingList, groceryShoppingQueryKey, type Extra, type ShoppingPreference } from "@/lib/grocery-items";
+import { buildRecipeGroceryRows } from "@/lib/grocery-meal-removal";
 import { readGroceryPrefs } from "@/lib/grocery-progress";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
@@ -27,18 +28,20 @@ export default function Home() {
   const [now] = useState(() => new Date());
   const [plan] = useState(readPlan);
   const catalog = useRecipeCatalog();
-  const extras = useQuery<GroceryExtra[]>({ queryKey: ["/api/grocery-extras"], retry: false });
+  const extras = useQuery<Extra[]>({ queryKey: ["/api/grocery-extras"], retry: false, refetchOnMount: "always" });
+  const shopping = useQuery<ShoppingPreference[]>({ queryKey: groceryShoppingQueryKey, retry: false, refetchOnMount: "always" });
 
   const today = mealsOnDay(plan, now.getDay());
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
   const usesCatalog = plan.selectedIds.length > 0 || plan.planAssignments.length > 0;
 
   const grocery = () => {
-    if ((usesCatalog && catalog.isError) || extras.isError) return "error";
-    if ((usesCatalog && catalog.isPending) || extras.isPending) return "loading";
-    const { items } = buildGroceryItems(catalog.data ?? [], plan.selectedIds, plan.planAssignments, extras.data ?? []);
-    const checked = readGroceryPrefs().checked;
-    return { total: items.size, left: [...items.keys()].filter(key => !checked.has(key)).length };
+    if ((usesCatalog && catalog.isError) || extras.isError || shopping.isError) return "error";
+    if ((usesCatalog && catalog.isPending) || extras.isPending || shopping.isPending) return "loading";
+    const recipeRows = buildRecipeGroceryRows(plan, catalog.data ?? []);
+    const skipped = new Set(shopping.data?.filter(row => row.skipped).map(row => row.key));
+    const { activeRows, purchasedRows } = buildShoppingList(recipeRows, extras.data ?? [], readGroceryPrefs().checked, skipped);
+    return { total: activeRows.length + purchasedRows.length, left: activeRows.length };
   };
   const groceryState = grocery();
   const tx = useHomeTaskText();
@@ -102,7 +105,7 @@ export default function Home() {
               <Link href="/grocery-list" className="btn btn-text">{text("openList")}</Link>
             </div>
             {groceryState === "error" || groceryState === "loading" ? (
-              <SectionState error={groceryState === "error"} retry={() => { void catalog.refetch(); void extras.refetch(); }} text={text} />
+              <SectionState error={groceryState === "error"} retry={() => { void catalog.refetch(); void extras.refetch(); void shopping.refetch(); }} text={text} />
             ) : groceryState.total === 0 ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground">{text("noItems")}</p>
