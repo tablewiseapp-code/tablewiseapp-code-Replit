@@ -219,6 +219,17 @@ export async function registerRoutes(
       res.status(500).json({ error: "Unable to save the import. Nothing was saved." });
     }
   });
+  // The photo behind the link GET /api/recipes returns. JPEG only: nothing else is served from a data URL.
+  app.get("/api/recipes/:id/image", async (req, res) => {
+    try {
+      const photo = (await storage.getRecipe(req.params.id))?.image?.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/);
+      if (!photo) return res.status(404).json({ error: "No photo" });
+      res.set("Cache-Control", "private, max-age=31536000, immutable").type("image/jpeg").send(Buffer.from(photo[1], "base64"));
+    } catch {
+      console.error("api_failure operation=recipe_image_get");
+      res.status(500).json({ error: "Failed to fetch photo" });
+    }
+  });
   app.get("/api/recipes/:id/source", async (req, res) => {
     try {
       const source = await youtube.forRecipe(req.params.id);
@@ -278,14 +289,16 @@ export async function registerRoutes(
     }
   });
 
-  // Interactive imports are explicitly distinct from existing batch/API creation.
-  // A failed, missing, fabricated or stale analysis cannot complete this workflow.
+  // Interactive imports (typed, pasted or dictated) are explicitly distinct from existing batch/API creation.
+  // Step-time analysis is optional so import works with AI off; when sent, a fabricated or stale one is refused.
   app.post("/api/import-recipe", async (req, res) => {
     const parsed = recipeInput.safeParse(req.body);
-    if (!parsed.success || !parsed.data.stepAnalysis ||
-        !analyzeRecipe.isValidated(parsed.data, parsed.data.stepAnalysis)) {
-      return res.status(409).json({ error: "Current completed timing analysis is required. Analyze again before saving." });
+    const stale = () => res.status(409).json({ error: "Current completed timing analysis is required. Analyze again before saving." });
+    if (!parsed.success) {
+      return parsed.error.issues.some(issue => issue.path[0] === "stepAnalysis") ? stale()
+        : res.status(400).json({ error: "Check the recipe name, ingredients and steps." });
     }
+    if (parsed.data.stepAnalysis && !analyzeRecipe.isValidated(parsed.data, parsed.data.stepAnalysis)) return stale();
     try {
       res.status(201).json(await storage.createRecipe(parsed.data));
     } catch (error) {

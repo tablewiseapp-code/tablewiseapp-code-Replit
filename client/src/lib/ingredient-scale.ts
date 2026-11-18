@@ -1,17 +1,9 @@
 // Deterministic ingredient scaling. Only a leading quantity is scaled; anything
 // ambiguous (other numbers in the line, unknown format) keeps the original text.
-const vulgar: Record<string, number> = { "½": 1 / 2, "⅓": 1 / 3, "⅔": 2 / 3, "¼": 1 / 4, "¾": 3 / 4, "⅛": 1 / 8 };
+import { parseQuantity, vulgar } from "@shared/ingredient-parse";
+
 const quantity = String.raw`(?:\d+\s*[${Object.keys(vulgar).join("")}]|[${Object.keys(vulgar).join("")}]|\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)`;
 const leading = new RegExp(String.raw`^(\s*)(${quantity})(?:\s*(?:-|–|—|to)\s*(${quantity}))?(?=\s|[a-zA-Zа-яА-Я]|$)`);
-
-function parseQuantity(raw: string): number | null {
-  const text = raw.trim().replace(",", ".");
-  const unicode = new RegExp(String.raw`^(\d+)?\s*([${Object.keys(vulgar).join("")}])$`).exec(text);
-  if (unicode) return Number(unicode[1] ?? 0) + vulgar[unicode[2]];
-  const mixed = /^(\d+)\s+(\d+)\/(\d+)$/.exec(text) ?? /^()(\d+)\/(\d+)$/.exec(text);
-  if (mixed) return Number(mixed[3]) ? Number(mixed[1] || 0) + Number(mixed[2]) / Number(mixed[3]) : null;
-  return /^\d+(?:\.\d+)?$/.test(text) ? Number(text) : null;
-}
 
 const fractions: Array<[number, string]> = [[1 / 8, "1/8"], [1 / 4, "1/4"], [1 / 3, "1/3"], [1 / 2, "1/2"], [2 / 3, "2/3"], [3 / 4, "3/4"]];
 export function formatQuantity(value: number): string {

@@ -99,7 +99,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     `${cookieName}=${value}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${config.production ? "; Secure" : ""}`;
 
   app.get("/operator", (_req, res) => {
-    res.set({ "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'; form-action 'self'; frame-ancestors 'none'", "Referrer-Policy": "no-referrer" });
+    res.set({ "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'; form-action 'self'; frame-ancestors 'none'", "Referrer-Policy": "same-origin" });
     res.type("html").send(`<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TableWise operator</title><main><h1>TableWise operator access</h1><p>Public visitors cannot change recipes or use paid AI. Sign in here to use existing import and recipe tools. Access expires after one hour or a server restart.</p><form action="/api/operator/session" method="post"><label>Operator token <input name="token" type="password" required minlength="32" maxlength="256" autocomplete="off"></label><button>Sign in</button></form><p>Sign out immediately:</p><form action="/api/operator/logout" method="post"><button>Sign out</button></form><p><a href="/recipes">Open recipes</a> · <a href="/import">Import recipe</a></p></main></html>`);
   });
   app.use("/api", (req, res, next) => {
@@ -185,6 +185,13 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       }
       if (/events\/?$/.test(req.path) && !consume(res, "public-generation-events", 60, 60_000)) return;
       res.locals.publicAI = true;
+      return next();
+    }
+    // Manual recipe import ("Type or paste") is open to every visitor during the pilot (product owner, 2026-11-17).
+    // Same-origin only and budgeted; editing and deleting recipes stay operator-only.
+    if (req.method === "POST" && !authorized(req) && /^\/import-recipe\/?$/.test(req.path)) {
+      if (!sameOrigin(req)) return res.status(403).json({ error: "Same-origin request required." });
+      if (!consume(res, "public-imports:minute", 10, 60_000) || !consume(res, "public-imports:day", 200, 86400_000)) return;
       return next();
     }
     // Public AI: create, edit, regenerate and approve one's own drafts (ownership is checked by each route).

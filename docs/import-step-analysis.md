@@ -2,11 +2,11 @@
 
 ## Scope and meaning
 
-Typed imports and voice imports both pass through complete-recipe timing
-analysis before final save. Typed entry uses **Analyze step times** as the
-first completion action; it never saves immediately. Voice fill automatically
-analyzes after transcription and parsing. Review the instructions, duration
-badges and warnings, then use **Save & open**.
+**Update (manual import MVP):** step-time analysis is now **optional**. "Save recipe"
+saves directly, so typed, pasted and dictated imports work with AI off. When AI is
+on, **Analyze step times** is a secondary action; a current, server-validated
+analysis is saved with the recipe, and a stale or fabricated one is refused (409).
+Voice fill still analyzes automatically when AI is on. See "Manual import" below.
 
 Each analyzed instruction keeps its exact text and a positive integer duration
 or range in seconds, minutes or hours (maximum seven days). `Source-stated`
@@ -41,11 +41,11 @@ the current review. Final save is a separate action after review; repeated
 clicks cannot start parallel client analysis/save requests. A voice parse
 arriving after manual edits preserves those edits instead of replacing them.
 
-The interactive `/api/import-recipe` endpoint accepts only a currently
-server-validated result matching the complete context. Per-process successful
+The interactive `/api/import-recipe` endpoint accepts a recipe without analysis,
+or with a currently server-validated result matching the complete context. Per-process successful
 analysis results expire after ten minutes, restart, or bounded cache eviction.
-An expired save asks for another analysis. Save failure clears the review so
-the Analyze action is available again. Legacy `/api/recipes` creation remains
+An expired analysis is refused; save failure clears the review, so the retry
+saves without it. Legacy `/api/recipes` creation remains
 available to the existing protected non-interactive workflows.
 
 ## Operator and paid-provider boundaries
@@ -113,3 +113,26 @@ The isolated PostgreSQL regression has been run successfully against a freshly
 created temporary cluster with TCP disabled. The application database migration
 remains unapplied. Live transcription accuracy and real-provider estimate quality
 are not verified by fake-provider tests.
+
+## Manual import ("Type or paste")
+
+`/import` has a **Type or paste** section: Recipe name, Ingredients and Steps, one
+item per line; empty lines are ignored and order is kept. Name, at least one
+ingredient and at least one step are required; errors show beside each field and
+a failed save keeps the text.
+
+Ingredient lines are parsed by regular code in `shared/ingredient-parse.ts` (no AI)
+and previewed under the field as the text changes. Each line becomes
+`{ originalText, quantity, unit, ingredient }`: quantities may be whole, decimal,
+fractional, Unicode or mixed (`2`, `2.5`, `1/2`, `½`, `1 1/2`, `1 ½`); units are matched
+case-insensitively, with or without a space, longest spelling first (`fl oz` before
+`oz`), and stored as a canonical key (`g kg oz lb ml l cup tsp tbsp "fl oz" piece
+clove slice`). Amounts stay in the units entered. Lines the rules cannot read
+(`salt to taste`, `2-3 eggs`, `1 x 400 g tin`) keep their text and a null quantity;
+parsing never blocks a save.
+
+`recipes.ingredients` holds the previewed text (what every screen shows, scales and
+groups); `recipes.ingredient_parts` holds the parts in the same order
+(migration `0011`). Older recipes have NULL parts and read as before. Editing the
+ingredient text without new parts clears the old parts. Units are English only.
+Tests: `npm run test:ingredient-parse`, `npm run test:manual-import-browser`.

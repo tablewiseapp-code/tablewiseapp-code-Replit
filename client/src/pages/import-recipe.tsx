@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { createRecipe } from "@/lib/storage";
 import { useI18n, type Language } from "@/lib/i18n";
@@ -6,6 +7,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { timingContext, timingContextSchema, stepAnalysisSchema, type StepAnalysis, type TimingContext } from "@shared/step-timing";
 import { YouTubeImport } from "@/components/youtube-import";
 import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step-timing";
+import { parseIngredients } from "@shared/ingredient-parse";
 
 function isValidUrl(str: string): boolean {
   try {
@@ -141,8 +143,20 @@ export default function ImportRecipe() {
   const parsedVoice = useRef<{ text: string; value: ParsedRecipe } | null>(null);
   const transcribedBlob = useRef<{ blob: Blob; text: string } | null>(null);
   const lines = (text: string) => text.split("\n").map(line => line.trim()).filter(Boolean);
+  // The preview, the timing analysis and the save all use the same parsed lines, so an analysis stays valid on save.
+  const parsedIngredients = useMemo(() => parseIngredients(ingredients), [ingredients]);
+  const stepLines = lines(steps);
+  const [tried, setTried] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const aiEnabled = useQuery<{ aiEnabled?: boolean }>({ queryKey: ["/api/operator/session"] }).data?.aiEnabled === true;
+  const fieldErrors = {
+    title: !title.trim() ? t("import.nameRequired") : null,
+    ingredients: parsedIngredients.length === 0 ? t("import.ingredientsRequired") : null,
+    steps: stepLines.length === 0 ? t("import.stepsRequired") : null,
+  };
+  const fieldError = (field: keyof typeof fieldErrors) => (tried ? fieldErrors[field] : null);
   const context: TimingContext = {
-    title: title.trim(), ingredients: lines(ingredients), steps: lines(steps),
+    title: title.trim(), ingredients: parsedIngredients.map(item => item.display), steps: stepLines,
     prepTime: metadata.prepTime, cookTime: metadata.cookTime, servings: metadata.servings,
   };
   const contextRef = useRef(timingContext(context));
@@ -343,7 +357,7 @@ export default function ImportRecipe() {
       setSteps((parsed.steps || []).join("\n"));
       setMetadata({ prepTime: parsed.prepTime, cookTime: parsed.cookTime, servings: parsed.servings, tags: parsed.tags });
       setAnalysis(null);
-      const nextContext = { title: parsed.title, ingredients: parsed.ingredients, steps: parsed.steps,
+      const nextContext = { title: parsed.title, ingredients: parseIngredients((parsed.ingredients || []).join("\n")).map(item => item.display), steps: parsed.steps,
         prepTime: parsed.prepTime, cookTime: parsed.cookTime, servings: parsed.servings };
       contextRef.current = timingContext(nextContext);
       await runAnalysis(nextContext);
@@ -381,43 +395,37 @@ export default function ImportRecipe() {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async () => {
+  const handleAnalyze = async () => {
     if (busy.current || voiceBusy.current || isRecording) return;
     busy.current = true;
-    if (!validAnalysis) {
-      await runAnalysis(context);
-      busy.current = false;
-      return;
-    }
+    await runAnalysis(context);
+    busy.current = false;
+  };
+
+  // Saves directly; a step-time analysis is included only when it matches the current text.
+  const handleSave = async () => {
+    if (busy.current || voiceBusy.current || isRecording) return;
+    setTried(true);
+    setSaveError(null);
+    if (fieldErrors.title || fieldErrors.ingredients || fieldErrors.steps) return;
+    busy.current = true;
     setIsSaving(true);
-
-    const parsedIngredients = ingredients
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-    
-    const parsedSteps = steps
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-
     try {
       const saved = await createRecipe({
-        title: title.trim() || "Untitled Recipe",
-        ingredients: parsedIngredients,
-        steps: parsedSteps,
+        title: title.trim(),
+        ingredients: parsedIngredients.map(item => item.display),
+        ingredientParts: parsedIngredients.map(({ display, ...part }) => part),
+        steps: stepLines,
         ...metadata,
-        stepAnalysis: validAnalysis,
+        ...(validAnalysis ? { stepAnalysis: validAnalysis } : {}),
         image: image || null,
         sourceUrl: sourceUrl.trim() && isValidUrl(sourceUrl.trim()) ? sourceUrl.trim() : null,
       }, true);
       setLocation(`/recipe/${saved.id}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to save recipe:", error);
-      const message = error.message || "Failed to save recipe";
-      setAnalysis(null);
-      setAnalysisError(message);
-      showErrorPopup(message);
+      if (validAnalysis) setAnalysis(null); // an expired analysis would fail again; the retry saves without it
+      setSaveError(t("import.saveFailed"));
     } finally {
       busy.current = false;
       setIsSaving(false);
@@ -586,78 +594,84 @@ export default function ImportRecipe() {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              {t("import.titleLabel")}
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t("import.titlePlaceholder")}
-              className="w-full px-4 py-3 text-sm border hairline rounded-lg bg-background focus-ring-quiet"
-              data-testid="input-title"
-            />
-            {!title.trim() && (
-              <p className="text-xs text-muted-foreground mt-1">{t("import.titleHint")}</p>
-            )}
-          </div>
+          <section aria-labelledby="type-or-paste-heading" className="space-y-6" data-testid="type-or-paste">
+            <h2 id="type-or-paste-heading" className="text-base font-semibold text-foreground">{t("import.typeOrPaste")}</h2>
+            <div>
+              <label htmlFor="import-title" className="block text-sm font-medium text-foreground mb-2">{t("import.titleLabel")}</label>
+              <input dir="auto" id="import-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                placeholder={t("import.titlePlaceholder")} aria-invalid={fieldError("title") ? true : undefined}
+                aria-describedby={fieldError("title") ? "import-title-error" : undefined}
+                className={`w-full px-4 py-3 text-sm border rounded-lg bg-background focus-ring-quiet ${fieldError("title") ? "border-destructive" : "hairline"}`}
+                data-testid="input-title" />
+              {fieldError("title") && <p id="import-title-error" className="mt-1 text-xs text-destructive" data-testid="error-title">{fieldError("title")}</p>}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              {t("import.ingredientsLabel")}
-            </label>
-            <textarea
-              value={ingredients}
-              onChange={(e) => setIngredients(e.target.value)}
-              placeholder="200g rice
-500g chicken thighs
-2 carrots, diced
-1 large onion, sliced"
-              rows={6}
-              className="w-full px-4 py-3 text-sm border hairline rounded-lg bg-background focus-ring-quiet resize-none"
-              data-testid="textarea-ingredients"
-            />
-          </div>
+            <div>
+              <label htmlFor="import-ingredients" className="block text-sm font-medium text-foreground mb-1">{t("import.ingredientsLabel")}</label>
+              <p id="import-ingredients-hint" className="mb-2 text-xs text-muted-foreground">{t("import.ingredientsHint")}</p>
+              <textarea dir="auto" id="import-ingredients" value={ingredients} onChange={(e) => setIngredients(e.target.value)}
+                placeholder={t("import.ingredientsPlaceholder")} rows={6} aria-invalid={fieldError("ingredients") ? true : undefined}
+                aria-describedby={`import-ingredients-hint${fieldError("ingredients") ? " import-ingredients-error" : ""}`}
+                className={`w-full px-4 py-3 text-sm border rounded-lg bg-background focus-ring-quiet resize-none ${fieldError("ingredients") ? "border-destructive" : "hairline"}`}
+                data-testid="textarea-ingredients" />
+              {fieldError("ingredients") && <p id="import-ingredients-error" className="mt-1 text-xs text-destructive" data-testid="error-ingredients">{fieldError("ingredients")}</p>}
+              {parsedIngredients.length > 0 && (
+                <div className="mt-3 rounded-lg bg-muted p-3" data-testid="ingredient-preview">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">{t("import.preview")}</p>
+                  {/* Lines the parser could not read are shown as written, in a quieter colour; fix them in the field above. */}
+                  <ul className="space-y-1 text-sm">
+                    {parsedIngredients.map((item, i) => (
+                      <li key={i} dir="auto" data-testid="ingredient-preview-item" data-parsed={item.quantity !== null}
+                        className={item.quantity === null ? "text-muted-foreground" : "text-foreground"}>{item.display}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              {t("import.stepsLabel")}
-            </label>
-            <textarea
-              value={steps}
-              onChange={(e) => setSteps(e.target.value)}
-              placeholder="Rinse the rice and soak for 30 minutes
-Cut chicken into pieces and season
-Sauté onions until golden brown"
-              rows={8}
-              className="w-full px-4 py-3 text-sm border hairline rounded-lg bg-background focus-ring-quiet resize-none"
-              data-testid="textarea-steps"
-            />
-          </div>
-
-          <section className="rounded-xl border hairline p-4 space-y-4" aria-live="polite" data-testid="timing-review">
-            <h2 className="text-sm font-medium">{t("timing.review")}</h2>
-            {analyzing ? <p role="status">{t("timing.analyzing")}</p> : !validAnalysis && <p className="text-sm">{t("timing.required")}</p>}
-            {analysisError && <p role="alert" className="text-sm text-red-600">{analysisError} {t("timing.retry")}</p>}
-            {validAnalysis && <>
-              <ol className="space-y-3">{validAnalysis.steps.map((step, i) => <li key={i} className="space-y-1 text-sm">
-                <p>{i + 1}. {step.text}</p><StepTiming duration={step} />
-              </li>)}</ol>
-              <AnalysisWarnings analysis={validAnalysis} />
-            </>}
+            <div>
+              <label htmlFor="import-steps" className="block text-sm font-medium text-foreground mb-1">{t("import.stepsLabel")}</label>
+              <p id="import-steps-hint" className="mb-2 text-xs text-muted-foreground">{t("import.stepsHint")}</p>
+              <textarea dir="auto" id="import-steps" value={steps} onChange={(e) => setSteps(e.target.value)}
+                placeholder={t("import.stepsPlaceholder")} rows={8} aria-invalid={fieldError("steps") ? true : undefined}
+                aria-describedby={`import-steps-hint${fieldError("steps") ? " import-steps-error" : ""}`}
+                className={`w-full px-4 py-3 text-sm border rounded-lg bg-background focus-ring-quiet resize-none ${fieldError("steps") ? "border-destructive" : "hairline"}`}
+                data-testid="textarea-steps" />
+              {fieldError("steps") && <p id="import-steps-error" className="mt-1 text-xs text-destructive" data-testid="error-steps">{fieldError("steps")}</p>}
+            </div>
           </section>
+
+          {(aiEnabled || analyzing || analysisError || validAnalysis) && (
+            <section className="rounded-xl border hairline p-4 space-y-4" aria-live="polite" data-testid="timing-review">
+              <h2 className="text-sm font-medium">{t("timing.review")}</h2>
+              {analyzing && <p role="status">{t("timing.analyzing")}</p>}
+              {analysisError && <p role="alert" className="text-sm text-destructive">{analysisError} {t("timing.retry")}</p>}
+              {validAnalysis ? <>
+                <ol className="space-y-3">{validAnalysis.steps.map((step, i) => <li key={i} className="space-y-1 text-sm">
+                  <p>{i + 1}. {step.text}</p><StepTiming duration={step} />
+                </li>)}</ol>
+                <AnalysisWarnings analysis={validAnalysis} />
+              </> : aiEnabled && (
+                <button type="button" onClick={handleAnalyze} disabled={isSaving || analyzing || isProcessing || isRecording}
+                  className="btn btn-secondary w-full sm:w-auto" aria-busy={analyzing} data-testid="button-analyze">
+                  {t("timing.analyze")}
+                </button>
+              )}
+            </section>
+          )}
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-4">
             <button
+              type="button"
               onClick={handleSave}
               disabled={isSaving || analyzing || isProcessing || isRecording}
               className="btn btn-primary w-full sm:w-auto"
-              aria-busy={isSaving || analyzing}
+              aria-busy={isSaving}
               data-testid="button-save"
             >
-              {isSaving ? t("import.saving") : validAnalysis ? t("import.saveAndOpen") : t("timing.analyze")}
+              {isSaving ? t("import.saving") : t("import.saveRecipe")}
             </button>
             <button
+              type="button"
               onClick={() => setLocation("/recipes")}
               className="btn btn-text w-full sm:w-auto"
               data-testid="button-back"
@@ -665,6 +679,7 @@ Sauté onions until golden brown"
               {t("import.back")}
             </button>
           </div>
+          {saveError && <p role="alert" className="text-sm text-destructive" data-testid="save-error">{saveError}</p>}
         </fieldset>
 
         <div className="card mt-12 p-5">

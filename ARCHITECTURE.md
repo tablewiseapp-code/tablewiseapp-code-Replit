@@ -63,7 +63,7 @@ Tables are defined in `shared/schema.ts`.
 
 | Table | Purpose | Scope |
 |---|---|---|
-| `recipes` | catalog | global, shared by all visitors |
+| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones) | global, shared by all visitors |
 | `recipe_nutrition` | cached nutrition | global |
 | `recipe_generations` | AI drafts and their status | per owner |
 | `cooking_sessions` | "I made it", rating, notes | per owner |
@@ -84,9 +84,9 @@ Browser `localStorage` still holds the week plan (`weeklyMealsState`), grocery p
 
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
-- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history.
+- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
-- **Operator only:** import, edit and delete recipes; read the analytics summary.
+- **Operator only:** YouTube import, edit and delete recipes; read the analytics summary.
 
 ## Environment flags
 
@@ -133,7 +133,7 @@ Spend is capped in `server/security.ts` (a global budget per minute, hour and da
 
 - Rate limits, the AI budget and operator sessions are per process and reset on restart.
 - The API rate limit is shared across all visitors, not per visitor.
-- `GET /api/recipes` returns the whole catalog; there is no pagination.
+- `GET /api/recipes` returns the whole catalog; there is no pagination. Uploaded recipe photos are replaced in that list by a cacheable link, `/api/recipes/:id/image?v=<hash>`; `GET /api/recipes/:id` still returns the full image.
 - The client ships as one bundle with no lazy-loaded routes.
 - The server imports `client/src/lib/planner-filters`; shared logic belongs in `shared/`.
 - Two migration files are numbered `0004`.

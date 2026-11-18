@@ -4,6 +4,7 @@ import { recipeInput, recipePatch } from "./request-schemas";
 import { recipeCreditInput } from "../shared/recipe-credit";
 import type { z } from "zod";
 import { analysisMatches, type StepAnalysis } from "../shared/step-timing";
+import type { IngredientPart } from "../shared/ingredient-parse";
 
 // JSON row lookup returns NULL if the additive column has not been installed.
 // Public reads stay compatible with the existing production schema.
@@ -13,12 +14,13 @@ const recipeColumns = {
   creditKind: sql<"chef" | "mine" | null>`to_jsonb(${recipes})->>'credit_kind'`,
   creditName: sql<string | null>`to_jsonb(${recipes})->>'credit_name'`,
   stepAnalysis: sql<StepAnalysis | null>`to_jsonb(${recipes})->'step_analysis'`,
+  ingredientParts: sql<IngredientPart[] | null>`to_jsonb(${recipes})->'ingredient_parts'`,
 };
 
 export function isMissingPreparationColumn(error: unknown): boolean {
   const value = error as { code?: string; message?: string; cause?: { code?: string; message?: string } } | null;
   const databaseError = value?.cause ?? value;
-  return databaseError?.code === "42703" && Boolean(/prep_time|step_analysis/.test(databaseError.message ?? ""));
+  return databaseError?.code === "42703" && Boolean(/prep_time|step_analysis|ingredient_parts/.test(databaseError.message ?? ""));
 }
 
 export interface IStorage {
@@ -61,7 +63,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAllRecipes(): Promise<Recipe[]> {
     const db = await this.database();
-    return db.select(recipeColumns).from(recipes).orderBy(desc(recipes.createdAt));
+    // Uploaded photos (data URLs, up to ~280 KB each) are replaced by a link so the catalog stays small;
+    // the hash changes with the photo, so the browser may cache each link forever.
+    return db.select({ ...recipeColumns, image: sql<string | null>`CASE WHEN ${recipes.image} LIKE 'data:%'
+      THEN '/api/recipes/' || ${recipes.id} || '/image?v=' || left(md5(${recipes.image}), 12) ELSE ${recipes.image} END` })
+      .from(recipes).orderBy(desc(recipes.createdAt));
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {
@@ -78,7 +84,7 @@ export class DatabaseStorage implements IStorage {
     // supplied fields so untimed legacy creation remains migration-independent.
     const columns = getTableColumns(recipes);
     const fields = Object.entries(values).filter(([key, value]) =>
-      value !== undefined && !(key === "stepAnalysis" && value === null));
+      value !== undefined && !((key === "stepAnalysis" || key === "ingredientParts") && value === null));
     const names = fields.map(([key]) => sql.identifier(columns[key as keyof typeof columns].name));
     const parameters = fields.map(([key, value]) => sql.param(value, columns[key as keyof typeof columns]));
     const returning = Object.entries(recipeColumns).map(([key, column]) => sql`${column} AS ${sql.identifier(key)}`);
@@ -108,6 +114,8 @@ export class DatabaseStorage implements IStorage {
       // Only write the additive column if the old row actually has analysis.
       const existing = await this.getRecipe(id);
       if (existing?.stepAnalysis) values.stepAnalysis = null;
+      // New ingredient text without new parts: drop the old parts rather than keep a stale breakdown.
+      if (values.ingredients && values.ingredientParts === undefined && existing?.ingredientParts) values.ingredientParts = null;
     }
     const db = await this.database();
     const [updated] = await db

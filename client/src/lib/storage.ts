@@ -2,6 +2,7 @@ import type { RecipeToolKey } from "./recipe-tools";
 import type { RecipeCredit } from "@shared/recipe-credit";
 import type { NutritionFields } from "@shared/recipe-nutrition";
 import type { StepAnalysis } from "@shared/step-timing";
+import type { IngredientPart } from "@shared/ingredient-parse";
 
 export type Recipe = RecipeCredit & NutritionFields & {
   id: string;
@@ -9,6 +10,7 @@ export type Recipe = RecipeCredit & NutritionFields & {
   ingredients: string[];
   steps: string[];
   stepAnalysis?: StepAnalysis | null;
+  ingredientParts?: IngredientPart[] | null;
   createdAt: string;
   updatedAt: string;
   image?: string | null;
