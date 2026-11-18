@@ -75,11 +75,14 @@ try {
   const measureOf = name => ev(`[...document.querySelectorAll(".grocery-item")].find(li => li.querySelector(".grocery-ingredient")?.textContent === ${JSON.stringify(name)})?.querySelector('[data-testid="grocery-item-measure"]')?.textContent`);
   await until(hasItem("10 chicken thighs"), "shared protein quantity");
   assert.equal(await measureOf("chicken thighs"), "10", "prices are hidden by default");
-  await clickText("My Items");
+  await clickText("From recipes");
+  assert.equal(await ev(hasItem("10 chicken thighs")), true);
+  assert.equal(await ev(hasItem("2 L milk")), false, "From recipes hides products added by hand");
+  await clickText("Added by me");
   assert.equal(await ev(hasItem("10 chicken thighs")), false);
   await ev(`document.querySelector('[aria-label="2 L milk"]').click()`);
   await until(hasText("Add groceries or household products"), "manual purchase hides item");
-  await clickText("All Items");
+  await clickText("All");
   assert.equal(await ev(`document.querySelector("main").innerText.includes("2 L milk")`), false, "bought item leaves the list (the Undo notice outside main may still name it)");
   await ev(`document.querySelector('[aria-label="100 g Greek yogurt"]').click()`);
   const priceToggle = `document.querySelector('[data-testid="category-prices-meat-poultry"]')`;
@@ -92,7 +95,11 @@ try {
   assert.equal(await ev(`!${meat}.querySelector("ul")`), true, "toggling prices keeps the category collapsed");
   await ev(`${meat}.querySelector('[data-testid="category-toggle-meat-poultry"]').click()`);
   await until(`!!${meat}.querySelector("ul")`, "category expands");
-  assert.equal(await measureOf("chicken thighs"), "10 · $12.49", "price beside quantity");
+  const priceOf = name => ev(`[...document.querySelectorAll(".grocery-item")].find(li => li.querySelector(".grocery-ingredient")?.textContent === ${JSON.stringify(name)})?.querySelector('[data-testid="grocery-item-price"]')?.textContent`);
+  assert.equal(await measureOf("chicken thighs"), "10", "quantity stays on its own");
+  assert.equal(await priceOf("chicken thighs"), "$12.49", "price in the $ column");
+  const [priceCenter, toggleCenter] = await ev(`[[...document.querySelectorAll(".grocery-item")].find(li => li.querySelector(".grocery-ingredient")?.textContent === "chicken thighs").querySelector('[data-testid="grocery-item-price"]'), ${priceToggle}].map(el => { const r = el.getBoundingClientRect(); return Math.round(r.x + r.width / 2); })`);
+  assert.ok(Math.abs(priceCenter - toggleCenter) <= 1, "price is centred under $");
   assert.equal(await measureOf("onions"), "1500 g", "other categories stay unpriced");
   await ev(`document.querySelector('[data-testid="category-prices-produce"]').click()`);
   assert.equal(await measureOf("onions"), "1500 g", "missing price shows quantity only");
@@ -101,8 +108,19 @@ try {
   await until(`${priceToggle}.getAttribute("aria-pressed") === "false"`, "second click turns prices off");
   assert.equal(await measureOf("chicken thighs"), "10");
   const [x, y] = await ev(`(r => [r.x + r.width / 2, r.y + r.height / 2])(document.querySelector('[aria-label="Item actions · 10 chicken thighs"]').getBoundingClientRect())`);
-  for (const type of ["mousePressed", "mouseReleased"]) await call("Input.dispatchMouseEvent", { type, x, y, button: "left", clickCount: 1 });
-  await until(`!!document.querySelector('[data-testid="button-remove-item"]')`, "item menu");
+  const openMenu = async () => {
+    for (const type of ["mousePressed", "mouseReleased"]) await call("Input.dispatchMouseEvent", { type, x, y, button: "left", clickCount: 1 });
+    await until(`!!document.querySelector('[data-testid="button-remove-item"]')`, "item menu");
+  };
+  // The note is a row menu action; its field keeps focus after the menu closes.
+  await openMenu();
+  await ev(`document.querySelector('[data-testid="button-item-note"]').click()`);
+  await until(`document.activeElement?.dataset.testid === "input-item-note" && !document.querySelector('[role="menu"]')`, "note field keeps focus");
+  await call("Input.insertText", { text: "organic" });
+  await ev(`document.activeElement.blur()`);
+  await until(hasText("organic"), "note saved under the item");
+  await openMenu();
+  assert.equal(await ev(`document.querySelector('[data-testid="button-item-note"]').textContent.trim()`), "Edit note");
   await ev(`document.querySelector('[data-testid="button-remove-item"]').click()`);
   await until(hasText("Remove 10 chicken thighs?"), "protein removal prompt");
   await ev(`[...document.querySelectorAll('[role="dialog"] label')].find(el => el.textContent.includes("Easy chicken curry")).querySelector("input").click()`);

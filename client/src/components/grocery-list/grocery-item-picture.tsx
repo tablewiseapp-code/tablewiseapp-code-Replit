@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -7,11 +7,16 @@ import { groceryProductText as copy } from "@/lib/grocery-product-copy";
 import { groceryPhoto } from "./grocery-add-item";
 
 /** Photo controls are outside the checkbox label, so editing never checks the row. */
-export function GroceryItemPicture({ item, image, disabled, onSave }: {
+/** `children` are extra row actions shown in the same menu, so a row has one "…" button. */
+export function GroceryItemPicture({ item, image, disabled, onSave, label, children, onMenuClosed }: {
   item: string;
   image?: string | null;
   disabled?: boolean;
   onSave: (image: string | null) => Promise<void>;
+  label?: string;
+  children?: ReactNode;
+  /** Runs when the menu has closed; call `preventDefault` to keep focus off the "…" button. */
+  onMenuClosed?: (event: Event) => void;
 }) {
   const { lang } = useI18n();
   const input = useRef<HTMLInputElement>(null);
@@ -41,17 +46,18 @@ export function GroceryItemPicture({ item, image, disabled, onSave }: {
       <DropdownMenu dir={lang === "he" ? "rtl" : "ltr"}>
         <DropdownMenuTrigger asChild>
           <button type="button" className="grocery-icon-button" disabled={disabled || Boolean(busy)}
-            aria-label={`${copy(lang, "actions")}: ${item}`} title={copy(lang, "actions")} data-testid="button-item-picture-menu">
+            aria-label={label ?? `${copy(lang, "actions")}: ${item}`} title={label ?? copy(lang, "actions")} data-testid="button-item-picture-menu">
             <MoreHorizontal aria-hidden="true" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" onCloseAutoFocus={onMenuClosed}>
           <DropdownMenuItem className="min-h-11" onSelect={() => input.current?.click()} data-testid="menu-item-picture-upload">
             {copy(lang, image ? "changePhoto" : "addPhoto")}
           </DropdownMenuItem>
           {image && <DropdownMenuItem className="min-h-11" onSelect={() => void save(null)} data-testid="menu-item-picture-remove">
             {copy(lang, "removePhoto")}
           </DropdownMenuItem>}
+          {children}
         </DropdownMenuContent>
       </DropdownMenu>
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden

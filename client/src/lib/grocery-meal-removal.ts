@@ -60,6 +60,13 @@ export function buildRecipeGroceryRows(plan: PlanState, catalog: GroceryRecipe[]
   return rows;
 }
 
+/** Meals that use a recipe: its day slots, or one entry with `spanDays: 0` for a recipe chosen for the Week but not on a day. */
+export function groceryMealsFor(plan: PlanState, recipeIds: Set<string>): PlanAssignment[] {
+  const placed = plan.planAssignments.filter(a => recipeIds.has(a.recipeId));
+  const unplaced = plan.selectedIds.filter(id => recipeIds.has(id) && !placed.some(a => a.recipeId === id));
+  return [...placed, ...unplaced.map(recipeId => ({ recipeId, mealType: "Dinner" as const, startDay: 0, spanDays: 0 }))];
+}
+
 export function removeGroceryMeals(plan: PlanState, remove: PlanAssignment[]) {
   const keys = new Set(remove.map(assignmentKey));
   const recipeIds = new Set(remove.map(a => a.recipeId));
@@ -89,7 +96,7 @@ export function restoreGroceryMeals(current: PlanState, removed: PlanAssignment[
   if (selectedIds.length > maxPlannedRecipes || removed.some(a =>
     Array.from({ length: a.spanDays }, (_, day) => occupant(current, a.mealType, a.startDay + day)).some(Boolean),
   )) return null;
-  return { ...current, selectedIds, planAssignments: [...current.planAssignments, ...removed] };
+  return { ...current, selectedIds, planAssignments: [...current.planAssignments, ...removed.filter(a => a.spanDays > 0)] };
 }
 
 export function remainingGroceryText(ingredient: string, purchases: Iterable<string>) {

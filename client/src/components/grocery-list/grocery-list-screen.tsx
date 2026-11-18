@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -12,17 +12,17 @@ import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
 import { readGroceryPrefs, saveGroceryPrefs, toggleCategory } from "@/lib/grocery-progress";
 import { planStorageKey, readPlan, writePlan, type PlanAssignment } from "@/lib/meal-plan";
-import { assignmentKey, buildRecipeGroceryRows, groceryMeasure, groceryPlanVersion, groceryQuantityText, remainingGroceryText, removeGroceryMeals, restoreGroceryMeals } from "@/lib/grocery-meal-removal";
+import { assignmentKey, buildRecipeGroceryRows, groceryMealsFor, groceryMeasure, groceryPlanVersion, groceryQuantityText, remainingGroceryText, removeGroceryMeals, restoreGroceryMeals } from "@/lib/grocery-meal-removal";
 import { buildShoppingList, groceryShoppingQueryKey as shoppingQuery, type Extra, type ShoppingPreference, type ShoppingRow } from "@/lib/grocery-items";
 import { shoppingCopy } from "@/lib/grocery-shopping-copy";
 import { parseIngredientLine, parseQuantity } from "@shared/ingredient-parse";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { currentWeek } from "@/lib/week-plan";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
-import { Ellipsis, Plus, Share2 } from "lucide-react";
+import { Plus, Share2 } from "lucide-react";
 import { loadSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
@@ -46,9 +46,12 @@ export default function GroceryListScreen() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(initialPrefs.checked);
   const [expansion, setExpansion] = useState(initialPrefs.expansion);
   const [shareOpen, setShareOpen] = useState(false);
-  const [tab, setTab] = useState<"all" | "mine">("all");
+  const [tab, setTab] = useState<"all" | "recipes" | "mine">("all");
   // Categories whose "$" button shows item prices. Display-only: expansion and checks are separate state.
   const [shownPrices, setShownPrices] = useState<Set<string>>(new Set());
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  // The note field opens once the row menu has closed, otherwise the menu takes focus back and the field closes.
+  const noteAfterMenu = useRef<string | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<ShoppingRow | null>(null);
   const [mealKeys, setMealKeys] = useState<Set<string>>(new Set());
   const [partial, setPartial] = useState<ShoppingRow | null>(null);
@@ -229,7 +232,7 @@ export default function GroceryListScreen() {
 
   categoryTranslations["Manually Added"] = copy("uncategorized");
 
-  const affected = pendingRemoval ? planAssignments.filter(a => pendingRemoval.proteinRecipes?.has(a.recipeId)) : [];
+  const affected = pendingRemoval?.proteinRecipes ? groceryMealsFor(plan, pendingRemoval.proteinRecipes) : [];
   const selectedMeals = affected.filter(a => mealKeys.has(assignmentKey(a)));
   const nextPlan = removeGroceryMeals(plan, selectedMeals);
   const preview = { dropped: [] as string[], reduced: [] as string[], kept: [] as string[] };
@@ -247,7 +250,7 @@ export default function GroceryListScreen() {
   }
 
   const beginRemoval = (row: ShoppingRow) => {
-    const meals = planAssignments.filter(a => row.proteinRecipes?.has(a.recipeId));
+    const meals = row.proteinRecipes ? groceryMealsFor(plan, row.proteinRecipes) : [];
     setMealKeys(new Set(meals.length === 1 ? [assignmentKey(meals[0])] : []));
     setPendingRemoval(row);
   };
@@ -334,7 +337,7 @@ export default function GroceryListScreen() {
     text: row.ingredient.slice(0, 300), recipes: row.recipes.join(" · ").slice(0, 300),
     checked: row.checked, note: notes[rowMetadataKey(row)] || null,
   }));
-  const rows = tab === "mine" ? activeRows.filter(row => row.extraId) : activeRows;
+  const rows = tab === "mine" ? activeRows.filter(row => row.extraId) : tab === "recipes" ? activeRows.filter(row => !row.extraId) : activeRows;
   const priceOf = (row: ShoppingRow) => {
     const preference = preferences.get(row.key);
     return preference?.priceText === row.ingredient ? preference.priceCents : null;
@@ -361,7 +364,6 @@ export default function GroceryListScreen() {
     const price = shownPrices.has(categoryOf(row)) ? priceOf(row) : null;
     const parsed = parseIngredientLine(row.ingredient);
     const quantity = parsed.quantity === null || !parsed.ingredient ? "" : parsed.display.slice(0, parsed.display.length - parsed.ingredient.length).trim();
-    const measure = [quantity, price === null ? "" : money(price)].filter(Boolean).join(" · ");
     return (
       <li className="grocery-item" key={row.key} data-testid={`grocery-item-${metadataKey}`}>
         <label className="grocery-item-label">
@@ -372,30 +374,33 @@ export default function GroceryListScreen() {
           </span>
           <span className="min-w-0">
             <span className="grocery-ingredient block">{quantity ? parsed.ingredient : row.ingredient}</span>
-            {measure && <span className="block text-sm" data-testid="grocery-item-measure">{measure}</span>}
+            {quantity && <span className="block text-sm" data-testid="grocery-item-measure">{quantity}</span>}
             {row.recipes.length > 0 && <span className="block text-xs text-muted-foreground" data-testid="grocery-item-recipes">{row.recipes.join(" · ")}</span>}
           </span>
           {isPantry(row.ingredient) && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
         </label>
         <GroceryItemPicture item={row.ingredient} image={Object.prototype.hasOwnProperty.call(pictures, metadataKey) ? pictures[metadataKey] : row.image}
-          disabled={picturesLoading || picturesError} onSave={image => savePicture(metadataKey, image)} />
-        <GroceryNote item={row.ingredient} value={notes[metadataKey]} canEdit onSave={note => saveNote(metadataKey, note)} />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className="min-h-11 min-w-11" aria-label={`${copy("actions")} · ${row.ingredient}`}>
-              <Ellipsis className="mx-auto size-4" aria-hidden="true" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {groceryMeasure(row.ingredient).quantity !== null && <DropdownMenuItem className="min-h-11" onSelect={() => {
-              setAmount("");
-              setPartial(row);
-            }}>{copy("purchase")}</DropdownMenuItem>}
-            <DropdownMenuItem className="min-h-11" onSelect={() => beginRemoval(row)} data-testid="button-remove-item">
-              {copy("remove")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          disabled={picturesLoading || picturesError} onSave={image => savePicture(metadataKey, image)}
+          label={`${copy("actions")} · ${row.ingredient}`} onMenuClosed={event => {
+            if (noteAfterMenu.current !== metadataKey) return;
+            event.preventDefault();
+            noteAfterMenu.current = null;
+            setEditingNote(metadataKey);
+          }}>
+          <DropdownMenuItem className="min-h-11" onSelect={() => { noteAfterMenu.current = metadataKey; }} data-testid="button-item-note">
+            {notes[metadataKey] ? copy("editNote") : t("grocery.notePlaceholder")}
+          </DropdownMenuItem>
+          {groceryMeasure(row.ingredient).quantity !== null && <DropdownMenuItem className="min-h-11" onSelect={() => {
+            setAmount("");
+            setPartial(row);
+          }}>{copy("purchase")}</DropdownMenuItem>}
+          <DropdownMenuItem className="min-h-11" onSelect={() => beginRemoval(row)} data-testid="button-remove-item">
+            {copy("remove")}
+          </DropdownMenuItem>
+        </GroceryItemPicture>
+        <span className="grocery-item-price" data-testid="grocery-item-price">{price === null ? "" : money(price)}</span>
+        <GroceryNote item={row.ingredient} value={notes[metadataKey]} canEdit onSave={note => saveNote(metadataKey, note)}
+          editing={editingNote === metadataKey} onEditingChange={open => setEditingNote(open ? metadataKey : null)} />
       </li>
     );
   };
@@ -411,10 +416,12 @@ export default function GroceryListScreen() {
             </button>
           </div>
           <div className="grocery-heading-foot !justify-start">
-            {(["all", "mine"] as const).map(value => (
-              <button key={value} className={tab === value ? "grocery-primary" : "grocery-share-button"}
-                aria-pressed={tab === value} onClick={() => setTab(value)}>{copy(value)}</button>
-            ))}
+            <div className="grocery-toggle" role="group" aria-label={t("grocery.title")}>
+              {(["all", "recipes", "mine"] as const).map(value => (
+                <button key={value} type="button" aria-pressed={tab === value} onClick={() => setTab(value)}
+                  data-testid={`grocery-filter-${value}`}>{copy(value)}</button>
+              ))}
+            </div>
             <button type="button" className="grocery-share-button ms-auto" onClick={() => setShareOpen(true)} data-testid="button-share-export">
               <Share2 aria-hidden="true" />{t("grocery.shareExportTitle")}
             </button>
@@ -432,7 +439,7 @@ export default function GroceryListScreen() {
         {!rows.length && (
           <p className="grocery-success" role="status" data-testid="grocery-shopping-complete">
             {tab === "mine" ? copy("emptyMine") : purchasedRows.length ? copy("done") : t("grocery.noMeals")}
-            {tab === "all" && !purchasedRows.length && <button className="grocery-share-button mt-2" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>}
+            {tab !== "mine" && !purchasedRows.length && <button className="grocery-share-button mt-2" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>}
           </p>
         )}
         <div className="grocery-list">
@@ -447,7 +454,13 @@ export default function GroceryListScreen() {
                 <header className="grocery-category-head">
                   <button className="grocery-category-toggle" aria-expanded={!collapsed} data-testid={`category-toggle-${slug}`}
                     onClick={() => setExpansion(previous => toggleCategory(previous, category, collapsed))}>
-                    <span>{title} · {items.length}</span><span aria-hidden="true">{collapsed ? "▾" : "▴"}</span>
+                    <span className="grocery-category-title">
+                      <h2>{title}</h2>
+                      <span className="grocery-category-count">{items.length}</span>
+                    </span>
+                    <svg className={`grocery-category-chevron${collapsed ? " is-collapsed" : ""}`} viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="m4 6 4 4 4-4" />
+                    </svg>
                   </button>
                   {shownPrices.has(category) && subtotal(items) && <span className="text-sm" data-testid={`category-subtotal-${slug}`}>{subtotal(items)}</span>}
                   <button type="button" className="grocery-share-button grocery-price-toggle" onClick={() => togglePrices(category)} aria-pressed={shownPrices.has(category)}
@@ -484,14 +497,14 @@ export default function GroceryListScreen() {
           <DialogDescription>{affected.length ? copy("protein") : copy("only")}</DialogDescription>
           {affected.length > 0 && <ul>
             {affected.map(a => {
-              const day = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 4 + a.startDay)));
+              const day = a.spanDays ? new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 4 + a.startDay))) : null;
               const key = assignmentKey(a);
               return <li key={key}><label className="flex min-h-11 items-center gap-2">
                 <input type="checkbox" checked={mealKeys.has(key)} onChange={event => {
                   const checked = event.target.checked;
                   setMealKeys(previous => checked ? new Set([...previous, key]) : new Set([...previous].filter(value => value !== key)));
                 }} />
-                <span>{recipes.find(recipe => recipe.id === a.recipeId)?.title} · {day} · {t(`meals.${a.mealType.toLowerCase()}`)}</span>
+                <span>{recipes.find(recipe => recipe.id === a.recipeId)?.title} · {day ? `${day} · ${t(`meals.${a.mealType.toLowerCase()}`)}` : copy("notOnDay")}</span>
               </label></li>;
             })}
           </ul>}
