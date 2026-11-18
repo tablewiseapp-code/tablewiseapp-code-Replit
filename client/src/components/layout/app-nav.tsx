@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { BookOpen, CalendarDays, ListChecks, Menu, Settings, ShoppingBasket, Sparkles } from "lucide-react";
+import { BookOpen, CalendarDays, Home, ListChecks, Menu, Settings, ShoppingBasket, Sparkles } from "lucide-react";
 import { LANGUAGES, useI18n } from "@/lib/i18n";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 
 // Fixed order by expected use. Never reorder at runtime.
 const PRIMARY = [
+  { href: "/", key: "nav.home", icon: Home, id: "home" },
   { href: "/recipes", key: "nav.recipes", icon: BookOpen, id: "recipes" },
   { href: "/meals?plan", key: "nav.week", icon: CalendarDays, id: "meals" },
   { href: "/grocery-list", key: "nav.groceries", icon: ShoppingBasket, id: "grocery-list" },
   { href: "/my-ideas", key: "nav.ideas", icon: Sparkles, id: "my-ideas" },
-  { href: "/home-tasks", key: "nav.homeTasks", icon: ListChecks, id: "home-tasks" },
+  { href: "/home-tasks", key: "nav.homeTasks", short: "nav.homeTasksShort", icon: ListChecks, id: "home-tasks" },
 ] as const;
 
 /** Which destination owns a URL. A recipe opened from the planner (?week) belongs to Week. */
 export function activeSection(path: string, search: string): string | null {
   if (path.startsWith("/recipe/") && new URLSearchParams(search).has("week")) return "meals";
   if (path === "/recipes" || path === "/import" || path === "/recipe-view" || path.startsWith("/recipe/")) return "recipes";
+  if (path === "/") return "home";
   if (path === "/plan" || path === "/meals") return "meals";
   if (path === "/home-tasks") return "home-tasks";
   if (path === "/grocery-list") return "grocery-list";
@@ -121,14 +123,14 @@ export function AppNav() {
 
       <nav aria-label={t("nav.main")} data-testid="app-nav-bottom"
         className="app-nav fixed inset-x-0 bottom-0 z-40 border-t hairline bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {PRIMARY.map(item => (
             <Link key={item.id} href={item.href} aria-current={current(item.id)} data-testid={`app-nav-bottom-link-${item.id}`}
               className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] ${focus} focus-visible:-outline-offset-2 ${active === item.id
                 ? "font-semibold text-foreground before:absolute before:inset-x-4 before:top-0 before:h-[3px] before:rounded-b before:bg-primary"
                 : "text-muted-foreground"}`}>
               <item.icon className="h-5 w-5" strokeWidth={active === item.id ? 2.5 : 1.75} aria-hidden="true" />
-              <span className="max-w-full truncate">{t(item.key)}</span>
+              <span className="max-w-full truncate">{t("short" in item ? item.short : item.key)}</span>
             </Link>
           ))}
         </div>

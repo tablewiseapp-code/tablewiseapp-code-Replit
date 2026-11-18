@@ -26,6 +26,8 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 3. **Cook** (`/recipe/:id`) — scale servings, check off ingredients, run cooking mode with per-step timers.
 4. **Remember** (My Cooking Experience on the recipe page) — "I made it", rating, notes, photos.
 
+**Home** (`/`) is the landing page: today's meals from the Week and how many grocery items are left, with links into each step.
+
 Supporting features: My Ideas (AI recipe ideas), Import (typed or dictated recipe), My Basic Settings (household, allergies, devices, budget, pantry).
 
 **Home Tasks** (`/home-tasks`, previewed on Home at `/`): add a household task by name in seconds, with suggestions from a seeded catalog, an optional due date, a priority (High, Normal, Low) and one optional photo. Open tasks are grouped Overdue, Today, Upcoming, Anytime; completed tasks are collapsed. Complete, Move to tomorrow and Delete all offer Undo. Home shows up to three Overdue or Today tasks. Not in this release: recurring tasks, reminders, assigning to family members, automatic expiry, calendar integration.
@@ -36,8 +38,8 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 
 | Term | Meaning |
 |---|---|
-| **Home** | The start page at `/`: a short summary with the Home task preview. |
-| **Home task** | One private household to-do: name, optional due date, priority, optional photo, created and completed times. The nav label is "Home Tasks". |
+| **Home** | The landing page at `/`. Shows today's meals, the grocery count and up to three Overdue or Today Home tasks. Today means today's weekday in the Week, because the plan is not dated. |
+| **Home task** | One private household to-do: name, optional due date, priority, optional photo, created and completed times. The nav label is "Home Tasks" ("Tasks" in the phone bottom bar). |
 | **Week** | The plan for one calendar week. The nav label is "Week"; the route is `/meals`. |
 | **Catalog** | The shared recipe collection every visitor sees. The UI calls it "Recipes". It is not personal. |
 | **Recipe** | A catalog entry: title, ingredients, steps, times, credit, tags. |

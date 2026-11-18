@@ -31,7 +31,7 @@ try {
   const hrefs = sel => ev(`Array.from(document.querySelectorAll('${sel}')).map(a => a.getAttribute("href"))`);
   const labels = sel => ev(`Array.from(document.querySelectorAll('${sel}')).map(a => a.textContent.trim())`);
   const current = sel => ev(`document.querySelector('${sel} [aria-current="page"]')?.getAttribute("href") ?? null`);
-  const ORDER = ["/recipes", "/meals", "/grocery-list", "/my-ideas", "/home-tasks"];
+  const ORDER = ["/", "/recipes", "/meals?plan", "/grocery-list", "/my-ideas", "/home-tasks"];
   await call("Runtime.enable");
 
   // ---- Desktop
@@ -40,16 +40,16 @@ try {
   await ev("localStorage.clear(); sessionStorage.clear(); localStorage.setItem('tablewise_language','en')");
   await go("/recipes", `document.querySelectorAll('[data-testid^="card-recipe-"]').length > 0`);
   eq(await hrefs('[data-testid="app-nav"] a'), ORDER, "desktop order");
-  eq(await labels('[data-testid="app-nav"] a'), ["Recipes", "Week", "Groceries", "Ideas", "Home Tasks"], "desktop labels");
+  eq(await labels('[data-testid="app-nav"] a'), ["Home", "Recipes", "Week", "Groceries", "Ideas", "Home Tasks"], "desktop labels");
   ok(await ev(`!document.body.innerText.includes("Import Recipe") && !document.querySelector('[data-testid="app-nav-header"] a[href="/recipe-view"], [data-testid="app-nav-header"] a[href="/import"]')`), "no Import/Recipe View in nav");
   ok(await ev(`${q("app-nav-link-settings")}.getBoundingClientRect().left > ${q("app-nav-link-home-tasks")}.getBoundingClientRect().right + 100`), "Settings separate, right-aligned");
   ok(await ev(`getComputedStyle(${q("app-nav-bottom")}).display === "none"`), "no bottom nav on desktop");
 
   // Every destination opens its screen and is marked current.
-  const screens = { "/recipes": "text-page-title", "/meals": "weekly-meals-header", "/grocery-list": null, "/my-ideas": "text-page-title", "/home-tasks": "text-page-title", "/settings": "text-page-title" };
+  const screens = { "/": "home-meals", "/recipes": "text-page-title", "/meals?plan": "button-back-to-selection", "/grocery-list": null, "/my-ideas": "text-page-title", "/home-tasks": "button-add-task", "/settings": "text-page-title" };
   for (const [path, ready] of Object.entries(screens)) {
     await ev(`document.querySelector('[data-testid="app-nav-header"] a[href="${path}"]').click()`);
-    await until(`location.pathname === "${path}" && ${ready ? `Boolean(${q(ready)})` : `Boolean(document.querySelector(".grocery-page, [data-testid='mvp-grocery']"))`}`, `open ${path}`);
+    await until(`location.pathname === "${path.split("?")[0]}" && ${ready ? `Boolean(${q(ready)})` : `Boolean(document.querySelector(".grocery-page, [data-testid='mvp-grocery']"))`}`, `open ${path}`);
     eq(await current('[data-testid="app-nav-header"]'), path, `${path} active`);
     eq(await ev(`document.querySelectorAll('[data-testid="app-nav-header"] [aria-current="page"]').length`), 1, `${path}: one current item`);
   }
@@ -70,7 +70,7 @@ try {
   await until(`location.pathname === ${JSON.stringify(cardHref)} && Boolean(${q("text-recipe-title")})`, "saved recipe opens");
   eq(await current('[data-testid="app-nav-header"]'), "/recipes", "Recipes active on detail");
   await go(`${cardHref}?week=2026-11-09`, `Boolean(${q("text-recipe-title")})`);
-  eq(await current('[data-testid="app-nav-header"]'), "/meals", "Week active on recipe opened from planner");
+  eq(await current('[data-testid="app-nav-header"]'), "/meals?plan", "Week active on recipe opened from planner");
   await go("/recipe-view", `location.pathname.startsWith("/recipe/") && Boolean(${q("text-recipe-title")})`);
   eq(await current('[data-testid="app-nav-header"]'), "/recipes", "/recipe-view still works, Recipes active");
 
@@ -79,15 +79,15 @@ try {
   await ev("document.activeElement?.blur(); window.focus()");
   const tab = async () => { await call("Input.dispatchKeyEvent", { type: "keyDown", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 }); await call("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 }); };
   const seen = [];
-  for (let i = 0; i < 8; i++) { await tab(); seen.push(await ev(`document.activeElement.getAttribute("href") ?? document.activeElement.dataset.testid`)); }
-  eq(seen.slice(0, 8), ["/", ...ORDER, "/settings", "button-language-selector"], "tab order");
+  for (let i = 0; i < 9; i++) { await tab(); seen.push(await ev(`document.activeElement.getAttribute("href") ?? document.activeElement.dataset.testid`)); }
+  eq(seen.slice(0, 9), ["/", ...ORDER, "/settings", "button-language-selector"], "tab order");
   ok(await ev(`(s => s.outlineStyle !== "none" && parseFloat(s.outlineWidth) >= 2)(getComputedStyle(document.activeElement))`), "visible focus ring");
 
   // ---- Mobile
   await size(390, true);
   await go("/recipes", `document.querySelectorAll('[data-testid^="card-recipe-"]').length > 0`);
   eq(await hrefs('[data-testid="app-nav-bottom"] a'), ORDER, "mobile order");
-  eq(await labels('[data-testid="app-nav-bottom"] a'), ["Recipes", "Week", "Groceries", "Ideas", "Home Tasks"], "mobile labels");
+  eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Recipes", "Week", "Groceries", "Ideas", "Tasks"], "mobile labels");
   ok(await ev(`getComputedStyle(${q("app-nav")}).display === "none"`), "desktop links hidden on mobile");
   ok(await ev(`Array.from(document.querySelectorAll('[data-testid="app-nav-bottom"] a, [data-testid="app-nav-header"] a, [data-testid="app-nav-header"] button')).filter(e => e.offsetParent).every(e => { const r = e.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })`), "touch targets ≥ 44px");
   const sel = `document.querySelector('[data-testid="app-nav-bottom"] [aria-current="page"]')`;
@@ -102,13 +102,14 @@ try {
   eq(await current('[data-testid="app-nav-bottom"]'), null, "no bottom item current on Settings");
 
   // Week: plan's sticky action bar sits above the bottom nav.
-  await ev(`${q("app-nav-bottom-link-meals")}.click()`);
+  await ev(`${q("app-nav-bottom-link-meals")}.click()`); // Week opens the plan view; go back to choosing recipes
+  await until(`Boolean(${q("button-back-to-selection")})`, "plan view"); await ev(`${q("button-back-to-selection")}.click()`);
   await until(`document.querySelectorAll('[data-testid^="button-add-"]').length > 0`, "meals");
-  eq(await current('[data-testid="app-nav-bottom"]'), "/meals", "Week active during selection");
+  eq(await current('[data-testid="app-nav-bottom"]'), "/meals?plan", "Week active during selection");
   await ev(`document.querySelector('[data-testid^="button-add-"]').click()`);
   await until(`!${q("button-generate-plan")}.disabled`, "selected");
   await ev(`${q("button-generate-plan")}.click()`); await until(`Boolean(${q("button-create-grocery-list")})`, "plan view");
-  eq(await current('[data-testid="app-nav-bottom"]'), "/meals", "Week active during planning");
+  eq(await current('[data-testid="app-nav-bottom"]'), "/meals?plan", "Week active during planning");
   const bar = `${q("button-create-grocery-list")}.parentElement`;
   ok(await ev(`${bar}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top + 0.5`), "sticky plan actions above bottom nav");
 

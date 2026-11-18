@@ -11,13 +11,13 @@ import MvpGrocery from "@/pages/mvp-grocery";
 import RecipeList from "@/pages/recipe-list";
 import RecipeDetail from "@/pages/recipe-detail";
 import WeeklyMeals from "@/pages/weekly-meals";
+import Home from "@/pages/home";
 import ImportRecipe from "@/pages/import-recipe";
 import GroceryList from "@/pages/grocery-list";
 import NotFound from "@/pages/not-found";
 import MyIdeas from "@/pages/my-ideas";
 import BasicSettings from "@/pages/basic-settings";
 import SharedGrocery from "@/pages/shared-grocery";
-import Home from "@/pages/home";
 import HomeTasks from "@/pages/home-tasks";
 
 function GroceryEntry() {

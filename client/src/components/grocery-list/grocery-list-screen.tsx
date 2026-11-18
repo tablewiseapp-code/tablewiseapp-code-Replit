@@ -10,10 +10,9 @@ import { GroceryNote } from "./grocery-note";
 import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
 import { categoryProgress, countChecked, isCategoryCollapsed, isListComplete, readGroceryPrefs, saveGroceryPrefs, toggleCategory, toggleItem as toggleChecked, type Expansion } from "@/lib/grocery-progress";
-import { plannedServingsFactor } from "@/lib/meal-plan";
+import { buildGroceryItems } from "@/lib/grocery-items";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { currentWeek } from "@/lib/week-plan";
-import { baseServings, scaleIngredient } from "@/lib/ingredient-scale";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
 import { Plus, Share2, X } from "lucide-react";
@@ -85,7 +84,7 @@ export default function GroceryListScreen() {
   const [recipesError, setRecipesError] = useState<string | null>(null);
   // Products the user added by hand ("I'm out of onion"), stored per owner on the server.
   const [extras, setExtras] = useState<{ id: string; text: string; image?: string | null }[]>([]);
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(() => new URLSearchParams(window.location.search).has("add")); // Home links here with ?add
   const state = loadState();
   const planAssignments = state?.planAssignments || [];
   usePilotPage("grocery_list_opened", currentWeek(), planAssignments.length > 0);
@@ -128,28 +127,7 @@ export default function GroceryListScreen() {
   }, []);
 
   const groceryData = useMemo(() => {
-    const usedRecipeIds = new Set([...(state?.selectedIds ?? []), ...planAssignments.map(a => a.recipeId)]); // shortlisted dishes count even before they get a slot
-    const usedRecipes = recipes.filter(r => usedRecipeIds.has(r.id));
-    const ingredientMap = new Map<string, { ingredient: string; recipes: string[]; image?: string | null; extraId?: string }>();
-    usedRecipes.forEach(recipe => {
-      // Planned servings (chosen in the recipe view) scale quantities; unparseable lines stay as written.
-      const factor = plannedServingsFactor(planAssignments, recipe.id, baseServings(recipe.servings));
-      const scaledIngredients = recipe.ingredients.map(text => scaleIngredient(text, factor));
-      scaledIngredients.forEach(ingredient => {
-        const key = ingredient.toLowerCase();
-        if (ingredientMap.has(key)) {
-          const item = ingredientMap.get(key)!;
-          if (!item.recipes.includes(recipe.title)) item.recipes.push(recipe.title);
-        } else {
-          ingredientMap.set(key, { ingredient, recipes: [recipe.title] });
-        }
-      });
-    });
-    extras.forEach(extra => {
-      const key = extra.text.toLowerCase();
-      const item = ingredientMap.get(key);
-      if (item) { item.extraId = extra.id; item.image = extra.image; } else ingredientMap.set(key, { ingredient: extra.text, recipes: [], image: extra.image, extraId: extra.id });
-    });
+    const { items: ingredientMap, usedRecipes } = buildGroceryItems(recipes, state?.selectedIds ?? [], planAssignments, extras);
     const categorized: Record<string, { ingredient: string; recipes: string[]; key: string; image?: string | null; extraId?: string }[]> = {};
     ingredientMap.forEach((data, key) => {
       const category = categorizeIngredient(data.ingredient);
