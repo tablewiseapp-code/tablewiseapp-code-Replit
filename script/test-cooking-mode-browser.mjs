@@ -47,6 +47,15 @@ try {
   // This recipe has no step-level ingredient data: Zen links to the full list instead of guessing.
   assert.equal(await ev(`Boolean(${el("cooking-step-ingredients")})`), false, "no guessed step ingredients");
   assert.match(await ev(`${el("cooking-view-recipe-ingredients")}.textContent`), /View recipe ingredients.*200 g canned chopped tomatoes/s, "full scaled list behind View recipe ingredients");
+  assert.equal(await ev(`${el("cooking-view-recipe-ingredients")}.open`), true, "full list expanded by default");
+  await click("cooking-ingredient-0");
+  assert.equal(await ev(`${el("cooking-ingredient-0")}.getAttribute('aria-pressed')`), "true", "tap marks an ingredient done");
+  assert.equal(await ev(`getComputedStyle(${el("cooking-ingredient-0")}).textDecorationLine`), "line-through", "done is struck through");
+  await click("cooking-next");
+  assert.equal(await ev(`${el("cooking-ingredient-0")}.getAttribute('aria-pressed')`), "true", "done marks kept across steps");
+  await click("cooking-ingredient-0");
+  assert.equal(await ev(`${el("cooking-ingredient-0")}.getAttribute('aria-pressed')`), "false", "second tap clears it");
+  await click("cooking-prev");
   await click("cooking-zen-toggle");
   assert.equal(await ev(`${el("cooking-mode")}.dataset.zen`), "false", "standard mode after switching");
   assert.equal(await ev(`document.querySelectorAll('[data-testid^="cooking-step-"][data-active]').length`), total, "all steps visible");

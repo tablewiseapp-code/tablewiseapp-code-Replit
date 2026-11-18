@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
-import { mealSlots, mealsOnDay, readPlan } from "@/lib/meal-plan";
+import { mealSlots, mealsOnDay, readPlan, type MealSlot } from "@/lib/meal-plan";
 import { buildShoppingList, groceryShoppingQueryKey, type Extra, type ShoppingPreference } from "@/lib/grocery-items";
 import { buildRecipeGroceryRows } from "@/lib/grocery-meal-removal";
 import { readGroceryPrefs } from "@/lib/grocery-progress";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
+import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 
@@ -35,7 +36,8 @@ export default function Home() {
   const text = (key: Parameters<typeof homeText>[1], values?: Record<string, string | number>) => homeText(lang, key, values);
   // Local date and weekday: the plan is not dated, so "today" is today's weekday in the current plan.
   const [now] = useState(() => new Date());
-  const [plan] = useState(readPlan);
+  const [plan, setPlan] = useState(readPlan);
+  const [picking, setPicking] = useState<MealSlot | null>(null);
   const catalog = useRecipeCatalog();
   const extras = useQuery<Extra[]>({ queryKey: ["/api/grocery-extras"], retry: false, refetchOnMount: "always" });
   const shopping = useQuery<ShoppingPreference[]>({ queryKey: groceryShoppingQueryKey, retry: false, refetchOnMount: "always" });
@@ -98,10 +100,10 @@ export default function Home() {
                   <div key={slot} className="flex items-start gap-3" data-testid={`home-slot-${slot.toLowerCase()}`}>
                     <h3 className="w-24 shrink-0 break-words pt-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t(mealKey[slot])}</h3>
                     {rows.length === 0 ? (
-                      <Link href="/meals?plan" data-testid={`home-add-${slot.toLowerCase()}`}
-                        className="flex min-h-11 flex-1 items-center rounded-md py-1 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                      <button type="button" onClick={() => setPicking(slot)} disabled={!catalog.data} data-testid={`home-add-${slot.toLowerCase()}`}
+                        className="flex min-h-11 flex-1 items-center rounded-md py-1 text-start text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                         {text(addKey[slot])}
-                      </Link>
+                      </button>
                     ) : (
                     <ul className="min-w-0 flex-1">
                       {rows.map(a => {
@@ -155,6 +157,7 @@ export default function Home() {
           </section>
         </div>
       </PageContainer>
+      <MealSuggestion meal={picking} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setPicking(null)} onAdded={() => setPlan(readPlan())} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
   );

@@ -42,7 +42,7 @@ try {
   await go("/", `Boolean(${q("home-meals")})`);
   eq(await text("text-page-title"), "Home", "title");
   eq(await text("text-home-date"), await ev(`new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })`), "local date");
-  for (const slot of ["breakfast", "lunch", "dinner"]) eq(await ev(`${q(`home-add-${slot}`)}.getAttribute("href")`), "/meals?plan", `+ Add ${slot}`);
+  for (const slot of ["breakfast", "lunch", "dinner"]) eq(await ev(`${q(`home-add-${slot}`)}.tagName`), "BUTTON", `+ Add ${slot} opens the picker, not the Week`);
   eq(await text("home-add-dinner"), "+ Add dinner", "add dinner copy");
   await until(`Boolean(${q("home-add-item")})`, "empty groceries");
   eq(await current('[data-testid="app-nav-header"]'), "/", "Home active");
@@ -107,6 +107,30 @@ try {
     await until(`location.pathname === "/home-tasks"`, "View all tasks opens Tasks");
     eq(await current('[data-testid="app-nav-bottom"]'), "/home-tasks", "Tasks tab active");
     await ev(`fetch("/api/home-tasks").then(r => r.json()).then(list => Promise.all(list.map(t => fetch("/api/home-tasks/" + t.id, { method: "DELETE" }))))`);
+
+    // ---- "+ Add lunch": a suggestion from the household settings, added only after the person agrees; no trip to the Week.
+    await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await go("/", `Boolean(${q("home-add-lunch")}) && !${q("home-add-lunch")}.disabled`);
+    await ev(`${q("home-add-lunch")}.click()`);
+    await until(`Boolean(${q("meal-suggestion-recipe")})`, "picker suggests a recipe");
+    ok((await text("meal-suggestion")).includes("Today’s lunch"), "picker is for today's lunch");
+    ok(Boolean(await text("meal-suggestion-filters")), "household settings shown");
+    const lunchPlanned = `(JSON.parse(localStorage.getItem("weeklyMealsState") ?? "{}").planAssignments?.filter(a => a.mealType === "Lunch") ?? [])`;
+    eq(await ev(`${lunchPlanned}.length`), 0, "nothing added before the person agrees");
+    const first = await ev(`${q("meal-suggestion-recipe")}.dataset.recipeId`);
+    if (await ev(`Boolean(${q("meal-suggestion-another")})`)) {
+      await ev(`${q("meal-suggestion-another")}.click()`);
+      ok(await ev(`${q("meal-suggestion-recipe")}.dataset.recipeId`) !== first, "Suggest another shows a different recipe");
+    }
+    const pick = await ev(`${q("meal-suggestion-recipe")}.dataset.recipeId`);
+    await ev(`${q("meal-suggestion-add")}.click()`);
+    await until(`!${q("meal-suggestion")} && Boolean(document.querySelector('[data-testid="home-meal-${pick}"]'))`, "added meal shows on Home");
+    eq(await ev("location.pathname"), "/", "stays on Home");
+    eq(await ev(`${lunchPlanned}.map(a => [a.recipeId, a.startDay])`), [[pick, await ev("new Date().getDay()")]], "added to today's lunch");
+    // A locked Week is never changed from Home.
+    await ev(`localStorage.setItem("week_locked_v1", "true"); ${q("home-add-breakfast")}.click()`);
+    await until(`Boolean(${q("meal-suggestion-blocked")})`, "locked message");
+    eq(await ev(`${q("meal-suggestion-add")}?.disabled ?? true`), true, "Add disabled while the Week is locked");
   } finally {
     await ev(`Promise.all(${JSON.stringify(extras)}.map(id => fetch("/api/grocery-extras/" + id, { method: "DELETE" })))`);
   }
