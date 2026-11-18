@@ -739,14 +739,14 @@ Rules:
     try { res.json(owner ? await recipeMarks.list(owner) : { liked: [], imported: [] }); }
     catch { cookingFailed(res, "my_recipes_list"); }
   });
-  app.put("/api/recipes/:id/like", async (req, res) => {
+  app.put("/api/recipe-likes/:id", async (req, res) => {
     const id = recipeId.safeParse(req.params.id);
     if (!id.success) return res.status(400).json({ error: "Invalid recipe identifier." });
     const owner = security.owner(req, res, true)!;
     try { await recipeMarks.add(owner, id.data, "liked"); res.status(204).end(); }
     catch (error) { isUnknownRecipe(error) ? res.status(404).json({ error: "Recipe not found." }) : cookingFailed(res, "recipe_like"); }
   });
-  app.delete("/api/recipes/:id/like", async (req, res) => {
+  app.delete("/api/recipe-likes/:id", async (req, res) => {
     const id = recipeId.safeParse(req.params.id);
     if (!id.success) return res.status(400).json({ error: "Invalid recipe identifier." });
     const owner = security.owner(req, res, false);

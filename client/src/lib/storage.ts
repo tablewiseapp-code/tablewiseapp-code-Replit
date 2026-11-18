@@ -78,6 +78,8 @@ export type MyRecipes = { liked: string[]; imported: string[] };
 export const myRecipesKey = ["/api/my-recipes"];
 
 export async function setRecipeLiked(id: string, liked: boolean): Promise<void> {
-  const res = await fetch(`/api/recipes/${encodeURIComponent(id)}/like`, { method: liked ? "PUT" : "DELETE" });
+  const res = await fetch(`/api/recipe-likes/${encodeURIComponent(id)}`, {
+    method: liked ? "PUT" : "DELETE", headers: { "Content-Type": "application/json" }, body: "{}",
+  });
   if (!res.ok) throw new Error("Failed to save like");
 }
