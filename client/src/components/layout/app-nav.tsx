@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { BookOpen, CalendarDays, Menu, Settings, ShoppingBasket, Sparkles } from "lucide-react";
+import { BookOpen, CalendarDays, Home, Menu, Settings, ShoppingBasket, Sparkles } from "lucide-react";
 import { LANGUAGES, useI18n } from "@/lib/i18n";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 
 // Fixed order by expected use. Never reorder at runtime.
 const PRIMARY = [
+  { href: "/", key: "nav.home", icon: Home, id: "home" },
   { href: "/recipes", key: "nav.recipes", icon: BookOpen, id: "recipes" },
   { href: "/meals?plan", key: "nav.week", icon: CalendarDays, id: "meals" },
   { href: "/grocery-list", key: "nav.groceries", icon: ShoppingBasket, id: "grocery-list" },
@@ -16,7 +17,8 @@ const PRIMARY = [
 export function activeSection(path: string, search: string): string | null {
   if (path.startsWith("/recipe/") && new URLSearchParams(search).has("week")) return "meals";
   if (path === "/recipes" || path === "/import" || path === "/recipe-view" || path.startsWith("/recipe/")) return "recipes";
-  if (path === "/" || path === "/plan" || path === "/meals") return "meals";
+  if (path === "/") return "home";
+  if (path === "/plan" || path === "/meals") return "meals";
   if (path === "/grocery-list") return "grocery-list";
   if (path === "/my-ideas") return "my-ideas";
   if (path === "/settings") return "settings";
@@ -119,7 +121,7 @@ export function AppNav() {
 
       <nav aria-label={t("nav.main")} data-testid="app-nav-bottom"
         className="app-nav fixed inset-x-0 bottom-0 z-40 border-t hairline bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {PRIMARY.map(item => (
             <Link key={item.id} href={item.href} aria-current={current(item.id)} data-testid={`app-nav-bottom-link-${item.id}`}
               className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] ${focus} focus-visible:-outline-offset-2 ${active === item.id

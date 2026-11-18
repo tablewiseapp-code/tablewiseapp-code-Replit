@@ -46,13 +46,14 @@ docs/                  product definition and per-feature notes
 
 | Route | Page | Purpose |
 |---|---|---|
-| `/`, `/plan` | redirect | → `/meals` |
+| `/` | `pages/home.tsx` | Home: today's meals and what is left to buy |
+| `/plan` | redirect | → `/meals` |
 | `/meals` | `pages/weekly-meals.tsx` | plan the week |
 | `/recipes` | `pages/recipe-list.tsx` | catalog grid |
 | `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history |
 | `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (operator) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
-| `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list |
+| `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form |
 | `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
 | `/settings` | `pages/basic-settings.tsx` | Basic Settings |
 | `/operator` | server-rendered in `server/security.ts` | operator sign-in |

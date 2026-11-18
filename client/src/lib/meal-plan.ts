@@ -92,3 +92,7 @@ export function setServingsAt(plan: PlanState, meal: MealSlot, day: number, serv
   if (!found || !(servings > 0)) return plan;
   return { ...plan, planAssignments: plan.planAssignments.map(a => a === found ? { ...a, servings } : a) };
 }
+
+/** Assignments that cover a weekday (0 = Sunday, as `Date.getDay()`), in Breakfast, Lunch, Dinner order. The plan is not dated. */
+export const mealsOnDay = (plan: PlanState, day: number) =>
+  mealSlots.flatMap(meal => plan.planAssignments.filter(a => a.mealType === meal && day >= a.startDay && day < a.startDay + a.spanDays));

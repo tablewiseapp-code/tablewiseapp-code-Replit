@@ -26,6 +26,8 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 3. **Cook** (`/recipe/:id`) — scale servings, check off ingredients, run cooking mode with per-step timers.
 4. **Remember** (My Cooking Experience on the recipe page) — "I made it", rating, notes, photos.
 
+**Home** (`/`) is the landing page: today's meals from the Week and how many grocery items are left, with links into each step.
+
 Supporting features: My Ideas (AI recipe ideas), Import (typed or dictated recipe), My Basic Settings (household, allergies, devices, budget, pantry).
 
 ## Vocabulary
@@ -34,6 +36,7 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 
 | Term | Meaning |
 |---|---|
+| **Home** | The landing page at `/`. Shows today's meals and the grocery count. Today means today's weekday in the Week, because the plan is not dated. |
 | **Week** | The plan for one calendar week. The nav label is "Week"; the route is `/meals`. |
 | **Catalog** | The shared recipe collection every visitor sees. The UI calls it "Recipes". It is not personal. |
 | **Recipe** | A catalog entry: title, ingredients, steps, times, credit, tags. |
