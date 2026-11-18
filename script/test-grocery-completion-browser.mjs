@@ -33,6 +33,7 @@ try {
     ];
     if (!sessionStorage.testSeed) {
       sessionStorage.testSeed = "1";
+      sessionStorage.shopping = JSON.stringify([{ key: JSON.stringify([null, "chicken thighs"]), skipped: false, priceCents: 1249, priceText: "10 chicken thighs" }]);
       localStorage.setItem("tablewise_language", "en");
       localStorage.setItem("weeklyMealsState", JSON.stringify({
         selectedIds: recipes.map(recipe => recipe.id),
@@ -70,19 +71,35 @@ try {
   await call("Page.navigate", { url: `${BASE}/grocery-list` });
   const clickText = (label, selector = "button") => ev(`[...document.querySelectorAll(${JSON.stringify(selector)})].find(el => el.textContent.trim() === ${JSON.stringify(label)}).click()`);
   const hasText = value => `document.body.innerText.includes(${JSON.stringify(value)})`;
-  await until(hasText("10 chicken thighs"), "shared protein quantity");
+  const hasItem = value => `!!document.querySelector(${JSON.stringify(`main [aria-label="${value}"]`)})`; // rows show the name, then quantity
+  const measureOf = name => ev(`[...document.querySelectorAll(".grocery-item")].find(li => li.querySelector(".grocery-ingredient")?.textContent === ${JSON.stringify(name)})?.querySelector('[data-testid="grocery-item-measure"]')?.textContent`);
+  await until(hasItem("10 chicken thighs"), "shared protein quantity");
+  assert.equal(await measureOf("chicken thighs"), "10", "prices are hidden by default");
   await clickText("My Items");
-  assert.equal(await ev(hasText("10 chicken thighs")), false);
+  assert.equal(await ev(hasItem("10 chicken thighs")), false);
   await ev(`document.querySelector('[aria-label="2 L milk"]').click()`);
   await until(hasText("Add groceries or household products"), "manual purchase hides item");
   await clickText("All Items");
   assert.equal(await ev(`document.querySelector("main").innerText.includes("2 L milk")`), false, "bought item leaves the list (the Undo notice outside main may still name it)");
   await ev(`document.querySelector('[aria-label="100 g Greek yogurt"]').click()`);
   const priceToggle = `document.querySelector('[data-testid="category-prices-meat-poultry"]')`;
+  const meat = `document.querySelector('[data-grocery-category="Meat & Poultry"]')`;
+  await ev(`${meat}.querySelector('[data-testid="category-toggle-meat-poultry"]').click()`);
+  await until(`!${meat}.querySelector("ul")`, "category collapses");
   await ev(`${priceToggle}.click()`);
-  await until(`${priceToggle}.textContent.trim() === "Unpriced"`, "subtotal replaces $");
+  await until(`${priceToggle}.getAttribute("aria-pressed") === "true"`, "$ is pressed");
+  assert.equal(await ev(`${priceToggle}.textContent.trim()`), "$");
+  assert.equal(await ev(`!${meat}.querySelector("ul")`), true, "toggling prices keeps the category collapsed");
+  await ev(`${meat}.querySelector('[data-testid="category-toggle-meat-poultry"]').click()`);
+  await until(`!!${meat}.querySelector("ul")`, "category expands");
+  assert.equal(await measureOf("chicken thighs"), "10 · $12.49", "price beside quantity");
+  assert.equal(await measureOf("onions"), "1500 g", "other categories stay unpriced");
+  await ev(`document.querySelector('[data-testid="category-prices-produce"]').click()`);
+  assert.equal(await measureOf("onions"), "1500 g", "missing price shows quantity only");
+  assert.equal(await ev(hasText("Unpriced")), false);
   await ev(`${priceToggle}.click()`);
-  await until(`${priceToggle}.textContent.trim() === "$"`, "second click restores $");
+  await until(`${priceToggle}.getAttribute("aria-pressed") === "false"`, "second click turns prices off");
+  assert.equal(await measureOf("chicken thighs"), "10");
   const [x, y] = await ev(`(r => [r.x + r.width / 2, r.y + r.height / 2])(document.querySelector('[aria-label="Item actions · 10 chicken thighs"]').getBoundingClientRect())`);
   for (const type of ["mousePressed", "mouseReleased"]) await call("Input.dispatchMouseEvent", { type, x, y, button: "left", clickCount: 1 });
   await until(`!!document.querySelector('[data-testid="button-remove-item"]')`, "item menu");
@@ -91,18 +108,18 @@ try {
   await ev(`[...document.querySelectorAll('[role="dialog"] label')].find(el => el.textContent.includes("Easy chicken curry")).querySelector("input").click()`);
   await until(hasText("Purchased items kept · 1"), "purchase preservation preview");
   await clickText("Remove item and selected meals");
-  await until(hasText("4 chicken thighs"), "shared ingredient remains");
-  assert.equal(await ev(hasText("2 tbsp curry paste")), false);
-  assert.equal(await ev(hasText("1 kg onions")), true);
+  await until(hasItem("4 chicken thighs"), "shared ingredient remains");
+  assert.equal(await ev(hasItem("2 tbsp curry paste")), false);
+  assert.equal(await ev(hasItem("1 kg onions")), true);
   await ev('document.querySelector(".grocery-category summary").click()');
   assert.equal(await ev(hasText("100 g greek yogurt")), true);
   await until(hasText("Meals removed"), "removal feedback");
   await clickText("Undo");
-  await until(hasText("10 chicken thighs"), "meal undo restores demand");
-  assert.equal(await ev(hasText("2 tbsp curry paste")), true);
+  await until(hasItem("10 chicken thighs"), "meal undo restores demand");
+  assert.equal(await ev(hasItem("2 tbsp curry paste")), true);
   assert.equal(await ev("document.documentElement.scrollWidth <= innerWidth"), true);
   ws.close();
-  console.log("Mobile grocery list, inline category prices, meal removal, purchased history, and Undo passed.");
+  console.log("Mobile grocery list, per-category prices, meal removal, purchased history, and Undo passed.");
 } finally {
   chrome.kill();
   await sleep(300);

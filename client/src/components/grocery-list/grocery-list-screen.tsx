@@ -47,7 +47,7 @@ export default function GroceryListScreen() {
   const [expansion, setExpansion] = useState(initialPrefs.expansion);
   const [shareOpen, setShareOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "mine">("all");
-  // Categories whose "$" button currently shows the estimated subtotal instead.
+  // Categories whose "$" button shows item prices. Display-only: expansion and checks are separate state.
   const [shownPrices, setShownPrices] = useState<Set<string>>(new Set());
   const [pendingRemoval, setPendingRemoval] = useState<ShoppingRow | null>(null);
   const [mealKeys, setMealKeys] = useState<Set<string>>(new Set());
@@ -55,13 +55,11 @@ export default function GroceryListScreen() {
   const [amount, setAmount] = useState("");
   const [plan, setPlan] = useState(readPlan);
   const [busy, setBusy] = useState(false);
-  const [priceEditor, setPriceEditor] = useState<ShoppingRow | null>(null);
-  const [priceInput, setPriceInput] = useState("");
   const { data: shopping = [], isError: shoppingError, isPending: shoppingPending, refetch: reloadShopping } =
     useQuery<ShoppingPreference[]>({ queryKey: shoppingQuery, refetchOnMount: "always" });
   const preferences = new Map(shopping.map(row => [row.key, row]));
   const skipped = new Set(shopping.filter(row => row.skipped).map(row => row.key));
-  const patchShopping = async (patch: { key: string; skipped: boolean } | { key: string; price: { cents: number; text: string } }) => {
+  const patchShopping = async (patch: { key: string; skipped: boolean }) => {
     const response = await apiRequest("PATCH", shoppingQuery[0], patch);
     const saved: ShoppingPreference = await response.json();
     queryClient.setQueryData<ShoppingPreference[]>(shoppingQuery, previous => [
@@ -341,7 +339,6 @@ export default function GroceryListScreen() {
     const preference = preferences.get(row.key);
     return preference?.priceText === row.ingredient ? preference.priceCents : null;
   };
-  const cents = /^\d+(?:[.,]\d{1,2})?$/.test(priceInput.trim()) ? Math.round(Number(priceInput.trim().replace(",", ".")) * 100) : NaN;
   const partialMeasure = partial ? groceryMeasure(partial.ingredient) : null;
   const displayUnit = partial ? parseIngredientLine(partial.ingredient).unit : null;
   const rawAmount = parseQuantity(amount);
@@ -349,10 +346,10 @@ export default function GroceryListScreen() {
   const validAmount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount > 0 &&
     partialMeasure?.quantity != null && parsedAmount <= partialMeasure.quantity;
   const locale = lang === "he" ? "he-IL" : lang === "ru" ? "ru-RU" : "en-CA";
-  const money = (value: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "CAD", currencyDisplay: "code" }).format(value / 100);
+  const money = (value: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "CAD", currencyDisplay: "narrowSymbol" }).format(value / 100);
   const subtotal = (items: ShoppingRow[]) => {
     const priced = items.map(priceOf).filter((value): value is number => value !== null);
-    return priced.length ? money(priced.reduce((sum, value) => sum + value, 0)) : copy("unpriced");
+    return priced.length ? money(priced.reduce((sum, value) => sum + value, 0)) : null;
   };
   const togglePrices = (category: string) => setShownPrices(previous => {
     const next = new Set(previous);
@@ -361,7 +358,10 @@ export default function GroceryListScreen() {
   });
   const renderRow = (row: ShoppingRow) => {
     const metadataKey = rowMetadataKey(row);
-    const price = shownPrices.has(categoryOf(row)) ? priceOf(row) : undefined;
+    const price = shownPrices.has(categoryOf(row)) ? priceOf(row) : null;
+    const parsed = parseIngredientLine(row.ingredient);
+    const quantity = parsed.quantity === null || !parsed.ingredient ? "" : parsed.display.slice(0, parsed.display.length - parsed.ingredient.length).trim();
+    const measure = [quantity, price === null ? "" : money(price)].filter(Boolean).join(" · ");
     return (
       <li className="grocery-item" key={row.key} data-testid={`grocery-item-${metadataKey}`}>
         <label className="grocery-item-label">
@@ -371,9 +371,9 @@ export default function GroceryListScreen() {
             <svg viewBox="0 0 16 16"><path d="m3.5 8.2 3 3 6-6.3" /></svg>
           </span>
           <span className="min-w-0">
-            <span className="grocery-ingredient block">{row.ingredient}</span>
+            <span className="grocery-ingredient block">{quantity ? parsed.ingredient : row.ingredient}</span>
+            {measure && <span className="block text-sm" data-testid="grocery-item-measure">{measure}</span>}
             {row.recipes.length > 0 && <span className="block text-xs text-muted-foreground" data-testid="grocery-item-recipes">{row.recipes.join(" · ")}</span>}
-            {price !== undefined && <span className="block text-xs text-muted-foreground" data-testid="grocery-item-price">{price === null ? copy("unpriced") : money(price)}</span>}
           </span>
           {isPantry(row.ingredient) && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary" data-testid="grocery-pantry">{settingsText(lang, "pantryBadge")}</span>}
         </label>
@@ -391,11 +391,6 @@ export default function GroceryListScreen() {
               setAmount("");
               setPartial(row);
             }}>{copy("purchase")}</DropdownMenuItem>}
-            <DropdownMenuItem className="min-h-11" onSelect={() => {
-              const price = priceOf(row);
-              setPriceInput(price === null ? "" : (price / 100).toFixed(2));
-              setPriceEditor(row);
-            }}>{copy("setPrice")}</DropdownMenuItem>
             <DropdownMenuItem className="min-h-11" onSelect={() => beginRemoval(row)} data-testid="button-remove-item">
               {copy("remove")}
             </DropdownMenuItem>
@@ -454,10 +449,9 @@ export default function GroceryListScreen() {
                     onClick={() => setExpansion(previous => toggleCategory(previous, category, collapsed))}>
                     <span>{title} · {items.length}</span><span aria-hidden="true">{collapsed ? "▾" : "▴"}</span>
                   </button>
-                  <button className="grocery-share-button" onClick={() => togglePrices(category)} aria-pressed={shownPrices.has(category)}
-                    aria-label={`${copy("prices")} · ${title}${shownPrices.has(category) ? ` · ${subtotal(items)}` : ""}`} data-testid={`category-prices-${slug}`}>
-                    {shownPrices.has(category) ? subtotal(items) : "$"}
-                  </button>
+                  {shownPrices.has(category) && subtotal(items) && <span className="text-sm" data-testid={`category-subtotal-${slug}`}>{subtotal(items)}</span>}
+                  <button type="button" className="grocery-share-button grocery-price-toggle" onClick={() => togglePrices(category)} aria-pressed={shownPrices.has(category)}
+                    aria-label={`${copy("prices")} · ${title}`} data-testid={`category-prices-${slug}`}>$</button>
                 </header>
                 {!collapsed && <ul>{items.map(renderRow)}</ul>}
               </section>
@@ -483,30 +477,6 @@ export default function GroceryListScreen() {
           )}
         </div>
       </div>
-
-      <Dialog open={priceEditor !== null} onOpenChange={open => { if (!open && !busy) setPriceEditor(null); }}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
-          <DialogTitle>{copy("setPrice")}</DialogTitle>
-          <DialogDescription>{priceEditor?.ingredient} · CAD</DialogDescription>
-          <form onSubmit={async event => {
-            event.preventDefault();
-            if (busy || !priceEditor || !Number.isFinite(cents) || cents > 10000000) return;
-            setBusy(true);
-            try {
-              await patchShopping({ key: priceEditor.key, price: { cents, text: priceEditor.ingredient } });
-              setShownPrices(previous => new Set(previous).add(categoryOf(priceEditor)));
-              setPriceEditor(null);
-            } catch { toast({ title: t("grocery.changeFailed"), variant: "destructive" }); }
-            finally { setBusy(false); }
-          }}>
-            <label className="block text-sm">CAD
-              <input className="my-2 block min-h-11 w-full rounded border bg-background px-3" inputMode="decimal"
-                value={priceInput} onChange={event => setPriceInput(event.target.value)} />
-            </label>
-            <button className="grocery-primary disabled:opacity-50" disabled={busy || !Number.isFinite(cents) || cents > 10000000}>{copy("save")}</button>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={pendingRemoval !== null} onOpenChange={open => { if (!open && !busy) setPendingRemoval(null); }}>
         <DialogContent className="max-h-[85dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg">

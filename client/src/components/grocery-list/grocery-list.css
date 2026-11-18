@@ -249,3 +249,4 @@
   .grocery-item:has(.grocery-photo-actions) .grocery-recipes { margin-top: 0; padding-inline-start: 27px; padding-inline-end: 0; text-align: start; }
   .grocery-photo-thumbnail { margin-inline-start: 27px; margin-block: 4px; }
 }
+.grocery-price-toggle[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
