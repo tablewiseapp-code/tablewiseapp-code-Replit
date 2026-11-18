@@ -54,7 +54,7 @@ docs/                  product definition and per-feature notes
 | `/meals` | `pages/weekly-meals.tsx` | plan the week |
 | `/recipes` | `pages/recipe-list.tsx` | catalog grid |
 | `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history |
-| `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (operator) |
+| `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (signed-in accounts; guests see it with saving disabled) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
 | `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form |
 | `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
@@ -83,6 +83,7 @@ Tables are defined in `shared/schema.ts`.
 | `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
 | `household_tasks` | seeded suggested task names in three languages | global |
 | `week_plans` | the Week: shortlisted recipe ids, slot assignments and the lock; one row per owner, replaced whole on each save (`GET`/`PUT /api/week-plan`) | per owner |
+| `recipe_marks` | recipes an owner liked or imported (`kind` `liked` or `imported`); `GET /api/my-recipes`, `PUT`/`DELETE /api/recipe-likes/:id` | per owner |
 | `accounts` | email (lowercase, unique), scrypt `password_hash` (nullable, for a future Google-only account), the `owner_id` every owner-scoped table uses | per account |
 | `account_sessions` | SHA-256 of a session cookie, its account and expiry (30 days) | per account |
 | `pilot_events` | funnel events | per anonymous pilot ID |
@@ -96,7 +97,8 @@ The Week is stored in `week_plans`. The browser keeps a synchronous copy in `loc
 - **Account:** `POST /api/auth/sign-in` (same-origin, budgeted, 10 attempts per email per 15 minutes) finds the account by email or, for a new email, creates it with the guest's owner and drops the guest cookie. It sets a `tablewise_session` HttpOnly cookie; only its SHA-256 is stored. Middleware in `server/accounts.ts` puts the session's owner in `res.locals.accountOwner`, and `owner()` prefers it over the guest cookie, so feature routes need no change. `POST /api/auth/sign-out` ends that session; `GET /api/auth/me` returns the email or null. On sign-in and sign-out the client drops the Week's browser copy and reloads.
 - **Google sign-in (not built):** add a `google_sub` column and two routes, one redirecting to Google and one callback that verifies the ID token, finds or creates the account by verified email, then starts a session the same way. The callback is a cross-site redirect, so the session cookie would need `SameSite=Lax`.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
-- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
+- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and like a recipe (`PUT`/`DELETE /api/recipe-likes/:id`, same-origin).
+- **Signed-in account (or operator) only:** save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors; a guest gets 401). The import is recorded in `recipe_marks` for "Imported by me".
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
 - **Operator only:** YouTube import, edit and delete recipes; read the analytics summary.
 
