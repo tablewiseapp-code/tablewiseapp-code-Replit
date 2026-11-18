@@ -58,8 +58,9 @@ export function curateDevelopmentCatalog<T extends Curatable>(recipes: T[]) {
     !Number.isInteger(r.cookTime) || r.cookTime! < 0 || r.equipment.length === 0)) {
     throw new Error("Every visible development recipe requires portions, preparation/cooking time and tools.");
   }
-  // Accepted AI recipes and the built-in catalog (data/catalog) stay visible alongside the curated twenty (not read-only).
+  // Only the uncurated synthetic seeds are hidden. Everything else stays visible alongside the curated twenty (not
+  // read-only): the built-in catalog (data/catalog), accepted AI recipes and recipes people typed, dictated or imported.
   const generated = recipes.filter(recipe => !visible.has(recipe.id) &&
-    (recipe.tags?.includes("ai-generated") || recipe.id.startsWith("tablewise:catalog:"))).map(curateDevelopmentRecipe);
+    !recipe.id.startsWith("tablewise:synthetic:")).map(curateDevelopmentRecipe);
   return [...result, ...generated];
 }
