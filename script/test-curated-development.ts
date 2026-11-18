@@ -7,6 +7,13 @@ import { recipeToolKeys } from "../client/src/lib/recipe-tools";
 const stored = [...researchedDinners, ...developmentFixtures];
 const before = structuredClone(stored);
 const visible = curateDevelopmentCatalog(stored);
+{ // A recipe someone typed or imported stays visible; uncurated synthetic seeds stay hidden.
+  const added = { ...stored[0], id: "c3467528-02d3-4364-9fe0-8d666a8a5e50", title: "rice", tags: [] };
+  const seed = { ...stored[0], id: "tablewise:synthetic:v1:999", tags: ["Synthetic test data"] };
+  const ids = curateDevelopmentCatalog([...stored, added, seed]).map(r => r.id);
+  assert.ok(ids.includes(added.id), "added recipe visible");
+  assert.ok(!ids.includes(seed.id), "synthetic seed hidden");
+}
 assert.equal(stored.length, 112);
 assert.equal(visible.length, 20);
 assert.equal(new Set(visible.map(r => r.id)).size, 20);
