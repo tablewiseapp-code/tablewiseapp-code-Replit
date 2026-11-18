@@ -127,7 +127,7 @@ Spend is capped in `server/security.ts` (a global budget per minute, hour and da
 ## Rules for changes
 
 1. **Per-user data goes in Postgres**, scoped by owner. Do not add new `localStorage` stores for user data.
-2. **Schema changes need a reviewed migration.** Add `migrations/000N_*.sql` with constraint names that match what drizzle-kit generates, apply it to the local Docker database, then run `sh script/db-dump.sh` to refresh `db/init/tablewise.sql.gz`.
+2. **Schema changes need a reviewed migration.** Add `migrations/000N_*.sql` with constraint names that match what drizzle-kit generates, apply it to the local Docker database, then run `sh script/db-dump.sh` to refresh `db/init/tablewise.sql.gz`. Also apply it to the Replit development database (`psql "$DATABASE_URL" -f migrations/000N_*.sql` in the Replit Shell) before publishing: Replit's publish makes the production schema match the development database, so a table or column missing there is dropped from production with its data. If the publish screen lists any DROP under "Development database changes detected", cancel it.
 3. **Validate every request body** with a Zod schema in `server/request-schemas.ts`.
 4. **Every user-facing string goes through i18n** in English, Russian and Hebrew (`client/src/lib/i18n.tsx` or the feature's `*-copy.ts`). Check right-to-left layout.
 5. **Use the design tokens** in `client/src/index.css`. No hardcoded hex colours.
