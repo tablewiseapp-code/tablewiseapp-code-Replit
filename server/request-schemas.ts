@@ -76,6 +76,15 @@ export const groceryItemPhotoInput = z.object({
   key: z.string().min(1).max(12000).refine(value => value === value.toLowerCase() && value.trim().length > 0),
   image: groceryExtraCreate.shape.image.unwrap().nullable(),
 }).strict();
+// Home Tasks: one upsert body for create, edit, complete, move and restore. createdAt is kept only on first save.
+export const homeTaskInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value => !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().startsWith(value)).nullable(),
+  priority: z.enum(["high", "normal", "low"]),
+  image: groceryExtraCreate.shape.image.unwrap().nullable(),
+  completedAt: z.string().datetime({ offset: true }).nullable(),
+  createdAt: z.string().datetime({ offset: true }).optional(),
+}).strict();
 export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
 export const cookingSessionPatch = z.object({
   rating: z.number().int().min(1).max(5).nullable(),

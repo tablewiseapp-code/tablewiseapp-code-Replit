@@ -1,0 +1,55 @@
+const copy = {
+  en: {
+    title: "Home Tasks", intro: "What needs doing around the house.", add: "+ Add task", empty: "No tasks yet. Add the first one.",
+    overdue: "Overdue", today: "Today", upcoming: "Upcoming", anytime: "Anytime", completed: "Completed ({count})",
+    high: "High priority", priorityHigh: "High", priorityNormal: "Normal", priorityLow: "Low", priority: "Priority",
+    name: "Task", namePlaceholder: "e.g. Fold laundry", nameRequired: "Enter a task name.", dueDate: "Due date (optional)", clearDate: "Clear date",
+    newTask: "New task", editTask: "Edit task", save: "Save", saving: "Saving…", cancel: "Cancel", createdOn: "Created on {date}",
+    addPhoto: "+ Add photo", replacePhoto: "Replace photo", removePhoto: "Remove photo", viewPhoto: "View photo", closePhoto: "Close photo",
+    photo: "Task photo", processing: "Preparing photo…", photoError: "Couldn’t use this photo. Choose a JPEG, PNG or WebP under 10 MB.",
+    saveError: "Couldn’t save the task. Your changes are kept, try again.", actionError: "Couldn’t update the task. Try again.",
+    loadError: "Tasks couldn’t be loaded.", retry: "Try again", fullError: "Your task list is full. Delete some tasks first.",
+    actions: "Task options", edit: "Edit", moveTomorrow: "Move to tomorrow", delete: "Delete",
+    doneToast: "Task completed", deletedToast: "Task deleted", movedToast: "Moved to tomorrow", undo: "Undo",
+    markDone: "Mark “{name}” done", markOpen: "Mark “{name}” not done", due: "Due {date}",
+    home: "Home", homeIntro: "Your week at a glance.", needsAttention: "Needs attention", nothingDue: "Nothing overdue or due today.",
+    viewAll: "View all tasks", planWeek: "Plan your week",
+  },
+  ru: {
+    title: "Дела по дому", intro: "Что нужно сделать по дому.", add: "+ Добавить дело", empty: "Пока нет дел. Добавьте первое.",
+    overdue: "Просрочено", today: "Сегодня", upcoming: "Скоро", anytime: "В любое время", completed: "Выполнено ({count})",
+    high: "Высокий приоритет", priorityHigh: "Высокий", priorityNormal: "Обычный", priorityLow: "Низкий", priority: "Приоритет",
+    name: "Дело", namePlaceholder: "Например: сложить бельё", nameRequired: "Введите название дела.", dueDate: "Срок (необязательно)", clearDate: "Убрать дату",
+    newTask: "Новое дело", editTask: "Изменить дело", save: "Сохранить", saving: "Сохраняем…", cancel: "Отмена", createdOn: "Создано {date}",
+    addPhoto: "+ Добавить фото", replacePhoto: "Заменить фото", removePhoto: "Удалить фото", viewPhoto: "Посмотреть фото", closePhoto: "Закрыть фото",
+    photo: "Фото к делу", processing: "Подготовка фото…", photoError: "Не удалось добавить фото. Выберите JPEG, PNG или WebP до 10 МБ.",
+    saveError: "Не удалось сохранить дело. Изменения не потеряны, попробуйте ещё раз.", actionError: "Не удалось изменить дело. Попробуйте ещё раз.",
+    loadError: "Не удалось загрузить дела.", retry: "Попробовать снова", fullError: "Список дел заполнен. Сначала удалите несколько дел.",
+    actions: "Действия с делом", edit: "Изменить", moveTomorrow: "Перенести на завтра", delete: "Удалить",
+    doneToast: "Дело выполнено", deletedToast: "Дело удалено", movedToast: "Перенесено на завтра", undo: "Отменить",
+    markDone: "Отметить «{name}» выполненным", markOpen: "Отметить «{name}» невыполненным", due: "Срок {date}",
+    home: "Главная", homeIntro: "Ваша неделя одним взглядом.", needsAttention: "Требует внимания", nothingDue: "Нет просроченных дел и дел на сегодня.",
+    viewAll: "Все дела", planWeek: "Спланировать неделю",
+  },
+  he: {
+    title: "משימות בית", intro: "מה צריך לעשות בבית.", add: "+ הוספת משימה", empty: "אין עדיין משימות. הוסיפו את הראשונה.",
+    overdue: "באיחור", today: "היום", upcoming: "בקרוב", anytime: "בכל זמן", completed: "הושלמו ({count})",
+    high: "עדיפות גבוהה", priorityHigh: "גבוהה", priorityNormal: "רגילה", priorityLow: "נמוכה", priority: "עדיפות",
+    name: "משימה", namePlaceholder: "לדוגמה: לקפל כביסה", nameRequired: "הזינו שם משימה.", dueDate: "תאריך יעד (לא חובה)", clearDate: "ניקוי תאריך",
+    newTask: "משימה חדשה", editTask: "עריכת משימה", save: "שמירה", saving: "שומר…", cancel: "ביטול", createdOn: "נוצרה ב־{date}",
+    addPhoto: "+ הוספת תמונה", replacePhoto: "החלפת תמונה", removePhoto: "הסרת תמונה", viewPhoto: "הצגת תמונה", closePhoto: "סגירת תמונה",
+    photo: "תמונת המשימה", processing: "מכין תמונה…", photoError: "לא ניתן להשתמש בתמונה. בחרו JPEG, PNG או WebP בגודל עד 10 MB.",
+    saveError: "לא ניתן לשמור את המשימה. השינויים נשמרו בטופס, נסו שוב.", actionError: "לא ניתן לעדכן את המשימה. נסו שוב.",
+    loadError: "לא ניתן לטעון את המשימות.", retry: "ניסיון נוסף", fullError: "רשימת המשימות מלאה. מחקו קודם כמה משימות.",
+    actions: "אפשרויות משימה", edit: "עריכה", moveTomorrow: "העברה למחר", delete: "מחיקה",
+    doneToast: "המשימה הושלמה", deletedToast: "המשימה נמחקה", movedToast: "הועבר למחר", undo: "ביטול פעולה",
+    markDone: "סימון „{name}” כבוצעה", markOpen: "סימון „{name}” כלא בוצעה", due: "עד {date}",
+    home: "בית", homeIntro: "השבוע שלכם במבט אחד.", needsAttention: "דורש תשומת לב", nothingDue: "אין משימות באיחור או להיום.",
+    viewAll: "כל המשימות", planWeek: "תכנון השבוע",
+  },
+};
+export type HomeTaskCopyKey = keyof typeof copy.en;
+export function homeTaskText(lang: string, key: HomeTaskCopyKey, params: Record<string, string | number> = {}): string {
+  const text = (copy[lang as keyof typeof copy] ?? copy.en)[key];
+  return text.replace(/\{(\w+)\}/g, (_, name) => String(params[name] ?? ""));
+}

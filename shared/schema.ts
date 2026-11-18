@@ -3,6 +3,7 @@ import { pgTable, text, varchar, integer, smallint, timestamp, uuid, date, uniqu
 import type { RecipeNutrition } from "./recipe-nutrition";
 import { stepAnalysisSchema, type StepAnalysis } from "./step-timing";
 import { ingredientPartSchema, type IngredientPart } from "./ingredient-parse";
+import type { HomeTaskPriority } from "./home-tasks";
 import type { RecipeGenerationRequest, RecipeGenerationStatus } from "./recipe-generation-request";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -245,3 +246,28 @@ export const groceryItemPhotos = pgTable("grocery_item_photos", {
   check("grocery_item_photos_key", sql`length(${table.itemKey}) BETWEEN 1 AND 12000`),
   check("grocery_item_photos_image", sql`${table.image} IS NULL OR length(${table.image}) <= 280023`),
 ]);
+
+// Home Tasks: household to-dos, private to the owner. The due date is a calendar date in the person's time zone.
+export const homeTasks = pgTable("home_tasks", {
+  /** Client-generated, so Undo after Delete can restore the same task. */
+  id: uuid("id").primaryKey(),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  name: text("name").notNull(),
+  dueDate: date("due_date"),
+  priority: varchar("priority", { length: 8 }).$type<HomeTaskPriority>().notNull(),
+  // ponytail: resized JPEG data URL in the row, like grocery pictures; move to object storage if volume grows.
+  image: text("image"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  index("home_tasks_owner").on(table.ownerId),
+  check("home_tasks_name", sql`length(${table.name}) BETWEEN 1 AND 120`),
+  check("home_tasks_priority", sql`${table.priority} IN ('high','normal','low')`),
+  check("home_tasks_image", sql`${table.image} IS NULL OR length(${table.image}) <= 280023`),
+]);
+
+// Suggested household task names, seeded by migration, like household_products.
+export const householdTasks = pgTable("household_tasks", {
+  id: text("id").primaryKey(),
+  names: jsonb("names").$type<Record<string, string>>().notNull(),
+});

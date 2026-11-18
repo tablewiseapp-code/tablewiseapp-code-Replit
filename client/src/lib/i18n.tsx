@@ -31,6 +31,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.week": "Week",
     "nav.groceries": "Groceries",
     "nav.ideas": "Ideas",
+    "nav.homeTasks": "Home Tasks",
     "nav.settings": "Settings",
     "nav.addRecipe": "Add recipe",
     "nav.menu": "Menu",
@@ -424,6 +425,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.week": "Меню недели",
     "nav.groceries": "Список покупок",
     "nav.ideas": "Мои идеи",
+    "nav.homeTasks": "Дела по дому",
     "nav.settings": "Мои основные настройки",
     "nav.addRecipe": "Импорт рецепта",
 
@@ -779,6 +781,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.week": "תפריט שבועי",
     "nav.groceries": "רשימת קניות",
     "nav.ideas": "הרעיונות שלי",
+    "nav.homeTasks": "משימות בית",
     "nav.settings": "ההגדרות הבסיסיות שלי",
     "nav.addRecipe": "ייבוא מתכון",
 

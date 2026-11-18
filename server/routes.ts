@@ -25,6 +25,8 @@ import { draftEdit, groceryExtraCreate, groceryItemPhotoInput, cookingSessionId,
 import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cooking-history";
 import { databaseGroceryItemPhotoStore, type GroceryItemPhotoStore } from "./grocery-item-photos/store";
 import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
+import { databaseHomeTaskStore, type HomeTaskStore } from "./home-tasks";
+import { homeTaskInput } from "./request-schemas";
 import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
 import { databaseGroceryStore, type GroceryStore } from "./shared-grocery";
 import { can, type Access } from "../shared/grocery-access";
@@ -50,6 +52,7 @@ export type RouteDependencies = {
   cooking?: CookingStore;
   groceryExtras?: GroceryExtraStore;
   groceryItemPhotos?: GroceryItemPhotoStore;
+  homeTasks?: HomeTaskStore;
   grocery?: GroceryStore;
   youtube?: YouTubeImportStore;
 };
@@ -131,7 +134,7 @@ export async function registerRoutes(
       return res.status(415).json({ error: "Use application/json." });
     }
     if (/^\/transcribe-audio\/?$/i.test(req.path) || /^\/cooking-sessions\/[^/]+\/photos\/?$/.test(req.path)) return next();
-    if ((/^\/grocery-extras\/?$/i.test(req.path) && req.method === "POST") || (/^\/grocery-item-photos\/?$/i.test(req.path) && req.method === "PUT")) return express.json({ limit: "300kb", inflate: false })(req, res, next);
+    if ((/^\/grocery-extras\/?$/i.test(req.path) && req.method === "POST") || (/^\/grocery-item-photos\/?$/i.test(req.path) && req.method === "PUT") || (/^\/home-tasks\/[^/]+\/?$/i.test(req.path) && req.method === "PUT")) return express.json({ limit: "300kb", inflate: false })(req, res, next);
     if (/^\/analytics\/events\/?$/i.test(req.path)) return express.json({ limit: "16kb", inflate: false })(req, res, next);
     express.json({ limit: "64kb", inflate: false })(req, res, next);
   });
@@ -657,6 +660,37 @@ Rules:
       if (owner) await groceryExtras.remove(owner, id.data);
       res.status(204).end(); // already gone is fine
     } catch { cookingFailed(res, "grocery_extra_delete"); }
+  });
+  // Home Tasks. Private to the owner, like grocery extras. One PUT creates, edits, completes, moves and restores.
+  const homeTasks = dependencies.homeTasks ?? databaseHomeTaskStore();
+  app.get("/api/household-tasks", async (_req, res) => {
+    try { res.json(await homeTasks.catalog()); }
+    catch { cookingFailed(res, "household_tasks_list"); }
+  });
+  app.get("/api/home-tasks", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await homeTasks.list(owner) : []); }
+    catch { cookingFailed(res, "home_task_list"); }
+  });
+  app.put("/api/home-tasks/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    const input = homeTaskInput.safeParse(req.body);
+    if (!id.success || !input.success) return res.status(400).json({ error: "Invalid task." });
+    const owner = security.owner(req, res, true)!;
+    try {
+      const task = await homeTasks.save(owner, id.data, input.data);
+      if (!task) return res.status(409).json({ error: "Your task list is full." });
+      res.json(task);
+    } catch { cookingFailed(res, "home_task_save"); }
+  });
+  app.delete("/api/home-tasks/:id", async (req, res) => {
+    const id = cookingSessionId.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ error: "Invalid task." });
+    const owner = security.owner(req, res, false);
+    try {
+      if (owner) await homeTasks.remove(owner, id.data);
+      res.status(204).end(); // already gone is fine
+    } catch { cookingFailed(res, "home_task_delete"); }
   });
   app.get("/api/cooking-sessions", async (req, res) => {
     const recipe = recipeId.safeParse(req.query.recipeId);

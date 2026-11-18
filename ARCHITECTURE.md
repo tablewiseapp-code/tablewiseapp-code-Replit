@@ -1,7 +1,7 @@
 # TableWise — Architecture
 
 > Source of truth for how the system is built. Product meaning and vocabulary live in [docs/PRODUCT.md](docs/PRODUCT.md).
-> Last reviewed: 2026-11-15. Feature-level detail lives in the other files under `docs/`.
+> Last reviewed: 2026-11-17. Feature-level detail lives in the other files under `docs/`.
 
 ## System in one paragraph
 
@@ -34,7 +34,7 @@ server/
   security.ts          operator sessions, owner cookie, access gates, rate limits, AI budget
   storage.ts           data access (Drizzle)
   request-schemas.ts   Zod schemas for request bodies
-  recipe-*.ts, cooking-history.ts, grocery-extras.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
+  recipe-*.ts, cooking-history.ts, grocery-extras.ts, home-tasks.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
 shared/                types and schemas used by both sides; schema.ts is the database schema
 migrations/            reviewed SQL, applied by hand
 db/init/               seed dump for the local Docker database
@@ -46,7 +46,9 @@ docs/                  product definition and per-feature notes
 
 | Route | Page | Purpose |
 |---|---|---|
-| `/`, `/plan` | redirect | → `/meals` |
+| `/` | `pages/home.tsx` | Home: Home task preview, link to the Week |
+| `/plan` | redirect | → `/meals` |
+| `/home-tasks` | `pages/home-tasks.tsx` | Home Tasks |
 | `/meals` | `pages/weekly-meals.tsx` | plan the week |
 | `/recipes` | `pages/recipe-list.tsx` | catalog grid |
 | `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history |
@@ -75,6 +77,8 @@ Tables are defined in `shared/schema.ts`.
 | `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
 | `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |
 | `recipe_sources` | where an imported recipe came from (YouTube link, video id, status `mock` until real extraction exists); one per recipe, one per owner and video | per owner (operator-only writes, like recipes) |
+| `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
+| `household_tasks` | seeded suggested task names in three languages | global |
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
@@ -84,7 +88,7 @@ Browser `localStorage` still holds the week plan (`weeklyMealsState`), grocery p
 
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
-- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
+- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin), and save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors).
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
 - **Operator only:** YouTube import, edit and delete recipes; read the analytics summary.
 

@@ -17,20 +17,23 @@ import NotFound from "@/pages/not-found";
 import MyIdeas from "@/pages/my-ideas";
 import BasicSettings from "@/pages/basic-settings";
 import SharedGrocery from "@/pages/shared-grocery";
+import Home from "@/pages/home";
+import HomeTasks from "@/pages/home-tasks";
 
 function GroceryEntry() {
   return new URLSearchParams(useSearch()).get("source") === "mvp" ? <MvpGrocery /> : <GroceryList />;
 }
 
-function MealsHome() {
+function PlanRedirect() {
   return <Redirect to="/meals" />;
 }
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={MealsHome}/>
-      <Route path="/plan" component={MealsHome}/>
+      <Route path="/" component={Home}/>
+      <Route path="/home-tasks" component={HomeTasks}/>
+      <Route path="/plan" component={PlanRedirect}/>
       <Route path="/recipe-view" component={RecipeView}/>
       <Route path="/recipes" component={RecipeList}/>
       <Route path="/my-ideas" component={MyIdeas}/>
