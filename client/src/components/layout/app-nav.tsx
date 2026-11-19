@@ -91,7 +91,7 @@ export function AppNav() {
     <>
       <header className="app-nav border-b hairline bg-background" data-testid="app-nav-header">
         <div className="app-container flex max-w-7xl items-center gap-2 py-2">
-          <Link href="/" className={`me-4 inline-flex min-h-11 items-center rounded-md text-base font-semibold tracking-tight text-foreground ${focus}`} data-testid="app-nav-brand">
+          <Link href="/household" className={`me-4 inline-flex min-h-11 items-center rounded-md text-base font-semibold tracking-tight text-foreground ${focus}`} data-testid="app-nav-brand">
             TableWise
           </Link>
           <nav aria-label={t("nav.main")} className="hidden flex-1 items-center gap-1 sm:flex" data-testid="app-nav">

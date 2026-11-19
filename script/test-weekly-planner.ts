@@ -65,4 +65,30 @@ assert.equal(JSON.stringify(plan), frozen, "helpers never mutate their input");
   assert.deepEqual(pageNumbers(5, 9), [1, null, 4, 5, 6, null, 9]);
   assert.deepEqual(pageNumbers(1, 2), [1, 2]);
 }
+// Week → Plan filters: deal ingredient, explicit-tag diets, nutrition thresholds, and what AI generation receives.
+{
+  const { matchesPlannerFilters, mealsGenerationFilters } = await import("../client/src/lib/planner-filters");
+  const none = { maxMinutes: 30, dietary: [], mealType: [], cookingMethod: [], source: [], proteinType: [], withNotes: false, modifiedByMe: false,
+    myPicks: false, minRating: null, servings: null, mustInclude: [], mustExclude: [] };
+  const meta = { isMyPick: false, rating: null };
+  const recipe = (ingredients: string[], tags: string[] = [], extra = {}) => ({ tags, ingredients, mealType: "Dinner", tools: ["Oven"], sourceType: "",
+    proteinType: "", hasNotes: false, modifiedByMe: false, servingsRange: "3-4", prepTime: 10, cookTime: 15, servings: "4", ...extra });
+  const ok = (r: ReturnType<typeof recipe>, f: object) => matchesPlannerFilters(r, { ...none, ...f }, "total", meta);
+  const thighs = recipe(["8 boneless chicken thighs", "1 onion"], ["glutenFree", "kidFriendly"]);
+  const mince = recipe(["500 g lean beef mince"]);
+  assert.ok(ok(thighs, { deal: "chicken-thighs" }) && !ok(mince, { deal: "chicken-thighs" }) && ok(mince, { deal: "ground-beef" }));
+  assert.ok(!ok(recipe(["2 chicken breasts"]), { deal: "chicken-thighs" }), "a chicken-thigh deal needs chicken thighs");
+  assert.ok(ok(thighs, { deal: "chicken-thighs", dietary: ["Gluten-free", "Kid friendly"] }) && !ok(thighs, { dietary: ["Dairy-free"] }));
+  assert.ok(!ok(thighs, { dietary: ["Halal"] }) && ok(recipe([], ["Halal"]), { dietary: ["Halal"] }), "religious needs an explicit tag");
+  assert.ok(!ok(thighs, { cookingLevel: "easy" }) && ok(recipe([], ["level:easy"]), { cookingLevel: "easy" }));
+  assert.ok(!ok(recipe(["x"], [], { prepTime: 20, cookTime: 15 }), {}), "default ≤30 uses total time");
+  const totals = { caloriesKcal: 1600, proteinG: 120, carbsG: 60, fatG: 40, fiberG: 30, sugarG: 10 };
+  const nutrition = { version: 1, source: "ai-estimate", model: "m", analyzedAt: "", inputHash: "", assumptions: ["a"], totals };
+  const lean = recipe(["x"], [], { nutrition });
+  assert.ok(ok(lean, { dietary: ["High-protein", "Low-carb", "Lower-calorie", "High-fibre"] }), "30 g protein, 15 g carbs, 400 kcal, 7.5 g fibre per serving");
+  assert.ok(!ok(recipe(["x"], [], { nutrition, servings: "2" }), { dietary: ["Low-carb"] }) && !ok(recipe(["x"]), { dietary: ["High-protein"] }));
+  const sent = mealsGenerationFilters({ ...none, dietary: ["Gluten-free", "Halal"], deal: "ground-beef", cookingLevel: "easy" });
+  assert.deepEqual(sent.filters.dietary, ["Gluten-free"]);
+  assert.deepEqual(sent.notApplied, ["dietary", "cookingLevel", "deal"]);
+}
 console.log("weekly planner checks passed");

@@ -24,6 +24,7 @@ export type PlannerRecipe = RecipeCredit & NutritionFields & {
   hasNotes: boolean;
   modifiedByMe: boolean;
   ingredients: string[];
+  stepCount: number;
   sourceUrl?: string | null;
   image?: string | null;
 };
@@ -49,6 +50,9 @@ function inferMealType(recipe: StoredRecipe): string {
   if (tags.some((tag) => tag.includes("lunch")) || /\blunch|sandwich|wrap|salad\b/.test(title)) {
     return "Lunch";
   }
+  // Desserts and snacks are not a meal the plan has; they must never default to Dinner.
+  if (tags.includes("dessert")) return "Dessert";
+  if (tags.includes("snack")) return "Snack";
   return "Dinner";
 }
 
@@ -131,6 +135,7 @@ export function toPlannerRecipe(recipe: StoredRecipe): PlannerRecipe {
     hasNotes: false,
     modifiedByMe: false,
     ingredients: recipe.ingredients,
+    stepCount: recipe.steps.length,
     sourceUrl: recipe.sourceUrl ?? null,
     image: recipe.image ?? null,
   };

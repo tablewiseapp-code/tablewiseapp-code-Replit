@@ -34,7 +34,7 @@ try {
   let n = 0; const waiting = {}; const exceptions = [];
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Runtime.exceptionThrown") exceptions.push(d.params.exceptionDetails.exception?.description ?? d.params.exceptionDetails.text); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
-  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r?.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r?.result?.value; };
   const until = async (e, what) => { for (let i = 0; i < 150; i++) { if (await ev(`Boolean(${e})`).catch(() => false)) return; await sleep(120); } throw new Error(`timeout: ${what}; page: ${String(await ev("document.body.innerText")).slice(0, 300).replace(/\n/g, " | ")}`); };
   const go = async path => { await call("Page.navigate", { url: BASE + path }); await sleep(400); };
@@ -100,16 +100,12 @@ try {
   await ev(`${q("recipe-search-clear")}?.click()`); await sleep(300);
 
   // 5. Manual filters combine with the baseline; Clear filters keeps saved settings.
-  // Sidebar order: meal type, time, protein, ingredients, dietary, method, source; cuisine only under More filters.
+  // Week → Plan order: cooking level, total time, dietary, kid favourites, kitchen tools; protein, meal type and ingredients under More filters.
   const order = await ev(`[...document.querySelectorAll("#meal-filters [data-filter-section]")].map(e => e.dataset.filterSection)`);
-  ok(JSON.stringify(order) === JSON.stringify(["mealType", "time", "protein", "ingredients", "dietary", "method", "source"]), `sidebar order ${order}`);
-  await ev(`${q("button-more-filters")}.click()`); await until(`document.querySelector('[data-filter-section="cuisine"]')`, "cuisine under More filters");
-  ok(JSON.stringify(await ev(`[...document.querySelectorAll("#meal-filters [data-filter-section]")].map(e => e.dataset.filterSection)`)).endsWith('"source","cuisine"]'), "cuisine listed after the main sections");
-  // Advanced groups start collapsed; open protein to check it is listed once.
-  await ev(`document.querySelector('#meal-filters [data-filter-section="protein"] button').click()`); await sleep(150);
-  ok(await ev(`document.querySelectorAll('#meal-filters [data-testid^="filter-protein-"]').length`) === 4, "protein shown once (not duplicated in More)");
-  await ev(`document.querySelector('#meal-filters [data-filter-section="protein"] button').click()`); await sleep(150);
-  const open = async section => { if (!(await ev(`!!document.querySelector('[data-filter-section="${section}"] [data-testid^="filter-"]')`))) await ev(`document.querySelector('[data-filter-section="${section}"] button').click()`); await sleep(150); };
+  ok(JSON.stringify(order) === JSON.stringify(["cookingLevel", "time", "dietary", "kidFavourites", "kitchenTools", "source"]), `sidebar order ${order}`);
+  await ev(`${q("button-more-filters")}.click()`); await until(`document.querySelector('#meal-filters [data-filter-section="protein"]')`, "protein under More filters");
+  ok(await ev(`document.querySelectorAll('#meal-filters [data-testid^="filter-protein-"]').length`) === 4, "protein shown once");
+  const open = async () => {}; // sections are always visible once More filters is open
   const sidebar = () => num("sidebar-matching");
   ok(await sidebar() === baseline.length && await num("count-matching") === baseline.length, "sidebar count = top count = cards");
   // Same filters, opposite order → same cards (visual order never changes results).

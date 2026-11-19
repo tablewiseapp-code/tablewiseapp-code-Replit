@@ -22,7 +22,7 @@ try {
   let onPaused = null; // Fetch.requestPaused handler, set while a recipe response is rewritten
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Fetch.requestPaused") onPaused?.(d.params); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
-  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r.exceptionDetails) throw new Error(r.exceptionDetails.text); return r.result.value; };
   const el = id => `document.querySelector('[data-testid="${id}"]')`;
   const click = id => ev(`${el(id)}.click()`);

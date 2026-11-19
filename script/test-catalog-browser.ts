@@ -62,7 +62,7 @@ async function main() {
   try {
     await send("Page.enable");
     await send("Runtime.enable");
-    await send("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
+    await send("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
     await send("Page.addScriptToEvaluateOnNewDocument", {
       source: `
         window.__catalogMode = 'error';

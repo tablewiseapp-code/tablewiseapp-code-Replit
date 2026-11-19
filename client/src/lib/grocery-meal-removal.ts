@@ -31,16 +31,15 @@ export type RecipeGroceryRow = {
   proteinRecipes: Set<string>;
 };
 
+/** Groceries come from scheduled meals only, scaled to each meal's servings. Shortlisted-only, declined and replaced recipes add nothing. */
 export function buildRecipeGroceryRows(plan: PlanState, catalog: GroceryRecipe[]) {
-  const selected = new Set([...plan.selectedIds, ...plan.planAssignments.map(a => a.recipeId)]);
+  const selected = new Set(plan.planAssignments.map(a => a.recipeId));
   const rows = new Map<string, RecipeGroceryRow & { quantity: number | null }>();
   for (const recipe of catalog) {
     if (!selected.has(recipe.id)) continue;
     const base = baseServings(recipe.servings);
     const assignments = plan.planAssignments.filter(a => a.recipeId === recipe.id);
-    const factor = base && assignments.length
-      ? assignments.reduce((sum, a) => sum + (a.servings || base), 0) / base
-      : assignments.length || 1;
+    const factor = base ? assignments.reduce((sum, a) => sum + (a.servings || base), 0) / base : assignments.length;
     const proteins = recipe.ingredients.flatMap((line, index) =>
       ingredientGroup(line) === "protein" && !optional.test(line) ? [index] : []);
     recipe.ingredients.forEach((line, index) => {
@@ -60,11 +59,9 @@ export function buildRecipeGroceryRows(plan: PlanState, catalog: GroceryRecipe[]
   return rows;
 }
 
-/** Meals that use a recipe: its day slots, or one entry with `spanDays: 0` for a recipe chosen for the Week but not on a day. */
+/** Meals that use a recipe: its day slots (only scheduled meals are on the grocery list). */
 export function groceryMealsFor(plan: PlanState, recipeIds: Set<string>): PlanAssignment[] {
-  const placed = plan.planAssignments.filter(a => recipeIds.has(a.recipeId));
-  const unplaced = plan.selectedIds.filter(id => recipeIds.has(id) && !placed.some(a => a.recipeId === id));
-  return [...placed, ...unplaced.map(recipeId => ({ recipeId, mealType: "Dinner" as const, startDay: 0, spanDays: 0 }))];
+  return plan.planAssignments.filter(a => recipeIds.has(a.recipeId));
 }
 
 export function removeGroceryMeals(plan: PlanState, remove: PlanAssignment[]) {

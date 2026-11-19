@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { Switch, Route, Redirect, useSearch } from "wouter";
-import { syncWeekPlan } from "@/lib/meal-plan";
+import { Switch, Route, Redirect, useLocation, useSearch } from "wouter";
+import { readPlan, syncWeekPlan } from "@/lib/meal-plan";
+import { loadSettings, syncSettings } from "@/lib/basic-settings";
+import { needsHouseholdSetup } from "@/lib/week-suggestions";
+import Household from "@/pages/household";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -32,9 +35,19 @@ function PlanRedirect() {
   return <Redirect to="/meals" />;
 }
 
+/** First visit after entry: "Your household", unless this person already has settings or a Week. Share links open directly. */
+function FirstVisit() {
+  const [location, setLocation] = useLocation();
+  useEffect(() => {
+    if (!location.startsWith("/shared/") && location !== "/household" && needsHouseholdSetup(loadSettings(), readPlan())) setLocation("/household", { replace: true });
+  }, []);
+  return null;
+}
+
 function Router() {
   return (
     <Switch>
+      <Route path="/household" component={Household}/>
       <Route path="/" component={Home}/>
       <Route path="/home-tasks" component={HomeTasks}/>
       <Route path="/plan" component={PlanRedirect}/>
@@ -60,7 +73,7 @@ function App() {
   useEffect(() => {
     const ask = choseGuest() || window.location.pathname.startsWith("/shared/") ? undefined
       : fetch("/api/auth/me").then(r => r.ok ? r.json() : {}).then((me: { email?: string | null }) => setAskSignIn(me.email === null)).catch(() => undefined);
-    Promise.all([syncWeekPlan().catch(() => undefined), ask]).finally(() => setReady(true));
+    Promise.all([syncWeekPlan().catch(() => undefined), syncSettings().catch(() => undefined), ask]).finally(() => setReady(true));
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
@@ -69,6 +82,7 @@ function App() {
           <RecipeDisplayProvider>
           <Toaster />
           {ready && (askSignIn ? <SignIn onGuest={() => setAskSignIn(false)} /> : <>
+            <FirstVisit />
             <AppNav />
             <Router />
           </>)}

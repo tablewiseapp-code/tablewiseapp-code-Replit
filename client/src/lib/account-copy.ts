@@ -1,5 +1,6 @@
 import { useI18n } from "@/lib/i18n";
 import { lockStorageKey, planStorageKey } from "@/lib/meal-plan";
+import { settingsKey } from "@/lib/basic-settings";
 
 const copy = {
   en: {
@@ -54,8 +55,8 @@ export const setGuestChoice = (on: boolean) => { try { on ? localStorage.setItem
 /** Who is signed in; email is null for a guest. */
 export type Me = { email: string | null; name?: string | null; photo?: string | null };
 
-/** The Week's browser copy belongs to whoever was signed in; drop it so the next person loads their own. */
+/** The Week's and Basic Settings' browser copies belong to whoever was signed in; drop them so the next person loads their own. */
 export function switchPerson() {
-  try { localStorage.removeItem(planStorageKey); localStorage.removeItem(lockStorageKey); } catch {}
+  try { [planStorageKey, lockStorageKey, settingsKey].forEach(key => localStorage.removeItem(key)); } catch {}
   window.location.assign("/");
 }

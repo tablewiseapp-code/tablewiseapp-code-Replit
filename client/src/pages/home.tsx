@@ -8,6 +8,7 @@ import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
+import { householdText } from "@/lib/household-copy";
 
 const mealKey = { Breakfast: "meals.breakfast", Lunch: "meals.lunch", Dinner: "meals.dinner" } as const;
 const addKey = { Breakfast: "addBreakfast", Lunch: "addLunch", Dinner: "addDinner" } as const;
@@ -26,6 +27,7 @@ export default function Home() {
   const [now] = useState(() => new Date());
   const [plan, setPlan] = useState(readPlan);
   const [picking, setPicking] = useState<MealSlot | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
   const catalog = useRecipeCatalog();
 
   const today = mealsOnDay(plan, now.getDay());
@@ -85,6 +87,8 @@ export default function Home() {
                 );
               })
             )}
+            {/* Available even when today is empty; never changes the Week or groceries. */}
+            <button type="button" onClick={() => setSuggesting(true)} disabled={!catalog.data} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
           </section>
 
           <details className="card p-3 sm:p-5" data-testid="home-task-preview">
@@ -100,6 +104,7 @@ export default function Home() {
         </div>
       </PageContainer>
       <MealSuggestion meal={picking} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setPicking(null)} onAdded={() => setPlan(readPlan())} />
+      <MealSuggestion mode="cook" meal={suggesting ? "Dinner" : null} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setSuggesting(false)} onAdded={() => undefined} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
   );

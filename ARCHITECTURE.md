@@ -1,7 +1,7 @@
 # TableWise — Architecture
 
 > Source of truth for how the system is built. Product meaning and vocabulary live in [docs/PRODUCT.md](docs/PRODUCT.md).
-> Last reviewed: 2026-11-18. Feature-level detail lives in the other files under `docs/`.
+> Last reviewed: 2026-11-19. Feature-level detail lives in the other files under `docs/`.
 
 ## System in one paragraph
 
@@ -35,7 +35,7 @@ server/
   storage.ts           data access (Drizzle)
   request-schemas.ts   Zod schemas for request bodies
   accounts.ts          sign in, sign out, sessions; sets the request's owner for a signed-in account
-  recipe-*.ts, cooking-history.ts, grocery-extras.ts, home-tasks.ts, week-plans.ts, shared-grocery.ts, pilot-analytics.ts   feature logic
+  recipe-*.ts, cooking-history.ts, grocery-extras.ts, home-tasks.ts, week-plans.ts (also household settings), shared-grocery.ts, pilot-analytics.ts   feature logic
 shared/                types and schemas used by both sides; schema.ts is the database schema
 migrations/            reviewed SQL, applied by hand
 db/init/               seed dump for the local Docker database
@@ -59,6 +59,7 @@ docs/                  product definition and per-feature notes
 | `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form |
 | `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
 | `/settings` | `pages/basic-settings.tsx` | Basic Settings |
+| `/household` | `pages/household.tsx` | Your household; first visit lands here (`FirstVisit` in `App.tsx`) when settings are unsaved and the Week is empty |
 | `/operator` | server-rendered in `server/security.ts` | operator sign-in |
 
 ## Data
@@ -82,6 +83,7 @@ Tables are defined in `shared/schema.ts`.
 | `recipe_sources` | where an imported recipe came from (YouTube link, video id, status `mock` until real extraction exists); one per recipe, one per owner and video | per owner (operator-only writes, like recipes) |
 | `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
 | `household_tasks` | seeded suggested task names in three languages | global |
+| `household_settings` | Basic Settings and Your household as one JSON document, sanitized by the client (`client/src/lib/basic-settings.ts`); `GET`/`PUT /api/household-settings` | per owner |
 | `week_plans` | the Week: shortlisted recipe ids, slot assignments and the lock; one row per owner, replaced whole on each save (`GET`/`PUT /api/week-plan`) | per owner |
 | `recipe_marks` | recipes an owner liked or imported (`kind` `liked` or `imported`); `GET /api/my-recipes`, `PUT`/`DELETE /api/recipe-likes/:id` | per owner |
 | `accounts` | email (lowercase, unique), scrypt `password_hash` (nullable, for a future Google-only account), the `owner_id` every owner-scoped table uses, optional `display_name` and `photo` (resized JPEG data URL) with a `photo_version` for its cacheable link | per account |
@@ -89,15 +91,15 @@ Tables are defined in `shared/schema.ts`.
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
-The Week is stored in `week_plans`. The browser keeps a synchronous copy in `localStorage` (`weeklyMealsState`, `week_locked_v1`): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Browser `localStorage` alone still holds grocery progress (including recorded purchase quantities), My Ideas, Basic Settings and planner filter state. This is legacy, not a pattern to copy.
+The Week is stored in `week_plans`. The browser keeps a synchronous copy in `localStorage` (`weeklyMealsState`, `week_locked_v1`): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Basic Settings follow the same pattern: `household_settings`, a synchronous copy in `localStorage` (`tablewise_basic_settings`), loaded by `syncSettings` before pages render and written through by `pushSettings`. Browser `localStorage` alone still holds grocery progress (including recorded purchase quantities), My Ideas and planner filter state. This is legacy, not a pattern to copy.
 
 ## Identity and access
 
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
-- **Account:** `POST /api/auth/sign-in` (same-origin, budgeted, 10 attempts per email per 15 minutes) finds the account by email or, for a new email, creates it with the guest's owner and drops the guest cookie. It sets a `tablewise_session` HttpOnly cookie; only its SHA-256 is stored. Middleware in `server/accounts.ts` puts the session's owner in `res.locals.accountOwner`, and `owner()` prefers it over the guest cookie, so feature routes need no change. `POST /api/auth/sign-out` ends that session; `GET /api/auth/me` returns the email (null for a guest), name and a versioned photo link (`GET /api/auth/photo?v=N`). `PUT /api/auth/profile` (same-origin, budgeted; a guest gets 401) changes the name or photo. On sign-in and sign-out the client drops the Week's browser copy and reloads.
+- **Account:** `POST /api/auth/sign-in` (same-origin, budgeted, 10 attempts per email per 15 minutes) finds the account by email or, for a new email, creates it with the guest's owner and drops the guest cookie. It sets a `tablewise_session` HttpOnly cookie; only its SHA-256 is stored. Middleware in `server/accounts.ts` puts the session's owner in `res.locals.accountOwner`, and `owner()` prefers it over the guest cookie, so feature routes need no change. `POST /api/auth/sign-out` ends that session; `GET /api/auth/me` returns the email (null for a guest), name and a versioned photo link (`GET /api/auth/photo?v=N`). `PUT /api/auth/profile` (same-origin, budgeted; a guest gets 401) changes the name or photo. On sign-in and sign-out the client drops the Week's and Basic Settings' browser copies and reloads, so nothing passes to the next person on a shared browser.
 - **Google sign-in (not built):** add a `google_sub` column and two routes, one redirecting to Google and one callback that verifies the ID token, finds or creates the account by verified email, then starts a session the same way. The callback is a cross-site redirect, so the session cookie would need `SameSite=Lax`.
 - **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
-- **Anyone may:** read the catalog, plan, use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and like a recipe (`PUT`/`DELETE /api/recipe-likes/:id`, same-origin).
+- **Anyone may:** read the catalog, plan, keep their own Basic Settings (`PUT /api/household-settings`, same-origin), use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and like a recipe (`PUT`/`DELETE /api/recipe-likes/:id`, same-origin).
 - **Signed-in account (or operator) only:** save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors; a guest gets 401). The import is recorded in `recipe_marks` for "Imported by me".
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
 - **Operator only:** YouTube import, edit and delete recipes; read the analytics summary.

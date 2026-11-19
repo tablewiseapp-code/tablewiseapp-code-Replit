@@ -20,8 +20,9 @@ const memory = (initial: Record<string, string> = {}) => {
   const data = { ...initial };
   return { data, getItem: (k: string) => data[k] ?? null, setItem: (k: string, v: string) => { data[k] = v; }, failing: false };
 };
+// Default tags carry the catalog's explicit gluten-free and dairy-free marks, so these tests exercise the ingredient rules.
 const recipe = (patch: Partial<EngineRecipe> & { steps?: string[] }): EngineRecipe => ({
-  id: patch.id ?? "r", title: patch.title ?? "Recipe", ingredients: patch.ingredients ?? ["400 g potatoes"], tags: patch.tags ?? ["Dinner"],
+  id: patch.id ?? "r", title: patch.title ?? "Recipe", ingredients: patch.ingredients ?? ["400 g potatoes"], tags: patch.tags ?? ["Dinner", "Gluten-free", "Dairy-free"],
   mealType: patch.mealType ?? "Dinner", prepTime: patch.prepTime ?? 10, cookTime: patch.cookTime ?? 20,
   deviceRequirements: patch.deviceRequirements ?? inferDeviceRequirements(patch.steps ?? []), equipment: patch.equipment, proteinType: patch.proteinType,
 });
@@ -135,10 +136,13 @@ test("shared meals respect every member's hard restrictions; member-specific one
   assert.equal(result.eligible, false);
   const kinds = result.reasons.map(r => r.kind === "diet" ? `${r.diet}:${r.members}` : r.kind === "allergy" ? `${r.allergen}:${r.members}` : r.kind);
   assert.deepEqual(kinds.sort(), [`glutenFree:${dana.id}`, `milk:${leo.id}`].sort());
-  const safe = recipe({ ingredients: ["400 g potatoes", "2 tbsp olive oil", "1 tsp salt"] });
+  const safe = recipe({ ingredients: ["400 g potatoes", "2 tbsp olive oil", "1 tsp salt"], tags: ["Dinner", "Gluten-free", "Dairy-free"] });
   assert.equal(checkEligibility(safe, family).eligible, true);
+  // Clean wording is not enough: without the catalog's explicit tag a recipe is never treated as gluten- or dairy-free.
+  const untagged = checkEligibility({ ...safe, tags: ["Dinner"] }, family);
+  assert.deepEqual(untagged.reasons.map(r => r.kind === "diet" || r.kind === "allergy" ? r.status : r.kind), ["uncertain", "uncertain"]);
   // Planning for Dana only: Leo's milk allergy no longer applies.
-  const forDana = checkEligibility(recipe({ ingredients: ["400 g potatoes", "100 g cheddar cheese"] }), family, [dana.id]);
+  const forDana = checkEligibility(recipe({ ingredients: ["400 g potatoes", "100 g cheddar cheese"], tags: ["Gluten-free"] }), family, [dana.id]);
   assert.equal(forDana.eligible, true);
 });
 test("unknown or ambiguous allergen information is never treated as safe", () => {

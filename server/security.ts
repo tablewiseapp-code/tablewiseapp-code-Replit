@@ -169,7 +169,7 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   const isGroceryWrite = (req: Request) =>
     (req.method === "PUT" && /^\/grocery-item-photos\/?$/.test(req.path)) ||
     (["PUT", "DELETE"].includes(req.method) && /^\/home-tasks\/[^/]+\/?$/.test(req.path)) ||
-    (req.method === "PUT" && /^\/week-plan\/?$/.test(req.path)) ||
+    (req.method === "PUT" && /^\/(?:week-plan|household-settings)\/?$/.test(req.path)) ||
     (["PUT", "DELETE"].includes(req.method) && /^\/recipe-likes\/[^/]+\/?$/.test(req.path)) ||
     (["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
       /^\/(?:shared-lists(?:\/[^/]+(?:\/items(?:\/[^/]+)?)?)?|grocery-notes|grocery-shopping)\/?$/.test(req.path));

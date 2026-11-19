@@ -4,9 +4,8 @@ import { selectableDevices, type DeviceId } from "./device-requirements";
 import { plannerCookingMethods } from "./planner-filters";
 import { mealSlots, type MealSlot } from "./meal-plan";
 
-// My Basic Settings. There are no user accounts yet, so settings live in this browser like every other
-// TableWise preference. ponytail: localStorage; move behind an authenticated API when accounts exist —
-// the document is versioned, sanitized and merge-on-write so that move is a storage swap, not a redesign.
+// My Basic Settings and Your household. Postgres (household_settings, per owner) is the source of truth; localStorage
+// is the synchronous copy every page reads, like the Week (meal-plan.ts). The document is versioned and sanitized.
 export const settingsKey = "tablewise_basic_settings";
 export const portionSizes = ["small", "regular", "large"] as const;
 export type PortionSize = typeof portionSizes[number];
@@ -23,6 +22,27 @@ const noRule = (): MealRule => ({ type: "both", max: null });
 
 /** Food likes/dislikes: a structured dish or ingredient id from shared/food-rules, or "custom:<the person's own words>". */
 export type IngredientChoice = string;
+/** Your household (/household): how the weekly dinner suggestions are made. Days are plan days (0 = Sunday). */
+export const cookingStyles = ["quick", "everyday", "chef"] as const;
+export type CookingStyle = typeof cookingStyles[number];
+export const challengeWhen = ["day", "any", "every"] as const;
+export const weeknightTimeOptions = [20, 30, 45, 60] as const;
+export type HouseholdSetup = {
+  /** new = never answered; skipped = "Skip for now"; done = "Suggest my week" was used at least once. */
+  status: "new" | "skipped" | "done";
+  style: CookingStyle;
+  /** Cooking evenings per week; null = "Not sure yet" (three, or the number of fixed days if more). */
+  evenings: number | null;
+  fixedDays: number[];
+  /** Total time limit for Mon–Fri dinners (minutes), except the chef challenge day. Hard. */
+  weeknightMax: number | null;
+  challenge: { when: typeof challengeWhen[number]; day: number | null };
+  /** Dinners the last suggestion placed and not yet approved, and dinners swapped out of this draft. */
+  suggested: string[]; declined: string[];
+};
+export const defaultSetup = (): HouseholdSetup => ({ status: "new", style: "everyday", evenings: null, fixedDays: [], weeknightMax: null,
+  challenge: { when: "day", day: null }, suggested: [], declined: [] });
+
 export type CookingPrefs = { quick: boolean; minimalCleanup: boolean; onePot: boolean; batch: boolean };
 export const cookingPrefKeys = ["quick", "minimalCleanup", "onePot", "batch"] as const;
 const noPrefs = (): CookingPrefs => ({ quick: false, minimalCleanup: false, onePot: false, batch: false });
@@ -43,6 +63,7 @@ export type BasicSettings = {
   planning: { meals: MealSlot[]; cookingDays: number; leftovers: typeof leftoverOptions[number]; repeatFavorites: boolean;
     variety: typeof varietyOptions[number]; novelty: typeof noveltyOptions[number]; mealRules: Record<MealSlot, MealRule> };
   shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[] };
+  setup: HouseholdSetup;
 };
 
 export const defaultSettings = (): BasicSettings => ({
@@ -54,6 +75,7 @@ export const defaultSettings = (): BasicSettings => ({
   planning: { meals: ["Breakfast", "Lunch", "Dinner"], cookingDays: 7, leftovers: "none", repeatFavorites: false, variety: "balanced", novelty: "balanced",
     mealRules: { Breakfast: noRule(), Lunch: noRule(), Dinner: noRule() } },
   shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [] },
+  setup: defaultSetup(),
 });
 
 // ---- Sanitizing: unknown/invalid values are dropped field by field, never the whole document. ----
@@ -73,6 +95,19 @@ const prefs = (raw: unknown, shared: Record<string, unknown>): CookingPrefs => {
   const own = obj(raw), source = raw === undefined ? shared : own;
   return { quick: bool(source.quick), minimalCleanup: bool(source.minimalCleanup), onePot: bool(source.onePot), batch: bool(source.batch) };
 };
+
+const days = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b) : []);
+const ids = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === "string" && x.length > 0 && x.length <= 150))].slice(0, 60) : []);
+function setup(raw: unknown): HouseholdSetup {
+  const r = obj(raw), c = obj(r.challenge);
+  return {
+    status: r.status === "skipped" || r.status === "done" ? r.status : "new", style: oneOf(cookingStyles, r.style, "everyday"),
+    evenings: r.evenings === null || r.evenings === undefined ? null : int(r.evenings, 1, 7, 3), fixedDays: days(r.fixedDays),
+    weeknightMax: (weeknightTimeOptions as readonly unknown[]).includes(r.weeknightMax) ? r.weeknightMax as number : null,
+    challenge: { when: oneOf(challengeWhen, c.when, "day"), day: Number.isInteger(c.day) && (c.day as number) >= 0 && (c.day as number) <= 6 ? c.day as number : null },
+    suggested: ids(r.suggested), declined: ids(r.declined),
+  };
+}
 
 function mealRule(raw: unknown): MealRule {
   const r = obj(raw);
@@ -116,6 +151,7 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
       repeatFavorites: bool(p.repeatFavorites), variety: oneOf(varietyOptions, p.variety, "balanced"), novelty: oneOf(noveltyOptions, p.novelty, "balanced"),
       mealRules: Object.fromEntries(mealSlots.map(m => [m, mealRule(obj(p.mealRules)[m])])) as Record<MealSlot, MealRule> },
     shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry) },
+    setup: setup(r.setup),
   };
 }
 
@@ -133,7 +169,30 @@ export function updateSettings(change: (current: BasicSettings) => BasicSettings
   const current = loadSettings(store);
   const next = sanitizeSettings({ ...change(current), version: 2, rev: current.rev + 1 });
   store.setItem(settingsKey, JSON.stringify(next));
+  if (store === browser()) pushSettings();
   return next;
+}
+
+// ---- Server copy (same pattern as the Week in meal-plan.ts) ----
+let lastQueued = "", queue = Promise.resolve();
+/** Sends the browser copy to the server when it changed. Requests go one at a time, in order; a failure retries on the next change. */
+export function pushSettings() {
+  const body = JSON.stringify(loadSettings());
+  if (body === lastQueued || typeof fetch !== "function") return;
+  lastQueued = body;
+  queue = queue.then(() => fetch("/api/household-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: true }))
+    .then(r => { if (!r.ok) throw new Error(); })
+    .catch(() => { if (lastQueued === body) lastQueued = ""; });
+}
+/** Run once before pages read settings. The server copy wins; browser settings with no server copy are uploaded once. */
+export async function syncSettings() {
+  const response = await fetch("/api/household-settings");
+  if (!response.ok) return;
+  const server: unknown = await response.json();
+  const store = browser();
+  if (server === null) { if (loadSettings().rev > 0) pushSettings(); return; }
+  store?.setItem(settingsKey, JSON.stringify(sanitizeSettings(server)));
+  lastQueued = JSON.stringify(loadSettings());
 }
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";

@@ -295,6 +295,13 @@ export const weekPlans = pgTable("week_plans", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// My Basic Settings and Your household: one document per owner, sanitized by the client (client/src/lib/basic-settings.ts).
+export const householdSettings = pgTable("household_settings", {
+  ownerId: varchar("owner_id", { length: 64 }).primaryKey(),
+  settings: jsonb("settings").$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // Suggested household task names, seeded by migration, like household_products.
 export const householdTasks = pgTable("household_tasks", {
   id: text("id").primaryKey(),

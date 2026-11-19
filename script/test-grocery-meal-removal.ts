@@ -43,13 +43,9 @@ const ambiguous = { ...curry, ingredients: ["6 chicken thighs", "2 eggs"] };
 assert.equal(rowFor(buildRecipeGroceryRows(plan, [ambiguous]), "6 chicken thighs")?.proteinRecipes.size, 0);
 console.log("Grocery meal removal, purchase quantities, and Undo tests passed.");
 
-// A recipe chosen for the Week but not on a day is still offered for removal, and Undo brings it back without a day.
+// Groceries come from scheduled meals only: a recipe chosen for the Week but not on a day adds nothing.
 const cacciatore = { id: "cacciatore", title: "Chicken cacciatore", servings: "4", ingredients: ["8 boneless skinless chicken thighs", "150 ml gluten-free chicken stock"] };
 const unplaced: PlanState = { selectedIds: [cacciatore.id], planAssignments: [] };
-const thighs = rowFor(buildRecipeGroceryRows(unplaced, [cacciatore]), "8 boneless skinless chicken thighs")!;
-const offered = groceryMealsFor(unplaced, thighs.proteinRecipes);
-assert.deepEqual(offered.map(a => [a.recipeId, a.spanDays]), [[cacciatore.id, 0]]);
-const withoutIt = removeGroceryMeals(unplaced, offered);
-assert.deepEqual(withoutIt.selectedIds, []);
-assert.deepEqual(restoreGroceryMeals(withoutIt, offered, unplaced), unplaced);
-console.log("unplaced recipe removal ok");
+assert.equal(buildRecipeGroceryRows(unplaced, [cacciatore]).size, 0);
+assert.deepEqual(groceryMealsFor(unplaced, new Set([cacciatore.id])), []);
+console.log("unscheduled recipe adds no groceries ok");

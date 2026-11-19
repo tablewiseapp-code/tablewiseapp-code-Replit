@@ -23,7 +23,7 @@ try {
   let n = 0; const waiting = {}; const errors = [];
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Runtime.exceptionThrown") errors.push(d.params.exceptionDetails.text); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
-  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r.exceptionDetails) throw new Error(`${r.exceptionDetails.text}: ${e}`); return r.result.value; };
   const q = id => `document.querySelector('[data-testid="${id}"]')`;
   const until = async (expr, what) => { for (let i = 0; i < 60; i++) { if (await ev(expr).catch(() => false)) return; await sleep(150); } throw new Error(`timeout: ${what}`); };
@@ -81,8 +81,11 @@ try {
   const tab = async () => { await call("Input.dispatchKeyEvent", { type: "keyDown", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 }); await call("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 }); };
   const seen = [];
   for (let i = 0; i < 9; i++) { await tab(); seen.push(await ev(`document.activeElement.getAttribute("href") ?? document.activeElement.dataset.testid`)); }
-  eq(seen.slice(0, 9), ["/", ...ORDER, "/settings", "button-language-selector"], "tab order");
+  eq(seen.slice(0, 9), ["/household", ...ORDER, "/settings", "button-language-selector"], "tab order");
   ok(await ev(`(s => s.outlineStyle !== "none" && parseFloat(s.outlineWidth) >= 2)(getComputedStyle(document.activeElement))`), "visible focus ring");
+  // The TableWise name opens Your household (product owner, 2026-11-19).
+  await ev(`document.querySelector('[data-testid="app-nav-brand"]').click()`);
+  await until(`location.pathname === "/household" && Boolean(document.querySelector('[data-testid="button-suggest-week"]'))`, "brand opens Your household");
 
   // ---- Mobile
   await size(390, true);

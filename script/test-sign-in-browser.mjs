@@ -51,9 +51,11 @@ try {
   // ---- Continue as guest is remembered.
   await go("/", onSignIn);
   await ev(`${q("button-guest")}.click()`);
-  await until(onApp, "guest sees the app");
+  await until(`${onApp} && location.pathname === "/household"`, "first visit: Your household");
+  await ev(`${q("button-skip-household")}.click()`);
+  await until(`location.pathname === "/" && ${onApp}`, "Skip for now goes Home");
   await go("/", onApp);
-  ok(true, "guest choice remembered after reload");
+  ok(await ev(`location.pathname === "/"`), "guest choice and skip remembered after reload");
 
   // ---- Settings → Sign in → new email creates the account and opens Home.
   await go("/settings", `Boolean(${q("button-sign-in")})`);

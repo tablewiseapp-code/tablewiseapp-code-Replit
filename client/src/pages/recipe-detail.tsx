@@ -107,7 +107,8 @@ export default function RecipeDetail() {
   const [selectedServings, setSelectedServings] = useState<number | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
-  const [cooking, setCooking] = useState(false);
+  // ?cook (Home → Suggest a recipe → Start cooking) opens Zen mode straight away.
+  const [cooking, setCooking] = useState(() => new URLSearchParams(search).has("cook"));
   const [timesOpen, setTimesOpen] = useState(false);
   const [creditOpen, setCreditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -318,7 +319,7 @@ export default function RecipeDetail() {
         )}
       </PageContainer>
 
-      {cooking && <CookingMode key={recipe.id} recipeId={recipe.id} title={recipe.title} steps={recipe.steps} analysis={analysis}
+      {cooking && recipe.steps.length > 0 && <CookingMode key={recipe.id} recipeId={recipe.id} title={recipe.title} steps={recipe.steps} analysis={analysis}
         servings={selectedServings} scaledIngredients={scaledIngredients}
         stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => setCooking(false)} />}
 

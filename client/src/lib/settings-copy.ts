@@ -63,6 +63,7 @@ const en = {
   incompatible: "Doesn't fit My Basic Settings", replaceWith: "Replace with {title}", noReplacement: "No matching replacement",
   reasonDevice: "needs {devices}", or: " or ", reasonDiet: "not {diet}", reasonDietUncertain: "may not be {diet}", reasonAllergy: "contains {allergen}",
   reasonAllergyUncertain: "may contain {allergen}", reasonCustom: "contains {term}", reasonTime: "{minutes} min (limit {max})", forWhom: " ({names})",
+  reasonWeeknight: "{minutes} min (weeknights: up to {max})", reasonWeeknightUnknown: "total time unknown (weeknights: up to {max})",
   fillWeek: "Fill my week", fillWeekHint: "Adds your selected recipes to empty slots using My Basic Settings ({days} cooking days). Nothing already planned changes.",
   filled: "Added {count} meals to your week.", fillNothing: "No empty slot matched your selected recipes and settings.",
   pantryBadge: "In your pantry",
@@ -154,6 +155,7 @@ const ru: Copy = {
   incompatible: "Не подходит под основные настройки", replaceWith: "Заменить на «{title}»", noReplacement: "Нет подходящей замены",
   reasonDevice: "нужно: {devices}", or: " или ", reasonDiet: "не {diet}", reasonDietUncertain: "возможно, не {diet}", reasonAllergy: "содержит: {allergen}",
   reasonAllergyUncertain: "может содержать: {allergen}", reasonCustom: "содержит: {term}", reasonTime: "{minutes} мин (лимит {max})", forWhom: " ({names})",
+  reasonWeeknight: "{minutes} мин (в будни: до {max})", reasonWeeknightUnknown: "общее время неизвестно (в будни: до {max})",
   fillWeek: "Заполнить неделю", fillWeekHint: "Добавляет выбранные рецепты в пустые ячейки по основным настройкам (дней готовки: {days}). Уже запланированное не меняется.",
   filled: "Добавлено блюд: {count}.", fillNothing: "Нет пустых ячеек, подходящих для выбранных рецептов и настроек.",
   pantryBadge: "Есть дома",
@@ -244,6 +246,7 @@ const he: Copy = {
   incompatible: "לא מתאים להגדרות הבסיסיות שלי", replaceWith: "להחליף ב„{title}”", noReplacement: "אין תחליף מתאים",
   reasonDevice: "דורש {devices}", or: " או ", reasonDiet: "לא {diet}", reasonDietUncertain: "ייתכן שאינו {diet}", reasonAllergy: "מכיל {allergen}",
   reasonAllergyUncertain: "עשוי להכיל {allergen}", reasonCustom: "מכיל {term}", reasonTime: "{minutes} דק׳ (מגבלה {max})", forWhom: " ({names})",
+  reasonWeeknight: "{minutes} דק׳ (בערבי חול: עד {max})", reasonWeeknightUnknown: "זמן כולל לא ידוע (בערבי חול: עד {max})",
   fillWeek: "מלא את השבוע שלי", fillWeekHint: "מוסיף את המתכונים שבחרתם למשבצות ריקות לפי ההגדרות הבסיסיות ({days} ימי בישול). מה שכבר מתוכנן לא משתנה.",
   filled: "נוספו {count} ארוחות לשבוע.", fillNothing: "אין משבצת ריקה שמתאימה למתכונים שבחרתם ולהגדרות.",
   pantryBadge: "יש במזווה",
@@ -296,6 +299,7 @@ export function restrictionText(lang: string, r: Restriction, nameOf: (memberId:
     case "allergy": return t(r.status === "uncertain" ? "reasonAllergyUncertain" : "reasonAllergy", { allergen: t(`allergen_${r.allergen}`).toLowerCase() }) + suffix;
     case "customAllergy": return t("reasonCustom", { term: r.term }) + suffix;
     case "time": return t("reasonTime", { minutes: r.minutes, max: r.max });
+    case "dayTime": return r.minutes == null ? t("reasonWeeknightUnknown", { max: r.max }) : t("reasonWeeknight", { minutes: r.minutes, max: r.max });
     case "mealType": return t(r.status === "uncertain" ? "reasonMealUncertain" : `reasonMeal_${r.type}`, { meal: t(`meal_${r.meal}`) });
     case "mealTime": return r.minutes == null ? t("reasonMealTimeUnknown", { meal: t(`meal_${r.meal}`), max: r.max })
       : t("reasonMealTime", { minutes: r.minutes, meal: t(`meal_${r.meal}`), max: r.max });

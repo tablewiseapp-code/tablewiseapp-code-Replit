@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { weekPlans } from "@shared/schema";
+import { householdSettings, weekPlans } from "@shared/schema";
 import type { z } from "zod";
 import type { weekPlanInput } from "./request-schemas";
 
@@ -22,6 +22,26 @@ export function databaseWeekPlanStore(connection?: Database): WeekPlanStore {
     async save(ownerId, plan) {
       await (await database()).insert(weekPlans).values({ ownerId, ...plan })
         .onConflictDoUpdate({ target: weekPlans.ownerId, set: { ...plan, updatedAt: new Date() } });
+    },
+  };
+}
+
+/** Owner-scoped: My Basic Settings, one document per owner, replaced whole on every save. */
+export type HouseholdSettingsStore = {
+  get(ownerId: string): Promise<Record<string, unknown> | null>;
+  save(ownerId: string, settings: Record<string, unknown>): Promise<void>;
+};
+
+export function databaseHouseholdSettingsStore(connection?: Database): HouseholdSettingsStore {
+  const database = async () => connection ?? (await import("./db")).db;
+  return {
+    async get(ownerId) {
+      const [row] = await (await database()).select().from(householdSettings).where(eq(householdSettings.ownerId, ownerId));
+      return row?.settings ?? null;
+    },
+    async save(ownerId, settings) {
+      await (await database()).insert(householdSettings).values({ ownerId, settings })
+        .onConflictDoUpdate({ target: householdSettings.ownerId, set: { settings, updatedAt: new Date() } });
     },
   };
 }

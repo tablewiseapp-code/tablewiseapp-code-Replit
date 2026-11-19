@@ -100,6 +100,10 @@ export const weekPlanInput = z.object({
   }).strict().refine(a => a.startDay + a.spanDays <= 7)).max(21),
   locked: z.boolean(),
 }).strict();
+// My Basic Settings: an opaque document the client sanitizes field by field. The server only checks its shape and size.
+// ponytail: not field-validated here; it is read back only by its owner's own client, which sanitizes it.
+export const householdSettingsInput = z.object({ version: z.literal(2), rev: z.number().int().min(0) }).passthrough()
+  .refine(value => JSON.stringify(value).length <= 64_000);
 export const cookingSessionCreate = z.object({ id: cookingSessionId, recipeId }).strict();
 export const cookingSessionPatch = z.object({
   rating: z.number().int().min(1).max(5).nullable(),

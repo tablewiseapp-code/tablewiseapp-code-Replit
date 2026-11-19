@@ -10,7 +10,7 @@ import type { RecipeToolKey } from "./recipe-tools";
 export type EngineRecipe = {
   id: string; title: string; ingredients: string[]; tags: string[]; mealType: string;
   prepTime?: number | null; cookTime?: number | null; minutes?: number;
-  deviceRequirements: DeviceRequirements; equipment?: RecipeToolKey[]; proteinType?: string;
+  deviceRequirements: DeviceRequirements; equipment?: RecipeToolKey[]; proteinType?: string; stepCount?: number;
 };
 export type Restriction =
   | { kind: "device"; missing: DeviceId[][] }
@@ -18,6 +18,8 @@ export type Restriction =
   | { kind: "allergy"; allergen: Allergen; status: Exclude<RuleStatus, "ok">; members: string[]; lines: string[] }
   | { kind: "customAllergy"; term: string; members: string[] }
   | { kind: "time"; minutes: number; max: number }
+  /** Your household: the weeknight dinner time limit, on a given day. Unknown time never passes. */
+  | { kind: "dayTime"; day: number; minutes: number | null; max: number }
   /** Meal-specific rules (My Basic Settings → Weekly Meal Planning); only when a meal is being evaluated. */
   | { kind: "mealType"; meal: MealSlot; type: "meatless" | "meat"; status: Exclude<RuleStatus, "ok"> }
   | { kind: "mealTime"; meal: MealSlot; minutes: number | null; max: number };
@@ -30,7 +32,8 @@ export type Eligibility = {
 };
 export type Ranking = { score: number; matches: string[]; concerns: string[] };
 
-const total = (r: EngineRecipe) => (r.prepTime != null || r.cookTime != null ? (r.prepTime ?? 0) + (r.cookTime ?? 0) : r.minutes ?? null);
+/** Recorded total time, or null. PlannerRecipe.minutes is an estimate (steps × 10) and never counts as a known time. */
+export const total = (r: EngineRecipe) => (r.prepTime != null || r.cookTime != null ? (r.prepTime ?? 0) + (r.cookTime ?? 0) : null);
 const HOUSEHOLD = "household";
 
 /** The people a shared meal is for: everyone by default, or a chosen subset (future per-meal selection). */
@@ -55,9 +58,24 @@ export function mealReasons(recipe: EngineRecipe, settings: BasicSettings, meal:
   return reasons;
 }
 
-/** Hard restrictions: devices, every diner's dietary patterns, allergies and custom allergies, and an explicit hard time limit.
- * With `meal`, that meal's recipe-type and time rules too (global restrictions always apply first and are never relaxed). */
-export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, memberIds?: readonly string[], meal?: MealSlot): Eligibility {
+// Restrictions the catalog marks with an explicit, build-verified tag. These need that tag as well as clean ingredient
+// wording: a recipe without the tag (an import, an AI recipe, missing data) is never treated as suitable.
+const tagKey = (tag: string) => tag.toLowerCase().replace(/[\s_-]+/g, "");
+const dietTags: Partial<Record<DietPattern, string[]>> = { vegetarian: ["vegetarian", "vegan"], vegan: ["vegan"], glutenFree: ["glutenfree"], dairyFree: ["dairyfree", "vegan"] };
+const allergenTags: Partial<Record<Allergen, string[]>> = { gluten: ["glutenfree"], milk: ["dairyfree", "vegan"] };
+const hasTag = (recipe: EngineRecipe, wanted: string[] | undefined) => !wanted || recipe.tags.some(tag => wanted.includes(tagKey(tag)));
+
+/** Your household's weeknight limit applies Mon–Fri, except a chosen chef challenge day. */
+export function weeknightLimit(settings: BasicSettings, day: number): number | null {
+  const s = settings.setup;
+  if (s.weeknightMax === null || day === 0 || day === 6) return null;
+  return s.style === "chef" && s.challenge.when === "day" && s.challenge.day === day ? null : s.weeknightMax;
+}
+
+/** Hard restrictions: devices, every diner's dietary patterns, allergies and custom allergies, excluded ingredients and an
+ * explicit hard time limit. With `meal`, that meal's recipe-type and time rules too; with `day` (0 = Sunday), that day's
+ * weeknight limit. Global restrictions always apply first and are never relaxed. The one rule for every suggestion. */
+export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, memberIds?: readonly string[], meal?: MealSlot, day?: number): Eligibility {
   const reasons: Restriction[] = [];
   const people = diners(settings, memberIds);
   const missing = unmetGroups(recipe.deviceRequirements, availableDevices(settings));
@@ -72,10 +90,12 @@ export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, 
   for (const [diet, members] of holders(settings.dietary.diets, m => m.diets)) {
     const { status, lines } = evaluateDiet(diet, recipe.ingredients);
     if (status !== "ok") reasons.push({ kind: "diet", diet, status, members, lines });
+    else if (!hasTag(recipe, dietTags[diet])) reasons.push({ kind: "diet", diet, status: "uncertain", members, lines: [] });
   }
   for (const [allergen, members] of holders(settings.dietary.allergies, m => m.allergies)) {
     const { status, lines } = evaluateAllergen(allergen, recipe.ingredients);
     if (status !== "ok") reasons.push({ kind: "allergy", allergen, status, members, lines });
+    else if (!hasTag(recipe, allergenTags[allergen])) reasons.push({ kind: "allergy", allergen, status: "uncertain", members, lines: [] });
   }
   for (const [term, members] of holders(settings.dietary.customAllergies, m => m.customAllergies)) {
     if (mentionsTerm(term, recipe.ingredients)) reasons.push({ kind: "customAllergy", term, members });
@@ -85,6 +105,8 @@ export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, 
   const minutes = total(recipe);
   if (hardMax && limit > 0 && minutes != null && minutes > limit) reasons.push({ kind: "time", minutes, max: limit });
   if (meal) reasons.push(...mealReasons(recipe, settings, meal));
+  const nightMax = day === undefined ? null : weeknightLimit(settings, day);
+  if (nightMax !== null && (minutes == null || minutes > nightMax)) reasons.push({ kind: "dayTime", day: day!, minutes, max: nightMax });
   return { eligible: reasons.length === 0, reasons, members: [HOUSEHOLD, ...people.map(m => m.id)] };
 }
 

@@ -1,6 +1,9 @@
 import { recipeStageMinutes, type RecipeTimeMode } from "./recipe-time";
 import type { PlannerRecipe } from "./planner-recipes";
-import { recipeCuisine } from "../../../shared/food-rules";
+import { evaluateDiet, recipeCuisine } from "../../../shared/food-rules";
+import { nutritionAmounts, nutritionBasis, usableNutrition, type NutrientKey, type NutritionFields } from "../../../shared/recipe-nutrition";
+import { ingredientMatches } from "./meal-filters";
+import { foodDealById } from "./food-deals";
 
 // The Meals page (/meals) filters. One implementation shared by the page and the AI generator's compliance check.
 export const plannerTimeOptions = [20, 30, 40, 60] as const;
@@ -10,6 +13,55 @@ export const plannerCookingMethods = ["Oven", "Air fryer", "Stovetop", "Microwav
 export const plannerProteinTypes = ["Chicken", "Beef", "Seafood", "Plant-based"] as const;
 export const plannerServings = ["1-2", "3-4", "5+"] as const;
 export const dietaryTag = { Vegetarian: "vegetarian", "Kid friendly": "kidFriendly", "Gluten-free": "glutenFree" } as const;
+
+// Week → Plan filters. Each option is a reusable definition, so kitchen tools and standing dietary preferences can
+// move into Basic Settings later. A positive match needs an explicit tag or a supported calculation; missing data never matches.
+/** Total-time limits on Week → Plan; the page also offers "Any" (no limit). */
+export const weekTimeOptions = [15, 20, 30, 40, 45, 60] as const;
+export const WEEK_DEFAULT_MAX_MINUTES = 30;
+export const KID_FAVOURITES = "Kid friendly"; // stored in `dietary`, matches the explicit kidFriendly tag
+export const cookingLevels = ["easy", "confident", "challenge"] as const;
+export type CookingLevel = typeof cookingLevels[number];
+const cookingLevelTags: Record<CookingLevel, string[]> = { easy: ["level:easy"], confident: ["level:intermediate"], challenge: ["level:advanced"] };
+
+type DietRecipe = Pick<PlannerRecipe, "tags" | "ingredients"> & NutritionFields & { servings?: string | null };
+const tagKey = (tag: string) => tag.toLowerCase().replace(/[\s_-]+/g, "");
+const tagged = (...names: string[]) => (r: DietRecipe) => r.tags.some(tag => names.includes(tagKey(tag)));
+// Per-serving thresholds, documented in docs/week-plan-filters.md. Only recipes with a numeric serving count and
+// real (not mock) nutrition qualify; ranges use the least favourable end.
+const perServing = (key: NutrientKey, test: (min: number, max: number) => boolean) => (r: DietRecipe) => {
+  const nutrition = usableNutrition(r.nutrition);
+  if (!nutrition || nutritionBasis(r.servings)?.unit !== "portion") return false;
+  const amount = nutritionAmounts(nutrition, r.servings).find(a => a.key === key)!;
+  return test(amount.min, amount.max);
+};
+const either = (...tests: ((r: DietRecipe) => boolean)[]) => (r: DietRecipe) => tests.some(test => test(r));
+
+export const dietaryGroups = ["quick", "eatingStyles", "nutritionGoals", "exclusions", "religious"] as const;
+export const dietaryOptions: { value: string; group: typeof dietaryGroups[number]; matches: (r: DietRecipe) => boolean }[] = [
+  { value: "Gluten-free", group: "quick", matches: tagged("glutenfree") },
+  { value: "Dairy-free", group: "quick", matches: tagged("dairyfree") },
+  { value: "Vegetarian", group: "quick", matches: tagged("vegetarian", "vegan") },
+  { value: "High-protein", group: "quick", matches: either(tagged("highprotein"), perServing("proteinG", min => min >= 20)) },
+  { value: "Low-carb", group: "quick", matches: either(tagged("lowcarb"), perServing("carbsG", (_, max) => max <= 20)) },
+  { value: "Vegan", group: "eatingStyles", matches: tagged("vegan") },
+  { value: "Pescatarian", group: "eatingStyles", matches: either(tagged("pescatarian", "vegetarian", "vegan"), r => evaluateDiet("pescatarian", r.ingredients).status === "ok") },
+  { value: "Mediterranean-style", group: "eatingStyles", matches: tagged("mediterraneanstyle", "mediterranean") },
+  { value: "Keto", group: "eatingStyles", matches: tagged("keto") },
+  { value: "Paleo", group: "eatingStyles", matches: tagged("paleo") },
+  { value: "Lower-calorie", group: "nutritionGoals", matches: either(tagged("lowercalorie", "lowcalorie"), perServing("caloriesKcal", (_, max) => max <= 500)) },
+  { value: "High-fibre", group: "nutritionGoals", matches: either(tagged("highfibre", "highfiber"), perServing("fiberG", min => min >= 6)) },
+  { value: "Low-sodium", group: "nutritionGoals", matches: tagged("lowsodium") }, // no sodium data in the catalog
+  { value: "Low added sugar", group: "nutritionGoals", matches: tagged("lowaddedsugar") }, // nutrition has total sugar only
+  { value: "Egg-free", group: "exclusions", matches: tagged("eggfree") },
+  { value: "Peanut-free", group: "exclusions", matches: tagged("peanutfree") },
+  { value: "Tree-nut-free", group: "exclusions", matches: tagged("treenutfree") },
+  { value: "Soy-free", group: "exclusions", matches: tagged("soyfree") },
+  { value: "Kosher", group: "religious", matches: tagged("kosher") },
+  { value: "Halal", group: "religious", matches: tagged("halal") },
+  { value: KID_FAVOURITES, group: "quick", matches: tagged("kidfriendly") },
+];
+const dietaryMatch = new Map(dietaryOptions.map(o => [o.value, o.matches]));
 
 export type PlannerFilters = {
   maxMinutes: number | null;
@@ -27,10 +79,14 @@ export type PlannerFilters = {
   mustExclude: string[];
   /** Optional so older saved filters and callers stay valid. Matches the recipe's cuisine tag. */
   cuisine?: string[];
+  /** Week → Plan only. One of cookingLevels; matched by explicit level tags. */
+  cookingLevel?: CookingLevel | null;
+  /** Week → Plan only. A Food deals offer id; matches recipes that use that ingredient. */
+  deal?: string | null;
 };
 export type PlannerMeta = { isMyPick: boolean; rating: number | null };
 type Filterable = Pick<PlannerRecipe, "tags" | "mealType" | "tools" | "sourceType" | "proteinType" | "hasNotes" |
-  "modifiedByMe" | "servingsRange" | "ingredients" | "prepTime" | "cookTime">;
+  "modifiedByMe" | "servingsRange" | "ingredients" | "prepTime" | "cookTime" | "nutrition" | "servings">;
 
 export function matchesPlannerFilters(recipe: Filterable, filters: PlannerFilters, timeMode: RecipeTimeMode, meta: PlannerMeta): boolean {
   if (filters.maxMinutes !== null) {
@@ -38,12 +94,11 @@ export function matchesPlannerFilters(recipe: Filterable, filters: PlannerFilter
     if (minutes === null || minutes > filters.maxMinutes) return false;
   }
   if (filters.dietary.length > 0) {
-    const hasDietary = filters.dietary.every(d => {
-      const tag = dietaryTag[d as keyof typeof dietaryTag];
-      return tag ? recipe.tags.includes(tag) : true;
-    });
-    if (!hasDietary) return false;
+    if (!filters.dietary.every(d => dietaryMatch.get(d)?.(recipe) ?? true)) return false;
   }
+  if (filters.cookingLevel && !tagged(...cookingLevelTags[filters.cookingLevel])(recipe)) return false;
+  const deal = filters.deal ? foodDealById(filters.deal) : undefined;
+  if (deal && !recipe.ingredients.some(line => deal.terms.some(term => ingredientMatches(line, term)))) return false;
   if (filters.mealType.length > 0 && !filters.mealType.includes(recipe.mealType)) return false;
   if (filters.cookingMethod.length > 0 && !filters.cookingMethod.some(m => recipe.tools.includes(m))) return false;
   if (filters.source.length > 0 && !filters.source.includes(recipe.sourceType)) return false;
@@ -79,7 +134,7 @@ export function recipeNameMatches(title: string, query: string): boolean {
 /** What a new recipe can be generated for. Personal filters (picks, ratings, notes, source) describe existing recipes only. */
 export type MealsGenerationFilters = Pick<PlannerFilters,
   "maxMinutes" | "dietary" | "mealType" | "cookingMethod" | "proteinType" | "servings" | "mustInclude" | "mustExclude">;
-export type NotAppliedFilter = "source" | "withNotes" | "modifiedByMe" | "myPicks" | "minRating" | "cuisine";
+export type NotAppliedFilter = "source" | "withNotes" | "modifiedByMe" | "myPicks" | "minRating" | "cuisine" | "dietary" | "cookingLevel" | "deal";
 
 export function mealsGenerationFilters(filters: PlannerFilters): { filters: MealsGenerationFilters; notApplied: NotAppliedFilter[] } {
   const notApplied: NotAppliedFilter[] = [];
@@ -89,9 +144,14 @@ export function mealsGenerationFilters(filters: PlannerFilters): { filters: Meal
   if (filters.myPicks) notApplied.push("myPicks");
   if (filters.minRating !== null) notApplied.push("minRating");
   if (filters.cuisine?.length) notApplied.push("cuisine");
+  // Generation understands the original dietary set only; the newer options are listed as not applied.
+  const dietary = filters.dietary.filter(d => (plannerDietary as readonly string[]).includes(d));
+  if (dietary.length < filters.dietary.length) notApplied.push("dietary");
+  if (filters.cookingLevel) notApplied.push("cookingLevel");
+  if (filters.deal) notApplied.push("deal");
   return {
     filters: {
-      maxMinutes: filters.maxMinutes, dietary: [...filters.dietary], mealType: [...filters.mealType],
+      maxMinutes: filters.maxMinutes, dietary, mealType: [...filters.mealType],
       cookingMethod: [...filters.cookingMethod], proteinType: [...filters.proteinType], servings: filters.servings,
       mustInclude: [...filters.mustInclude], mustExclude: [...filters.mustExclude],
     },

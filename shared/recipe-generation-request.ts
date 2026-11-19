@@ -9,7 +9,8 @@ const terms = z.array(z.string().min(1).max(200)).max(50);
 const set = <T extends readonly [string, ...string[]]>(values: T) => z.array(z.enum(values)).max(values.length);
 export const mealsFilterSchema = z.object({
   /** Minutes. Measures preparation or prep + cooking, per the request's timeMode. null = no limit. */
-  maxMinutes: z.union([z.literal(20), z.literal(30), z.literal(40), z.literal(60), z.null()]), // = plannerTimeOptions
+  // plannerTimeOptions (My Ideas) plus weekTimeOptions (Week → Plan).
+  maxMinutes: z.union([z.literal(15), z.literal(20), z.literal(30), z.literal(40), z.literal(45), z.literal(60), z.null()]),
   dietary: set(plannerDietary), mealType: set(plannerMealTypes), cookingMethod: set(plannerCookingMethods),
   proteinType: set(plannerProteinTypes), servings: z.enum(plannerServings).nullable(),
   mustInclude: terms, mustExclude: terms,

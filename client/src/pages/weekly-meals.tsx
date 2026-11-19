@@ -2,7 +2,7 @@
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recordPilotEvent } from "@/lib/pilot-analytics";
 import { currentWeek } from "@/lib/week-plan";
-import { Check, ChevronDown, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useLocation, useSearch } from "wouter";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable } from "@dnd-kit/core";
@@ -15,10 +15,14 @@ import { Button } from "@/components/ui/button";
 import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { matchesPlannerFilters, pageNumbers, paginate, recipeNameMatches } from "@/lib/planner-filters";
+import { FoodDeals } from "@/components/food-deals";
+import { useWeekFilterCopy } from "@/lib/week-filter-copy";
+import { useFilterLabels, useWeekFilterChips, WeekFilterPanel } from "@/components/week-filter-panel";
+import { countWeekFilters, defaultWeekFilters, sanitizeWeekFilters, type WeekFilters } from "@/lib/week-filters";
 
 const SELECTED_PREVIEW = 5; // more selections collapse behind "Show all"
-import { availableDevices, methodChoices, useSavedSettings } from "@/lib/basic-settings";
-import { cuisines, recipeCuisine } from "@shared/food-rules";
+import { availableDevices, methodChoices, updateSettings, useSavedSettings } from "@/lib/basic-settings";
+import { DinnerReview } from "@/components/dinner-review";
 import { ActivePreferences } from "@/components/active-preferences";
 import { limitingReasons, matchCounts } from "@/lib/active-preferences";
 import { checkEligibility, fillWeek, personalize, suggestReplacement } from "@/lib/preference-engine";
@@ -45,22 +49,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 type Recipe = PlannerRecipe;
 
-interface Filters {
-  maxMinutes: number | null;
-  dietary: string[];
-  mealType: string[];
-  cookingMethod: string[];
-  source: string[];
-  proteinType: string[];
-  withNotes: boolean;
-  modifiedByMe: boolean;
-  myPicks: boolean;
-  minRating: number | null;
-  servings: string | null;
-  mustInclude: string[];
-  mustExclude: string[];
-  cuisine: string[];
-}
+type Filters = WeekFilters;
 
 interface PlanAssignment {
   recipeId: string;
@@ -73,33 +62,14 @@ interface PlanAssignment {
 interface WeeklyMealsState {
   filters: Filters;
   selectedIds: string[];
-  expandedSections: string[];
-  showMoreFilters: boolean;
   planAssignments: PlanAssignment[];
 }
 
-const defaultFilters: Filters = {
-  maxMinutes: null,
-  dietary: [],
-  mealType: [],
-  cookingMethod: [],
-  source: [],
-  proteinType: [],
-  withNotes: false,
-  modifiedByMe: false,
-  myPicks: false,
-  minRating: null,
-  servings: null,
-  mustInclude: [],
-  mustExclude: [],
-  cuisine: [],
-};
+const defaultFilters: Filters = defaultWeekFilters;
 
 const defaultState: WeeklyMealsState = {
   filters: defaultFilters,
   selectedIds: [],
-  expandedSections: [], // advanced filter groups start collapsed
-  showMoreFilters: false,
   planAssignments: [],
 };
 
@@ -116,13 +86,15 @@ const WEEK_EN = { title: "Plan your week", subtitle: "Pick recipes you'd like to
 
 const MEALS: ("Breakfast" | "Lunch" | "Dinner")[] = ["Breakfast", "Lunch", "Dinner"];
 
+// Kitchen tools on Week → Plan: the devices in Basic Settings, plus No-cook.
+const kitchenTools = (devices: ReturnType<typeof availableDevices>) => methodChoices(devices);
+
 function loadState(): WeeklyMealsState {
   try {
     const saved = localStorage.getItem("weeklyMealsState");
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Merge filters too, so a filter added later (e.g. cuisine) has its default for returning users.
-      return { ...defaultState, ...parsed, filters: { ...defaultFilters, ...parsed.filters } };
+      return { ...defaultState, ...parsed, filters: sanitizeWeekFilters(parsed.filters) };
     }
   } catch (e) {
     console.error("Failed to load state:", e);
@@ -154,12 +126,12 @@ function WeeklyMealsContent() {
   const sText = (key: string, values?: Record<string, string | number>) => settingsText(lang, key, values);
   const [state, setState] = useState<WeeklyMealsState>(() => {
     // Drop a saved cooking-method filter for a device the person no longer has.
-    const saved = loadState(), allowed: readonly string[] = methodChoices(devices);
+    const saved = loadState(), allowed: readonly string[] = kitchenTools(devices);
     return { ...saved, filters: { ...saved.filters, cookingMethod: saved.filters.cookingMethod.filter(m => allowed.includes(m)) } };
   });
   useEffect(() => {
     // Temporary filters stay, except a cooking method for a device the person no longer has.
-    const allowed: readonly string[] = methodChoices(availableDevices(settings));
+    const allowed: readonly string[] = kitchenTools(availableDevices(settings));
     setState(prev => {
       const cookingMethod = prev.filters.cookingMethod.filter(m => allowed.includes(m));
       return cookingMethod.length === prev.filters.cookingMethod.length ? prev : { ...prev, filters: { ...prev.filters, cookingMethod } };
@@ -181,8 +153,6 @@ function WeeklyMealsContent() {
     if (weekLocked && !seen.locked) recordPilotEvent("plan_completed", pilotWeek);
     pilotSeen.current = { ids: state.selectedIds, locked: weekLocked };
   }, [state.selectedIds, weekLocked, pilotWeek]);
-  const [includeInput, setIncludeInput] = useState("");
-  const [excludeInput, setExcludeInput] = useState("");
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
   const [arrangingRecipe, setArrangingRecipe] = useState<string | null>(null);
   // The plan view lives in the URL (/meals?plan), so the Week nav link, Back and reload all land in the right place.
@@ -196,6 +166,8 @@ function WeeklyMealsContent() {
   const [page, setPage] = useState(1);
   const [showAllSelected, setShowAllSelected] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Both disclosures start collapsed on every visit.
+  const c = useWeekFilterCopy();
   const filtersKey = JSON.stringify(state.filters);
   useEffect(() => setPage(1), [query, filtersKey]); // new search or filters → back to page 1
   const planCopy = usePlannerCopy();
@@ -320,27 +292,14 @@ function WeeklyMealsContent() {
     return recipes.filter(r => usedRecipeIds.has(r.id));
   }, [recipes, usedRecipeIds]);
 
+  // Shared with Your household: the same filters, in the same state, on both pages.
+  const setFilters = useCallback((filters: Filters) => setState(prev => ({ ...prev, filters })), []);
+  const filterChips = useWeekFilterChips(state.filters, setFilters);
   const updateFilters = useCallback((updates: Partial<Filters>) => {
     setState(prev => ({ ...prev, filters: { ...prev.filters, ...updates } }));
   }, []);
 
-  const toggleSection = (section: string) => {
-    setState(prev => ({
-      ...prev,
-      expandedSections: prev.expandedSections.includes(section)
-        ? prev.expandedSections.filter(s => s !== section)
-        : [...prev.expandedSections, section],
-    }));
-  };
 
-  const toggleArrayFilter = (key: keyof Filters, value: string) => {
-    const current = state.filters[key] as string[];
-    if (current.includes(value)) {
-      updateFilters({ [key]: current.filter(v => v !== value) });
-    } else {
-      updateFilters({ [key]: [...current, value] });
-    }
-  };
 
   const clearAllFilters = () => {
     updateFilters(defaultFilters);
@@ -372,48 +331,9 @@ function WeeklyMealsContent() {
     }
   };
 
-  const addIncludeIngredient = () => {
-    const trimmed = includeInput.trim().toLowerCase();
-    if (trimmed && !state.filters.mustInclude.includes(trimmed)) {
-      updateFilters({ mustInclude: [...state.filters.mustInclude, trimmed] });
-    }
-    setIncludeInput("");
-  };
 
-  const addExcludeIngredient = () => {
-    const trimmed = excludeInput.trim().toLowerCase();
-    if (trimmed && !state.filters.mustExclude.includes(trimmed)) {
-      updateFilters({ mustExclude: [...state.filters.mustExclude, trimmed] });
-    }
-    setExcludeInput("");
-  };
 
-  const removeIncludeIngredient = (ing: string) => {
-    updateFilters({ mustInclude: state.filters.mustInclude.filter(i => i !== ing) });
-  };
 
-  const removeExcludeIngredient = (ing: string) => {
-    updateFilters({ mustExclude: state.filters.mustExclude.filter(i => i !== ing) });
-  };
-
-  const countActiveFilters = (): number => {
-    let count = 0;
-    if (state.filters.maxMinutes !== null) count++;
-    count += state.filters.dietary.length;
-    count += state.filters.mealType.length;
-    count += state.filters.cookingMethod.length;
-    count += state.filters.source.length;
-    count += state.filters.proteinType.length;
-    if (state.filters.withNotes) count++;
-    if (state.filters.modifiedByMe) count++;
-    if (state.filters.myPicks) count++;
-    if (state.filters.minRating !== null) count++;
-    if (state.filters.servings) count++;
-    count += state.filters.mustInclude.length;
-    count += state.filters.mustExclude.length;
-    count += state.filters.cuisine.length;
-    return count;
-  };
 
   // My Basic Settings always apply: hard restrictions (devices, diets, allergies, hard time limit) hide recipes;
   // soft preferences only change the order (preference-engine.ts). My Recipes is not affected.
@@ -434,7 +354,7 @@ function WeeklyMealsContent() {
     return notes;
   }, [personalized, settings, lang]);
   const matchesPage = (recipe: Recipe, filters = state.filters) => (!query || recipeNameMatches(recipe.title, query)) &&
-    matchesPlannerFilters(recipe, filters, timeMode, getMeta(recipe.id));
+    matchesPlannerFilters(recipe, filters, "total", getMeta(recipe.id)); // Week → Plan filters on total recipe time
   const filterRecipes = (): Recipe[] => eligibleRecipes.filter(recipe => matchesPage(recipe));
   // Per-meal counts: the same rules and filters the list uses when that meal type is the one selected.
   const mealEligible = useMemo(() => personalize(recipes, settings, { meals: mealSlots }).eligible.map(e => e.recipe), [recipes, settings]);
@@ -457,16 +377,12 @@ function WeeklyMealsContent() {
   };
 
   // AI generation from the current filters. Saving uses the normal recipe API; the recipe then joins the selection.
-  const generation = mealsGenerationBody(state.filters, timeMode);
-  const filterLabel: Record<string, string> = {
-    "Vegetarian": t("meals.vegetarian"), "Kid friendly": t("meals.kidFriendly"), "Gluten-free": t("meals.glutenFree"),
-    "Breakfast": t("meals.breakfast"), "Lunch": t("meals.lunch"), "Dinner": t("meals.dinner"), "Lunch box": t("meals.lunchBox"),
-    "Oven": t("meals.oven"), "Air fryer": t("meals.airFryer"), "Stovetop": t("meals.stovetop"), "Microwave": t("meals.microwave"), "No-cook": t("meals.noCook"),
-    "Chicken": t("meals.chicken"), "Beef": t("meals.beef"), "Seafood": t("meals.seafood"), "Plant-based": t("meals.plantBased"),
-  };
+  const generation = mealsGenerationBody(state.filters, "total");
+  const filterLabel = useFilterLabels();
+
   const g = generation.body.filters;
   const generationChips = [
-    ...(g.maxMinutes !== null ? [`${timeCopy(timeMode)} ≤ ${g.maxMinutes} ${timeCopy("minutesShort")}`] : []),
+    ...(g.maxMinutes !== null ? [`${timeCopy("total")} ≤ ${g.maxMinutes} ${timeCopy("minutesShort")}`] : []),
     ...[...g.dietary, ...g.mealType, ...g.cookingMethod, ...g.proteinType].map(value => filterLabel[value] ?? value),
     ...(g.servings ? [g.servings] : []),
     ...g.mustInclude.map(term => `${t("meals.mustInclude")}: ${term}`),
@@ -475,9 +391,11 @@ function WeeklyMealsContent() {
   const notAppliedLabel: Record<string, string> = {
     source: t("meals.source"), withNotes: t("meals.withMyNotes"), modifiedByMe: t("meals.modifiedByMe"),
     myPicks: t("meals.showOnlyMyPicks"), minRating: t("meals.minimumRating"), cuisine: t("meals.cuisine"),
+    dietary: state.filters.dietary.filter(d => !generation.body.filters.dietary.includes(d)).map(d => filterLabel[d] ?? d).join(", "),
+    cookingLevel: c("cookingLevel"), deal: c("foodDeals"),
   };
   const violationLabel = (v: FilterViolation) =>
-    v.filter === "maxMinutes" ? `${timeCopy(timeMode)} ≤ ${v.value} ${timeCopy("minutesShort")}` :
+    v.filter === "maxMinutes" ? `${timeCopy("total")} ≤ ${v.value} ${timeCopy("minutesShort")}` :
     v.filter === "mustInclude" ? `${t("meals.mustInclude")}: ${v.value}` :
     v.filter === "mustExclude" ? `${t("meals.mustExclude")}: ${v.value}` :
     v.value.split(" / ").map(value => filterLabel[value] ?? value).join(" / ");
@@ -492,15 +410,11 @@ function WeeklyMealsContent() {
   };
   // Search with no result: same name but other filters (explained to the customer), and the AI request for that name.
   const nameOnly = query ? eligibleRecipes.filter(r => recipeNameMatches(r.title, query) && !filteredRecipes.includes(r)) : [];
-  const searchRequest = searchGenerationRequest(query, state.filters, timeMode);
-  const searchChips = [
-    ...(g.maxMinutes !== null ? [{ label: generationChips[0], remove: () => updateFilters({ maxMinutes: null }) }] : []),
-    ...(["dietary", "mealType", "cookingMethod", "proteinType"] as const).flatMap(key =>
-      state.filters[key].map(value => ({ label: filterLabel[value] ?? value, remove: () => toggleArrayFilter(key, value) }))),
-    ...(g.servings ? [{ label: `${t("meals.servingsFilter")}: ${g.servings}`, remove: () => updateFilters({ servings: null }) }] : []),
-    ...g.mustInclude.map(term => ({ label: `${t("meals.mustInclude")}: ${term}`, remove: () => removeIncludeIngredient(term) })),
-    ...g.mustExclude.map(term => ({ label: `${t("meals.mustExclude")}: ${term}`, remove: () => removeExcludeIngredient(term) })),
-  ];
+  const searchRequest = searchGenerationRequest(query, state.filters, "total");
+  const dealName = state.filters.deal ? c(`deal_${state.filters.deal}`) : "";
+  const removeDeal = () => updateFilters({ deal: null });
+  const searchChips = filterChips.search;
+
   const reloadRecipes = () => { fetchRecipes().then(data => setRecipes(toPlannerRecipes(data))).catch(() => undefined); };
   const publishedFromSearch = (saved: StoredRecipe) => {
     setRecipes(prev => [...prev.filter(r => r.id !== saved.id), toPlannerRecipe(saved)]);
@@ -508,20 +422,12 @@ function WeeklyMealsContent() {
     else setMaxSelectionsHit(true);
     toast({ title: generateCopy(lang, "published"), description: saved.title });
   };
-  const activeFilterCount = countActiveFilters();
-  // Cuisines present in the recipes you can cook (plus any already chosen, so it can be removed).
-  const cuisineOptions = cuisines.filter(c => state.filters.cuisine.includes(c) || eligibleRecipes.some(r => recipeCuisine(r.tags) === c));
-  // Every temporary filter as a removable chip. My Basic Settings are not here: they are always applied.
-  const sourceLabel: Record<string, string> = { "My recipes": t("meals.myRecipes"), "Imported": t("meals.imported"), "Trusted authors": t("meals.trustedAuthors"), "Personal": t("meals.personal") };
-  const activeFilterChips = [
-    ...searchChips,
-    ...state.filters.cuisine.map(c => ({ label: `${t("meals.cuisine")}: ${sText(`cuisine_${c}`)}`, remove: () => toggleArrayFilter("cuisine", c) })),
-    ...state.filters.source.map(src => ({ label: sourceLabel[src] ?? src, remove: () => toggleArrayFilter("source", src) })),
-    ...(state.filters.myPicks ? [{ label: t("meals.showOnlyMyPicks"), remove: () => updateFilters({ myPicks: false, minRating: null }) }] : []),
-    ...(state.filters.myPicks && state.filters.minRating !== null ? [{ label: `${t("meals.minimumRating")}: ${state.filters.minRating}*+`, remove: () => updateFilters({ minRating: null }) }] : []),
-    ...(state.filters.withNotes ? [{ label: t("meals.withMyNotes"), remove: () => updateFilters({ withNotes: false }) }] : []),
-    ...(state.filters.modifiedByMe ? [{ label: t("meals.modifiedByMe"), remove: () => updateFilters({ modifiedByMe: false }) }] : []),
-  ];
+  const activeFilterCount = countWeekFilters(state.filters);
+
+  const showDealRecipes = (dealId: string) => {
+    updateFilters({ deal: dealId }); // replaces any earlier deal; every other filter stays
+    document.getElementById("meal-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const canGenerate = state.selectedIds.length >= 1;
 
   const generatePlan = () => {
@@ -613,6 +519,11 @@ function WeeklyMealsContent() {
       if (result.added && commit(() => result.plan)) notify(sText("filled", { count: result.added }));
       else if (!result.added) notify(sText("fillNothing"));
     };
+    // Approving a suggested week is the same lock as "Finalize week"; the draft bookkeeping is cleared.
+    const approveWeek = () => {
+      setWeekLocked(true);
+      try { updateSettings(s => ({ ...s, setup: { ...s.setup, suggested: [], declined: [] } })); } catch { /* the lock is what matters */ }
+    };
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
@@ -626,6 +537,10 @@ function WeeklyMealsContent() {
             {planCopy("summary", { recipes: recipeCount, planned, total: totalSlots })}
           </p>
 
+          {settings.setup.status === "done" && (
+            <DinnerReview plan={plan} recipes={recipes} settings={settings} locked={weekLocked} commit={commit} notify={notify}
+              onApprove={approveWeek} onEdit={() => setWeekLocked(false)} fits={r => matchesPlannerFilters(r, state.filters, "total", getMeta(r.id))} />
+          )}
           {shortlist.length === 0 ? (
             <div className="rounded-lg border hairline bg-white p-6 text-center" data-testid="planner-empty">
               <h2 className="text-base font-medium">{planCopy("emptyTitle")}</h2>
@@ -674,398 +589,9 @@ function WeeklyMealsContent() {
     );
   }
 
-  // One filter panel: the desktop sidebar and the mobile sheet render the same controls.
-  const filterPanel = (
-            <>
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-base font-medium text-foreground" data-testid="additional-filters-count">{t("filters.open", { count: activeFilterCount })}</h2>
-                {activeFilterCount > 0 && (
-                  <button type="button" onClick={clearAllFilters} className="btn btn-text" data-testid="button-clear-filters">
-                    {t("filters.clearAll")}
-                  </button>
-                )}
-              </div>
-              <p className="mb-3 text-sm text-muted-foreground" aria-live="polite" data-testid="sidebar-matching" data-count={filteredRecipes.length}>
-                {filteredRecipes.length === 1 ? t("meals.matchingCountOne") : t("meals.matchingCount", { count: filteredRecipes.length })}
-              </p>
-              {activeFilterChips.length > 0 && (
-                <ul aria-label={t("filters.applied")} className="mb-4 flex flex-wrap gap-1.5" data-testid="active-filter-chips">
-                  {activeFilterChips.map(chip => (
-                    <li key={chip.label}>
-                      <button type="button" onClick={chip.remove} aria-label={t("meals.removeFilter", { label: chip.label })} data-testid="active-filter-chip"
-                        className="chip">
-                        {chip.label}<X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="mealType">
-                <button 
-                  onClick={() => toggleSection("mealType")} aria-expanded={state.expandedSections.includes("mealType")}
-                  className="flex items-center justify-between w-full text-left min-h-11"
-                  data-testid="button-toggle-mealtype"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.mealType")}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("mealType") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("mealType") && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {["Breakfast", "Lunch", "Dinner", "Lunch box"].map(type => {
-                      const mealTypeTranslations: Record<string, string> = {
-                        "Breakfast": t("meals.breakfast"),
-                        "Lunch": t("meals.lunch"),
-                        "Dinner": t("meals.dinner"),
-                        "Lunch box": t("meals.lunchBox"),
-                      };
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => toggleArrayFilter("mealType", type)}
-                          className="chip" aria-pressed={state.filters.mealType.includes(type)}
-                          data-testid={`filter-meal-${type.toLowerCase().replace(" ", "-")}`}
-                        >
-                          {mealTypeTranslations[type] || type}
-                          {(mealSlots as readonly string[]).includes(type) && recipes.length > 0 && (
-                            <span className="ms-1 text-muted-foreground" data-testid={`meal-count-${type.toLowerCase()}`}>· {sText("mealCount", { count: mealCount(type as MealSlot) })}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="time">
-                <button 
-                  onClick={() => toggleSection("time")} aria-expanded={state.expandedSections.includes("time")}
-                  className="flex items-center justify-between w-full text-left min-h-11"
-                  data-testid="button-toggle-time"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.maxMinutes")} · {timeCopy(timeMode)}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("time") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("time") && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {[null, 20, 30, 40, 60].map(mins => (
-                      <button
-                        key={mins ?? "any"}
-                        onClick={() => updateFilters({ maxMinutes: mins })}
-                        className="chip" aria-pressed={state.filters.maxMinutes === mins}
-                        data-testid={`filter-time-${mins ?? "any"}`}
-                      >
-                        {mins ?? t("meals.any")}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="protein">
-                <button
-                  onClick={() => toggleSection("protein")} aria-expanded={state.expandedSections.includes("protein")}
-                  className="flex items-center justify-between w-full text-start min-h-11"
-                  data-testid="button-toggle-protein"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.proteinType")}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("protein") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("protein") && (
-                  <div className="mt-3">
-                    <div className="flex flex-wrap gap-2">
-                      {["Chicken", "Beef", "Seafood", "Plant-based"].map(protein => {
-                        const proteinTranslations: Record<string, string> = {
-                          "Chicken": t("meals.chicken"),
-                          "Beef": t("meals.beef"),
-                          "Seafood": t("meals.seafood"),
-                          "Plant-based": t("meals.plantBased"),
-                        };
-                        return (
-                          <button
-                            key={protein}
-                            onClick={() => toggleArrayFilter("proteinType", protein)}
-                            className="chip" aria-pressed={state.filters.proteinType.includes(protein)}
-                            data-testid={`filter-protein-${protein.toLowerCase().replace("-", "")}`}
-                          >
-                            {proteinTranslations[protein] || protein}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="ingredients">
-                <button
-                  onClick={() => toggleSection("ingredients")} aria-expanded={state.expandedSections.includes("ingredients")}
-                  className="flex items-center justify-between w-full text-start min-h-11"
-                  data-testid="button-toggle-ingredients"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.ingredients")}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("ingredients") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("ingredients") && (
-                  <div className="mt-3">
-                  <div className="pb-3">
-                    <span className="text-sm text-muted-foreground block mb-2">{t("meals.mustInclude")}</span>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {state.filters.mustInclude.map(ing => (
-                        <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
-                          {ing}
-                          <button
-                            onClick={() => removeIncludeIngredient(ing)}
-                            aria-label={`Remove ${ing} from must include`}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      value={includeInput}
-                      onChange={(e) => setIncludeInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addIncludeIngredient()}
-                      placeholder={t("meals.typeEnter")}
-                      className="w-full px-3 min-h-11 text-base border hairline rounded-lg bg-card focus-ring-quiet"
-                      data-testid="input-must-include"
-                    />
-                  </div>
-
-                  <div className="pb-3 mb-3">
-                    <span className="text-sm text-muted-foreground block mb-2">{t("meals.mustExclude")}</span>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {state.filters.mustExclude.map(ing => (
-                        <span key={ing} className="px-2 py-0.5 text-xs bg-foreground/10 rounded-full flex items-center gap-1">
-                          {ing}
-                          <button
-                            onClick={() => removeExcludeIngredient(ing)}
-                            aria-label={`Remove ${ing} from must exclude`}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      value={excludeInput}
-                      onChange={(e) => setExcludeInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addExcludeIngredient()}
-                      placeholder={t("meals.typeEnter")}
-                      className="w-full px-3 min-h-11 text-base border hairline rounded-lg bg-card focus-ring-quiet"
-                      data-testid="input-must-exclude"
-                    />
-                  </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="dietary">
-                <button 
-                  onClick={() => toggleSection("dietary")} aria-expanded={state.expandedSections.includes("dietary")}
-                  className="flex items-center justify-between w-full text-left min-h-11"
-                  data-testid="button-toggle-dietary"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.dietary")}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("dietary") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("dietary") && (
-                  <div className="mt-3 space-y-2">
-                    {["Vegetarian", "Kid friendly", "Gluten-free"].map(diet => {
-                      const dietTranslations: Record<string, string> = {
-                        "Vegetarian": t("meals.vegetarian"),
-                        "Kid friendly": t("meals.kidFriendly"),
-                        "Gluten-free": t("meals.glutenFree"),
-                      };
-                      return (
-                        <label key={diet} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={state.filters.dietary.includes(diet)}
-                            onChange={() => toggleArrayFilter("dietary", diet)}
-                            className="h-5 w-5 shrink-0 accent-primary"
-                            data-testid={`filter-dietary-${diet.toLowerCase().replace(" ", "-")}`}
-                          />
-                          <span className="text-sm text-foreground">{dietTranslations[diet] || diet}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="method">
-                <button 
-                  onClick={() => toggleSection("method")} aria-expanded={state.expandedSections.includes("method")}
-                  className="flex items-center justify-between w-full text-left min-h-11"
-                  data-testid="button-toggle-method"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.cookingMethod")}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("method") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("method") && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {methodChoices(devices).map(method => {
-                      const methodTranslations: Record<string, string> = {
-                        "Oven": t("meals.oven"),
-                        "Air fryer": t("meals.airFryer"),
-                        "Stovetop": t("meals.stovetop"),
-                        "Microwave": t("meals.microwave"),
-                        "No-cook": t("meals.noCook"),
-                      };
-                      return (
-                        <button
-                          key={method}
-                          onClick={() => toggleArrayFilter("cookingMethod", method)}
-                          className="chip" aria-pressed={state.filters.cookingMethod.includes(method)}
-                          data-testid={`filter-method-${method.toLowerCase().replace(" ", "-")}`}
-                        >
-                          {methodTranslations[method] || method}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="source">
-                <button 
-                  onClick={() => toggleSection("source")} aria-expanded={state.expandedSections.includes("source")}
-                  className="flex items-center justify-between w-full text-left min-h-11"
-                  data-testid="button-toggle-source"
-                >
-                  <span className="text-sm font-medium text-foreground">{t("meals.source")}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("source") ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {state.expandedSections.includes("source") && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {["My recipes", "Imported", "Trusted authors", "Personal"].map(src => {
-                      const sourceTranslations: Record<string, string> = {
-                        "My recipes": t("meals.myRecipes"),
-                        "Imported": t("meals.imported"),
-                        "Trusted authors": t("meals.trustedAuthors"),
-                        "Personal": t("meals.personal"),
-                      };
-                      return (
-                        <button
-                          key={src}
-                          onClick={() => toggleArrayFilter("source", src)}
-                          className="chip" aria-pressed={state.filters.source.includes(src)}
-                          data-testid={`filter-source-${src.toLowerCase().replace(" ", "-")}`}
-                        >
-                          {sourceTranslations[src] || src}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <button 
-                onClick={() => setState(prev => ({ ...prev, showMoreFilters: !prev.showMoreFilters }))}
-                className="btn btn-text mb-3"
-                data-testid="button-more-filters" aria-expanded={state.showMoreFilters}
-              >
-                {state.showMoreFilters ? t("meals.lessFilters") : t("meals.moreFilters")}
-              </button>
-
-              {state.showMoreFilters && (
-                <>
-                  <div className="border-b hairline pb-3 mb-3" data-filter-section="cuisine">
-                    <span className="text-sm text-muted-foreground block mb-2">{t("meals.cuisine")}</span>
-                    <div className="flex flex-wrap gap-2">
-                      {cuisineOptions.map(cuisine => (
-                        <button
-                          key={cuisine}
-                          onClick={() => toggleArrayFilter("cuisine", cuisine)}
-                          className="chip" aria-pressed={state.filters.cuisine.includes(cuisine)}
-                          data-testid={`filter-cuisine-${cuisine.toLowerCase().replace(/\s+/g, "-")}`}
-                        >
-                          {sText(`cuisine_${cuisine}`)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="border-b hairline pb-3 mb-3">
-                    <button 
-                      onClick={() => toggleSection("myPicks")} aria-expanded={state.expandedSections.includes("myPicks")}
-                      className="flex items-center justify-between w-full text-left min-h-11"
-                      data-testid="button-toggle-mypicks-section"
-                    >
-                      <span className="text-sm font-medium text-foreground">{t("meals.myPicksFilter")}</span>
-                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${state.expandedSections.includes("myPicks") ? "rotate-180" : ""}`} aria-hidden="true" />
-                    </button>
-                    {state.expandedSections.includes("myPicks") && (
-                      <div className="mt-3 space-y-3">
-                        <label className="flex min-h-11 items-center gap-3 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            checked={state.filters.myPicks}
-                            onChange={() => updateFilters({ myPicks: !state.filters.myPicks })}
-                            className="h-5 w-5 shrink-0 accent-primary"
-                            data-testid="checkbox-filter-mypicks"
-                          />
-                          <span className="text-sm text-foreground">{t("meals.showOnlyMyPicks")}</span>
-                        </label>
-                        
-                        {state.filters.myPicks && (
-                          <div className="pl-5 space-y-2">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">{t("meals.minimumRating")}</span>
-                            <div className="flex flex-wrap gap-1">
-                              {[null, 4, 3, 2].map(rating => (
-                                <button
-                                  key={String(rating)}
-                                  onClick={() => updateFilters({ minRating: rating })}
-                                  className={`px-3 py-2 min-h-11 text-[10px] rounded border hairline transition-colors ${
-                                    state.filters.minRating === rating 
-                                      ? "bg-foreground text-background border-foreground" 
-                                      : "text-muted-foreground hover:text-foreground border-muted-foreground/30"
-                                  }`}
-                                  data-testid={`button-filter-rating-${rating || "any"}`}
-                                >
-                                  {rating ? `${rating}*+` : t("meals.any")}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border-b hairline pb-3 mb-3 space-y-2">
-                    <label className="flex min-h-11 items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={state.filters.withNotes}
-                        onChange={() => updateFilters({ withNotes: !state.filters.withNotes })}
-                        className="h-5 w-5 shrink-0 accent-primary"
-                        data-testid="filter-with-notes"
-                      />
-                      <span className="text-sm text-foreground">{t("meals.withMyNotes")}</span>
-                    </label>
-                    <label className="flex min-h-11 items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={state.filters.modifiedByMe}
-                        onChange={() => updateFilters({ modifiedByMe: !state.filters.modifiedByMe })}
-                        className="h-5 w-5 shrink-0 accent-primary"
-                        data-testid="filter-modified"
-                      />
-                      <span className="text-sm text-foreground">{t("meals.modifiedByMe")}</span>
-                    </label>
-                  </div>
-
-                </>
-              )}
-            </>
-  );
+  // One filter panel (components/week-filter-panel.tsx): the desktop sidebar, the phone sheet and Your household.
+  const filterPanel = <WeekFilterPanel filters={state.filters} onChange={setFilters} devices={devices} eligible={eligibleRecipes}
+    matchingCount={filteredRecipes.length} mealCount={recipes.length > 0 ? mealCount : undefined} />;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -1204,6 +730,7 @@ function WeeklyMealsContent() {
               </div>
             )}
 
+            <FoodDeals activeDeal={state.filters.deal} onShowRecipes={showDealRecipes} />
             {!query && visibleFilteredRecipes.length > 0 && <div className="mb-3 flex justify-end"><GenerateRecipe request={generationRequest} variant="button" onAccept={acceptGenerated} /></div>}
             {results.total > 0 && (
               <h2 className="mb-2 text-sm text-muted-foreground" aria-live="polite" data-testid="results-range" data-total={results.total}>
@@ -1230,12 +757,10 @@ function WeeklyMealsContent() {
                   onEditFilters={() => window.matchMedia("(min-width: 1024px)").matches ? document.getElementById("meal-filters")?.scrollIntoView({ block: "start" }) : setFiltersOpen(true)} />
               ) : query && visibleFilteredRecipes.length === 0 ? null : visibleFilteredRecipes.length === 0 ? (
                 <>
-                  {activeFilterCount > 0 && (
-                    <div className="card mb-3 flex flex-wrap items-center justify-between gap-3 p-4" role="status" data-testid="filters-empty">
-                      <p className="text-base text-foreground">{t("meals.noRecipesMatch")}</p>
-                      <button type="button" onClick={clearAllFilters} className="btn btn-secondary" data-testid="button-reset-filters-empty">{t("filters.clearFilters")}</button>
-                    </div>
-                  )}
+                  <div className="card mb-3 flex flex-wrap items-center justify-between gap-3 p-4" role="status" data-testid="filters-empty">
+                    <p className="text-base text-foreground">{c("noRecipesMatch")}</p>
+                    {state.filters.deal && <button type="button" onClick={removeDeal} className="btn btn-secondary" data-testid="button-remove-deal">{c("removeDeal")}</button>}
+                  </div>
                   <GenerateRecipe request={generationRequest} variant="empty" onAccept={acceptGenerated} />
                 </>
               ) : (

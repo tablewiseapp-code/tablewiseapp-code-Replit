@@ -28,8 +28,8 @@ import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cook
 import { databaseGroceryItemPhotoStore, type GroceryItemPhotoStore } from "./grocery-item-photos/store";
 import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
 import { databaseHomeTaskStore, type HomeTaskStore } from "./home-tasks";
-import { homeTaskInput, weekPlanInput } from "./request-schemas";
-import { databaseWeekPlanStore, type WeekPlanStore } from "./week-plans";
+import { homeTaskInput, householdSettingsInput, weekPlanInput } from "./request-schemas";
+import { databaseWeekPlanStore, databaseHouseholdSettingsStore, type HouseholdSettingsStore, type WeekPlanStore } from "./week-plans";
 import { databaseRecipeMarkStore, type RecipeMarkStore } from "./recipe-marks";
 import { databaseAccountStore, installAccounts, type AccountStore } from "./accounts";
 import { shareToken, sharedListCreate, sharedListPatch, sharedItemCreate, sharedItemPatch, groceryNoteInput } from "./request-schemas";
@@ -59,6 +59,7 @@ export type RouteDependencies = {
   groceryItemPhotos?: GroceryItemPhotoStore;
   homeTasks?: HomeTaskStore;
   weekPlans?: WeekPlanStore;
+  householdSettings?: HouseholdSettingsStore;
   recipeMarks?: RecipeMarkStore;
   accounts?: AccountStore;
   grocery?: GroceryStore;
@@ -766,6 +767,20 @@ Rules:
     const owner = security.owner(req, res, true)!;
     try { await weekPlans.save(owner, input.data); res.status(204).end(); }
     catch { cookingFailed(res, "week_plan_save"); }
+  });
+  // My Basic Settings and Your household. Private to the owner; null until the first save.
+  const householdSettings = dependencies.householdSettings ?? databaseHouseholdSettingsStore();
+  app.get("/api/household-settings", async (req, res) => {
+    const owner = security.owner(req, res, false);
+    try { res.json(owner ? await householdSettings.get(owner) : null); }
+    catch { cookingFailed(res, "household_settings_get"); }
+  });
+  app.put("/api/household-settings", async (req, res) => {
+    const input = householdSettingsInput.safeParse(req.body);
+    if (!input.success) return res.status(400).json({ error: "Invalid settings." });
+    const owner = security.owner(req, res, true)!;
+    try { await householdSettings.save(owner, input.data); res.status(204).end(); }
+    catch { cookingFailed(res, "household_settings_save"); }
   });
   app.get("/api/cooking-sessions", async (req, res) => {
     const recipe = recipeId.safeParse(req.query.recipeId);

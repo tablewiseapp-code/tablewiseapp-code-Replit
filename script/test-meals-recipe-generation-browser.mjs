@@ -33,7 +33,7 @@ try {
   const generateBodies = [], saves = [], events = [], saved = [];
   let generateReplies = [];
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
-  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" }); // skip the first-visit sign-in screen
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
   const fulfill = (requestId, status, body) => call("Fetch.fulfillRequest", {
     requestId, responseCode: status, responseHeaders: [{ name: "Content-Type", value: "application/json" }],
     body: Buffer.from(body === undefined ? "" : JSON.stringify(body)).toString("base64"),
