@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useCanGenerate } from "@/hooks/use-can-generate";
 import { useLocation } from "wouter";
 import { Heart, Sparkles } from "lucide-react";
+import { RecipeViewRows } from "@/components/recipe-summary";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { PageContainer } from "@/components/layout/page-container";
 import { GeneratedRecipeBody } from "@/components/generate-recipe";
@@ -203,6 +204,7 @@ export default function MyIdeas() {
                           {[recipe.prepTime != null && `${t("prep")} ${recipe.prepTime} ${t("min")}`, total != null && `${t("total")} ${total} ${t("min")}`,
                             cookingMethods(idea).map(m => filterLabelKey[m] ? tr(filterLabelKey[m]) : m).join(", ")].filter(Boolean).join(" · ")}
                         </p>
+                        <RecipeViewRows recipe={{ ...recipe, id: idea.id }} testId={`idea-view-${idea.id}`} className="mt-1" />
                         <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                           <span className="inline-flex items-center gap-1" data-testid="badge-idea-ai"><Sparkles className="h-3 w-3" aria-hidden="true" />{t("ai")}</span>
                           {planned && <span className="tag" data-testid="badge-idea-planned">{t("planned")}</span>}

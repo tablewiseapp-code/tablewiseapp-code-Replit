@@ -9,6 +9,9 @@ import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
+import { RecipeViewRows, useServingsText } from "@/components/recipe-summary";
+import { recipeStageMinutes } from "@/lib/recipe-time";
+import type { Recipe } from "@/lib/storage";
 
 const mealKey = { Breakfast: "meals.breakfast", Lunch: "meals.lunch", Dinner: "meals.dinner" } as const;
 const addKey = { Breakfast: "addBreakfast", Lunch: "addLunch", Dinner: "addDinner" } as const;
@@ -31,6 +34,12 @@ export default function Home() {
   const catalog = useRecipeCatalog();
 
   const today = mealsOnDay(plan, now.getDay());
+  const servingsText = useServingsText();
+  /** "35 min total · 4 servings": the Week's servings for this meal, else the recipe's; unknown values are left out. */
+  const meta = (recipe: Recipe, servings?: number | null) => {
+    const minutes = recipeStageMinutes(recipe, "total");
+    return [minutes !== null ? t("card.totalMinutes", { count: minutes }) : null, servingsText(servings ? String(servings) : recipe.servings)].filter(Boolean).join(" · ");
+  };
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
 
   const tx = useHomeTaskText();
@@ -76,7 +85,11 @@ export default function Home() {
                             <Link href={`/recipe/${encodeURIComponent(recipe.id)}`} data-testid={`home-meal-${recipe.id}`}
                               className="flex min-h-11 items-center gap-3 rounded-md py-1 hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                               {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />}
-                              <span className="text-sm font-medium">{recipe.title}</span>
+                              <span className="min-w-0">
+                                <span className="block text-sm font-medium">{recipe.title}</span>
+                                {meta(recipe, a.servings) && <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, a.servings)}</span>}
+                                <RecipeViewRows recipe={recipe} testId={`home-meal-view-${recipe.id}`} />
+                              </span>
                             </Link>
                           </li>
                         );

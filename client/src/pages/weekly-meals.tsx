@@ -36,7 +36,7 @@ import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type Fil
 import { RecipeIngredients } from "@/components/recipe-ingredients";
 import { NutritionDetailsToggle, useRecipeDisplay } from "@/components/recipe-display";
 import { usableNutrition } from "@shared/recipe-nutrition";
-import { DietaryTags, NutritionRow, RecipeMeta } from "@/components/recipe-summary";
+import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
 import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTime } from "@/components/recipe-time-display";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
@@ -119,7 +119,6 @@ function WeeklyMealsContent() {
   const { t, lang } = useI18n();
   const { t: timeCopy } = useMvpCopy();
   const { mode: timeMode } = useRecipeTime();
-  const { showNutrition } = useRecipeDisplay();
   // My Basic Settings are the baseline: loaded on open, refreshed when they change in another tab or on return.
   const settings = useSavedSettings();
   const devices = availableDevices(settings);
@@ -783,8 +782,7 @@ function WeeklyMealsContent() {
                               {likedNote.has(recipe.id) && <span className="text-primary" data-testid={`recipe-liked-${recipe.id}`}>{likedNote.get(recipe.id)}</span>}
                             </div>
                           )}
-                          <DietaryTags tags={recipe.tags} testId={`meals-catalog-diet-${recipe.id}`} />
-                          {showNutrition && <NutritionRow recipe={recipe} testId={`meals-catalog-nutrition-${recipe.id}`} />}
+                          <RecipeViewRows recipe={recipe} testId={`meals-catalog-view-${recipe.id}`} />
                         </div>
                         <button type="button" onClick={() => toggleSelection(recipe.id)} aria-pressed={isSelected}
                           aria-label={`${isSelected ? t("meals.added") : t("meals.add")}: ${recipe.title}`}

@@ -61,3 +61,30 @@ export function nutritionBasis(servings?: string | null) {
 export const isMockNutrition = (nutrition?: RecipeNutrition | null) =>
   Boolean(nutrition && (/mock/i.test(nutrition.model) || nutrition.assumptions.some(item => /\bmock\b|placeholder/i.test(item))));
 export const usableNutrition = (nutrition?: RecipeNutrition | null) => nutrition && !isMockNutrition(nutrition) ? nutrition : null;
+
+// ---- Settings → Recipe View: the per-serving values a recipe card shows. ----
+export const recipeNutrients = ["calories", "protein", "carbs", "fat", "sugars", "fiber", "sodium"] as const;
+export type RecipeNutrient = typeof recipeNutrients[number];
+export type ServingNutrition = { values: Partial<Record<RecipeNutrient, number>>; estimated: boolean };
+// Sodium is not analysed yet, so it has no stored total and is always omitted for catalog recipes.
+const totalKey: Partial<Record<RecipeNutrient, NutrientKey>> = {
+  calories: "caloriesKcal", protein: "proteinG", carbs: "carbsG", fat: "fatG", sugars: "sugarG", fiber: "fiberG",
+};
+export const nutrientUnit = (nutrient: RecipeNutrient) => nutrient === "calories" ? "kcal" : nutrient === "sodium" ? "mg" : "g";
+
+/** Stored per-serving values win. Whole-recipe totals are divided only by one known serving count above zero
+ * (a range such as "4–6" or a yield such as "12 muffins" is not one). Unknown values are left out, a recorded 0 stays. */
+export function servingNutrition(recipe: NutritionFields & { servings?: string | null; perServing?: Partial<Record<RecipeNutrient, number>> | null }): ServingNutrition | null {
+  const known = (values: Partial<Record<RecipeNutrient, number>>) =>
+    Object.fromEntries(Object.entries(values).filter(([, v]) => typeof v === "number" && Number.isFinite(v) && v >= 0)) as ServingNutrition["values"];
+  if (recipe.perServing) return { values: known(recipe.perServing), estimated: false };
+  const nutrition = usableNutrition(recipe.nutrition);
+  const portions = servingRange(recipe.servings);
+  if (!nutrition || !portions || portions.min !== portions.max) return null;
+  const values: ServingNutrition["values"] = {};
+  for (const nutrient of recipeNutrients) {
+    const key = totalKey[nutrient];
+    if (key) values[nutrient] = nutrition.totals[key] / portions.min;
+  }
+  return { values: known(values), estimated: nutrition.source === "ai-estimate" };
+}

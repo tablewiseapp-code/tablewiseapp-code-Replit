@@ -1,9 +1,11 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useI18n } from "@/lib/i18n";
 import { normalizeFactOrder, readFactOrder, recipeFactOrderKey, type RecipeFactId } from "@/lib/recipe-fact-layout";
+import { loadSettings, settingsChangedEvent, settingsKey, updateSettings, type RecipeView } from "@/lib/basic-settings";
 
-export const nutritionDisplayKey = "tablewise:nutrition-details:v1";
 const DisplayContext = createContext<{
+  /** Settings → Recipe View, the one preference every recipe surface reads. Stored in Basic Settings. */
+  recipeView: RecipeView; setRecipeView: (value: RecipeView) => void;
   showNutrition: boolean; setShowNutrition: (value: boolean) => void;
   factOrder: RecipeFactId[]; setFactOrder: (value: readonly RecipeFactId[]) => void;
 } | null>(null);
@@ -16,16 +18,25 @@ export function RecipeDisplayProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(recipeFactOrderKey, JSON.stringify(normalized)); }
     catch { /* Browser-only layout preference. */ }
   };
-  const [showNutrition, update] = useState(() => {
-    try { return localStorage.getItem(nutritionDisplayKey) === "true"; }
-    catch { return false; }
-  });
-  const setShowNutrition = (value: boolean) => {
+  const [recipeView, update] = useState(() => loadSettings().recipeView);
+  useEffect(() => {
+    // Settings page saves, the server copy arriving, and other tabs all land here.
+    const refresh = () => update(previous => {
+      const next = loadSettings().recipeView;
+      return JSON.stringify(next) === JSON.stringify(previous) ? previous : next;
+    });
+    const onStorage = (e: StorageEvent) => { if (e.key === settingsKey) refresh(); };
+    window.addEventListener(settingsChangedEvent, refresh);
+    window.addEventListener("storage", onStorage);
+    return () => { window.removeEventListener(settingsChangedEvent, refresh); window.removeEventListener("storage", onStorage); };
+  }, []);
+  const setRecipeView = (value: RecipeView) => {
     update(value);
-    try { localStorage.setItem(nutritionDisplayKey, String(value)); }
-    catch { /* Display preference only; never modify recipe/planner data. */ }
+    try { updateSettings(s => ({ ...s, recipeView: value })); }
+    catch { /* Browser storage refused: the choice lasts for this visit. */ }
   };
-  return <DisplayContext.Provider value={{ showNutrition, setShowNutrition, factOrder, setFactOrder }}>{children}</DisplayContext.Provider>;
+  const setShowNutrition = (value: boolean) => setRecipeView({ ...recipeView, showNutrition: value });
+  return <DisplayContext.Provider value={{ recipeView, setRecipeView, showNutrition: recipeView.showNutrition, setShowNutrition, factOrder, setFactOrder }}>{children}</DisplayContext.Provider>;
 }
 
 export function useRecipeDisplay() {

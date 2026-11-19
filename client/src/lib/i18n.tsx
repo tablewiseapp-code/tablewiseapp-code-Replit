@@ -412,6 +412,15 @@ const translations: Record<Language, Record<string, string>> = {
   },
 
   ru: {
+    "card.vegan": "Веганское",
+    "card.dairyFree": "Без молочных продуктов",
+    "card.servings": "{count} порц.",
+    "card.totalMinutes": "Всего {count} мин",
+    "card.prepMinutes": "Подготовка {count} мин",
+    "settings.selectedCount": "выбрано: {count}",
+    "display.showNutrition": "Показывать пищевую ценность",
+    "display.on": "Вкл.",
+    "display.off": "Выкл.",
     "timing.seconds": "сек", "timing.minutes": "мин", "timing.hours": "ч",
     "timing.source": "Указано в рецепте", "timing.estimate": "Оценка ИИ", "timing.unknown": "Время не указано",
     "timing.review": "Проверка времени шагов", "timing.analyzing": "Анализ всего рецепта…",
@@ -776,6 +785,15 @@ const translations: Record<Language, Record<string, string>> = {
   },
 
   he: {
+    "card.vegan": "טבעוני",
+    "card.dairyFree": "ללא מוצרי חלב",
+    "card.servings": "{count} מנות",
+    "card.totalMinutes": "סה״כ {count} דק׳",
+    "card.prepMinutes": "הכנה {count} דק׳",
+    "settings.selectedCount": "{count} נבחרו",
+    "display.showNutrition": "הצגת ערכים תזונתיים",
+    "display.on": "מופעל",
+    "display.off": "כבוי",
     "timing.seconds": "שנ׳", "timing.minutes": "דק׳", "timing.hours": "שע׳",
     "timing.source": "מצוין במתכון", "timing.estimate": "הערכת AI", "timing.unknown": "הזמן לא צוין",
     "timing.review": "סקירת זמני השלבים", "timing.analyzing": "המתכון המלא בניתוח…",
