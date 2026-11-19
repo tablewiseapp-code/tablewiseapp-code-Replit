@@ -38,13 +38,18 @@ assert.equal(cookingEvenings(settingsWith(s => { s.setup.evenings = null; s.setu
 assert.deepEqual(cookingEvenings(settingsWith(s => { s.setup.evenings = 2; s.setup.fixedDays = [1, 3, 5]; })), [1, 3, 5], "fixed days are kept when they exceed the count");
 
 // 2. Chef challenge on Friday with a 30-minute weeknight limit: weekdays respect it, Friday is the most involved.
-const chef = settingsWith(s => { s.setup.style = "chef"; s.setup.evenings = 4; s.setup.challenge = { when: "day", day: 5 }; s.setup.weeknightMax = 30; });
+const chef = settingsWith(s => { s.setup.style = "chef"; s.setup.evenings = 4; s.setup.challenge = { when: "day", day: 5 }; s.setup.weeknightMax = { Breakfast: 10, Lunch: null, Dinner: 30 }; });
 const c = suggestWeek(empty(), catalog, chef, "2026-11-16");
 for (const a of c.plan.planAssignments) {
   if (a.startDay >= 1 && a.startDay <= 4) assert.ok(total(byId.get(a.recipeId)!)! <= 30, `weekday ${a.startDay} within 30 min`);
 }
 const friday = byId.get(occupant(c.plan, "Dinner", 5)!.recipeId)!;
 assert.ok(["Slow braise", "Elaborate risotto", "Pasta bake"].includes(friday.title), `ambitious Friday, got ${friday.title}`);
+// Per meal: the breakfast limit (10) applies to breakfasts on weekdays, not to dinners and not at the weekend.
+const breakfast = toPlannerRecipes([{ ...recipe("Pancakes", 20, 3, ["Breakfast"]), tags: ["Breakfast"] }] as never)[0];
+assert.equal(checkEligibility(breakfast, chef, undefined, "Breakfast", 2).eligible, false, "20-min breakfast over a 10-min weekday limit");
+assert.equal(checkEligibility(breakfast, chef, undefined, "Breakfast", 6).eligible, true, "no limit on Saturday");
+assert.equal(checkEligibility(breakfast, chef, undefined, "Dinner", 2).eligible, true, "the breakfast limit does not apply to dinner");
 const quickFriday = byId.get(occupant(q.plan, "Dinner", 5)!.recipeId)!;
 assert.ok(total(quickFriday)! <= 30, "Quick & easy Friday stays simple");
 

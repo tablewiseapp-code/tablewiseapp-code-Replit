@@ -38,6 +38,19 @@ export function addToPlan(plan: PlanState, request: AddRequest, replace = false)
   return { ...plan, selectedIds, planAssignments: [...kept, { recipeId: request.recipeId, mealType: request.meal, startDay: request.day, spanDays: 1, ...servings }] };
 }
 
+/** Undo of one addToPlan: `before` is the plan it was applied to. Returns null (nothing to undo) unless the slot still holds
+ * exactly the assignment that add created, so a later edit is never overwritten. Restores what the add replaced. */
+export function undoAdd(plan: PlanState, before: PlanState, { recipeId, day, meal }: AddRequest): PlanState | null {
+  const now = occupant(plan, meal, day);
+  if (!now || now.recipeId !== recipeId || now.startDay !== day || now.spanDays !== 1 || occupant(before, meal, day)?.recipeId === recipeId) return null;
+  const replaced = occupant(before, meal, day);
+  const planAssignments = [...plan.planAssignments.filter(a => a !== now), ...(replaced ? [replaced] : [])];
+  const used = new Set(planAssignments.map(a => a.recipeId));
+  const selectedIds = [...plan.selectedIds.filter(id => id !== recipeId || before.selectedIds.includes(id) || used.has(id)),
+    ...(replaced && !plan.selectedIds.includes(replaced.recipeId) ? [replaced.recipeId] : [])];
+  return { ...plan, selectedIds, planAssignments };
+}
+
 export function readPlan(): PlanState {
   try {
     const parsed = JSON.parse(localStorage.getItem(planStorageKey) ?? "null");

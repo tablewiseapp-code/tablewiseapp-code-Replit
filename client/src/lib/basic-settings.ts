@@ -27,7 +27,7 @@ export type IngredientChoice = string;
 export const cookingStyles = ["quick", "everyday", "chef"] as const;
 export type CookingStyle = typeof cookingStyles[number];
 export const challengeWhen = ["day", "any", "every"] as const;
-export const weeknightTimeOptions = [20, 30, 45, 60] as const;
+export const weeknightTimeOptions = [10, 15, 20, 30, 45, 60] as const;
 export type HouseholdSetup = {
   /** new = never answered; skipped = "Skip for now"; done = "Suggest my week" was used at least once. */
   status: "new" | "skipped" | "done";
@@ -35,13 +35,17 @@ export type HouseholdSetup = {
   /** Cooking evenings per week; null = "Not sure yet" (three, or the number of fixed days if more). */
   evenings: number | null;
   fixedDays: number[];
+  /** The person explicitly chose "None" for dietary restrictions and allergies (required before suggesting). */
+  noRestrictions: boolean;
   /** Total time limit for Mon–Fri dinners (minutes), except the chef challenge day. Hard. */
-  weeknightMax: number | null;
+  /** Total-time limit per meal on Mon–Fri (minutes, null = no limit), e.g. 10 for breakfast and 40 for dinner. Hard.
+   * The chef challenge evening's dinner is not limited. */
+  weeknightMax: Record<MealSlot, number | null>;
   challenge: { when: typeof challengeWhen[number]; day: number | null };
   /** Dinners the last suggestion placed and not yet approved, and dinners swapped out of this draft. */
   suggested: string[]; declined: string[];
 };
-export const defaultSetup = (): HouseholdSetup => ({ status: "new", style: "everyday", evenings: null, fixedDays: [], weeknightMax: null,
+export const defaultSetup = (): HouseholdSetup => ({ status: "new", style: "everyday", evenings: null, fixedDays: [], noRestrictions: false, weeknightMax: { Breakfast: null, Lunch: null, Dinner: null },
   challenge: { when: "day", day: null }, suggested: [], declined: [] });
 
 /** Settings → Recipe View: what every recipe card shows besides name, time and servings. */
@@ -113,7 +117,12 @@ function setup(raw: unknown): HouseholdSetup {
   return {
     status: r.status === "skipped" || r.status === "done" ? r.status : "new", style: oneOf(cookingStyles, r.style, "everyday"),
     evenings: r.evenings === null || r.evenings === undefined ? null : int(r.evenings, 1, 7, 3), fixedDays: days(r.fixedDays),
-    weeknightMax: (weeknightTimeOptions as readonly unknown[]).includes(r.weeknightMax) ? r.weeknightMax as number : null,
+    noRestrictions: bool(r.noRestrictions),
+    // An earlier single limit applied to the suggested dinners, so it becomes the dinner limit.
+    weeknightMax: Object.fromEntries(mealSlots.map(meal => {
+      const raw = typeof r.weeknightMax === "number" ? (meal === "Dinner" ? r.weeknightMax : null) : obj(r.weeknightMax)[meal];
+      return [meal, (weeknightTimeOptions as readonly unknown[]).includes(raw) ? raw as number : null];
+    })) as Record<MealSlot, number | null>,
     challenge: { when: oneOf(challengeWhen, c.when, "day"), day: Number.isInteger(c.day) && (c.day as number) >= 0 && (c.day as number) <= 6 ? c.day as number : null },
     suggested: ids(r.suggested), declined: ids(r.declined),
   };
