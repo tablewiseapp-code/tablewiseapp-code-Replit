@@ -48,7 +48,7 @@ try {
     return all;
   };
   const titles = () => ev(`[...document.querySelectorAll('[data-testid^="recipe-card-"]')].map(c => c.querySelector("h3,h4,p,span")?.textContent ?? c.textContent).join(" | ")`);
-  const openMeals = async () => { await go("/meals"); await until(`${q("active-preferences")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "meals loaded"); };
+  const openMeals = async () => { await go("/meals?browse"); await until(`${q("active-preferences")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "meals loaded"); };
   const setSettings = value => ev(`localStorage.setItem("tablewise_basic_settings", ${JSON.stringify(value)})`);
   const resetPage = () => ev(`localStorage.removeItem("weeklyMealsState"); localStorage.setItem("tablewise_language", "en")`);
   await call("Runtime.enable"); await call("Page.enable");
@@ -61,7 +61,6 @@ try {
 
   // 0 selected: Continue disabled with the reason; page 1 shows 12; range + total.
   await go("/meals"); await ev("localStorage.clear()"); await resetPage(); await openMeals();
-  ok(await ev(`${q("button-generate-plan")}.disabled`), "Continue disabled with nothing selected");
   ok((await text("selected-count")).includes("Select at least 1"), `disabled Continue explains why: ${await text("selected-count")}`);
   ok((await pageCards()).length === 12, "12 recipes on page 1");
   ok(await text("results-range") === `Showing 1–12 of ${total} recipes`, `range on page 1: ${await text("results-range")}`);
@@ -80,7 +79,7 @@ try {
   await click(`button-add-${picked}`);
   await click("page-1");
   ok(await ev(`!!${q(`selected-recipe-${picked}`)}`) && await text("selected-counter") === "1 / 12", "selection survives page change");
-  ok((await text("selected-count")) === "1 selected" && !(await ev(`${q("button-generate-plan")}.disabled`)), "header count + Continue enabled");
+  ok((await text("selected-count")) === "1 selected", "header count");
   ok(!(await cards()).includes(picked) && (await ev(`Number(${q("results-range")}.dataset.total)`)) === total - 1, "selected recipe leaves results; totals follow");
 
   // Compact row: link to the recipe, total time, no price or tools.
@@ -109,14 +108,15 @@ try {
   ok((await text("results-range")).startsWith("Showing 1–"), `search resets to page 1: ${await text("results-range")}`);
 
   // Continue runs the existing plan step (no new route).
-  await click("button-generate-plan");
-  ok(await ev(`location.pathname`) === "/meals" && await ev(`!!${q("button-back-to-selection")}`), "Continue opens the existing plan step");
+  await click("button-back-to-week");
+  await until(`location.pathname === "/meals" && Boolean(${q("week-status")})`, "week calendar");
+  ok(true, "Back to week opens the Week calendar");
 
   // Mobile + Russian: sticky compact header, translated copy, no raw keys.
   await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await resetPage(); await ev(`localStorage.setItem("tablewise_language", "ru")`); await openMeals();
   ok((await text("results-range")).startsWith("Рецепты 1–12 из"), "ru range");
-  ok((await text("button-generate-plan")).includes("Составить план") && (await text("page-next")).includes("Далее"), "ru buttons");
+  ok((await text("button-back-to-week")).includes("Назад к неделе") && (await text("page-next")).includes("Далее"), "ru buttons");
   await ev("window.scrollTo(0, 2000)"); await sleep(200);
   const box = await ev(`(() => { const r = ${q("weekly-meals-header")}.getBoundingClientRect(); return [r.top, r.height, document.documentElement.scrollWidth]; })()`);
   ok(Math.abs(box[0]) < 2 && box[1] < 100 && box[2] <= 390, `mobile header sticky, compact, no sideways scroll: ${box}`);

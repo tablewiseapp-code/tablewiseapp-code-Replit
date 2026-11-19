@@ -56,7 +56,7 @@ async function main() {
       const cookies = Object.fromEntries(response.headers.getSetCookie().map(c => c.split(";")[0].split("=") as [string, string]));
       return { status: response.status, data, cookies };
     };
-    const plan = { selectedIds: ["r1"], planAssignments: [], locked: true };
+    const plan = { weekStart: "2026-11-16", proposed: false, selectedIds: ["r1"], planAssignments: [], locked: true };
     const signIn = (email: string, password: string, cookie?: string) => request("POST", "/api/auth/sign-in", { email, password }, cookie);
 
     // A guest plans a Week, then signs in with a new email: the account adopts the guest's data.
@@ -72,18 +72,18 @@ async function main() {
     const session = `tablewise_session=${created.cookies.tablewise_session}`;
     const ann = { email: "ann@example.com", name: null, photo: null };
     assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, ann);
-    assert.deepEqual((await request("GET", "/api/week-plan", undefined, session)).data, plan, "guest Week came along");
+    assert.deepEqual((await request("GET", "/api/week-plan?week=2026-11-16", undefined, session)).data, plan, "guest Week came along");
 
     // Another browser: wrong password, then the right one opens the same Week.
     assert.equal((await signIn("ann@example.com", "not-the-pass")).status, 401);
     const second = await signIn("ann@example.com", "secret-pass");
     assert.equal(second.status, 200);
     const session2 = `tablewise_session=${second.cookies.tablewise_session}`;
-    assert.deepEqual((await request("GET", "/api/week-plan", undefined, session2)).data, plan);
+    assert.deepEqual((await request("GET", "/api/week-plan?week=2026-11-16", undefined, session2)).data, plan);
     // A session wins over a guest cookie in the same browser; the guest's data stays with the guest.
     const other = (await request("PUT", "/api/week-plan", { ...plan, locked: false })).cookies.tablewise_owner;
-    assert.deepEqual((await request("GET", "/api/week-plan", undefined, `${session2}; tablewise_owner=${other}`)).data, plan);
-    assert.equal((await request("GET", "/api/week-plan", undefined, `tablewise_owner=${other}`)).data.locked, false);
+    assert.deepEqual((await request("GET", "/api/week-plan?week=2026-11-16", undefined, `${session2}; tablewise_owner=${other}`)).data, plan);
+    assert.equal((await request("GET", "/api/week-plan?week=2026-11-16", undefined, `tablewise_owner=${other}`)).data.locked, false);
 
     // Profile: name and photo belong to the account, so every signed-in browser sees them; a guest has none.
     const jpeg = `data:image/jpeg;base64,${Buffer.from([255, 216, 255, 224, 0, 16]).toString("base64")}`;

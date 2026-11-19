@@ -91,7 +91,11 @@ export const homeTaskInput = z.object({
   createdAt: z.string().datetime({ offset: true }).optional(),
 }).strict();
 // The Week: the whole plan in one PUT. Caps match /meals (12 recipes, 21 slots, 7 days).
+/** A calendar week, named by its Monday ("2026-11-16"). */
+export const weekStart = z.string().regex(/^20\d\d-\d\d-\d\d$/).refine(v => new Date(`${v}T12:00:00Z`).toISOString().startsWith(v) && new Date(`${v}T12:00:00Z`).getUTCDay() === 1);
 export const weekPlanInput = z.object({
+  weekStart,
+  proposed: z.boolean(),
   selectedIds: z.array(recipeId).max(12),
   planAssignments: z.array(z.object({
     recipeId, mealType: z.enum(["Breakfast", "Lunch", "Dinner"]),

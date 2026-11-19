@@ -11,7 +11,7 @@ import { GroceryNote } from "./grocery-note";
 import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
 import { readGroceryPrefs, saveGroceryPrefs, toggleCategory } from "@/lib/grocery-progress";
-import { planStorageKey, readPlan, writePlan, type PlanAssignment } from "@/lib/meal-plan";
+import { fetchWeek, planStorageKey, readPlan, saveWeek, writePlan, type PlanAssignment, type PlanState } from "@/lib/meal-plan";
 import { assignmentKey, buildRecipeGroceryRows, groceryMealsFor, groceryMeasure, groceryPlanVersion, groceryQuantityText, remainingGroceryText, removeGroceryMeals, restoreGroceryMeals } from "@/lib/grocery-meal-removal";
 import { buildShoppingList, groceryShoppingQueryKey as shoppingQuery, type Extra, type ShoppingPreference, type ShoppingRow } from "@/lib/grocery-items";
 import { shoppingCopy } from "@/lib/grocery-shopping-copy";
@@ -19,7 +19,7 @@ import { parseIngredientLine, parseQuantity } from "@shared/ingredient-parse";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePilotPage } from "@/hooks/use-pilot-page";
-import { currentWeek } from "@/lib/week-plan";
+import { currentWeek, isWeek } from "@/lib/week-plan";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
 import { Plus, Share2 } from "lucide-react";
@@ -56,7 +56,21 @@ export default function GroceryListScreen() {
   const [mealKeys, setMealKeys] = useState<Set<string>>(new Set());
   const [partial, setPartial] = useState<ShoppingRow | null>(null);
   const [amount, setAmount] = useState("");
-  const [plan, setPlan] = useState(readPlan);
+  // Another week's list (/grocery-list?week=Monday from the Week calendar) reads and saves that week on the server;
+  // otherwise the current week's browser copy, as before.
+  const [otherWeek] = useState(() => { const w = new URLSearchParams(window.location.search).get("week"); return w && isWeek(w) && w !== currentWeek() ? w : null; });
+  const [plan, setPlan] = useState<PlanState>(() => otherWeek ? { selectedIds: [], planAssignments: [] } : readPlan());
+  const [otherLocked, setOtherLocked] = useState(false);
+  const [weekPending, setWeekPending] = useState(!!otherWeek);
+  useEffect(() => {
+    if (!otherWeek) return;
+    fetchWeek(otherWeek).then(w => { setPlan(w.plan); setOtherLocked(w.locked); })
+      .catch(() => toast({ title: t("grocery.changeFailed"), variant: "destructive" })).finally(() => setWeekPending(false));
+  }, [otherWeek]);
+  const shownPlan = useRef(plan);
+  shownPlan.current = plan;
+  const latestPlan = () => otherWeek ? shownPlan.current : readPlan();
+  const storePlan = (next: PlanState) => otherWeek ? saveWeek(otherWeek, next, otherLocked) : writePlan(next);
   const [busy, setBusy] = useState(false);
   const { data: shopping = [], isError: shoppingError, isPending: shoppingPending, refetch: reloadShopping } =
     useQuery<ShoppingPreference[]>({ queryKey: shoppingQuery, refetchOnMount: "always" });
@@ -72,7 +86,7 @@ export default function GroceryListScreen() {
   const copy = (key: Parameters<typeof shoppingCopy>[1]) => shoppingCopy(lang, key);
   useEffect(() => {
     const refresh = (event: StorageEvent) => {
-      if (event.key === planStorageKey || event.key === null) {
+      if (!otherWeek && (event.key === planStorageKey || event.key === null)) {
         setPlan(readPlan());
         setPendingRemoval(null);
       }
@@ -259,7 +273,7 @@ export default function GroceryListScreen() {
     if (!pendingRemoval || busy) return;
     try {
       if (withMeals) {
-        const current = readPlan();
+        const current = latestPlan();
         if (groceryPlanVersion(current) !== groceryPlanVersion(plan)) {
           setPlan(current);
           setPendingRemoval(null);
@@ -267,12 +281,12 @@ export default function GroceryListScreen() {
           return;
         }
         const removed = [...selectedMeals];
-        writePlan(nextPlan);
+        storePlan(nextPlan);
         setPlan(nextPlan);
         toast({ title: copy("removed"), action: <ToastAction altText={t("undo")} onClick={() => {
-          const restored = restoreGroceryMeals(readPlan(), removed, current);
+          const restored = restoreGroceryMeals(latestPlan(), removed, current);
           if (!restored) { toast({ title: copy("undoConflict"), variant: "destructive" }); return; }
-          try { writePlan(restored); setPlan(restored); }
+          try { storePlan(restored); setPlan(restored); }
           catch { toast({ title: t("grocery.changeFailed"), variant: "destructive" }); }
         }}>{t("undo")}</ToastAction> });
       } else if (pendingRemoval.extraId) {
@@ -291,7 +305,7 @@ export default function GroceryListScreen() {
     finally { setBusy(false); }
   };
 
-  if (isLoadingRecipes || shoppingPending) {
+  if (isLoadingRecipes || shoppingPending || weekPending) {
     return (
       <main className="grocery-page" aria-busy="true">
         <div className="grocery-shell">

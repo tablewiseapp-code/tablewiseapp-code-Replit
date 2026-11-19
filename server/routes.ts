@@ -28,7 +28,7 @@ import { databaseCookingStore, isUnknownRecipe, type CookingStore } from "./cook
 import { databaseGroceryItemPhotoStore, type GroceryItemPhotoStore } from "./grocery-item-photos/store";
 import { databaseGroceryExtraStore, type GroceryExtraStore } from "./grocery-extras";
 import { databaseHomeTaskStore, type HomeTaskStore } from "./home-tasks";
-import { homeTaskInput, householdSettingsInput, weekPlanInput } from "./request-schemas";
+import { homeTaskInput, householdSettingsInput, weekPlanInput, weekStart } from "./request-schemas";
 import { databaseWeekPlanStore, databaseHouseholdSettingsStore, type HouseholdSettingsStore, type WeekPlanStore } from "./week-plans";
 import { databaseRecipeMarkStore, type RecipeMarkStore } from "./recipe-marks";
 import { databaseAccountStore, installAccounts, type AccountStore } from "./accounts";
@@ -754,11 +754,13 @@ Rules:
     try { if (owner) await recipeMarks.remove(owner, id.data, "liked"); res.status(204).end(); }
     catch { cookingFailed(res, "recipe_unlike"); }
   });
-  // The Week plan. Private to the owner; null until the first save.
+  // The Week plan for one calendar week (?week=Monday). Private to the owner; null until the first save.
   const weekPlans = dependencies.weekPlans ?? databaseWeekPlanStore();
   app.get("/api/week-plan", async (req, res) => {
+    const week = weekStart.safeParse(req.query.week);
+    if (!week.success) return res.status(400).json({ error: "Invalid week." });
     const owner = security.owner(req, res, false);
-    try { res.json(owner ? await weekPlans.get(owner) : null); }
+    try { res.json(owner ? await weekPlans.get(owner, week.data) : null); }
     catch { cookingFailed(res, "week_plan_get"); }
   });
   app.put("/api/week-plan", async (req, res) => {

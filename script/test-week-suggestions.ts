@@ -5,7 +5,8 @@ import { occupant, type PlanState } from "../client/src/lib/meal-plan";
 import { checkEligibility, total } from "../client/src/lib/preference-engine";
 import { buildRecipeGroceryRows } from "../client/src/lib/grocery-meal-removal";
 import { toPlannerRecipes, type PlannerRecipe } from "../client/src/lib/planner-recipes";
-import { cookingEvenings, needsHouseholdSetup, openEvening, suggestWeek, swapDinner } from "../client/src/lib/week-suggestions";
+import { cookingEvenings, needsHouseholdSetup, openEvening, proposeWeek, suggestWeek, swapDinner } from "../client/src/lib/week-suggestions";
+import { plannedSlotCount, totalSlots } from "../client/src/lib/meal-plan";
 
 const empty = (): PlanState => ({ selectedIds: [], planAssignments: [] });
 const settingsWith = (change: (s: BasicSettings) => void) => { const s = defaultSettings(); change(s); return s; };
@@ -106,6 +107,44 @@ assert.equal(needsHouseholdSetup(defaultSettings(), empty()), true);
 assert.equal(needsHouseholdSetup({ ...defaultSettings(), rev: 3 }, empty()), false);
 assert.equal(needsHouseholdSetup(defaultSettings(), manual), false);
 
+// The full week: 7 days × Breakfast, Lunch, Dinner from a catalog with every meal type.
+{
+  const meal = (type: string, title: string, tags: string[] = []) => ({ ...(recipe(title, 20, 3, tags) as object), tags: [type, ...tags] }) as never;
+  const full = toPlannerRecipes([
+    ...["Oats", "Eggs", "Toast", "Yogurt"].map(t => meal("Breakfast", t, ["Vegetarian"])),
+    ...["Soup", "Salad", "Wrap"].map(t => meal("Lunch", t, ["Vegetarian"])),
+    ...catalog.map(r => ({ ...r, steps: Array.from({ length: r.stepCount ?? 1 }, () => "x"), tags: r.tags })) as never[],
+  ] as never);
+  const settings = settingsWith(s => { s.household.servingsMode = "fixed"; s.household.fixedServings = 3; });
+  const p = proposeWeek(empty(), full, settings, "2026-11-16");
+  assert.equal(plannedSlotCount(p.plan), totalSlots, "21 meals");
+  assert.equal(p.open.length, 0);
+  assert.ok(p.plan.proposed && p.plan.planAssignments.every(a => a.servings === 3 && full.find(r => r.id === a.recipeId)!.mealType === a.mealType));
+  const breakfasts = p.plan.planAssignments.filter(a => a.mealType === "Breakfast").map(a => a.recipeId);
+  assert.equal(new Set(breakfasts).size, 4, "every breakfast used before one repeats");
+  assert.ok(Math.max(...[...new Set(breakfasts)].map(id => breakfasts.filter(b => b === id).length)) <= 2, "repeats are spread");
+  assert.deepEqual(proposeWeek(empty(), full, settings, "2026-11-16").plan, p.plan, "deterministic");
+  // A partial draft keeps its meals and only fills the gaps.
+  const partial: PlanState = { selectedIds: [], planAssignments: [{ recipeId: catalog[4].id, mealType: "Dinner", startDay: 3, spanDays: 1, servings: 7 }] };
+  const filled = proposeWeek(partial, full, settings, "2026-11-16").plan;
+  assert.equal(plannedSlotCount(filled), totalSlots);
+  assert.deepEqual(filled.planAssignments[0], partial.planAssignments[0]);
+  // Restrictions are never relaxed: a vegetarian household with no vegetarian lunch would get empty lunches. Here lunches are
+  // vegetarian, dinners mostly not: only the tagged vegetarian dinner (Carrot soup) can be planned, and it repeats.
+  const veg = proposeWeek(empty(), full, settingsWith(s => { s.dietary.diets = ["vegetarian"]; }), "2026-11-16");
+  const vegDinners = veg.plan.planAssignments.filter(a => a.mealType === "Dinner");
+  assert.equal(vegDinners.length, 7);
+  assert.ok(vegDinners.every(a => full.find(r => r.id === a.recipeId)!.title === "Carrot soup"));
+  const noLunch = proposeWeek(empty(), full.filter(r => r.mealType !== "Lunch"), settings, "2026-11-16");
+  assert.equal(noLunch.open.length, 7);
+  assert.ok(noLunch.open.every(slot => slot.meal === "Lunch"), "lunches without an eligible recipe stay open");
+  // Filters narrow the choice, but a slot no recipe passes falls back to the restrictions alone.
+  const fitsOats = (r: PlannerRecipe) => r.title === "Oats" || r.mealType !== "Breakfast";
+  const narrowed = proposeWeek(empty(), full, settings, "2026-11-16", fitsOats).plan;
+  assert.ok(narrowed.planAssignments.filter(a => a.mealType === "Breakfast").every(a => full.find(r => r.id === a.recipeId)!.title === "Oats"));
+  assert.equal(plannedSlotCount(proposeWeek(empty(), full, settings, "2026-11-16", () => false).plan), totalSlots);
+}
+
 // Optional: the real catalog (scenarios 1–3).
 if (process.env.CATALOG_URL) {
   const real = toPlannerRecipes(await (await fetch(`${process.env.CATALOG_URL}/api/recipes`)).json());
@@ -122,6 +161,12 @@ if (process.env.CATALOG_URL) {
     "| vegan:", real.filter(r => r.mealType === "Dinner" && checkEligibility(r, none).eligible).length,
     "| dairy-free:", real.filter(r => r.mealType === "Dinner" && checkEligibility(r, settingsWith(s => { s.dietary.diets = ["dairyFree"]; })).eligible).length,
     "| vegetarian:", real.filter(r => r.mealType === "Dinner" && checkEligibility(r, two).eligible).length);
+}
+if (process.env.CATALOG_URL) {
+  const real = toPlannerRecipes(await (await fetch(`${process.env.CATALOG_URL}/api/recipes`)).json());
+  const p = proposeWeek(empty(), real, defaultSettings(), "2026-11-16");
+  assert.equal(plannedSlotCount(p.plan), totalSlots, "real catalog: 21 meals");
+  console.log("real catalog: distinct recipes in the proposed week:", new Set(p.plan.planAssignments.map(a => a.recipeId)).size);
 }
 function ok2(r: PlannerRecipe) { return r.tags.some(t => t.toLowerCase().replace(/[\s_-]/g, "") === "glutenfree"); }
 console.log("week suggestions: ok");

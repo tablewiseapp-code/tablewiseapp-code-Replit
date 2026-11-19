@@ -28,26 +28,31 @@ async function main() {
     const pushed = await describe();
     await pool.query("DROP TABLE week_plans");
     await pool.query(readFileSync("migrations/0013_week_plans.sql", "utf8"));
-    assert.deepEqual(await describe(), pushed, "migration matches Drizzle schema");
+    await pool.query(`INSERT INTO week_plans (owner_id, selected_ids, plan_assignments) VALUES ('old', '[]', '[]')`);
+    await pool.query(readFileSync("migrations/0020_week_plans_by_week.sql", "utf8"));
+    assert.equal((await pool.query("SELECT week_start = date_trunc('week', now())::date AS ok FROM week_plans")).rows[0].ok, true, "an existing plan becomes this week");
+    await pool.query("DELETE FROM week_plans");
+    assert.deepEqual(await describe(), pushed, "migrations match Drizzle schema");
 
     await registerRoutes(server, app, { storage: {} as any, weekPlans: databaseWeekPlanStore(drizzle(pool, { schema })),
       nutrition: async r => r as any, config: { aiEnabled: false, production: false, publicCatalog: true } });
     app.use(apiErrorHandler);
     server.listen(0, "127.0.0.1"); await once(server, "listening");
     const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
-    const request = async (method: string, body?: unknown, cookie?: string, origin = true) => {
-      const response = await fetch(base + "/api/week-plan", { method, headers: {
+    const request = async (method: string, body?: unknown, cookie?: string, origin = true, week = "2026-11-16") => {
+      const response = await fetch(base + "/api/week-plan" + (method === "GET" ? `?week=${week}` : ""), { method, headers: {
         ...(body === undefined ? {} : { "content-type": "application/json" }),
         ...(cookie ? { cookie } : {}), ...(origin ? { origin: base } : {}),
       }, body: body === undefined ? undefined : JSON.stringify(body) });
       const data = response.headers.get("content-type")?.includes("json") ? await response.json() : undefined;
       return { status: response.status, data, cookie: response.headers.get("set-cookie")?.split(";")[0] };
     };
-    const plan = { selectedIds: ["r1"], planAssignments: [{ recipeId: "r1", mealType: "Dinner", startDay: 2, spanDays: 2, servings: 4 }], locked: false };
+    const plan = { weekStart: "2026-11-16", proposed: true, selectedIds: ["r1"], planAssignments: [{ recipeId: "r1", mealType: "Dinner", startDay: 2, spanDays: 2, servings: 4 }], locked: false };
 
     assert.equal((await request("GET")).data, null, "no owner: no plan");
     assert.equal((await request("PUT", plan, undefined, false)).status, 403, "same-origin only");
     for (const bad of [{ ...plan, extra: 1 }, { ...plan, planAssignments: [{ ...plan.planAssignments[0], startDay: 6 }] },
+      { ...plan, weekStart: "2026-11-17" }, { ...plan, weekStart: "2026-02-30" }, { ...plan, proposed: undefined },
       { ...plan, selectedIds: Array.from({ length: 13 }, (_, i) => `r${i}`) }, { ...plan, planAssignments: [{ ...plan.planAssignments[0], mealType: "Snack" }] }])
       assert.equal((await request("PUT", bad)).status, 400, JSON.stringify(bad));
 
@@ -59,7 +64,13 @@ async function main() {
     assert.equal((await request("PUT", locked, cookie)).status, 204, "replace whole plan");
     assert.deepEqual((await request("GET", undefined, cookie)).data, locked);
 
-    const stranger = await request("PUT", { selectedIds: [], planAssignments: [], locked: false });
+    assert.equal((await request("GET", undefined, cookie, true, "2026-11-23")).data, null, "each week is its own plan");
+    const next = { ...plan, weekStart: "2026-11-23", locked: false, planAssignments: [] };
+    assert.equal((await request("PUT", next, cookie)).status, 204);
+    assert.deepEqual((await request("GET", undefined, cookie, true, "2026-11-23")).data, next);
+    assert.deepEqual((await request("GET", undefined, cookie)).data, locked, "saving next week leaves this week alone");
+    assert.equal((await request("GET", undefined, cookie, true, "2026-11-17")).status, 400, "a week starts on Monday");
+    const stranger = await request("PUT", { weekStart: "2026-11-16", proposed: false, selectedIds: [], planAssignments: [], locked: false });
     assert.notEqual(stranger.cookie, cookie);
     assert.deepEqual((await request("GET", undefined, cookie)).data, locked, "another owner's save does not touch mine");
     console.log("week plan db: ok");

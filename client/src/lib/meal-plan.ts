@@ -1,9 +1,13 @@
 // Writes to the same "weeklyMealsState" the /meals planner and the grocery list already read.
-// Postgres (week_plans) is the source of truth; localStorage is the synchronous copy every page reads.
+// Postgres (week_plans, one row per calendar week) is the source of truth; localStorage is the synchronous copy of the
+// current calendar week that every page reads. Other weeks are read and written on the server only (fetchWeek, saveWeek).
+import { currentWeek } from "./week-plan";
+
 export const mealSlots = ["Breakfast", "Lunch", "Dinner"] as const;
 export type MealSlot = typeof mealSlots[number];
 export type PlanAssignment = { recipeId: string; mealType: MealSlot; startDay: number; spanDays: number; servings?: number };
-export type PlanState = { selectedIds: string[]; planAssignments: PlanAssignment[] } & Record<string, unknown>;
+/** weekStart: the Monday of the plan's week. proposed: the full-week proposal was made, so empty slots stay empty. */
+export type PlanState = { selectedIds: string[]; planAssignments: PlanAssignment[]; weekStart?: string; proposed?: boolean } & Record<string, unknown>;
 export const planStorageKey = "weeklyMealsState";
 export const lockStorageKey = "week_locked_v1";
 export const maxPlannedRecipes = 12; // same cap as /meals
@@ -63,26 +67,59 @@ export const isWeekLocked = () => { try { return JSON.parse(localStorage.getItem
 export function writePlan(plan: PlanState) { localStorage.setItem(planStorageKey, JSON.stringify(plan)); pushWeekPlan(); }
 
 // ---- Server copy ----
-const synced = () => { const { selectedIds, planAssignments } = readPlan(); return JSON.stringify({ selectedIds, planAssignments, locked: isWeekLocked() }); };
-let lastQueued = "", queue = Promise.resolve();
-/** Sends the browser copy to the server when the plan or lock changed. Requests go one at a time, in order. */
-export function pushWeekPlan() {
-  const body = synced();
-  if (body === lastQueued) return;
-  lastQueued = body;
-  queue = queue.then(() => fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: true }))
+type ServerWeek = { weekStart: string; proposed: boolean; selectedIds: string[]; planAssignments: PlanAssignment[]; locked: boolean };
+const body = (week: string, plan: PlanState, locked: boolean) =>
+  JSON.stringify({ weekStart: week, proposed: plan.proposed === true, selectedIds: plan.selectedIds, planAssignments: plan.planAssignments, locked } satisfies ServerWeek);
+const copyWeek = () => readPlan().weekStart ?? currentWeek(); // a tab left open past Sunday still saves the week it shows
+const synced = () => body(copyWeek(), readPlan(), isWeekLocked());
+const lastQueued = new Map<string, string>();
+let queue = Promise.resolve();
+function put(week: string, text: string) {
+  if (lastQueued.get(week) === text) return;
+  lastQueued.set(week, text);
+  queue = queue.then(() => fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: text, keepalive: true }))
     .then(r => { if (!r.ok) throw new Error(); })
-    .catch(() => { if (lastQueued === body) lastQueued = ""; }); // retried on the next change
+    .catch(() => { if (lastQueued.get(week) === text) lastQueued.delete(week); }); // retried on the next change
 }
-/** Run once before pages read the plan. The server copy wins; a browser plan with no server copy is uploaded once. */
+/** Sends the browser copy (the current week) to the server when the plan or lock changed. Requests go one at a time, in order. */
+export function pushWeekPlan() { put(copyWeek(), synced()); }
+
+/** Run once before pages read the plan. The server copy of the current week wins; a browser plan with no server copy is
+ * uploaded once if it belongs to this week (or predates dated weeks); a plan left from an earlier week is cleared. */
 export async function syncWeekPlan() {
-  const response = await fetch("/api/week-plan");
+  const week = currentWeek();
+  const response = await fetch(`/api/week-plan?week=${week}`);
   if (!response.ok) return;
-  const server: { selectedIds: string[]; planAssignments: PlanAssignment[]; locked: boolean } | null = await response.json();
-  if (!server) { const local = readPlan(); if (local.selectedIds.length || local.planAssignments.length || isWeekLocked()) pushWeekPlan(); return; }
-  localStorage.setItem(planStorageKey, JSON.stringify({ ...readPlan(), selectedIds: server.selectedIds, planAssignments: server.planAssignments }));
+  const server: ServerWeek | null = await response.json();
+  const local = readPlan();
+  if (!server) {
+    const fresh = local.weekStart === undefined || local.weekStart === week;
+    if (!fresh) localStorage.setItem(lockStorageKey, "false");
+    localStorage.setItem(planStorageKey, JSON.stringify(fresh ? { ...local, weekStart: week } : { ...local, weekStart: week, proposed: false, selectedIds: [], planAssignments: [] }));
+    if (readPlan().selectedIds.length || readPlan().planAssignments.length || isWeekLocked()) pushWeekPlan();
+    return;
+  }
+  localStorage.setItem(planStorageKey, JSON.stringify({ ...local, weekStart: week, proposed: server.proposed, selectedIds: server.selectedIds, planAssignments: server.planAssignments }));
   localStorage.setItem(lockStorageKey, JSON.stringify(server.locked));
-  lastQueued = synced();
+  lastQueued.set(week, synced());
+}
+
+/** Any week's plan and lock. The current week comes from the browser copy; others from the server (empty if never saved). */
+export async function fetchWeek(week: string): Promise<{ plan: PlanState; locked: boolean }> {
+  if (week === currentWeek()) return { plan: readPlan(), locked: isWeekLocked() };
+  const response = await fetch(`/api/week-plan?week=${week}`);
+  if (!response.ok) throw new Error("week");
+  const server: ServerWeek | null = await response.json();
+  if (!server) return { plan: { selectedIds: [], planAssignments: [], weekStart: week, proposed: false }, locked: false };
+  lastQueued.set(week, body(week, server, server.locked));
+  return { plan: { selectedIds: server.selectedIds, planAssignments: server.planAssignments, weekStart: week, proposed: server.proposed }, locked: server.locked };
+}
+/** Saves any week. The current week goes through the browser copy (Home and Groceries read it); throws when the browser refuses. */
+export function saveWeek(week: string, plan: PlanState, locked: boolean) {
+  if (week !== currentWeek()) return put(week, body(week, plan, locked));
+  localStorage.setItem(planStorageKey, JSON.stringify({ ...readPlan(), ...plan, weekStart: week }));
+  localStorage.setItem(lockStorageKey, JSON.stringify(locked));
+  pushWeekPlan();
 }
 
 /** Grocery scale for a recipe: planned servings / original servings. Several assignments: the largest wins. */
@@ -111,6 +148,24 @@ export function moveTo(plan: PlanState, from: Slot, to: Slot): PlanState {
   const rest = plan.planAssignments.filter(a => a !== found);
   const blocked = Array.from({ length: found.spanDays }, (_, i) => occupant({ ...plan, planAssignments: rest }, to.meal, to.day + i)).some(Boolean);
   return blocked ? plan : { ...plan, planAssignments: [...rest, { ...found, mealType: to.meal, startDay: to.day }] };
+}
+
+/** Move meal: to a free slot it moves; onto an occupied single-day slot the two meals trade places, so both stay scheduled. */
+export function moveOrSwap(plan: PlanState, from: Slot, to: Slot): PlanState {
+  const a = occupant(plan, from.meal, from.day), b = occupant(plan, to.meal, to.day);
+  if (!a || a === b) return plan;
+  if (!b) return moveTo(plan, from, to);
+  if (a.spanDays > 1 || b.spanDays > 1) return plan;
+  return { ...plan, planAssignments: plan.planAssignments.map(x =>
+    x === a ? { ...a, mealType: to.meal, startDay: to.day } : x === b ? { ...b, mealType: from.meal, startDay: from.day } : x) };
+}
+
+/** Swap / Choose recipe: puts a recipe on one slot. A filled slot keeps its servings; the shortlist is not touched. */
+export function setRecipeAt(plan: PlanState, { day, meal }: Slot, recipeId: string, servings?: number | null): PlanState {
+  const found = occupant(plan, meal, day);
+  if (found?.recipeId === recipeId) return plan;
+  if (found) return { ...plan, planAssignments: plan.planAssignments.map(a => (a === found ? { ...a, recipeId } : a)) };
+  return { ...plan, planAssignments: [...plan.planAssignments, { recipeId, mealType: meal, startDay: day, spanDays: 1, ...(servings && servings > 0 ? { servings } : {}) }] };
 }
 
 /** Adds one single-day assignment of the recipe per free slot; occupied slots are skipped, never replaced. */

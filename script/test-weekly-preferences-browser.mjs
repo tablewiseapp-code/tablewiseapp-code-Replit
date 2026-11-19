@@ -48,7 +48,7 @@ try {
     return all;
   };
   const titles = () => ev(`[...document.querySelectorAll('[data-testid^="recipe-card-"]')].map(c => c.querySelector("h3,h4,p,span")?.textContent ?? c.textContent).join(" | ")`);
-  const openMeals = async () => { await go("/meals"); await until(`${q("active-preferences")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "meals loaded"); };
+  const openMeals = async () => { await go("/meals?browse"); await until(`${q("active-preferences")} && document.querySelectorAll('[data-testid^="recipe-card-"]').length > 0`, "meals loaded"); };
   const setSettings = value => ev(`localStorage.setItem("tablewise_basic_settings", ${JSON.stringify(value)})`);
   const resetPage = () => ev(`localStorage.removeItem("weeklyMealsState"); localStorage.setItem("tablewise_language", "en")`);
   await call("Runtime.enable"); await call("Page.enable");
@@ -157,12 +157,11 @@ try {
     planAssignments: [{ recipeId: ${JSON.stringify(keep)}, mealType: "Lunch", startDay: 3, spanDays: 1 }] }))`);
   await openMeals();
   if (blocked) ok(await ev(`!!${q(`incompatible-${blocked}`)}`), "incompatible selected meal is warned, not removed");
-  await ev(`${q("button-generate-plan")}.click()`); await until(q("button-fill-week"), "plan view");
-  await ev(`${q("button-fill-week")}.click()`); await sleep(600);
+  await ev(`${q("button-back-to-week")}.click()`); await until(q("week-status"), "Week calendar");
   const plan = await ev(`JSON.parse(localStorage.getItem("weeklyMealsState")).planAssignments`);
   ok(plan.some(a => a.recipeId === keep && a.mealType === "Lunch" && a.startDay === 3), "existing plan entry kept");
   const filled = plan.filter(a => !(a.recipeId === keep && a.mealType === "Lunch"));
-  ok(filled.length > 0 && filled.every(a => a.mealType === "Dinner" && a.servings === 2 * a.spanDays && a.recipeId !== blocked), "Fill my week: dinners only, household servings, never the incompatible pick");
+  ok(filled.length === 20 && filled.every(a => a.servings === 2 && a.recipeId !== blocked), "the proposal fills the other 20 meals: household servings, never the incompatible pick");
   await resetPage();
 
   // Recipes open at the household's servings (Dana + Leo = 2), scaling the ingredients.
@@ -176,7 +175,7 @@ try {
 
   // 9. Nothing matches: named reasons + edit action.
   await setSettings(settings({ kitchen: { devices: [] }, dietary: { diets: ["vegan"], allergies: ["milk", "eggs", "peanuts", "treeNuts", "soy", "gluten", "fish", "shellfish", "sesame", "mustard"], customAllergies: [], dislikes: [], favorites: [], preferredCuisines: [], avoidCuisines: [] }, cooking: { weekdayMax: 5, weekendMax: 5, hardMax: true } }));
-  await go("/meals"); await until(q("no-match-settings"), "no-match state");
+  await go("/meals?browse"); await until(q("no-match-settings"), "no-match state");
   ok((await ev(`${q("no-match-settings")}.textContent`)).includes("No recipes match your current settings."), "no-match title");
   ok((await ev(`${q("no-match-settings")}.querySelectorAll("li").length`)) > 0, "limiting restrictions listed");
   ok(await ev(`!!${q("button-no-match-edit")}`) && (await cards()).length === 0, "edit action, and no incompatible suggestions");

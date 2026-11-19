@@ -287,13 +287,17 @@ export const homeTasks = pgTable("home_tasks", {
 ]);
 
 // The Week (/meals): one plan per owner. The browser keeps a copy in localStorage for synchronous reads.
+// The Week: one plan per owner and calendar week (week_start is that week's Monday).
 export const weekPlans = pgTable("week_plans", {
-  ownerId: varchar("owner_id", { length: 64 }).primaryKey(),
+  ownerId: varchar("owner_id", { length: 64 }).notNull(),
+  weekStart: date("week_start").notNull(),
   selectedIds: jsonb("selected_ids").$type<string[]>().notNull(),
   planAssignments: jsonb("plan_assignments").$type<{ recipeId: string; mealType: "Breakfast" | "Lunch" | "Dinner"; startDay: number; spanDays: number; servings?: number }[]>().notNull(),
   locked: boolean("locked").default(false).notNull(),
+  /** The full-week proposal was made; empty slots are not filled again. */
+  proposed: boolean("proposed").default(false).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, table => [primaryKey({ columns: [table.ownerId, table.weekStart] })]);
 
 // My Basic Settings and Your household: one document per owner, sanitized by the client (client/src/lib/basic-settings.ts).
 export const householdSettings = pgTable("household_settings", {
