@@ -48,7 +48,7 @@ docs/                  product definition and per-feature notes
 | Route | Page | Purpose |
 |---|---|---|
 | (first visit) | `pages/sign-in.tsx` | shown in place of any page until the person signs in or picks "Continue as guest" (remembered in `localStorage` `tablewise_guest_v1`); never on `/shared/:token` |
-| `/` | `pages/home.tsx` | Home: today's meals and what is left to buy |
+| `/` | `pages/home.tsx` | Home: today's meals and collapsed Home Tasks |
 | `/plan` | redirect | → `/meals` |
 | `/home-tasks` | `pages/home-tasks.tsx` | Home Tasks |
 | `/meals` | `pages/weekly-meals.tsx` | plan the week |

@@ -1,7 +1,7 @@
 # TableWise — Product Definition
 
 > Source of truth for what the product is. If code or another doc disagrees with this file, raise it; do not silently pick one.
-> Last reviewed: 2026-11-18.
+> Last reviewed: 2026-11-19.
 
 ## What it is
 
@@ -26,13 +26,13 @@ A person who plans and cooks for a household: several eaters, allergies and disl
 3. **Cook** (`/recipe/:id`) — scale servings, check off ingredients, run cooking mode with per-step timers. Start cooking opens Zen mode at step 1 by default. In Zen mode, the ingredients the current step uses (with that step's quantities) are listed above its instruction, and they change with Next and Back. A step that uses none shows no ingredient section. A recipe without step-level ingredient data shows "View recipe ingredients" (the full list) instead; ingredients are never guessed (product owner, 2026-11-18).
 4. **Remember** (My Cooking Experience on the recipe page) — "I made it", rating, notes, photos.
 
-**Home** (`/`) is the landing page: today's meals from the Week and how many grocery items are left, with links into each step. On a phone, Today's meals, a Tasks preview and the bottom tabs fit on one screen. The preview shows only the task rows that fit, with "View all tasks" when more exist. With enlarged text, Home scrolls instead (product owner, 2026-11-18). An empty meal's "+ Add" opens a picker on Home: it shows the Basic Settings that apply (household, allergies and diets, devices, that meal's rule), suggests one recipe of that meal type, offers another, and adds it to today only when the person taps Add. Week → Plan filters are not applied, and a locked Week is not changed (product owner, 2026-11-18).
+**Home** (`/`) is the landing page: Today's meals from the Week and Home Tasks, nothing else. Home Tasks starts collapsed, with the number of open tasks beside its title; opening it lists every open task and "View all tasks". On a phone, Home does not scroll while Home Tasks is collapsed (product owner, 2026-11-19). An empty meal's "+ Add" opens a picker on Home: it shows the Basic Settings that apply (household, allergies and diets, devices, that meal's rule), suggests one recipe of that meal type, offers another, and adds it to today only when the person taps Add. Week → Plan filters are not applied, and a locked Week is not changed (product owner, 2026-11-18).
 
 **Sign in** (first visit, at any page except a share link): email and password, or "Continue as guest". There is no separate sign-up: the first sign-in with a new email creates the account with the password typed, and the guest's data becomes the account's. Basic Settings shows who is signed in, with Sign out (product owner, 2026-11-18). A signed-in account can add an optional name and photo there; the photo (or the first letter of the name or email) replaces the Settings icon in the header (2026-11-18).
 
 Supporting features: My Ideas (AI recipe ideas), Import (typed or dictated recipe), My Basic Settings (household, allergies, devices, budget, pantry).
 
-**Home Tasks** (`/home-tasks`, previewed on Home at `/`): add a household task by name in seconds, with suggestions from a seeded catalog, an optional due date, a priority (High, Normal, Low) and one optional photo. Open tasks are grouped Overdue, Today, Upcoming, Anytime; completed tasks are collapsed. Complete, Move to tomorrow and Delete all offer Undo. Home shows open tasks in the same order, as many as fit on the screen (changed by the product owner, 2026-11-18). Not in this release: recurring tasks, reminders, assigning to family members, automatic expiry, calendar integration.
+**Home Tasks** (`/home-tasks`, previewed on Home at `/`): add a household task by name in seconds, with suggestions from a seeded catalog, an optional due date, a priority (High, Normal, Low) and one optional photo. Open tasks are grouped Overdue, Today, Upcoming, Anytime; completed tasks are collapsed. Complete, Move to tomorrow and Delete all offer Undo. Home shows the open-task count and, when opened, the open tasks in the same order (changed by the product owner, 2026-11-19). Not in this release: recurring tasks, reminders, assigning to family members, automatic expiry, calendar integration.
 
 ## Vocabulary
 
@@ -40,7 +40,7 @@ Use these words in UI copy, code names and docs. Do not introduce synonyms.
 
 | Term | Meaning |
 |---|---|
-| **Home** | The landing page at `/`. Shows today's meals, the grocery count and the open Home tasks that fit on the screen. Today means today's weekday in the Week, because the plan is not dated. |
+| **Home** | The landing page at `/`. Shows today's meals and a collapsed Home Tasks section with the open-task count. Today means today's weekday in the Week, because the plan is not dated. |
 | **Home task** | One private household to-do: name, optional due date, priority, optional photo, created and completed times. The nav label is "Home Tasks" ("Tasks" in the phone bottom bar). |
 | **Phone bottom bar** | Home, Groceries, Tasks, in that order. Recipes, Week and Ideas are in the phone Menu (product owner, 2026-11-18). |
 | **Step ingredients** | The ingredients one cooking step uses, written with that step's quantity ("1 tbsp oil"). Optional recipe data; most recipes have none yet. |

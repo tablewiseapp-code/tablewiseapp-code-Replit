@@ -1,4 +1,4 @@
-// Home screen in a real browser (throwaway Chrome profile = new owner; adds and removes its own grocery extras).
+// Home screen in a real browser (throwaway Chrome profile = new owner; adds and removes its own Home tasks).
 // Usage: node script/test-home-browser.mjs   (BASE_URL, CHROME_PATH optional; needs Node 22+)
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -44,65 +44,44 @@ try {
   eq(await text("text-home-date"), await ev(`new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })`), "local date");
   for (const slot of ["breakfast", "lunch", "dinner"]) eq(await ev(`${q(`home-add-${slot}`)}.tagName`), "BUTTON", `+ Add ${slot} opens the picker, not the Week`);
   eq(await text("home-add-dinner"), "+ Add dinner", "add dinner copy");
-  await until(`Boolean(${q("home-add-item")})`, "empty groceries");
   eq(await current('[data-testid="app-nav-header"]'), "/", "Home active");
-  await ev(`${q("home-add-item")}.click()`);
-  await until(`location.pathname === "/grocery-list" && Boolean(${q("input-add-item")})`, "Add item opens the add form");
+  ok(await ev(`!${q("home-groceries")}`), "no grocery card on Home");
 
-  // ---- Today's dinner plus a hand-added product that is also a recipe ingredient.
+  // ---- Today's dinner.
   const recipe = await ev(`fetch("/api/recipes").then(r => r.json()).then(list => list.find(r => r.ingredients.length > 1))`);
   ok(recipe, "a recipe with ingredients");
   await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify({ selectedIds: [${JSON.stringify(recipe.id)}], planAssignments: [{ recipeId: ${JSON.stringify(recipe.id)}, mealType: "Dinner", startDay: new Date().getDay(), spanDays: 1 }] }))`);
-  const extras = []; // one at a time: parallel first requests would each get a new owner cookie
-  for (const text of [recipe.ingredients[0].toUpperCase(), "Home test product"])
-    extras.push(await ev(`fetch("/api/grocery-extras", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: ${JSON.stringify(text)} }) }).then(r => r.json()).then(x => x.id)`));
   try {
-    await go("/", `Boolean(${q("home-grocery-count")}) && Boolean(${q(`home-meal-${recipe.id}`)})`);
+    await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
     ok((await text("home-meals")).includes("DINNER") || (await text("home-meals")).includes("Dinner"), "grouped under Dinner");
     ok(Boolean(await text("home-add-breakfast")) && Boolean(await text("home-add-lunch")) && !(await text("home-add-dinner")), "empty slots offer + Add, filled slot does not");
-    const expected = await ev("Number(document.querySelector('[data-testid=home-grocery-count]').textContent.match(/[0-9]+/)?.[0])");
-    ok(expected >= 3, "recipe and manual items appear in the count");
-    await ev(`localStorage.setItem("tablewise:grocery-list:v1", JSON.stringify({ checked: [...${JSON.stringify(recipe.ingredients)}.map(i => i.toLowerCase()), ...${JSON.stringify(extras)}.map(id => "extra:" + id)], expansion: {} }))`);
-    await go("/", `Boolean(${q("home-grocery-count")})`);
-    eq(await text("home-grocery-count"), "All groceries checked.", "all checked");
     await ev(`${q(`home-meal-${recipe.id}`)}.click()`);
     await until(`location.pathname === "/recipe/${encodeURIComponent(recipe.id)}" && Boolean(${q("text-recipe-title")})`, "meal opens recipe");
 
     // ---- Mobile and Hebrew.
     await size(390, true);
     await ev("localStorage.setItem('tablewise_language','he')");
-    await go("/", `Boolean(${q("home-grocery-count")})`);
+    await go("/", `Boolean(${q("home-meals")})`);
     eq(await ev("document.documentElement.dir"), "rtl", "rtl");
-    ok(await ev(`${q("home-meals")}.getBoundingClientRect().bottom <= ${q("home-groceries")}.getBoundingClientRect().top`), "meals above groceries");
     ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
     await go("/plan", `location.pathname === "/meals"`); // deep link still redirects to Week
 
-    // ---- Small phone, long task list: meals, a task preview and the bottom tabs on one screen.
+    // ---- Tasks: collapsed, with the open-task count beside the title; opening shows every open task.
     await ev("localStorage.setItem('tablewise_language','en')");
     await ev(`Promise.all(Array.from({ length: 15 }, (_, i) => fetch("/api/home-tasks/" + crypto.randomUUID(), { method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Home browser task " + (i + 1), dueDate: null, priority: "normal", image: null, completedAt: null }) })))`);
-    const rows = () => ev(`document.querySelectorAll('[data-testid="home-task"]').length`);
-    const navTop = `${q("app-nav-bottom")}.getBoundingClientRect().top`;
     for (const [width, height] of [[375, 667], [360, 640]]) {
       await call("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: true });
-      await go("/", `document.querySelectorAll('[data-testid="home-task"]').length > 0 && Boolean(${q("home-grocery-count")})`); await sleep(300);
-      const shown = await rows();
-      ok(shown >= 1 && shown < 15, `${width}px: only the rows that fit (${shown} of 15)`);
-      eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Groceries", "Tasks"], `${width}px: bottom tabs`);
-      ok(await ev(`${q("home-meals")}.getBoundingClientRect().bottom <= ${navTop}`), `${width}px: today's meals above the tabs`);
-      ok(await ev(`[...document.querySelectorAll('[data-testid="home-task"]')].every(li => li.getBoundingClientRect().bottom <= ${navTop})`), `${width}px: every shown task above the tabs`);
-      ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), `${width}px: no horizontal scroll`);
+      await go("/", `Boolean(${q("home-task-count")})`); await sleep(300);
+      ok(await ev(`document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth`), `${width}px: Home does not scroll`);
     }
-    ok(await ev(`Boolean(${q("link-view-all-tasks")})`), "View all tasks when some are hidden");
-    // Smaller than supported (320 × 568): one task, and Home scrolls to it.
-    await call("Emulation.setDeviceMetricsOverride", { width: 320, height: 568, deviceScaleFactor: 1, mobile: true }); await sleep(400);
-    ok(await rows() === 1 && await ev(`document.documentElement.scrollHeight > innerHeight`), "320px: one task, Home scrolls");
-    // Enlarged text (rem-based layout, as with browser text scaling): still at least one task, page scrolls, targets readable.
-    await ev(`document.documentElement.style.fontSize = "200%"`); await sleep(400);
-    ok(await rows() >= 1, "large text: a task still shows");
-    ok(await ev(`document.documentElement.scrollHeight > innerHeight`), "large text: Home scrolls");
-    ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "large text: no horizontal scroll");
-    ok(await ev(`[...document.querySelectorAll('[data-testid="home-task-check"]')].every(e => { const r = e.parentElement.getBoundingClientRect(); return r.width >= 44 && r.height >= 44; })`), "large text: 44px task targets");
+    eq(await text("home-task-count"), "15", "task count beside the title");
+    ok(await ev(`!${q("home-task-preview")}.open`), "tasks collapsed");
+    eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Groceries", "Tasks"], "bottom tabs");
+    ok(await ev(`${q("home-task-preview")}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top`), "meals and collapsed tasks above the tabs");
+    await ev(`${q("home-task-preview")}.querySelector("summary").click()`);
+    eq(await ev(`document.querySelectorAll('[data-testid="home-task"]').length`), 15, "opened: every open task");
+    ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
     await ev(`${q("link-view-all-tasks")}.click()`);
     await until(`location.pathname === "/home-tasks"`, "View all tasks opens Tasks");
     eq(await current('[data-testid="app-nav-bottom"]'), "/home-tasks", "Tasks tab active");
@@ -132,7 +111,7 @@ try {
     await until(`Boolean(${q("meal-suggestion-blocked")})`, "locked message");
     eq(await ev(`${q("meal-suggestion-add")}?.disabled ?? true`), true, "Add disabled while the Week is locked");
   } finally {
-    await ev(`Promise.all(${JSON.stringify(extras)}.map(id => fetch("/api/grocery-extras/" + id, { method: "DELETE" })))`);
+    await ev(`fetch("/api/home-tasks").then(r => r.json()).then(list => Promise.all(list.map(t => fetch("/api/home-tasks/" + t.id, { method: "DELETE" }))))`);
   }
   eq(errors, [], "no page errors");
   console.log(`PASS home browser: ${checks} checks`);
