@@ -42,6 +42,9 @@ try {
   assert.equal(await ev("document.querySelector('[role=combobox]').value"), "Toothbrush");
   await ev("document.querySelector('[data-testid=button-add-item-submit]').click()");
   await until("Boolean(document.querySelector('[data-testid=\"grocery-item-toothbrush\"]'))", "suggested product saved");
+  await until("!document.querySelector('[role=combobox]') && !document.querySelector('.grocery-heading details')", "add panel and Paste list close after adding");
+  await ev("document.querySelector('[data-testid=button-add-item]').click()");
+  await until("Boolean(document.querySelector('[role=combobox]'))", "form reopens");
   await type("My custom product");
   await ev(`(async () => {
     const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 600;
