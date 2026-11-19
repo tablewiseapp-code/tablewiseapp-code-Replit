@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RecipeCreditLine } from "@/components/recipe-credit";
+import { RecipeViewRows } from "@/components/recipe-summary";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { householdText } from "@/lib/household-copy";
@@ -174,6 +175,7 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
                 {total(planned) !== null ? text("genTotal", { n: total(planned)! }) : h("timeUnknown")}
                 {input.servings ? ` · ${h("servings", { n: input.servings })}` : ""}
               </p>
+              <RecipeViewRows recipe={recipe} testId="meal-generator-view" className="mt-1" />
               <RecipeCreditLine recipe={recipe} />
             </div>
             <section aria-label={text("genIngredients")}>
