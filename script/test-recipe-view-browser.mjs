@@ -11,6 +11,9 @@ const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Conte
 const profile = mkdtempSync(join(tmpdir(), "tw-recipe-view-"));
 const port = 9400 + Math.floor(Math.random() * 400);
 const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
+// The Week API names a week by its Monday (local time, as the app does).
+const thisWeek = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let checks = 0;
 const ok = (cond, msg) => { assert.ok(cond, msg); checks++; };
@@ -89,7 +92,7 @@ try {
   ok((await text("recipe-view-detail-nutrition")).includes("Sugars"), "full view follows the selection");
 
   // Week → Plan: the Nutrition switch is the same preference.
-  await go("/meals", `Boolean(${q("nutrition-details-toggle")})`);
+  await go("/meals?browse", `Boolean(${q("nutrition-details-toggle")})`);
   eq(await ev(`${q("nutrition-details-toggle")}.getAttribute("aria-checked")`), "true", "Week switch reads Settings");
   await click("nutrition-details-toggle");
   await until(`${q("nutrition-details-toggle")}.getAttribute("aria-checked") === "false" && !document.querySelector('[data-testid$="-nutrition"][data-testid^="meals-catalog-view-"]')`, "Week switch off hides nutrition");
@@ -109,7 +112,7 @@ try {
   const today = await ev("new Date().getDay()");
   const three = recipes.filter(r => r.nutrition && !/mock/i.test(r.nutrition.model) && /^\d+$/.test((r.servings ?? "").trim())).slice(0, 3);
   const plan = { selectedIds: three.map(r => r.id), planAssignments: three.map((r, i) => ({ recipeId: r.id, mealType: ["Breakfast", "Lunch", "Dinner"][i], startDay: today, spanDays: 1 })) };
-  const saveWeek = await ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: ${JSON.stringify(JSON.stringify({ selectedIds: plan.selectedIds, planAssignments: plan.planAssignments, locked: false }))} }).then(async r => r.status < 300 || r.status + " " + await r.text())`);
+  const saveWeek = await ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: ${JSON.stringify(JSON.stringify({ weekStart: thisWeek, proposed: false, selectedIds: plan.selectedIds, planAssignments: plan.planAssignments, locked: false }))} }).then(async r => r.status < 300 || r.status + " " + await r.text())`);
   eq(saveWeek, true, "Week saved");
   await size(390, 844, true);
   await go("/", `Boolean(${q(`home-meal-view-${three[2].id}-nutrition`)})`);

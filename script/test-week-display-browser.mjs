@@ -32,7 +32,7 @@ try {
   await call("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
   await call("Page.navigate", { url: BASE }); await sleep(1000);
   await ev("localStorage.clear(); localStorage.setItem('tablewise_language','en')");
-  await call("Page.navigate", { url: `${BASE}/meals` });
+  await call("Page.navigate", { url: `${BASE}/meals?browse` });
   await until(`${cards}.length > 0`, "cards");
 
   // Display controls: Time Prep / Total (pressed buttons) and Show nutrition (switch, default Off).

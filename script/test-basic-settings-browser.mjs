@@ -69,7 +69,7 @@ try {
   ok(true, "persistence after reload");
 
   // Weekly Meals: only no-cook recipes + explanation; method filter only No-cook. My Recipes keeps everything.
-  await go("/meals");
+  await go("/meals?browse");
   await until(q("settings-banner"), "settings banner");
   ok((await ev(`${q("settings-banner")}.textContent`)).includes("only no-cook"), "no-cook explanation");
   const shown = await ev(`document.querySelectorAll('[data-testid^="recipe-card-"]').length`);
@@ -93,7 +93,7 @@ try {
   ok(await ev(`JSON.stringify(JSON.parse(localStorage.getItem("tablewise_basic_settings")).kitchen.devices) === '["Stovetop"]'`), "retried change stored");
 
   // Stovetop only → Weekly Meals hides oven recipes and offers Stovetop + No-cook.
-  await go("/meals"); await until(q("count-settings"), "settings count");
+  await go("/meals?browse"); await until(q("count-settings"), "settings count");
   ok(Number(await ev(`${q("count-settings")}.dataset.count`)) > 0, "excluded-by-settings count shown");
 
   // Long option lists are searchable; searching only filters what is shown and never changes saved values.

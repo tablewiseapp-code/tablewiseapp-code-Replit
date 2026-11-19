@@ -70,11 +70,11 @@ try {
     }
 
     // Meals planner: catalog recipes appear and the existing meal-type filter places them by category.
-    await go("/meals");
+    await go("/meals?browse");
     // Weekly Meals is paginated (12 per page): the catalog shows up in the match count, not necessarily on page 1.
     await until(`Number(document.querySelector('[data-testid="count-matching"]')?.dataset.count) >= ${catalog.length}`, `${label} planner counts the catalog recipes`);
     ok(await ev(`document.querySelectorAll('[data-testid^="recipe-card-"]').length`) <= 12, `${label} planner shows one page of results`);
-    await noOverflow("/meals");
+    await noOverflow("/meals?browse");
   }
   ok(exceptions.length === 0, `uncaught page errors: ${exceptions.join(" | ")}`);
   ok(failedRequests.length === 0, `failed requests: ${failedRequests.join(" | ")}`);

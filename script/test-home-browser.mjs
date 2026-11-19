@@ -11,6 +11,9 @@ const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Conte
 const profile = mkdtempSync(join(tmpdir(), "tw-home-"));
 const port = 9400 + Math.floor(Math.random() * 400);
 const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
+// The Week API names a week by its Monday (local time, as the app does).
+const thisWeek = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let checks = 0;
 const ok = (cond, msg) => { assert.ok(cond, msg); checks++; };
@@ -91,7 +94,7 @@ try {
     await call("Emulation.setDeviceMetricsOverride", { width: 360, height: 640, deviceScaleFactor: 1, mobile: true });
     const planned = meal => `(JSON.parse(localStorage.getItem("weeklyMealsState") ?? "{}").planAssignments?.filter(a => a.mealType === "${meal}") ?? [])`;
     const today = await ev("new Date().getDay()");
-    await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify({ selectedIds: [], planAssignments: [] })); fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ selectedIds: [], planAssignments: [], locked: false }) })`);
+    await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify({ selectedIds: [], planAssignments: [] })); fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ weekStart: ${JSON.stringify(thisWeek)}, proposed: false, selectedIds: [], planAssignments: [], locked: false }) })`);
     await go("/", `Boolean(${q("home-add-breakfast")}) && !${q("home-add-breakfast")}.disabled`);
     await ev(`${q("home-add-breakfast")}.click()`);
     await until(`Boolean(${q("meal-generator")})`, "generator opens");
@@ -156,7 +159,7 @@ try {
     await ev(`${q("meal-generator-add")}.click()`);
     await until(`Boolean(${q(`home-meal-${dinner}`)})`, "dinner on Home");
     await sleep(800); // write-through to /api/week-plan
-    const server = await ev(`fetch("/api/week-plan").then(r => r.json())`);
+    const server = await ev(`fetch("/api/week-plan?week=" + ${JSON.stringify(thisWeek)}).then(r => r.json())`);
     ok(server.planAssignments.some(a => a.recipeId === dinner && a.mealType === "Dinner" && a.startDay === today), "the Week on the server has today's dinner");
     eq(server.locked, false, "approval state unchanged");
     await ev(`localStorage.removeItem("weeklyMealsState")`);
@@ -199,7 +202,7 @@ try {
     await sleep(200);
     ok(await ev(`(() => { const r = ${q("meal-generator")}.getBoundingClientRect(); return r.width <= 460 && r.top > 0 && r.bottom < innerHeight; })()`), "desktop: compact centred dialog");
     await ev(`localStorage.setItem("week_locked_v1", "false")`);
-    await ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ selectedIds: [], planAssignments: [], locked: false }) })`);
+    await ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ weekStart: ${JSON.stringify(thisWeek)}, proposed: false, selectedIds: [], planAssignments: [], locked: false }) })`);
   } finally {
     await ev(`fetch("/api/home-tasks").then(r => r.json()).then(list => Promise.all(list.map(t => fetch("/api/home-tasks/" + t.id, { method: "DELETE" }))))`);
   }
