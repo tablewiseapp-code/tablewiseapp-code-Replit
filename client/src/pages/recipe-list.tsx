@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { RecipeCreditLine } from "@/components/recipe-credit";
 import { ChevronDown, Plus } from "lucide-react";
-import { DietaryTags, RecipeMeta } from "@/components/recipe-summary";
+import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
 
 export default function RecipeList() {
   const { t } = useI18n();
@@ -170,7 +170,7 @@ function RecipeGrid({ recipes }: { recipes: Recipe[] }) {
             </h3>
             <RecipeMeta recipe={recipe} className="mt-2" testId={`text-recipe-info-${recipe.id}`} />
             <div className="mt-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
-            <div className="mt-3"><DietaryTags tags={recipe.tags} testId={`recipe-tags-${recipe.id}`} /></div>
+            <RecipeViewRows recipe={recipe} testId={`recipe-view-${recipe.id}`} className="mt-2" />
           </Link>
           <div className="absolute end-2 top-2"><RecipeLikeButton recipeId={recipe.id} /></div>
         </div>

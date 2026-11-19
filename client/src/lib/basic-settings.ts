@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { allergens, cuisines, dietPatterns, foodPrefIds, type Allergen, type Cuisine, type DietPattern } from "@shared/food-rules";
+import { recipeNutrients, type RecipeNutrient } from "@shared/recipe-nutrition";
 import { selectableDevices, type DeviceId } from "./device-requirements";
 import { plannerCookingMethods } from "./planner-filters";
 import { mealSlots, type MealSlot } from "./meal-plan";
@@ -47,6 +48,14 @@ export type HouseholdSetup = {
 export const defaultSetup = (): HouseholdSetup => ({ status: "new", style: "everyday", evenings: null, fixedDays: [], noRestrictions: false, weeknightMax: { Breakfast: null, Lunch: null, Dinner: null },
   challenge: { when: "day", day: null }, suggested: [], declined: [] });
 
+/** Settings → Recipe View: what every recipe card shows besides name, time and servings. */
+export const recipeDetails = ["prepTime", "cookTime", "dietaryTags", "mainTool"] as const;
+export type RecipeDetail = typeof recipeDetails[number];
+export type RecipeView = { showNutrition: boolean; nutrients: RecipeNutrient[]; details: RecipeDetail[] };
+/** The Week's earlier browser-only "Show nutrition" switch; read once for settings saved before Recipe View existed. */
+export const legacyNutritionKey = "tablewise:nutrition-details:v1";
+export const defaultRecipeView = (): RecipeView => ({ showNutrition: false, nutrients: ["protein", "carbs"], details: [] });
+
 export type CookingPrefs = { quick: boolean; minimalCleanup: boolean; onePot: boolean; batch: boolean };
 export const cookingPrefKeys = ["quick", "minimalCleanup", "onePot", "batch"] as const;
 const noPrefs = (): CookingPrefs => ({ quick: false, minimalCleanup: false, onePot: false, batch: false });
@@ -68,6 +77,7 @@ export type BasicSettings = {
     variety: typeof varietyOptions[number]; novelty: typeof noveltyOptions[number]; mealRules: Record<MealSlot, MealRule> };
   shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[] };
   setup: HouseholdSetup;
+  recipeView: RecipeView;
 };
 
 export const defaultSettings = (): BasicSettings => ({
@@ -79,7 +89,7 @@ export const defaultSettings = (): BasicSettings => ({
   planning: { meals: ["Breakfast", "Lunch", "Dinner"], cookingDays: 7, leftovers: "none", repeatFavorites: false, variety: "balanced", novelty: "balanced",
     mealRules: { Breakfast: noRule(), Lunch: noRule(), Dinner: noRule() } },
   shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [] },
-  setup: defaultSetup(),
+  setup: defaultSetup(), recipeView: defaultRecipeView(),
 });
 
 // ---- Sanitizing: unknown/invalid values are dropped field by field, never the whole document. ----
@@ -118,6 +128,18 @@ function setup(raw: unknown): HouseholdSetup {
   };
 }
 
+function recipeView(raw: unknown): RecipeView {
+  if (raw === undefined) {
+    let legacy = false;
+    try { legacy = globalThis.localStorage?.getItem(legacyNutritionKey) === "true"; } catch { /* no browser storage */ }
+    return { ...defaultRecipeView(), showNutrition: legacy };
+  }
+  const r = obj(raw);
+  // Nutrient choices are kept while nutrition is off; an empty choice is a choice.
+  return { showNutrition: bool(r.showNutrition), nutrients: Array.isArray(r.nutrients) ? subset(recipeNutrients, r.nutrients) : defaultRecipeView().nutrients,
+    details: subset(recipeDetails, r.details) };
+}
+
 function mealRule(raw: unknown): MealRule {
   const r = obj(raw);
   return { type: oneOf(mealRecipeTypes, r.type, "both"),
@@ -140,9 +162,9 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
   const r = obj(raw);
   // v1 (the first My Basic Settings): { devices: [...] } — an explicit choice, kept even when empty.
   if (r.version === undefined && Array.isArray(r.devices)) {
-    return { ...d, kitchen: { devices: subset(selectableDevices, r.devices) } };
+    return { ...d, kitchen: { devices: subset(selectableDevices, r.devices) }, recipeView: recipeView(undefined) };
   }
-  if (r.version !== 2) return d;
+  if (r.version !== 2) return { ...d, recipeView: recipeView(undefined) };
   const h = obj(r.household), di = obj(r.dietary), k = obj(r.kitchen), c = obj(r.cooking), p = obj(r.planning), s = obj(r.shopping);
   const members = (Array.isArray(h.members) ? h.members : []).map(member).filter((m): m is Member => !!m);
   return {
@@ -160,7 +182,7 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
       repeatFavorites: bool(p.repeatFavorites), variety: oneOf(varietyOptions, p.variety, "balanced"), novelty: oneOf(noveltyOptions, p.novelty, "balanced"),
       mealRules: Object.fromEntries(mealSlots.map(m => [m, mealRule(obj(p.mealRules)[m])])) as Record<MealSlot, MealRule> },
     shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry) },
-    setup: setup(r.setup),
+    setup: setup(r.setup), recipeView: recipeView(r.recipeView),
   };
 }
 
@@ -178,9 +200,13 @@ export function updateSettings(change: (current: BasicSettings) => BasicSettings
   const current = loadSettings(store);
   const next = sanitizeSettings({ ...change(current), version: 2, rev: current.rev + 1 });
   store.setItem(settingsKey, JSON.stringify(next));
-  if (store === browser()) pushSettings();
+  if (store === browser()) { pushSettings(); changed(); }
   return next;
 }
+
+/** Same-tab change signal ("storage" only fires in other tabs). */
+export const settingsChangedEvent = "tablewise:settings-changed";
+const changed = () => { try { window.dispatchEvent(new Event(settingsChangedEvent)); } catch { /* not a browser */ } };
 
 // ---- Server copy (same pattern as the Week in meal-plan.ts) ----
 let lastQueued = "", queue = Promise.resolve();
@@ -202,6 +228,7 @@ export async function syncSettings() {
   if (server === null) { if (loadSettings().rev > 0) pushSettings(); return; }
   store?.setItem(settingsKey, JSON.stringify(sanitizeSettings(server)));
   lastQueued = JSON.stringify(loadSettings());
+  changed();
 }
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";

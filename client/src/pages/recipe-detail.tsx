@@ -16,7 +16,8 @@ import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit";
 import { RecipeLikeButton } from "@/components/recipe-like-button";
 import { RecipeNutritionPanel } from "@/components/recipe-nutrition";
-import { DietaryTags } from "@/components/recipe-summary";
+import { DietaryTags, RecipeViewRows } from "@/components/recipe-summary";
+import { useRecipeDisplay } from "@/components/recipe-display";
 import { RecipeVideo } from "@/components/youtube-import";
 import { CookingMode } from "@/components/cooking-mode";
 import { hasCookingProgress } from "@/lib/cooking-session";
@@ -92,6 +93,7 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
 
 export default function RecipeDetail() {
   const { t } = useI18n();
+  const { recipeView } = useRecipeDisplay();
   const { t: view } = useRecipeViewCopy();
   const search = useSearch();
   const plannerHref = recipePlannerURL(search);
@@ -240,6 +242,8 @@ export default function RecipeDetail() {
           </div>
           {tools && <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="text-tools"><Wrench className="h-4 w-4" aria-hidden="true" />{timingCopy("toolsUsed")}: {tools}</p>}
           <div className="mt-3"><DietaryTags tags={recipe.tags} testId="recipe-dietary-tags" /></div>
+          {/* Settings → Recipe View nutrition; times, tools and tags are always shown in full above. */}
+          <RecipeViewRows recipe={recipe} view={{ ...recipeView, details: [] }} testId="recipe-view-detail" className="mt-2 text-sm" />
           {recipe.metadataEstimated && <p className="mt-2 text-sm text-muted-foreground" data-testid="text-development-estimates">{timingCopy("developmentEstimates")}</p>}
         </header>
 

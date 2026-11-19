@@ -3,12 +3,18 @@ import { Link } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
-import { mealSlots, mealsOnDay, readPlan, type MealSlot } from "@/lib/meal-plan";
+import { mealSlots, mealsOnDay, readPlan, undoAdd, writePlan, type MealSlot } from "@/lib/meal-plan";
+import { MealGenerator, type MealAdded, type MealTarget } from "@/components/meal-generator";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
+import { RecipeViewRows, useServingsText } from "@/components/recipe-summary";
+import { recipeStageMinutes } from "@/lib/recipe-time";
+import type { Recipe } from "@/lib/storage";
 
 const mealKey = { Breakfast: "meals.breakfast", Lunch: "meals.lunch", Dinner: "meals.dinner" } as const;
 const addKey = { Breakfast: "addBreakfast", Lunch: "addLunch", Dinner: "addDinner" } as const;
@@ -26,11 +32,31 @@ export default function Home() {
   // Local date and weekday: the plan is not dated, so "today" is today's weekday in the current plan.
   const [now] = useState(() => new Date());
   const [plan, setPlan] = useState(readPlan);
-  const [picking, setPicking] = useState<MealSlot | null>(null);
+  const [generating, setGenerating] = useState<MealTarget | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const catalog = useRecipeCatalog();
+  const { toast } = useToast();
+  const mealName = (slot: MealSlot) => t(mealKey[slot]).toLocaleLowerCase(lang);
+  // Focus goes back to the meal's row: the + Add button, or the recipe that replaced it.
+  const focusSlot = (slot: MealSlot) => requestAnimationFrame(() =>
+    document.querySelector<HTMLElement>(`[data-testid="home-slot-${slot.toLowerCase()}"] a, [data-testid="home-slot-${slot.toLowerCase()}"] button`)?.focus());
+  const added = ({ before, request }: MealAdded) => {
+    setPlan(readPlan());
+    toast({ title: text("genAdded", { meal: mealName(request.meal) }), action: <ToastAction altText={text("genUndo")} data-testid="home-meal-undo" onClick={() => {
+      // Only this assignment is undone, and only while the slot still holds it.
+      const undone = undoAdd(readPlan(), before, request);
+      if (!undone) { toast({ title: text("genUndoGone") }); return; }
+      try { writePlan(undone); setPlan(readPlan()); } catch { toast({ variant: "destructive", title: text("genSaveError") }); }
+    }}>{text("genUndo")}</ToastAction> });
+  };
 
   const today = mealsOnDay(plan, now.getDay());
+  const servingsText = useServingsText();
+  /** "35 min total · 4 servings": the Week's servings for this meal, else the recipe's; unknown values are left out. */
+  const meta = (recipe: Recipe, servings?: number | null) => {
+    const minutes = recipeStageMinutes(recipe, "total");
+    return [minutes !== null ? t("card.totalMinutes", { count: minutes }) : null, servingsText(servings ? String(servings) : recipe.servings)].filter(Boolean).join(" · ");
+  };
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
 
   const tx = useHomeTaskText();
@@ -63,7 +89,7 @@ export default function Home() {
                   <div key={slot} className="flex items-start gap-3" data-testid={`home-slot-${slot.toLowerCase()}`}>
                     <h3 className="w-24 shrink-0 break-words pt-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t(mealKey[slot])}</h3>
                     {rows.length === 0 ? (
-                      <button type="button" onClick={() => setPicking(slot)} disabled={!catalog.data} data-testid={`home-add-${slot.toLowerCase()}`}
+                      <button type="button" onClick={() => setGenerating({ meal: slot, day: now.getDay() })} disabled={!catalog.data} data-testid={`home-add-${slot.toLowerCase()}`}
                         className="flex min-h-11 flex-1 items-center rounded-md py-1 text-start text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                         {text(addKey[slot])}
                       </button>
@@ -76,7 +102,11 @@ export default function Home() {
                             <Link href={`/recipe/${encodeURIComponent(recipe.id)}`} data-testid={`home-meal-${recipe.id}`}
                               className="flex min-h-11 items-center gap-3 rounded-md py-1 hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                               {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />}
-                              <span className="text-sm font-medium">{recipe.title}</span>
+                              <span className="min-w-0">
+                                <span className="block text-sm font-medium">{recipe.title}</span>
+                                {meta(recipe, a.servings) && <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, a.servings)}</span>}
+                                <RecipeViewRows recipe={recipe} testId={`home-meal-view-${recipe.id}`} />
+                              </span>
                             </Link>
                           </li>
                         );
@@ -103,8 +133,8 @@ export default function Home() {
           </details>
         </div>
       </PageContainer>
-      <MealSuggestion meal={picking} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setPicking(null)} onAdded={() => setPlan(readPlan())} />
-      <MealSuggestion mode="cook" meal={suggesting ? "Dinner" : null} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setSuggesting(false)} onAdded={() => undefined} />
+      <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={slot => { setGenerating(null); focusSlot(slot); }} onAdded={added} />
+      <MealSuggestion meal={suggesting ? "Dinner" : null} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setSuggesting(false)} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
   );

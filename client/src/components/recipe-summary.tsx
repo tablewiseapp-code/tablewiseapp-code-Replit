@@ -1,7 +1,12 @@
 import { Clock3, Users } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { recipeStageMinutes, type RecipeTimeData, type RecipeTimeMode } from "@/lib/recipe-time";
-import { nutritionAmounts, nutritionBasis, servingRange, usableNutrition, type NutritionFields } from "@shared/recipe-nutrition";
+import { nutrientUnit, nutritionAmounts, nutritionBasis, recipeNutrients, servingNutrition, servingRange, usableNutrition, type NutritionFields, type RecipeNutrient } from "@shared/recipe-nutrition";
+import { recipeDetails, type RecipeView } from "@/lib/basic-settings";
+import { settingsText } from "@/lib/settings-copy";
+import { useMvpCopy } from "@/lib/mvp-copy";
+import { mainCookingTool } from "@/lib/recipe-tools";
+import { useRecipeDisplay } from "./recipe-display";
 
 // Only these tags are meaningful to people choosing a recipe. Everything else (ai-generated, meal:dinner,
 // provenance and development markers, cuisines, meal types) stays internal.
@@ -81,5 +86,51 @@ export function NutritionRow({ recipe, testId }: {
         <span key={key} className="tabular-nums" data-testid={`${id}-${key}`}>{show(key)}</span>)}
     </p>
     <p className="text-muted-foreground" data-testid={`${id}-basis`}>{basisText} · {t("nutrition.estimateLabel")}</p>
+  </div>;
+}
+
+export type RecipeViewData = NutritionFields & RecipeTimeData & {
+  id: string; servings?: string | null; tags?: readonly string[] | null; steps?: string[] | null; equipment?: readonly string[] | null;
+  /** Stored per-serving values (only the Settings preview has them today); they win over whole-recipe totals. */
+  perServing?: Partial<Record<RecipeNutrient, number>> | null;
+};
+
+/**
+ * Settings → Recipe View on any recipe card: the selected nutrition on one line (wraps on a phone), then the selected
+ * extra details. A row with nothing to show is left out; so is the whole block. `view` overrides the saved preference (preview).
+ */
+export function RecipeViewRows({ recipe, view, testId, className = "" }: { recipe: RecipeViewData; view?: RecipeView; testId?: string; className?: string }) {
+  const { recipeView } = useRecipeDisplay();
+  const { t, lang } = useI18n();
+  const { t: tool } = useMvpCopy();
+  const { showNutrition, nutrients, details } = view ?? recipeView;
+  const s = (key: string, values?: Record<string, string | number>) => settingsText(lang, key, values);
+  const id = testId ?? `recipe-view-${recipe.id}`;
+  const serving = showNutrition ? servingNutrition(recipe) : null;
+  const shown = serving ? recipeNutrients.filter(n => nutrients.includes(n) && serving.values[n] !== undefined) : [];
+  const amount = (n: RecipeNutrient, value: number) =>
+    `${value.toLocaleString(lang, { maximumFractionDigits: nutrientUnit(n) === "g" && value < 10 ? 1 : 0 })} ${s(`unit_${nutrientUnit(n)}`)}`;
+  const facts = recipeDetails.filter(d => details.includes(d)).flatMap((detail): { detail: string; text: string }[] => {
+    if (detail === "prepTime" || detail === "cookTime") {
+      const minutes = recipeStageMinutes(recipe, detail === "prepTime" ? "preparation" : "cooking");
+      return minutes === null ? [] : [{ detail, text: s(detail === "prepTime" ? "prepValue" : "cookValue", { n: minutes }) }];
+    }
+    if (detail === "dietaryTags") {
+      const tags = dietaryLabelKeys(recipe.tags).map(key => t(key)).join(", ");
+      return tags ? [{ detail, text: tags }] : [];
+    }
+    const main = mainCookingTool(recipe);
+    return main ? [{ detail, text: tool(main) }] : [];
+  });
+  if (!shown.length && !facts.length) return null;
+  return <div className={`space-y-0.5 text-xs text-muted-foreground ${className}`} data-testid={id}>
+    {serving && shown.length > 0 && <p className="flex flex-wrap gap-x-1" data-testid={`${id}-nutrition`}>
+      <span>{s(serving.estimated ? "estPerServing" : "perServing")}</span>
+      {shown.map(n => <span key={n} className="whitespace-nowrap tabular-nums" data-testid={`${id}-${n}`}>
+        <span aria-hidden="true">· </span>{s(`nutrient_${n}`)} {amount(n, serving.values[n]!)}</span>)}
+    </p>}
+    {facts.length > 0 && <p className="flex flex-wrap gap-x-1" data-testid={`${id}-details`}>
+      {facts.map(({ detail, text }, i) => <span key={detail} data-testid={`${id}-${detail}`}>{i > 0 && <span aria-hidden="true">· </span>}{text}</span>)}
+    </p>}
   </div>;
 }

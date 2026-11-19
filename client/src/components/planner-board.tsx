@@ -10,7 +10,7 @@ import { recipeNameMatches } from "@/lib/planner-filters";
 import { usePlannerCopy } from "@/lib/planner-copy";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
 import type { RecipeTimeMode } from "@/lib/recipe-time";
-import { NutritionRow, RecipeMeta } from "@/components/recipe-summary";
+import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
@@ -42,7 +42,6 @@ type Props = {
   onPicked?: (recipeId: string) => void;
   servingsFallback: number | null;
   timeMode: RecipeTimeMode;
-  showNutrition: boolean;
 };
 
 function Stepper({ value, onChange, label, fewer, more }: { value: number; onChange: (value: number) => void; label: string; fewer: string; more: string }) {
@@ -57,7 +56,7 @@ function Stepper({ value, onChange, label, fewer, more }: { value: number; onCha
 
 function SlotCard({ slot, day, props, onOpen }: { slot: Slot; day: BoardDay; props: Props; onOpen: (modal: Modal) => void }) {
   const t = usePlannerCopy();
-  const { plan, recipes, locked, mealNames, recipeHref, timeMode, showNutrition } = props;
+  const { plan, recipes, locked, mealNames, recipeHref, timeMode } = props;
   const { meal } = slot;
   const found = occupant(plan, meal, slot.day);
   const recipe = found ? recipes.get(found.recipeId) : undefined;
@@ -90,7 +89,7 @@ function SlotCard({ slot, day, props, onOpen }: { slot: Slot; day: BoardDay; pro
             </Link>
             <RecipeMeta recipe={{ ...recipe, servings: found?.servings ? String(found.servings) : recipe.servings }} mode={timeMode}
               className="gap-x-3 text-xs [&_svg]:h-3.5 [&_svg]:w-3.5" testId={`meta-${meal}-${slot.day}`} />
-            {showNutrition && <NutritionRow recipe={recipe} testId={`nutrition-${meal}-${slot.day}`} />}
+            <RecipeViewRows recipe={recipe} testId={`view-${meal}-${slot.day}`} />
           </div>
         ) : (
           <p className="text-sm text-amber-900" data-testid={`open-${meal}-${slot.day}`}>{locked ? "—" : t("noEligible")}</p>

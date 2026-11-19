@@ -83,7 +83,7 @@ Tables are defined in `shared/schema.ts`.
 | `recipe_sources` | where an imported recipe came from (YouTube link, video id, status `mock` until real extraction exists); one per recipe, one per owner and video | per owner (operator-only writes, like recipes) |
 | `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
 | `household_tasks` | seeded suggested task names in three languages | global |
-| `household_settings` | Basic Settings and Your household as one JSON document, sanitized by the client (`client/src/lib/basic-settings.ts`); `GET`/`PUT /api/household-settings` | per owner |
+| `household_settings` | Basic Settings, Your household and Recipe View (`recipeView`; settings saved before it read the Week's old browser switch `tablewise:nutrition-details:v1` once) as one JSON document, sanitized by the client (`client/src/lib/basic-settings.ts`); `GET`/`PUT /api/household-settings` | per owner |
 | `week_plans` | the Week: `week_start` (Monday), shortlisted recipe ids, slot assignments, the lock and `proposed` (the Suggested week was made); one row per owner and week, replaced whole on each save (`GET /api/week-plan?week=`, `PUT /api/week-plan`) | per owner |
 | `recipe_marks` | recipes an owner liked or imported (`kind` `liked` or `imported`); `GET /api/my-recipes`, `PUT`/`DELETE /api/recipe-likes/:id` | per owner |
 | `accounts` | email (lowercase, unique), scrypt `password_hash` (nullable, for a future Google-only account), the `owner_id` every owner-scoped table uses, optional `display_name` and `photo` (resized JPEG data URL) with a `photo_version` for its cacheable link | per account |

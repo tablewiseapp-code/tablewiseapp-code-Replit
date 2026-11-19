@@ -11,7 +11,7 @@ Unable to save — Retry). English, Russian and Hebrew (RTL).
 | Weekly Meals list and name search | Hard restrictions hide recipes; soft preferences reorder them. A banner says how many are hidden. |
 | Cooking-method filter | Only the person's devices, plus No-cook. |
 | Selected recipes | An incompatible pick is never removed: it gets a warning with the reason and a **Replace with …** button. |
-| Weekly plan | **Fill my week** fills empty slots only, from the selected recipes, using meals to plan, cooking days, time limits, leftovers and servings. |
+| Weekly plan | The Week calendar proposes all 21 meals once per week with household servings (docs/PRODUCT.md, Suggested week). Fill my week was removed on 2026-11-19, so cooking days and leftovers are saved but not used. |
 | Recipe page | Opens at the household's servings when the recipe can be scaled. |
 | Grocery list | Pantry items are marked “In your pantry”. |
 | My Recipes | Unchanged: always the complete collection. |
@@ -51,8 +51,7 @@ and a recipe with no ingredient lines is never treated as safe. Custom allergies
 “Same as Cooking Preferences”). Meat means meat, poultry or seafood, read from every ingredient line
 (`evaluateMeat` in `shared/food-rules.ts`); eggs and dairy are meatless. Unclear lines (stock, curry paste) or no ingredient
 lines pass neither Meatless nor Meat, and an unknown total time never passes a time limit. These rules apply only when a
-meal is evaluated: Fill my week (each slot uses its own meal; an explicit meal limit replaces the weekday/weekend time for
-that meal), replacements, the slot picker (matching recipes first), and the Weekly Meals list when that meal type is
+meal is evaluated: the Week calendar's Suggested week, Swap and Choose recipe (each slot uses its own meal), replacements, and the Weekly Meals list when that meal type is
 filtered (the meal-type chips show each meal's live match count from the same rules and filters). Without a meal filter the
 list uses only the global rules, so a recipe that fails Breakfast still shows for Dinner. Global hard rules (allergies,
 diets, devices, hard time limit) always apply first; a meal rule never relaxes them. Older settings without meal rules
@@ -66,12 +65,12 @@ ingredient lines); free text is kept as typed and matches either, by whole word 
 several of their likes matching), so a dish two children like ranks above one only one likes, and a long list can't
 outweigh the others. Each person who dislikes it takes −3. Only the members eating count (`memberIds`). Likes never
 hide a recipe and never relax an allergy, diet or meal rule — they rank what is already eligible, before pagination,
-in the Weekly Meals list, Fill my week, the slot picker and replacements. A real match shows “Matches Mia's
+in the recipe list, the Week calendar's Suggested week and Swap picker, and replacements. A real match shows “Matches Mia's
 favourites” or “Liked by 2 family members” on the recipe card. Recipe text is English, so Russian or Hebrew free
 text only matches through the translated suggestion chips.
 
 **Soft (order only):** favourite/disliked foods (household and per member), preferred/avoided cuisines,
-weekday/weekend time, quick, minimal clean-up, one-pot and batch cooking (set separately for weekdays and the weekend; Fill my week uses each day's set, the list uses the weekday set), meals to plan, repeat favourites,
+weekday/weekend time, quick, minimal clean-up, one-pot and batch cooking (set separately for weekdays and the weekend; the Week calendar uses each day's set, the list uses the weekday set), meals to plan, repeat favourites,
 familiar vs new, variety against already-selected recipes, ingredient reuse, budget-friendly (catalog
 “Budget” tag). With default settings nothing is hidden and the order is unchanged.
 
@@ -102,7 +101,7 @@ event. Moving to account storage later is a storage swap behind `loadSettings`/`
 
 `npm run test:basic-settings` (45 checks, incl. per-member food likes/dislikes: persistence, migration, empty vs unset, two-tab merge, failed write,
 AND/OR devices, household restrictions, uncertain allergens, ranking, replacement, Weekly Meals filtering,
-Fill my week) and `BASE_URL=http://localhost:5001 npm run test:basic-settings-browser` (39 checks: keyboard,
+the full-week proposal in test:week-suggestions) and `BASE_URL=http://localhost:5001 npm run test:basic-settings-browser` (39 checks: keyboard,
 autosave failure/retry, reload, Weekly Meals, My Recipes unchanged, en/ru/he, RTL, desktop/mobile, touch targets) and
 `npm run test:weekly-preferences-browser` (34 checks: auto-applied restrictions, chips, soft vs hard time, search, manual
-filters + Clear filters, edit → return, Fill my week, My Recipes, no-match state, ru/he RTL mobile). Unit tests: 25.
+filters + Clear filters, edit → return, the Suggested week keeping a planned meal, My Recipes, no-match state, ru/he RTL mobile). Unit tests: 25.

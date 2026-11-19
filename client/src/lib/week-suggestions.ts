@@ -38,7 +38,7 @@ export function challengeDays(settings: BasicSettings, evenings: number[]): numb
 
 /** How involved a recipe is, from recorded data only: steps, ingredient lines and total time. Used for ranking, never to hide.
  * ponytail: a proxy; replace with real difficulty tags when the catalog has them. */
-const effort = (r: EngineRecipe) => (r.stepCount ?? 0) + r.ingredients.length / 2 + (total(r) ?? 30) / 15;
+export const effort = (r: EngineRecipe) => (r.stepCount ?? 0) + r.ingredients.length / 2 + (total(r) ?? 30) / 15;
 
 export function dinnerEligibility(recipe: EngineRecipe, settings: BasicSettings, day?: number): Eligibility {
   return checkEligibility(recipe, settings, undefined, DINNER, day);
