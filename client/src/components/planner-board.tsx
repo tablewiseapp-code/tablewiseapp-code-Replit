@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { Minus, MoreHorizontal, Plus } from "lucide-react";
+import { RecipeViewRows } from "@/components/recipe-summary";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { addToPlan, checkAdd, mealSlots, moveTo, occupant, removeAt, repeatOn, setServingsAt, type MealSlot, type PlanState, type Slot } from "@/lib/meal-plan";
@@ -69,6 +70,7 @@ function RecipeCard({ recipe, locked, onPlan, onView }: { recipe: PlannerRecipe;
       <div className="min-w-0 flex-1">
         <p className="break-words text-sm font-medium">{recipe.title}</p>
         {facts && <p className="text-xs text-muted-foreground">{facts}</p>}
+        <RecipeViewRows recipe={recipe} testId={`selected-recipe-view-${recipe.id}`} />
         <div className="mt-1 flex items-center gap-1">
           <button type="button" onClick={onView} className={`-ms-2 min-h-11 rounded-full px-2 text-xs font-medium text-primary hover:bg-accent ${focus}`} data-testid={`view-recipe-${recipe.id}`}>{t("view")}</button>
           <button type="button" onClick={onPlan} disabled={locked} className={`${pill} ms-auto bg-primary px-3 text-xs text-white hover:bg-primary-hover disabled:opacity-50`} data-testid={`plan-recipe-${recipe.id}`}>

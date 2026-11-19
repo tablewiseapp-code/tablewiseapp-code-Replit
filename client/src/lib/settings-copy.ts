@@ -90,6 +90,11 @@ const en = {
   reasonMealUncertain: "meat content unclear ({meal})", reasonMealTime: "{minutes} min ({meal}: up to {max})", reasonMealTimeUnknown: "total time unknown ({meal}: up to {max})",
   bd_meal: "Meal settings (type and time)", mealCount: "{count} matching", chipMealRule: "{meal}: {rule}", pickOthers: "Don't match the settings for this meal",
   activeSubtitle: "Always active from My Basic Settings",
+  recipeView: "Recipe View", recipeViewHint: "Choose what recipe cards show everywhere in TableWise.", showNutrition: "Show nutrition", nutritionOff: "Nutrition off",
+  nutrientsLabel: "Nutrition per serving", recipeDetailsLabel: "Extra recipe details", noExtraDetails: "No extra details", preview: "Preview", sampleTitle: "Lemon chicken with rice",
+  nutrient_calories: "Calories", nutrient_protein: "Protein", nutrient_carbs: "Carbs", nutrient_fat: "Fat", nutrient_sugars: "Sugars", nutrient_fiber: "Fiber", nutrient_sodium: "Sodium",
+  detail_prepTime: "Prep time", detail_cookTime: "Cook time", detail_dietaryTags: "Dietary tags", detail_mainTool: "Main cooking tool",
+  perServing: "Per serving", estPerServing: "Est. per serving", unit_kcal: "kcal", unit_g: "g", unit_mg: "mg", prepValue: "Prep {n} min", cookValue: "Cook {n} min",
   noMatchTitle: "No recipes match your current settings.", noMatchBody: "Most often excluded by:", reasonCount: "{reason} — {count} recipes",
 };
 type Copy = typeof en;
@@ -182,6 +187,11 @@ const ru: Copy = {
   reasonMealUncertain: "неясно, есть ли мясо ({meal})", reasonMealTime: "{minutes} мин ({meal}: до {max})", reasonMealTimeUnknown: "общее время неизвестно ({meal}: до {max})",
   bd_meal: "Настройки приёма пищи (тип и время)", mealCount: "подходит: {count}", chipMealRule: "{meal}: {rule}", pickOthers: "Не подходят под настройки этого приёма пищи",
   activeSubtitle: "Всегда действуют из основных настроек",
+  recipeView: "Вид рецепта", recipeViewHint: "Выберите, что показывать в карточках рецептов во всём TableWise.", showNutrition: "Показывать пищевую ценность", nutritionOff: "Пищевая ценность скрыта",
+  nutrientsLabel: "Пищевая ценность на порцию", recipeDetailsLabel: "Дополнительные сведения", noExtraDetails: "Без дополнительных сведений", preview: "Пример", sampleTitle: "Курица с лимоном и рисом",
+  nutrient_calories: "Калории", nutrient_protein: "Белки", nutrient_carbs: "Углеводы", nutrient_fat: "Жиры", nutrient_sugars: "Сахара", nutrient_fiber: "Клетчатка", nutrient_sodium: "Натрий",
+  detail_prepTime: "Время подготовки", detail_cookTime: "Время готовки", detail_dietaryTags: "Диетические метки", detail_mainTool: "Основная посуда или прибор",
+  perServing: "На порцию", estPerServing: "Примерно на порцию", unit_kcal: "ккал", unit_g: "г", unit_mg: "мг", prepValue: "Подготовка {n} мин", cookValue: "Готовка {n} мин",
   noMatchTitle: "Нет рецептов, подходящих под ваши настройки.", noMatchBody: "Чаще всего исключено по причине:", reasonCount: "{reason} — рецептов: {count}",
 };
 
@@ -273,6 +283,11 @@ const he: Copy = {
   reasonMealUncertain: "לא ברור אם יש בשר ({meal})", reasonMealTime: "{minutes} דק׳ ({meal}: עד {max})", reasonMealTimeUnknown: "זמן כולל לא ידוע ({meal}: עד {max})",
   bd_meal: "הגדרות ארוחה (סוג וזמן)", mealCount: "{count} מתאימים", chipMealRule: "{meal}: {rule}", pickOthers: "לא מתאימים להגדרות של ארוחה זו",
   activeSubtitle: "פעיל תמיד מתוך ההגדרות הבסיסיות",
+  recipeView: "תצוגת מתכון", recipeViewHint: "בחרו מה יוצג בכרטיסי המתכונים בכל TableWise.", showNutrition: "הצגת ערכים תזונתיים", nutritionOff: "ערכים תזונתיים מוסתרים",
+  nutrientsLabel: "ערכים תזונתיים למנה", recipeDetailsLabel: "פרטים נוספים על המתכון", noExtraDetails: "ללא פרטים נוספים", preview: "תצוגה מקדימה", sampleTitle: "עוף לימוני עם אורז",
+  nutrient_calories: "קלוריות", nutrient_protein: "חלבון", nutrient_carbs: "פחמימות", nutrient_fat: "שומן", nutrient_sugars: "סוכרים", nutrient_fiber: "סיבים תזונתיים", nutrient_sodium: "נתרן",
+  detail_prepTime: "זמן הכנה", detail_cookTime: "זמן בישול", detail_dietaryTags: "תגיות תזונה", detail_mainTool: "כלי הבישול העיקרי",
+  perServing: "למנה", estPerServing: "הערכה למנה", unit_kcal: "קק״ל", unit_g: "גרם", unit_mg: "מ״ג", prepValue: "הכנה {n} דק׳", cookValue: "בישול {n} דק׳",
   noMatchTitle: "אין מתכונים שמתאימים להגדרות הנוכחיות שלך.", noMatchBody: "הסיבות הנפוצות ביותר:", reasonCount: "{reason} — {count} מתכונים",
 };
 

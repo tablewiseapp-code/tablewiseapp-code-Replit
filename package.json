@@ -46,6 +46,7 @@
     "test:recipe-catalog": "tsx script/test-recipe-catalog.ts",
     "test:basic-settings": "tsx script/test-basic-settings.ts",
     "test:basic-settings-browser": "node script/test-basic-settings-browser.mjs",
+    "test:recipe-view-browser": "node script/test-recipe-view-browser.mjs",
     "test:weekly-preferences-browser": "node script/test-weekly-preferences-browser.mjs",
     "test:recipe-catalog-db": "bash script/recipe-catalog-db.sh",
     "test:catalog": "tsx script/test-dinner-catalog.ts",

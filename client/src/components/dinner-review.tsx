@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useI18n } from "@/lib/i18n";
+import { RecipeViewRows } from "@/components/recipe-summary";
 import { useHouseholdCopy } from "@/lib/household-copy";
 import { limitingReasons } from "@/lib/active-preferences";
 import { householdServings, loadSettings, updateSettings, type BasicSettings } from "@/lib/basic-settings";
@@ -83,6 +84,7 @@ export function DinnerReview({ plan, recipes, settings, locked, commit, notify, 
                 {recipe ? <>
                   <Link href={`/recipe/${encodeURIComponent(recipe.id)}`} className="text-sm font-medium text-foreground underline-offset-2 hover:underline">{recipe.title}</Link>
                   <p className="text-xs text-muted-foreground">{[minutes ? t("minutes", { n: minutes }) : t("timeUnknown"), found?.servings ? t("servings", { n: found.servings }) : null].filter(Boolean).join(" · ")}</p>
+                  <RecipeViewRows recipe={recipe} testId={`dinner-view-${day}`} />
                 </> : <>
                   <p className="text-sm text-muted-foreground">{t("openEvening")}</p>
                   {why && <div className="text-xs text-muted-foreground" data-testid={`open-reason-${day}`}>

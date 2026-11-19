@@ -8,9 +8,8 @@ import { RecipeCreditLine } from "./recipe-credit";
 import type { RecipeCredit } from "@shared/recipe-credit";
 import type { RecipeToolKey } from "@/lib/recipe-tools";
 import type { NutritionFields } from "@shared/recipe-nutrition";
-import { useNutritionBlocks } from "./recipe-nutrition";
 import { RecipeFactLayout, type RecipeFactBlock } from "./recipe-fact-layout";
-import { NutritionDetailsToggle, useRecipeDisplay } from "./recipe-display";
+import { NutritionDetailsToggle } from "./recipe-display";
 
 const TimeContext = createContext<{
   mode: RecipeTimeMode;
@@ -66,12 +65,9 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
   showLink?: boolean;
 }) {
   const { mode } = useRecipeTime();
-  const { showNutrition } = useRecipeDisplay();
   const { t } = useMvpCopy();
   const minutes = recipeStageMinutes(recipe, mode);
   const portions = recipe.servings?.trim();
-  const nutritionBlocks = useNutritionBlocks({ recipe, compact, context })
-    .filter(block => context !== "catalog" || block.id !== "nutrition-status");
   // Unknown values are omitted rather than shown as "not specified".
   const hasCredit = recipe.creditKind === "mine" || Boolean(recipe.creditName?.trim() || recipe.chefReference?.trim());
   const blocks: RecipeFactBlock[] = [
@@ -88,13 +84,13 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
       <div>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</div> }] : []),
     // catalog cards keep credit off the card face
     ...(context === "catalog" || !hasCredit ? [] : [{ id: "credit" as const, label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> }]),
-    ...(showNutrition ? nutritionBlocks : []),
+    // Nutrition is shown once, by RecipeViewRows on the card (Settings → Recipe View).
   ];
   return (
     <div className={`flex min-w-0 basis-full flex-wrap items-start gap-x-3 gap-y-1 text-muted-foreground ${compact ? "text-[10px]" : "text-xs"}`}
       data-testid={`meals-${context}-facts-${recipe.id}`}>
       <RecipeFactLayout blocks={blocks} context={`${context}-${recipe.id}`} interactive={interactive ?? (!compact && context === "catalog")}
-        testId={showNutrition ? `nutrition-${context}-${recipe.id}` : undefined} />
+        testId={undefined} />
       {context !== "drag" && showLink && (
         <Link href={`/recipe/${recipe.id}`} onPointerDown={event => event.stopPropagation()}
           onKeyDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}

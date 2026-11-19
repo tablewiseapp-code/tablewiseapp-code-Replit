@@ -13,6 +13,8 @@ import { matchesPlannerFilters } from "../client/src/lib/planner-filters";
 import { evaluateAllergen } from "../shared/food-rules";
 import { activePreferenceChips, limitingReasons, matchCounts } from "../client/src/lib/active-preferences";
 import { evaluateDiet } from "../shared/food-rules";
+import { servingNutrition } from "../shared/recipe-nutrition";
+import { mainCookingTool } from "../client/src/lib/recipe-tools";
 
 let passed = 0;
 const test = (name: string, fn: () => void) => { fn(); passed++; console.log(`PASS ${name}`); };
@@ -583,5 +585,33 @@ test("food preference copy is translated in English, Russian and Hebrew", () => 
     if (lang !== "en" && !["ing_pizza"].includes(key)) assert.notEqual(text, settingsText("en", key), `${lang}.${key} is translated`);
   }
   assert.equal(settingsText("he", "likedByMany", { count: 2 }), "אהוב על 2 מבני הבית");
+});
+test("Recipe View: defaults, kept choices, legacy Week switch, per-serving nutrition", () => {
+  assert.deepEqual(defaultSettings().recipeView, { showNutrition: false, nutrients: ["protein", "carbs"], details: [] });
+  // Nutrient choices survive nutrition off; unknown values are dropped; an empty choice stays empty.
+  const kept = sanitizeSettings({ ...defaultSettings(), recipeView: { showNutrition: false, nutrients: ["sodium", "bogus", "fat"], details: ["mainTool", "x"] } });
+  assert.deepEqual(kept.recipeView, { showNutrition: false, nutrients: ["fat", "sodium"], details: ["mainTool"] });
+  assert.deepEqual(sanitizeSettings({ ...defaultSettings(), recipeView: { showNutrition: true, nutrients: [] } }).recipeView.nutrients, []);
+  // Settings saved before Recipe View keep the Week's earlier browser switch.
+  const old = { ...defaultSettings() } as Partial<BasicSettings>; delete old.recipeView;
+  const g = globalThis as { localStorage?: unknown };
+  g.localStorage = memory({ "tablewise:nutrition-details:v1": "true" });
+  try {
+    assert.equal(sanitizeSettings(old).recipeView.showNutrition, true);
+    assert.equal(sanitizeSettings(null).recipeView.showNutrition, true);
+    assert.equal(sanitizeSettings({ ...defaultSettings(), recipeView: { showNutrition: false } }).recipeView.showNutrition, false, "a saved choice wins");
+  } finally { delete g.localStorage; }
+  assert.equal(sanitizeSettings(old).recipeView.showNutrition, false);
+
+  const totals = { caloriesKcal: 2000, proteinG: 128, carbsG: 0, fatG: 60, fiberG: 10, sugarG: 0 };
+  const nutrition = { version: 1 as const, source: "ai-estimate" as const, model: "gpt", analyzedAt: new Date(0).toISOString(), inputHash: "a".repeat(64), assumptions: ["x"], totals };
+  assert.deepEqual(servingNutrition({ nutrition, servings: "4" }), { estimated: true,
+    values: { calories: 500, protein: 32, carbs: 0, fat: 15, sugars: 0, fiber: 2.5 } }, "totals ÷ servings; a recorded 0 stays; sodium unknown");
+  for (const servings of [null, "", "0", "4-6", "12 muffins"]) assert.equal(servingNutrition({ nutrition, servings }), null, `no single serving count: ${servings}`);
+  assert.equal(servingNutrition({ servings: "4", nutrition: { ...nutrition, model: "mock-data" } }), null, "placeholder values never shown");
+  assert.equal(servingNutrition({ servings: "4" }), null, "imported recipe without nutrition");
+  assert.deepEqual(servingNutrition({ nutrition, servings: "4", perServing: { sodium: 610, protein: Number.NaN } }), { estimated: false, values: { sodium: 610 } }, "stored per-serving wins");
+  assert.equal(mainCookingTool({ steps: ["Chop on a cutting board with a knife.", "Roast in the oven."] }), "toolOven");
+  assert.equal(mainCookingTool({ steps: ["Mix in a bowl."] }), null);
 });
 console.log(`All ${passed} My Basic Settings tests passed.`);

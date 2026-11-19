@@ -14,8 +14,10 @@ import { setGuestChoice, switchPerson, useAccountCopy, type Me } from "@/lib/acc
 import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
 import { mealSlots, type MealSlot } from "@/lib/meal-plan";
+import { recipeNutrients } from "@shared/recipe-nutrition";
+import { RecipeMeta, RecipeViewRows, type RecipeViewData } from "@/components/recipe-summary";
 import {
-  cookingPrefKeys, emptyMember, householdServings, leftoverOptions, mealRecipeTypes, mealTimeLimits, noveltyOptions, portionSizes, servingLimits,
+  cookingPrefKeys, emptyMember, recipeDetails, householdServings, leftoverOptions, mealRecipeTypes, mealTimeLimits, noveltyOptions, portionSizes, servingLimits,
   useBasicSettings, varietyOptions, type BasicSettings, type IngredientChoice, type MealRule, type Member,
 } from "@/lib/basic-settings";
 
@@ -296,6 +298,12 @@ function AccountCard() {
   );
 }
 
+/** Settings → Recipe View preview: a sample with every value filled in, so each choice shows. */
+const sampleRecipe: RecipeViewData = {
+  id: "sample", servings: "4", prepTime: 10, cookTime: 25, tags: ["glutenfree", "dairyfree"], equipment: ["toolOven"],
+  perServing: { calories: 520, protein: 32, carbs: 45, fat: 14, sugars: 3, fiber: 4, sodium: 610 },
+};
+
 export default function BasicSettingsPage() {
   const { dir, t: app } = useI18n();
   const t = useSettingsCopy();
@@ -463,6 +471,25 @@ export default function BasicSettingsPage() {
             <Toggle label={t("reuseIngredients")} on={s.shopping.reuseIngredients} onChange={reuseIngredients => edit("shopping", { reuseIngredients })} testid="pref-reuse" />
             <Terms label={t("pantry")} hint={t("pantryHint")} placeholder={t("pantryPlaceholder")} values={s.shopping.pantry} onChange={pantry => edit("shopping", { pantry })} testid="pantry" />
             <Note>{t("shoppingDeferred")}</Note>
+          </>)}
+
+          {section("recipe-view", t("recipeView"), [s.recipeView.showNutrition
+              ? recipeNutrients.filter(n => s.recipeView.nutrients.includes(n)).map(n => t(`nutrient_${n}`)).join(", ") || t("showNutrition") : t("nutritionOff"),
+            recipeDetails.filter(d => s.recipeView.details.includes(d)).map(d => t(`detail_${d}`)).join(", ") || t("noExtraDetails")].join(" · "), <>
+            <p className="mt-2 text-sm text-muted-foreground">{t("recipeViewHint")}</p>
+            <Toggle label={t("showNutrition")} on={s.recipeView.showNutrition} onChange={showNutrition => edit("recipeView", { showNutrition })} testid="recipe-view-nutrition" />
+            {s.recipeView.showNutrition && <Chips label={t("nutrientsLabel")} options={recipeNutrients} selected={s.recipeView.nutrients} labelOf={n => t(`nutrient_${n}`)}
+              onToggle={n => edit("recipeView", { nutrients: toggle(s.recipeView.nutrients, n) })} testid="recipe-view-nutrient" />}
+            <Chips label={t("recipeDetailsLabel")} options={recipeDetails} selected={s.recipeView.details} labelOf={d => t(`detail_${d}`)}
+              onToggle={d => edit("recipeView", { details: toggle(s.recipeView.details, d) })} testid="recipe-view-detail" />
+            <div className="mt-5 pb-3" data-testid="recipe-view-preview">
+              <p className="text-sm font-medium text-muted-foreground">{t("preview")}</p>
+              <div className="mt-2 rounded-lg border hairline bg-card p-3">
+                <p className="text-base font-semibold text-foreground">{t("sampleTitle")}</p>
+                <RecipeMeta recipe={sampleRecipe} testId="recipe-view-preview-meta" />
+                <RecipeViewRows recipe={sampleRecipe} view={s.recipeView} testId="recipe-view-preview-rows" className="mt-1" />
+              </div>
+            </div>
           </>)}
         </Accordion>
       </PageContainer>

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RecipeCreditLine } from "@/components/recipe-credit";
+import { RecipeViewRows } from "@/components/recipe-summary";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
@@ -56,6 +57,7 @@ export function MealSuggestion({ meal, day, catalog, onClose }: { meal: MealSlot
             <p className="text-xs font-medium text-muted-foreground">{text("pickHowAbout")}</p>
             <Link href={`/recipe/${encodeURIComponent(recipe.id)}`} className="mt-1 block text-base font-semibold text-foreground underline-offset-2 hover:underline">{recipe.title}</Link>
             {recipe.minutes > 0 && <p className="text-sm text-muted-foreground">{recipe.minutes} {view("minutes")}</p>}
+            <RecipeViewRows recipe={recipe} testId="meal-suggestion-view" />
             <RecipeCreditLine recipe={recipe} />
           </div>
         ) : (

@@ -43,7 +43,7 @@ try {
   await go("/settings"); await ev("localStorage.clear()"); await go("/settings");
   await until(q("members-empty"), "empty household state");
   ok(await ev(`${q("text-page-title")}.textContent`) === "My Basic Settings", "title");
-  ok(await ev(`[...document.querySelectorAll('[data-testid^="section-"][data-testid$="-toggle"]')].length`) === 6, "six sections");
+  ok(await ev(`[...document.querySelectorAll('[data-testid^="section-"][data-testid$="-toggle"]')].length`) === 7, "seven sections (Recipe View last)");
 
   // Keyboard: focus "Add adult", press Enter; Tab moves on; Space toggles a chip.
   await ev(`${q("add-adult")}.focus()`); await key("Enter");

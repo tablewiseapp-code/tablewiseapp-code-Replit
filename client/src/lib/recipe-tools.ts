@@ -22,3 +22,5 @@ export function recipeToolKeys(steps: string[], explicit?: readonly string[] | n
   const text = steps.join(" ");
   return equipment.filter(tool => tool.pattern.test(text)).map(tool => tool.label);
 }
+export const mainCookingTool = (recipe: { steps?: string[] | null; equipment?: readonly string[] | null }) =>
+  recipeToolKeys(recipe.steps ?? [], recipe.equipment).find(tool => tool !== "toolBowl" && tool !== "toolKnife" && tool !== "toolBoard") ?? null;
