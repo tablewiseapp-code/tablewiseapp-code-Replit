@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
+import { householdText } from "@/lib/household-copy";
 import { ChevronDown, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useI18n } from "@/lib/i18n";
@@ -58,9 +59,9 @@ export function useWeekFilterChips(filters: WeekFilters, onChange: (next: WeekFi
 
 /** The Week → Plan filters. One component for the Week page (sidebar and phone sheet) and Your household, so both
  * always show the same filters in the same state. `eligible`: recipes allowed by Basic Settings (cuisine choices). */
-export function WeekFilterPanel({ filters, onChange, devices, eligible, matchingCount, mealCount }: {
+export function WeekFilterPanel({ filters, onChange, devices, eligible, matchingCount, mealCount, variant = "week" }: {
   filters: WeekFilters; onChange: (next: WeekFilters) => void; devices: DeviceId[]; eligible: readonly PlannerRecipe[];
-  matchingCount: number; mealCount?: (meal: MealSlot) => number;
+  matchingCount: number; mealCount?: (meal: MealSlot) => number; variant?: "week" | "onboarding";
 }) {
   const { t, lang } = useI18n();
   const c = useWeekFilterCopy();
@@ -123,33 +124,14 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
       </div>
     );
   };
-  return (
-            <>
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-base font-medium text-foreground" data-testid="additional-filters-count">{t("filters.open", { count: activeFilterCount })}</h2>
-                {activeFilterCount > 0 && (
-                  <button type="button" onClick={clearAllFilters} className="btn btn-text" data-testid="button-clear-filters">
-                    {t("filters.clearAll")}
-                  </button>
-                )}
-              </div>
-              <p className="mb-3 text-sm text-muted-foreground" aria-live="polite" data-testid="sidebar-matching" data-count={matchingCount}>
-                {matchingCount === 1 ? t("meals.matchingCountOne") : t("meals.matchingCount", { count: matchingCount })}
-              </p>
-              {activeFilterChips.length > 0 && (
-                <ul aria-label={t("filters.applied")} className="mb-4 flex flex-wrap gap-1.5" data-testid="active-filter-chips">
-                  {activeFilterChips.map(chip => (
-                    <li key={chip.label}>
-                      <button type="button" onClick={chip.remove} aria-label={t("meals.removeFilter", { label: chip.label })} data-testid="active-filter-chip"
-                        className="chip">
-                        {chip.label}<X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <section className="border-b hairline pb-3 mb-3" data-filter-section="cookingLevel" aria-labelledby="filter-title-level">
+  // Onboarding (Your household) already asked about diets and kitchen equipment, so those sections are left out there,
+  // Meal type leads and Cuisine is shown up front as optional. Both pages still share one filter state.
+  const onboarding = variant === "onboarding";
+  const main = onboarding ? ["mealType", "cookingLevel", "time", "kidFavourites", "source", "cuisine"] : ["cookingLevel", "time", "dietary", "kidFavourites", "kitchenTools", "source"];
+  const more = onboarding ? ["protein", "ingredients", "myPicks", "personal"] : ["protein", "mealType", "ingredients", "cuisine", "myPicks", "personal"];
+  const blocks: Record<string, ReactNode> = {
+    cookingLevel: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="cookingLevel" aria-labelledby="filter-title-level">
                 {sectionTitle(c("cookingLevel"), "filter-title-level")}
                 <div className="flex flex-wrap gap-2">
                   {cookingLevels.map(level => (
@@ -158,8 +140,9 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                   ))}
                 </div>
               </section>
-
-              <section className="border-b hairline pb-3 mb-3" data-filter-section="time" aria-labelledby="filter-title-time">
+    ),
+    time: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="time" aria-labelledby="filter-title-time">
                 {sectionTitle(c("totalTime"), "filter-title-time")}
                 <div className="flex flex-wrap gap-2">
                   {[null, ...weekTimeOptions].map(mins => (
@@ -168,8 +151,9 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                   ))}
                 </div>
               </section>
-
-              <section className="border-b hairline pb-3 mb-3" data-filter-section="dietary" aria-labelledby="filter-title-dietary">
+    ),
+    dietary: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="dietary" aria-labelledby="filter-title-dietary">
                 {sectionTitle(c("dietary"), "filter-title-dietary")}
                 <div className="flex flex-wrap gap-2">
                   {dietaryIn("quick").map(o => (
@@ -204,16 +188,18 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                   )}
                 </div>
               </section>
-
-              <div className="border-b hairline pb-3 mb-3" data-filter-section="kidFavourites">
+    ),
+    kidFavourites: (
+<div className="border-b hairline pb-3 mb-3" data-filter-section="kidFavourites">
                 <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
                   <span className="text-sm font-medium text-foreground">{c("kidFavourites")}</span>
                   <Switch checked={filters.dietary.includes(KID_FAVOURITES)} onCheckedChange={() => toggleArrayFilter("dietary", KID_FAVOURITES)}
                     data-testid="filter-kid-favourites" />
                 </label>
               </div>
-
-              <section className="border-b hairline pb-3 mb-3" data-filter-section="kitchenTools" aria-labelledby="filter-title-tools">
+    ),
+    kitchenTools: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="kitchenTools" aria-labelledby="filter-title-tools">
                 {sectionTitle(c("kitchenTools"), "filter-title-tools")}
                 <div className="flex flex-wrap gap-2">
                   {methodChoices(devices).map(tool => (
@@ -222,8 +208,9 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                   ))}
                 </div>
               </section>
-
-              <section className="border-b hairline pb-3 mb-3" data-filter-section="source" aria-labelledby="filter-title-source">
+    ),
+    source: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="source" aria-labelledby="filter-title-source">
                 {sectionTitle(t("meals.source"), "filter-title-source")}
                 <div className="flex flex-wrap gap-2">
                   {sourceOptions.map(src => (
@@ -232,11 +219,9 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                   ))}
                 </div>
               </section>
-
-              {disclosure(moreFiltersOpen, () => setMoreFiltersOpen(v => !v), c(moreFiltersOpen ? "fewerFilters" : "moreFilters"), "more-filters-panel", "button-more-filters")}
-              {moreFiltersOpen && (
-                <div id="more-filters-panel" className="mt-2" data-testid="more-filters-panel">
-                  <section className="border-b hairline pb-3 mb-3" data-filter-section="protein" aria-labelledby="filter-title-protein">
+    ),
+    protein: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="protein" aria-labelledby="filter-title-protein">
                     {sectionTitle(t("meals.proteinType"), "filter-title-protein")}
                     <div className="flex flex-wrap gap-2">
                       {["Chicken", "Beef", "Seafood", "Plant-based"].map(protein => (
@@ -245,7 +230,9 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                       ))}
                     </div>
                   </section>
-                  <section className="border-b hairline pb-3 mb-3" data-filter-section="mealType" aria-labelledby="filter-title-meal">
+    ),
+    mealType: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="mealType" aria-labelledby="filter-title-meal">
                     {sectionTitle(t("meals.mealType"), "filter-title-meal")}
                     <div className="flex flex-wrap gap-2">
                       {["Breakfast", "Lunch", "Dinner", "Lunch box"].map(type => (
@@ -259,13 +246,17 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                       ))}
                     </div>
                   </section>
-                  <section className="border-b hairline mb-3" data-filter-section="ingredients">
+    ),
+    ingredients: (
+<section className="border-b hairline mb-3" data-filter-section="ingredients">
                     {ingredientInput("include")}
                     {ingredientInput("exclude")}
                   </section>
-                  {cuisineOptions.length > 0 && (
+    ),
+    cuisine: (
+cuisineOptions.length > 0 && (
                     <section className="border-b hairline pb-3 mb-3" data-filter-section="cuisine" aria-labelledby="filter-title-cuisine">
-                      {sectionTitle(t("meals.cuisine"), "filter-title-cuisine")}
+                      {sectionTitle(onboarding ? `${t("meals.cuisine")} (${householdText(lang, "optional")})` : t("meals.cuisine"), "filter-title-cuisine")}
                       <div className="flex flex-wrap gap-2">
                         {cuisineOptions.map(cu => (
                           <button key={cu} type="button" className="chip" aria-pressed={filters.cuisine.includes(cu)}
@@ -273,8 +264,10 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                         ))}
                       </div>
                     </section>
-                  )}
-                  <section className="border-b hairline pb-3 mb-3" data-filter-section="myPicks" aria-labelledby="filter-title-picks">
+                  )
+    ),
+    myPicks: (
+<section className="border-b hairline pb-3 mb-3" data-filter-section="myPicks" aria-labelledby="filter-title-picks">
                     {sectionTitle(t("meals.myPicksFilter"), "filter-title-picks")}
                     <label className="flex min-h-11 cursor-pointer items-center gap-3">
                       <input type="checkbox" checked={filters.myPicks} className="h-5 w-5 shrink-0 accent-primary" data-testid="checkbox-filter-mypicks"
@@ -293,7 +286,9 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                       </div>
                     )}
                   </section>
-                  <section className="pb-1" data-filter-section="personal">
+    ),
+    personal: (
+<section className="pb-1" data-filter-section="personal">
                     <label className="flex min-h-11 cursor-pointer items-center gap-3">
                       <input type="checkbox" checked={filters.withNotes} onChange={() => updateFilters({ withNotes: !filters.withNotes })}
                         className="h-5 w-5 shrink-0 accent-primary" data-testid="filter-with-notes" />
@@ -305,8 +300,41 @@ export function WeekFilterPanel({ filters, onChange, devices, eligible, matching
                       <span className="text-sm text-foreground">{t("meals.modifiedByMe")}</span>
                     </label>
                   </section>
-                </div>
+    ),
+  };
+  return (
+    <>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-medium text-foreground" data-testid="additional-filters-count">{t("filters.open", { count: activeFilterCount })}</h2>
+                {activeFilterCount > 0 && (
+                  <button type="button" onClick={clearAllFilters} className="btn btn-text" data-testid="button-clear-filters">
+                    {t("filters.clearAll")}
+                  </button>
+                )}
+              </div>
+              <p className="mb-3 text-sm text-muted-foreground" aria-live="polite" data-testid="sidebar-matching" data-count={matchingCount}>
+                {matchingCount === 1 ? t("meals.matchingCountOne") : t("meals.matchingCount", { count: matchingCount })}
+              </p>
+              {activeFilterChips.length > 0 && (
+                <ul aria-label={t("filters.applied")} className="mb-4 flex flex-wrap gap-1.5" data-testid="active-filter-chips">
+                  {activeFilterChips.map(chip => (
+                    <li key={chip.label}>
+                      <button type="button" onClick={chip.remove} aria-label={t("meals.removeFilter", { label: chip.label })} data-testid="active-filter-chip"
+                        className="chip">
+                        {chip.label}<X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </>
+
+      {main.map(key => <Fragment key={key}>{blocks[key]}</Fragment>)}
+      {disclosure(moreFiltersOpen, () => setMoreFiltersOpen(v => !v), c(moreFiltersOpen ? "fewerFilters" : "moreFilters"), "more-filters-panel", "button-more-filters")}
+      {moreFiltersOpen && (
+        <div id="more-filters-panel" className="mt-2" data-testid="more-filters-panel">
+          {more.map(key => <Fragment key={key}>{blocks[key]}</Fragment>)}
+        </div>
+      )}
+    </>
   );
 }

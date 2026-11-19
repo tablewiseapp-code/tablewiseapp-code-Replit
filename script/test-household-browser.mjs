@@ -55,7 +55,7 @@ try {
   await click("q-style-toggle");
   ok(await ev(`!document.getElementById("q-style-body").inert`), "a collapsed group opens again");
   await click("fixed-5");
-  ok((await ev(`${q("household-summary")}.textContent`)).startsWith("Quick & easy · 5 servings · None"), "summary shows the constraints");
+  ok((await ev(`${q("household-summary")}.textContent`)).startsWith("Quick & easy · 5 servings · 3"), "summary shows the constraints");
   // Too many fixed days: an inline offer, selections kept.
   for (const d of [1, 2, 3]) await click(`fixed-${d}`);
   await until(`Boolean(${q("over-count")})`, "over-count offer");
@@ -64,7 +64,11 @@ try {
   eq(await ev(`[...document.querySelectorAll('[data-testid^="allergy-"]')].map(b => b.dataset.testid.slice(8))`),
     ["milk", "eggs", "peanuts", "treeNuts", "soy", "gluten", "fish", "shellfish", "sesame", "mustard"], "all ten allergies offered");
   // "None" answers the restrictions question, so that group folds away and shows "None" beside its title.
-  await click("q-restrictions-toggle"); await click("restriction-none");
+  ok(await ev(`${q("restriction-none")}.getAttribute("aria-pressed") === "false"`), "None is not pre-selected");
+  await click("button-suggest-week");
+  await until(`Boolean(${q("restrictions-required")})`, "restrictions answer required");
+  ok(await ev(`location.pathname === "/household"`), "not suggested without an answer");
+  await click("restriction-none");
   ok(await ev(`document.querySelector('[data-testid="q-restrictions-toggle"]').getAttribute("aria-expanded") === "false"`), "None collapses the restrictions group");
   eq(await ev(`${q("q-restrictions-summary")}.textContent`), "None", "None shown beside the title");
   // Switching style keeps entered values.
