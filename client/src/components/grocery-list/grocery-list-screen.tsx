@@ -427,8 +427,8 @@ export default function GroceryListScreen() {
             </button>
           </div>
           {addOpen && <>
-            <GroceryAddItem onAdd={addExtra} />
-            <GroceryBulkAdd categories={categoryTranslations} onSave={addBulk}
+            <GroceryAddItem onAdd={async (text, image) => await addExtra(text, image) && (setAddOpen(false), true)} />
+            <GroceryBulkAdd categories={categoryTranslations} onSave={async items => await addBulk(items) && (setAddOpen(false), true)}
               existing={[...manualRows.map(row => ({ text: row.ingredient, id: row.extraId })), ...activeRows.filter(row => !row.extraId).map(row => ({ text: row.ingredient }))]} />
           </>}
           <p aria-live="polite" className="mt-3 text-sm font-medium">{copy("left")} · {rows.length}</p>
