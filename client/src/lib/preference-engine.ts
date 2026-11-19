@@ -18,7 +18,7 @@ export type Restriction =
   | { kind: "allergy"; allergen: Allergen; status: Exclude<RuleStatus, "ok">; members: string[]; lines: string[] }
   | { kind: "customAllergy"; term: string; members: string[] }
   | { kind: "time"; minutes: number; max: number }
-  /** Your household: the weeknight dinner time limit, on a given day. Unknown time never passes. */
+  /** Your household: a meal's Mon–Fri time limit, on a given day. Unknown time never passes. */
   | { kind: "dayTime"; day: number; minutes: number | null; max: number }
   /** Meal-specific rules (My Basic Settings → Weekly Meal Planning); only when a meal is being evaluated. */
   | { kind: "mealType"; meal: MealSlot; type: "meatless" | "meat"; status: Exclude<RuleStatus, "ok"> }
@@ -65,11 +65,12 @@ const dietTags: Partial<Record<DietPattern, string[]>> = { vegetarian: ["vegetar
 const allergenTags: Partial<Record<Allergen, string[]>> = { gluten: ["glutenfree"], milk: ["dairyfree", "vegan"] };
 const hasTag = (recipe: EngineRecipe, wanted: string[] | undefined) => !wanted || recipe.tags.some(tag => wanted.includes(tagKey(tag)));
 
-/** Your household's weeknight limit applies Mon–Fri, except a chosen chef challenge day. */
-export function weeknightLimit(settings: BasicSettings, day: number): number | null {
+/** Your household's weekday limit for one meal, Mon–Fri; the chosen chef challenge evening's dinner is not limited. */
+export function weeknightLimit(settings: BasicSettings, day: number, meal: MealSlot = "Dinner"): number | null {
   const s = settings.setup;
-  if (s.weeknightMax === null || day === 0 || day === 6) return null;
-  return s.style === "chef" && s.challenge.when === "day" && s.challenge.day === day ? null : s.weeknightMax;
+  const max = s.weeknightMax[meal];
+  if (max === null || day === 0 || day === 6) return null;
+  return meal === "Dinner" && s.style === "chef" && s.challenge.when === "day" && s.challenge.day === day ? null : max;
 }
 
 /** Hard restrictions: devices, every diner's dietary patterns, allergies and custom allergies, excluded ingredients and an
@@ -105,7 +106,7 @@ export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, 
   const minutes = total(recipe);
   if (hardMax && limit > 0 && minutes != null && minutes > limit) reasons.push({ kind: "time", minutes, max: limit });
   if (meal) reasons.push(...mealReasons(recipe, settings, meal));
-  const nightMax = day === undefined ? null : weeknightLimit(settings, day);
+  const nightMax = day === undefined ? null : weeknightLimit(settings, day, meal);
   if (nightMax !== null && (minutes == null || minutes > nightMax)) reasons.push({ kind: "dayTime", day: day!, minutes, max: nightMax });
   return { eligible: reasons.length === 0, reasons, members: [HOUSEHOLD, ...people.map(m => m.id)] };
 }
