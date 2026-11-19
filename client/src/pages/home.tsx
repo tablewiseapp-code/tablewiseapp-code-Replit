@@ -1,13 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { mealSlots, mealsOnDay, readPlan, type MealSlot } from "@/lib/meal-plan";
-import { buildShoppingList, groceryShoppingQueryKey, type Extra, type ShoppingPreference } from "@/lib/grocery-items";
-import { buildRecipeGroceryRows } from "@/lib/grocery-meal-removal";
-import { readGroceryPrefs } from "@/lib/grocery-progress";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
@@ -23,14 +19,6 @@ function SectionState({ error, retry, text }: { error: boolean; retry: () => voi
     : <p className="text-sm text-muted-foreground" aria-busy="true">{text("loading")}</p>;
 }
 
-/** How many task rows end above the bottom tab bar (at least one: with large text the page scrolls instead). */
-export function rowsThatFit(list: HTMLElement): number {
-  const nav = document.querySelector('[data-testid="app-nav-bottom"]')?.getBoundingClientRect().height ?? 0; // 0 when hidden on wide screens
-  const limit = window.innerHeight - nav - 16; // the card's bottom padding
-  const rows = Array.from(list.children).filter(row => row.getBoundingClientRect().bottom + window.scrollY <= limit);
-  return Math.max(1, rows.length);
-}
-
 export default function Home() {
   const { t, lang, dir } = useI18n();
   const text = (key: Parameters<typeof homeText>[1], values?: Record<string, string | number>) => homeText(lang, key, values);
@@ -39,43 +27,17 @@ export default function Home() {
   const [plan, setPlan] = useState(readPlan);
   const [picking, setPicking] = useState<MealSlot | null>(null);
   const catalog = useRecipeCatalog();
-  const extras = useQuery<Extra[]>({ queryKey: ["/api/grocery-extras"], retry: false, refetchOnMount: "always" });
-  const shopping = useQuery<ShoppingPreference[]>({ queryKey: groceryShoppingQueryKey, retry: false, refetchOnMount: "always" });
 
   const today = mealsOnDay(plan, now.getDay());
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
-  const usesCatalog = plan.selectedIds.length > 0 || plan.planAssignments.length > 0;
 
-  const grocery = () => {
-    if ((usesCatalog && catalog.isError) || extras.isError || shopping.isError) return "error";
-    if ((usesCatalog && catalog.isPending) || extras.isPending || shopping.isPending) return "loading";
-    const recipeRows = buildRecipeGroceryRows(plan, catalog.data ?? []);
-    const skipped = new Set(shopping.data?.filter(row => row.skipped).map(row => row.key));
-    const { activeRows, purchasedRows } = buildShoppingList(recipeRows, extras.data ?? [], readGroceryPrefs().checked, skipped);
-    return { total: activeRows.length + purchasedRows.length, left: activeRows.length };
-  };
-  const groceryState = grocery();
   const tx = useHomeTaskText();
   const tasks = useHomeTasks();
   const [editing, setEditing] = useState<HomeTask | null>(null);
   const preview = homePreview(tasks.data ?? [], localDate());
-  // Show every row, measure before paint, then keep only the rows that fit. Re-measure when anything above can change height.
-  const [fit, setFit] = useState(Infinity);
-  const listRef = useRef<HTMLUListElement>(null);
-  const aboveRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => setFit(Infinity), [preview.length, lang]);
-  useLayoutEffect(() => { if (fit === Infinity && listRef.current) setFit(rowsThatFit(listRef.current)); }, [fit, preview.length, lang]);
-  useEffect(() => {
-    const again = () => setFit(Infinity);
-    const observer = new ResizeObserver(again);
-    if (aboveRef.current) observer.observe(aboveRef.current);
-    window.addEventListener("resize", again);
-    return () => { observer.disconnect(); window.removeEventListener("resize", again); };
-  }, []);
-  const shown = preview.slice(0, fit);
 
   return (
-    <div className="min-h-screen bg-background pb-24 sm:pb-10" dir={dir}>
+    <div className="sm:pb-10" dir={dir}>
       <PageContainer size="md" className="py-4 sm:py-10">
         <header className="page-header mb-4 sm:mb-6">
           <h1 className="page-title sr-only sm:not-sr-only" data-testid="text-page-title">{text("title")}</h1>
@@ -85,7 +47,6 @@ export default function Home() {
         </header>
 
         <div className="flex flex-col gap-3 sm:gap-4">
-          <div ref={aboveRef} className="flex flex-col gap-3 sm:gap-4">
           <section className="card p-3 sm:p-5" aria-labelledby="home-meals" data-testid="home-meals">
             <div className="mb-1 flex items-center justify-between gap-2">
               <h2 id="home-meals" className="text-base font-semibold">{text("todaysMeals")}</h2>
@@ -126,35 +87,16 @@ export default function Home() {
             )}
           </section>
 
-          <section className="card flex flex-wrap items-center justify-between gap-x-3 gap-y-1 p-3 sm:p-5" aria-labelledby="home-groceries" data-testid="home-groceries">
-            <h2 id="home-groceries" className="text-base font-semibold">{text("groceries")}</h2>
-            <Link href="/grocery-list" className="btn btn-text order-last ms-auto">{text("openList")}</Link>
-            <div className="min-w-0 flex-1">
-            {groceryState === "error" || groceryState === "loading" ? (
-              <SectionState error={groceryState === "error"} retry={() => { void catalog.refetch(); void extras.refetch(); void shopping.refetch(); }} text={text} />
-            ) : groceryState.total === 0 ? (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">{text("noItems")}</p>
-                <Link href="/grocery-list?add" className="btn btn-secondary" data-testid="home-add-item">{text("addItem")}</Link>
-              </div>
-            ) : (
-              <p className="text-sm" data-testid="home-grocery-count">
-                {groceryState.left === 0 ? text("allChecked") : groceryState.left === 1 ? text("toBuyOne") : text("toBuy", { count: groceryState.left })}
-              </p>
-            )}
-            </div>
-          </section>
-          </div>
-
-          <section className="card p-3 sm:p-5" aria-labelledby="home-tasks" data-testid="home-task-preview">
-            <div className="mb-1 flex min-h-11 items-center justify-between gap-2">
-              <h2 id="home-tasks" className="text-base font-semibold">{tx("title")}</h2>
-              {shown.length < preview.length && <Link href="/home-tasks" className="btn btn-text" data-testid="link-view-all-tasks">{tx("viewAll")}</Link>}
-            </div>
+          <details className="card p-3 sm:p-5" data-testid="home-task-preview">
+            <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-base font-semibold">
+              {tx("title")}
+              {tasks.data && <span className="rounded-full bg-muted px-2 text-sm font-medium text-muted-foreground" data-testid="home-task-count">{preview.length}</span>}
+            </summary>
             {tasks.isPending || tasks.isError ? <SectionState error={tasks.isError} retry={() => tasks.refetch()} text={text} />
               : preview.length === 0 ? <p className="text-sm text-muted-foreground" data-testid="home-nothing-due">{tx("nothingDue")}</p>
-              : <ul ref={listRef}>{shown.map(task => <TaskRow key={task.id} task={task} onOpen={setEditing} />)}</ul>}
-          </section>
+              : <ul>{preview.map(task => <TaskRow key={task.id} task={task} onOpen={setEditing} />)}</ul>}
+            <Link href="/home-tasks" className="btn btn-text" data-testid="link-view-all-tasks">{tx("viewAll")}</Link>
+          </details>
         </div>
       </PageContainer>
       <MealSuggestion meal={picking} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setPicking(null)} onAdded={() => setPlan(readPlan())} />
