@@ -76,7 +76,7 @@ try {
   await ev(`localStorage.clear(); localStorage.setItem('tablewise_language','en'); localStorage.setItem('tablewise:time-display:v1','preparation');
     localStorage.setItem('weeklyMealsState', ${JSON.stringify(JSON.stringify(state))})`);
   await call("Fetch.enable", { patterns: [{ urlPattern: "*/api/recipes*", requestStage: "Request" }] });
-  await call("Page.navigate", { url: `${BASE}/meals` });
+  await call("Page.navigate", { url: `${BASE}/meals?browse` });
 
   // Empty state replaces the old message; active filters shown as chips; personal filter reported, not sent.
   await until(el("generate-recipe-empty"), "empty state");
@@ -136,10 +136,10 @@ try {
   assert.ok(await ev("document.documentElement.scrollWidth <= innerWidth + 1"), "no horizontal scroll");
 
   // Plan it: the planner's normal flow; the added-to-plan signal fires (not 'cooked').
-  await click("button-generate-plan");
-  await until(el("plan-recipe-ai-test-1"), "planner board");
-  await click("plan-recipe-ai-test-1"); await until(el("button-confirm-plan"), "plan dialog");
-  await click("plan-day-2"); await click("plan-meal-Dinner"); await click("button-confirm-plan");
+  await click("button-back-to-week");
+  await until(el("swap-Dinner-2"), "week calendar");
+  await click("swap-Dinner-2"); await until(el("pick-ai-test-1"), "picker offers the accepted recipe");
+  await click("pick-ai-test-1");
   await until(`JSON.parse(localStorage.getItem('weeklyMealsState')).planAssignments.some(a => a.recipeId === 'ai-test-1')`, "assignment saved");
   for (let i = 0; i < 20 && !events.includes("generated_recipe_added_to_plan"); i++) await sleep(100);
   assert.ok(events.includes("generated_recipe_added_to_plan"));

@@ -2,7 +2,7 @@
 // Hard restrictions come from checkEligibility (preference-engine.ts), the one rule every suggestion uses; this file only
 // picks evenings and ranks the eligible recipes. Plan days: 0 = Sunday … 6 = Saturday, as in meal-plan.ts.
 import { householdServings, type BasicSettings } from "./basic-settings";
-import { maxPlannedRecipes, occupant, type PlanAssignment, type PlanState } from "./meal-plan";
+import { mealSlots, maxPlannedRecipes, occupant, type MealSlot, type PlanAssignment, type PlanState, type Slot } from "./meal-plan";
 import { checkEligibility, rankRecipe, total, weeknightLimit, type EngineRecipe, type Eligibility } from "./preference-engine";
 
 export const weekOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon … Sun
@@ -49,15 +49,15 @@ const dinners = <T extends EngineRecipe>(catalog: readonly T[]) => catalog.filte
 export type Fits<T> = (recipe: T) => boolean;
 const any = () => true;
 
-/** Eligible dinners for one evening, best first. `exclude`: recipes not to offer (already planned, declined). */
+/** Eligible recipes of one meal (dinner by default) for one day, best first. `exclude`: recipes not to offer (already planned, declined). */
 export function rankedForDay<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, day: number,
-  { exclude = new Set<string>(), chosen = [], challenge = false, seed = "", fits = any }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; challenge?: boolean; seed?: string; fits?: Fits<T> } = {}): T[] {
-  const pool = dinners(catalog).filter(r => dinnerEligibility(r, settings).eligible);
+  { meal = DINNER, exclude = new Set<string>(), chosen = [], challenge = false, seed = "", fits = any }: { meal?: MealSlot; exclude?: Set<string>; chosen?: readonly EngineRecipe[]; challenge?: boolean; seed?: string; fits?: Fits<T> } = {}): T[] {
+  const pool = catalog.filter(r => r.mealType === meal && checkEligibility(r, settings, undefined, meal).eligible);
   const order = [...pool].sort((a, b) => effort(a) - effort(b));
   const pct = (r: EngineRecipe) => (order.length > 1 ? order.indexOf(r as T) / (order.length - 1) : 0.5);
   const target = challenge ? 1 : settings.setup.style === "quick" ? 0 : 0.4;
   const dayType = day === 0 || day === 6 ? "weekend" as const : "weekday" as const;
-  return pool.filter(r => !exclude.has(r.id) && fits(r) && dinnerEligibility(r, settings, day).eligible)
+  return pool.filter(r => !exclude.has(r.id) && fits(r) && checkEligibility(r, settings, undefined, meal, day).eligible)
     .map(r => ({ r, score: rankRecipe(r, settings, { day: dayType, selected: chosen }).score - 4 * Math.abs(pct(r) - target), tie: hash(`${seed}:${r.id}`) }))
     .sort((a, b) => b.score - a.score || a.tie - b.tie).map(x => x.r);
 }
@@ -120,6 +120,38 @@ export function replaceDinner(plan: PlanState, day: number, recipeId: string): P
   const stillUsed = planAssignments.some(a => a.recipeId === current.recipeId);
   const selectedIds = [...new Set([...plan.selectedIds.filter(id => stillUsed || id !== current.recipeId), recipeId])];
   return { ...plan, selectedIds, planAssignments };
+}
+
+// ---- The full week: 7 days × Breakfast, Lunch, Dinner ----
+/** Alternatives for one slot (Swap, Choose recipe), best first. The Week filters narrow them; when no recipe passes the
+ * filters, every recipe that passes the restrictions is offered instead. Restrictions are never relaxed. */
+export function slotOptions<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, { day, meal }: Slot,
+  { exclude, chosen, seed = "", fits = any }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; seed?: string; fits?: Fits<T> } = {}): T[] {
+  const challenge = meal === DINNER && challengeDays(settings, cookingEvenings(settings)).includes(day);
+  const ranked = (f: Fits<T>) => rankedForDay(catalog, settings, day, { meal, exclude, chosen, challenge, seed, fits: f });
+  const filtered = ranked(fits);
+  return filtered.length ? filtered : ranked(any);
+}
+
+/** The proposed week. Keeps every scheduled meal and fills each empty slot with the best eligible recipe of that meal,
+ * preferring one not yet in the week (a recipe repeats only when the eligible ones run out). Deterministic for a seed.
+ * Returns the slots with no eligible recipe; they stay empty. */
+export function proposeWeek<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, seed: string, fits: Fits<T> = any) {
+  const servings = householdServings(settings);
+  const assignments = [...plan.planAssignments];
+  const uses = new Map<string, number>();
+  for (const a of assignments) uses.set(a.recipeId, (uses.get(a.recipeId) ?? 0) + 1);
+  const open: Slot[] = [];
+  for (const meal of [...mealSlots].reverse()) for (const day of weekOrder) { // dinners first: they have the most rules
+    if (occupant({ ...plan, planAssignments: assignments }, meal, day)) continue;
+    const chosen = catalog.filter(r => uses.has(r.id));
+    const options = slotOptions(catalog, settings, { day, meal }, { chosen, seed, fits });
+    if (!options.length) { open.push({ day, meal }); continue; }
+    const pick = options.reduce((best, r) => ((uses.get(r.id) ?? 0) < (uses.get(best.id) ?? 0) ? r : best)); // least used, then best ranked
+    assignments.push({ recipeId: pick.id, mealType: meal, startDay: day, spanDays: 1, ...(servings ? { servings } : {}) });
+    uses.set(pick.id, (uses.get(pick.id) ?? 0) + 1);
+  }
+  return { plan: { ...plan, planAssignments: assignments, proposed: true }, open };
 }
 
 /** First visit: no household answers, no saved settings and an empty Week. Returning people and anyone with a plan skip it. */

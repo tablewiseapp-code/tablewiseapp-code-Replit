@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { addToPlan, checkAdd, moveTo, occupant, plannedSlotCount, removeAt, repeatOn, setServingsAt, totalSlots, type PlanState } from "../client/src/lib/meal-plan";
+import { addToPlan, checkAdd, moveOrSwap, moveTo, occupant, setRecipeAt, plannedSlotCount, removeAt, repeatOn, setServingsAt, totalSlots, type PlanState } from "../client/src/lib/meal-plan";
 
 const empty = (): PlanState => ({ selectedIds: ["a", "b"], planAssignments: [] });
 
@@ -90,5 +90,20 @@ assert.equal(JSON.stringify(plan), frozen, "helpers never mutate their input");
   const sent = mealsGenerationFilters({ ...none, dietary: ["Gluten-free", "Halal"], deal: "ground-beef", cookingLevel: "easy" });
   assert.deepEqual(sent.filters.dietary, ["Gluten-free"]);
   assert.deepEqual(sent.notApplied, ["dietary", "cookingLevel", "deal"]);
+}
+// Move meal: a free target moves; an occupied one trades places, so both meals stay scheduled with their servings.
+{
+  const two: PlanState = { selectedIds: [], planAssignments: [
+    { recipeId: "a", mealType: "Dinner", startDay: 1, spanDays: 1, servings: 6 }, { recipeId: "b", mealType: "Lunch", startDay: 3, spanDays: 1, servings: 2 }] };
+  const traded = moveOrSwap(two, { day: 1, meal: "Dinner" }, { day: 3, meal: "Lunch" });
+  assert.deepEqual([occupant(traded, "Lunch", 3)?.recipeId, occupant(traded, "Lunch", 3)?.servings], ["a", 6]);
+  assert.deepEqual([occupant(traded, "Dinner", 1)?.recipeId, occupant(traded, "Dinner", 1)?.servings], ["b", 2]);
+  assert.equal(occupant(moveOrSwap(two, { day: 1, meal: "Dinner" }, { day: 0, meal: "Breakfast" }), "Breakfast", 0)?.recipeId, "a");
+  assert.equal(moveOrSwap(two, { day: 2, meal: "Dinner" }, { day: 3, meal: "Lunch" }), two, "nothing to move");
+  // Swap / Choose recipe: one slot changes, its servings stay, every other slot is untouched.
+  const swapped = setRecipeAt(two, { day: 3, meal: "Lunch" }, "c");
+  assert.deepEqual(swapped.planAssignments, [two.planAssignments[0], { ...two.planAssignments[1], recipeId: "c" }]);
+  assert.deepEqual(setRecipeAt(two, { day: 0, meal: "Lunch" }, "d", 4).planAssignments.at(-1), { recipeId: "d", mealType: "Lunch", startDay: 0, spanDays: 1, servings: 4 });
+  assert.equal(setRecipeAt(two, { day: 1, meal: "Dinner" }, "a"), two);
 }
 console.log("weekly planner checks passed");

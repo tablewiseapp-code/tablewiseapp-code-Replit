@@ -92,46 +92,52 @@ try {
   await until(`${inPanel('[data-testid="household-filters"]', "filter-kid-favourites")}.getAttribute("aria-checked") === "true"`, "kid favourites on");
   ok((await ev(`${q("q-filters-summary")}.textContent`)).includes("Kid favourites"), "filters summary");
 
-  // ---- Suggest my week → the populated board: Friday plus two more, 5 servings each.
+  // ---- Suggest my week → the Week calendar: Friday's dinner plus the full 21-meal proposal, 5 servings each.
   await click("button-suggest-week");
-  await until(`location.pathname === "/meals" && Boolean(${q("dinner-review")})`, "Week review");
+  await until(`location.pathname === "/meals" && Boolean(${q("week-status")})`, "Week calendar");
   let week = await dinners();
-  eq(week.length, 3, "three dinners");
+  eq(week.length, 7, "a dinner every day");
+  eq((await plan()).planAssignments.length, 21, "21 meals");
   ok(week.some(a => a.startDay === 5), "Friday scheduled");
-  ok(week.every(a => a.servings === 5), "five servings each");
-  ok((await ev(`${q("dinner-5")}.textContent`)).includes("5 servings"), "row shows servings");
-  ok(await noScroll(), "Week review fits a phone");
+  ok((await plan()).planAssignments.every(a => a.servings === 5), "five servings each");
+  ok((await ev(`${q("meta-Dinner-5")}.textContent`)).includes("5 servings"), "card shows servings");
+  ok(await noScroll(), "Week calendar fits a phone");
 
-  ok(await Promise.all(week.map(a => recipe(a.recipeId))).then(rs => rs.every(r => r.tags.includes("Kid friendly"))), "suggestions respect the shared filters");
+  ok(await Promise.all(week.map(a => recipe(a.recipeId))).then(rs => rs.every(r => r.tags.includes("Kid friendly"))), "dinners respect the shared filters");
 
-  // ---- Swap only Friday.
-  const before = week;
-  await click("swap-5");
-  await until(`${q("dinner-5")}.dataset.recipeId !== ${JSON.stringify(before.find(a => a.startDay === 5).recipeId)}`, "Friday swapped");
+  // ---- Swap only Friday's dinner.
+  const all = async () => (await plan()).planAssignments.slice().sort((a, b) => a.startDay - b.startDay || a.mealType.localeCompare(b.mealType));
+  const before = await all();
+  const friday = before.find(a => a.startDay === 5 && a.mealType === "Dinner").recipeId;
+  await click("swap-Dinner-5");
+  await until(`Boolean(document.querySelector('[data-testid="pick-list-Dinner-5"] button'))`, "picker");
+  await ev(`document.querySelector('[data-testid="pick-list-Dinner-5"] button').click()`);
+  await until(`${q("cell-Dinner-5")}.dataset.recipe !== ${JSON.stringify(friday)}`, "Friday swapped");
+  const after = await all();
+  eq(after.filter(a => !(a.startDay === 5 && a.mealType === "Dinner")), before.filter(a => !(a.startDay === 5 && a.mealType === "Dinner")), "other meals unchanged");
   week = await dinners();
-  eq(week.filter(a => a.startDay !== 5), before.filter(a => a.startDay !== 5), "other evenings unchanged");
 
   // ---- Refresh keeps the draft.
-  await go("/meals?plan", `Boolean(${q("dinner-review")})`);
+  await go("/meals?plan", `Boolean(${q("week-status")})`);
   eq(await dinners(), week, "draft survives a refresh");
 
-  // ---- Approve → Groceries from scheduled dinners only; approving again changes nothing.
+  // ---- Approve → Groceries from scheduled meals only; approving again changes nothing.
   await click("button-approve-week");
   await until(`Boolean(${q("button-edit-week")})`, "approved");
-  const scheduled = new Set((await Promise.all(week.map(a => recipe(a.recipeId)))).map(r => r.title));
+  const scheduled = new Set((await Promise.all((await plan()).planAssignments.map(a => recipe(a.recipeId)))).map(r => r.title));
   const groceryTitles = async () => {
     await go("/grocery-list", `document.querySelectorAll('[data-testid="grocery-item-recipes"]').length > 0`);
     return ev(`[...document.querySelectorAll('[data-testid="grocery-item-recipes"]')].map(e => e.textContent)`);
   };
   const first = await groceryTitles();
-  ok(first.every(text => [...scheduled].some(t => text.includes(t))), "every grocery row comes from a scheduled dinner");
+  ok(first.every(text => [...scheduled].some(t => text.includes(t))), "every grocery row comes from a scheduled meal");
   await go("/meals?plan", `Boolean(${q("button-edit-week")})`);
   await click("button-edit-week"); await until(`Boolean(${q("button-approve-week")})`, "editable");
   await click("button-approve-week"); await until(`Boolean(${q("button-edit-week")})`, "approved again");
   eq(await groceryTitles(), first, "approving twice does not duplicate groceries");
 
   // ---- Same filter state on the Week page, and back: a filter set there shows on Your household.
-  await go("/meals", `Boolean(${inPanel("#meal-filters", "filter-kid-favourites")})`);
+  await go("/meals?browse", `Boolean(${inPanel("#meal-filters", "filter-kid-favourites")})`);
   eq(await ev(`${inPanel("#meal-filters", "filter-kid-favourites")}.getAttribute("aria-checked")`), "true", "Week page shows the household filter");
   await ev(`${inPanel("#meal-filters", "filter-time-any")}.click()`);
   await go("/household", `Boolean(${q("q-filters-summary")})`);

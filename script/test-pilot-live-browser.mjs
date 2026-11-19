@@ -51,7 +51,7 @@ try {
     localStorage.setItem('weeklyMealsState', JSON.stringify({ selectedIds: [${JSON.stringify(first)}], planAssignments: [{ recipeId: ${JSON.stringify(first)}, mealType: 'Dinner', startDay: 0, spanDays: 1 }] }))`);
   sent.length = 0;
 
-  await go("/meals");
+  await go("/meals?browse");
   await until(el(`button-add-${second}`), "catalog");
   await until("true", "settle"); await sleep(800);
   assert.equal(names("planner_opened").length, 1, "planner_opened once");
@@ -62,14 +62,14 @@ try {
   await ev(`${el(`button-add-${second}`)}.click()`); await sleep(800);
   assert.deepEqual(names("meal_selected").map(e => e.recipeId), [second]);
 
-  await ev(`${el("button-generate-plan")}.click()`);
-  await until(el("button-finalize-week"), "plan view");
+  await ev(`${el("button-back-to-week")}.click()`);
+  await until(el("button-approve-week"), "week calendar");
   assert.equal(names("plan_completed").length, 0);
-  await ev(`${el("button-finalize-week")}.click()`); await sleep(800);
+  await ev(`${el("button-approve-week")}.click()`); await sleep(800);
   assert.equal(names("plan_completed").length, 1, "locking the week completes the plan");
   // Unlock and lock again in the same week: still one completion.
-  await ev(`${el("button-unlock-week")}.click()`); await sleep(200);
-  await ev(`${el("button-finalize-week")}.click()`); await sleep(800);
+  await ev(`${el("button-edit-week")}.click()`); await sleep(200);
+  await ev(`${el("button-approve-week")}.click()`); await sleep(800);
   assert.equal(names("plan_completed").length, 1);
 
   await go("/grocery-list"); await sleep(1500);
@@ -82,11 +82,11 @@ try {
   await go("/my-ideas");
   await until(el("my-ideas-empty"), "my ideas without AI"); await sleep(800);
   assert.equal(await ev(`${el("button-create-first-idea")} === null && ${el("button-new-idea")} === null`), true, "no AI buttons when generation is off");
-  await go("/meals");
-  await until(el("button-generate-plan"), "planner without AI"); await sleep(800);
+  await go("/meals?browse");
+  await until(el("button-back-to-week"), "planner without AI"); await sleep(800);
   assert.equal(await ev(`document.querySelector('[data-testid^="generate-recipe"]') === null`), true, "no Generate button when generation is off");
 
-  console.log("PASS pilot live browser: planner_opened once, restored plan not counted, meal_selected on add, plan_completed on lock (once per week), grocery_list_opened, AI controls hidden when generation is off.");
+  console.log("PASS pilot live browser: planner_opened once, restored plan not counted, meal_selected on add, plan_completed on Approve week (once per week), grocery_list_opened, AI controls hidden when generation is off.");
 } finally {
   chrome.kill();
   await sleep(300); try { rmSync(profile, { recursive: true, force: true, maxRetries: 3 }); } catch { /* Chrome still closing */ }

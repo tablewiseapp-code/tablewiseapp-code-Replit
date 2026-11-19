@@ -47,7 +47,7 @@ try {
   ok(await ev(`getComputedStyle(${q("app-nav-bottom")}).display === "none"`), "no bottom nav on desktop");
 
   // Every destination opens its screen and is marked current.
-  const screens = { "/": "home-meals", "/recipes": "text-page-title", "/meals?plan": "button-back-to-selection", "/grocery-list": null, "/my-ideas": "text-page-title", "/home-tasks": "button-add-task", "/settings": "text-page-title" };
+  const screens = { "/": "home-meals", "/recipes": "text-page-title", "/meals?plan": "week-status", "/grocery-list": null, "/my-ideas": "text-page-title", "/home-tasks": "button-add-task", "/settings": "text-page-title" };
   for (const [path, ready] of Object.entries(screens)) {
     await ev(`document.querySelector('[data-testid="app-nav-header"] a[href="${path}"]').click()`);
     await until(`location.pathname === "${path.split("?")[0]}" && ${ready ? `Boolean(${q(ready)})` : `Boolean(document.querySelector(".grocery-page, [data-testid='mvp-grocery']"))`}`, `open ${path}`);
@@ -111,14 +111,10 @@ try {
 
   // Week: plan's sticky action bar sits above the bottom nav.
   await ev(`${q("app-nav-menu-trigger")}.click()`); await until(`Boolean(${q("app-nav-menu-link-meals")})`, "menu for Week");
-  await ev(`${q("app-nav-menu-link-meals")}.click()`); // Week opens the plan view; go back to choosing recipes
-  await until(`Boolean(${q("button-back-to-selection")})`, "plan view"); await ev(`${q("button-back-to-selection")}.click()`);
-  await until(`document.querySelectorAll('[data-testid^="button-add-"]:not([data-testid="button-add-deal-category"])').length > 0`, "meals");
+  await ev(`${q("app-nav-menu-link-meals")}.click()`); // Week opens the calendar
+  await until(`Boolean(${q("week-status")})`, "Week calendar");
   eq(await current('[data-testid="app-nav-bottom"]'), null, "Week has no bottom tab");
-  await ev(`document.querySelector('[data-testid^="button-add-"]:not([data-testid="button-add-deal-category"])').click()`);
-  await until(`!${q("button-generate-plan")}.disabled`, "selected");
-  await ev(`${q("button-generate-plan")}.click()`); await until(`Boolean(${q("button-create-grocery-list")})`, "plan view");
-  const bar = `${q("button-create-grocery-list")}.parentElement`;
+  const bar = `${q("button-approve-week")}.parentElement`;
   ok(await ev(`${bar}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top + 0.5`), "sticky plan actions above bottom nav");
 
   // Cooking Mode hides navigation; leaving restores it.

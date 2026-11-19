@@ -31,6 +31,7 @@
     "test:weekly-planner": "tsx script/test-weekly-planner.ts",
     "test:week-suggestions": "tsx script/test-week-suggestions.ts",
     "test:household-browser": "node script/test-household-browser.mjs",
+    "test:week-calendar-browser": "node script/test-week-calendar-browser.mjs",
     "test:cooking-mode-browser": "node script/test-cooking-mode-browser.mjs",
     "test:app-nav-browser": "node script/test-app-nav-browser.mjs",
     "test:ui-pass-browser": "node script/test-ui-pass-browser.mjs",
