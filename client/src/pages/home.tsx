@@ -13,6 +13,8 @@ import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
 import { RecipeViewRows, useServingsText } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import type { Recipe } from "@/lib/storage";
 
@@ -53,6 +55,7 @@ export default function Home() {
   const today = mealsOnDay(plan, now.getDay());
   const servingsText = useServingsText();
   /** "35 min total · 4 servings": the Week's servings for this meal, else the recipe's; unknown values are left out. */
+  const phone = useIsMobile();
   const meta = (recipe: Recipe, servings?: number | null) => {
     const minutes = recipeStageMinutes(recipe, "total");
     return [minutes !== null ? t("card.totalMinutes", { count: minutes }) : null, servingsText(servings ? String(servings) : recipe.servings)].filter(Boolean).join(" · ");
@@ -86,7 +89,7 @@ export default function Home() {
               mealSlots.map(slot => {
                 const rows = today.filter(a => a.mealType === slot && recipes.has(a.recipeId));
                 return (
-                  <div key={slot} className="flex items-start gap-3" data-testid={`home-slot-${slot.toLowerCase()}`}>
+                  <div key={slot} className={phone ? "grid gap-1" : "flex items-start gap-3"} data-testid={`home-slot-${slot.toLowerCase()}`}>
                     <h3 className="w-24 shrink-0 break-words pt-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t(mealKey[slot])}</h3>
                     {rows.length === 0 ? (
                       <button type="button" onClick={() => setGenerating({ meal: slot, day: now.getDay() })} disabled={!catalog.data} data-testid={`home-add-${slot.toLowerCase()}`}
@@ -99,6 +102,8 @@ export default function Home() {
                         const recipe = recipes.get(a.recipeId)!;
                         return (
                           <li key={`${slot}-${a.recipeId}`}>
+                            {phone ? <RecipeCard recipe={recipe} href={`/recipe/${encodeURIComponent(recipe.id)}`} testId={`home-meal-${recipe.id}`}
+                              servings={a.servings ? String(a.servings) : null} ids={{ meta: `home-meal-meta-${recipe.id}`, view: `home-meal-view-${recipe.id}` }} /> :
                             <Link href={`/recipe/${encodeURIComponent(recipe.id)}`} data-testid={`home-meal-${recipe.id}`}
                               className="flex min-h-11 items-center gap-3 rounded-md py-1 hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                               {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />}
@@ -107,7 +112,7 @@ export default function Home() {
                                 {meta(recipe, a.servings) && <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, a.servings)}</span>}
                                 <RecipeViewRows recipe={recipe} testId={`home-meal-view-${recipe.id}`} />
                               </span>
-                            </Link>
+                            </Link>}
                           </li>
                         );
                       })}

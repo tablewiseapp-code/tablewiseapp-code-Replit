@@ -92,7 +92,7 @@ export function installAccounts(app: Express, security: Security, store: Account
     return value && /^[a-f0-9]{64}$/.test(value) ? hash(value) : undefined;
   };
 
-  app.use("/api", async (req: Request, res: Response, next: NextFunction) => {
+  security.useAccounts(async (req: Request, res: Response, next: NextFunction) => {
     const tokenHash = token(req);
     if (!tokenHash) return next();
     try {

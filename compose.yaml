@@ -26,7 +26,6 @@ services:
       DATABASE_URL: postgresql://tablewise:tablewise@db:5432/tablewise
       PORT: 5000
       TABLEWISE_PUBLIC_CATALOG_REVIEWED: "true"
-      TABLEWISE_DEV_CURATED_CATALOG: "true"
     ports:
       - "5001:5000"
     volumes:

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RecipeCreditLine } from "@/components/recipe-credit";
-import { RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { householdText } from "@/lib/household-copy";
@@ -169,14 +169,10 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
         {recipe && planned ? (
           <article className="grid gap-3" data-testid="meal-generator-recipe" data-recipe-id={recipe.id}>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">{text("genSuggested")}</p>
-              <h3 className="text-lg font-semibold">{recipe.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {total(planned) !== null ? text("genTotal", { n: total(planned)! }) : h("timeUnknown")}
-                {input.servings ? ` · ${h("servings", { n: input.servings })}` : ""}
-              </p>
-              <RecipeViewRows recipe={recipe} testId="meal-generator-view" className="mt-1" />
-              <RecipeCreditLine recipe={recipe} />
+              <p className="mb-2 text-xs font-medium text-muted-foreground">{text("genSuggested")}</p>
+              <RecipeCard recipe={recipe} servings={input.servings ? String(input.servings) : null} ids={{ view: "meal-generator-view" }}>
+                <RecipeCreditLine recipe={recipe} />
+              </RecipeCard>
             </div>
             <section aria-label={text("genIngredients")}>
               <h4 className="text-sm font-semibold">{text("genIngredients")}</h4>
