@@ -126,12 +126,10 @@ export async function registerRoutes(
   installAccounts(app, security, dependencies.accounts ?? databaseAccountStore(), dependencies.now);
   const storage = dependencies.storage ?? (await import("./storage")).storage;
   const recipeMarks = dependencies.recipeMarks ?? databaseRecipeMarkStore();
-  // Development-only saved reads. No model calls, migrations or public paid endpoint.
-  // Custom storage adapters must supply their own corresponding nutrition reader.
-  const nutrition = developmentCredits
-    ? dependencies.nutrition ?? (!dependencies.storage
-      ? await (await import("./recipe-nutrition")).databaseNutritionEnricher() : undefined)
-    : undefined;
+  // Saved nutrition estimates on every recipe read, in development and production (product owner, 2026-11-20).
+  // Reads recipe_nutrition only: no model calls. Custom storage adapters must supply their own nutrition reader.
+  const nutrition = dependencies.nutrition ?? (!dependencies.storage
+    ? await (await import("./recipe-nutrition")).databaseNutritionEnricher() : undefined);
   const withNutrition = async <T extends NutritionInput>(rows: T[]) => nutrition ? nutrition(rows) : rows;
   const analyzeRecipe = createRecipeAnalyzer(dependencies.now);
   const parseCached = recipeParseCache<z.infer<typeof recipeInput>>(dependencies.now);

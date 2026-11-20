@@ -118,8 +118,8 @@ try {
   await go("/", `Boolean(${q(`home-meal-view-${three[2].id}-nutrition`)})`);
   for (const r of three) ok((await text(`home-meal-view-${r.id}-nutrition`)).includes("Calories"), `Home shows nutrition for ${r.id}`);
   ok((await text(`home-meal-meta-${three[0].id}`)).length > 0, "Home shows time or servings");
-  const fit = await ev(`({ page: document.scrollingElement.scrollHeight, view: innerHeight, wide: document.scrollingElement.scrollWidth })`);
-  ok(fit.page <= fit.view, `Home fits one phone screen with every field on (${fit.page} > ${fit.view})`);
+  const fit = await ev(`({ wide: document.scrollingElement.scrollWidth })`);
+  // Today's meals are full recipe cards on a phone (2026-11-20): Home may scroll down, never sideways.
   ok(fit.wide <= 390, "no sideways scroll");
   await click("home-suggest-recipe");
   await until(`Boolean(${q("meal-suggestion-cook")})`, "suggestion");
