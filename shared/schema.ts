@@ -41,12 +41,15 @@ export const recipes = pgTable("recipes", {
   creditKind: text("credit_kind").$type<"chef" | "mine">(),
   creditName: varchar("credit_name", { length: 120 }),
   tags: text("tags").array(),
+  // Language the recipe was written in ("es"). Null = not recorded (every recipe before 2026-11-20; English).
+  language: varchar("language", { length: 2 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, table => [
   check("recipes_prep_time_check", sql`${table.prepTime} IS NULL OR ${table.prepTime} BETWEEN 0 AND 10080`),
   check("recipes_ingredient_parts_check", sql`${table.ingredientParts} IS NULL OR jsonb_typeof(${table.ingredientParts}) = 'array'`),
   check("recipes_step_ingredients_check", sql`${table.stepIngredients} IS NULL OR jsonb_typeof(${table.stepIngredients}) = 'array'`),
+  check("recipes_language_check", sql`${table.language} IS NULL OR ${table.language} ~ '^[a-z]{2}$'`),
   check("recipes_credit_check", sql`(${table.creditKind} IS NULL AND ${table.creditName} IS NULL) OR
     (${table.creditKind} IS NOT NULL AND ${table.creditKind} IN ('chef', 'mine') AND
       (${table.creditName} IS NULL OR (length(btrim(${table.creditName})) BETWEEN 1 AND 120 AND ${table.creditName} = btrim(${table.creditName}))) AND
@@ -344,4 +347,22 @@ export const recipeMarks = pgTable("recipe_marks", {
 }, table => [
   primaryKey({ columns: [table.ownerId, table.recipeId, table.kind] }),
   check("recipe_marks_kind", sql`${table.kind} IN ('liked','imported')`),
+]);
+
+// A recipe's text in one reading language. Lists follow the original's order: ingredients[i] translates
+// line i's ingredient name (ingredient_parts[i].ingredient, or the whole line when there are no parts);
+// quantity and unit stay codes in ingredient_parts. No row for the original's own language.
+// ponytail: stale after an edit when recipes.updated_at > created_at; re-translate on edit when import writes rows.
+export const recipeTranslations = pgTable("recipe_translations", {
+  recipeId: varchar("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
+  language: varchar("language", { length: 2 }).$type<"en" | "ru" | "he">().notNull(),
+  title: text("title").notNull(),
+  ingredients: text("ingredients").array().notNull(),
+  steps: text("steps").array().notNull(),
+  translatedBy: varchar("translated_by", { length: 8 }).$type<"ai" | "person">().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, table => [
+  primaryKey({ columns: [table.recipeId, table.language] }),
+  check("recipe_translations_language", sql`${table.language} IN ('en','ru','he')`),
+  check("recipe_translations_translated_by", sql`${table.translatedBy} IN ('ai','person')`),
 ]);

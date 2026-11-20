@@ -68,7 +68,8 @@ Tables are defined in `shared/schema.ts`.
 
 | Table | Purpose | Scope |
 |---|---|---|
-| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones); `step_ingredients` holds one list per step of the ingredient lines that step uses (`[]` = none, NULL = no data; dropped when steps change without it) | global, shared by all visitors |
+| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones); `step_ingredients` holds one list per step of the ingredient lines that step uses (`[]` = none, NULL = no data; dropped when steps change without it); `language` is the language it was written in (NULL before 2026-11-20) | global, shared by all visitors |
+| `recipe_translations` | a recipe's title, ingredient names and steps in one reading language (`en`, `ru`, `he`), in the original's order; quantity and unit stay in `ingredient_parts`; `translated_by` `ai` or `person`. Design test (2026-11-20): nothing reads or writes it yet; `script/sample-recipe-translations.sql` loads two local examples | global |
 | `recipe_nutrition` | cached nutrition | global |
 | `recipe_generations` | AI drafts and their status | per owner |
 | `cooking_sessions` | "I made it", rating, notes | per owner |
