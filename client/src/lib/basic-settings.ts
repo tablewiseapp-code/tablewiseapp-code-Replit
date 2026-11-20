@@ -4,6 +4,7 @@ import { recipeNutrients, type RecipeNutrient } from "@shared/recipe-nutrition";
 import { selectableDevices, type DeviceId } from "./device-requirements";
 import { plannerCookingMethods } from "./planner-filters";
 import { mealSlots, type MealSlot } from "./meal-plan";
+import { sanitizeStores, type StoreChoice } from "./grocery-stores";
 
 // My Basic Settings and Your household. Postgres (household_settings, per owner) is the source of truth; localStorage
 // is the synchronous copy every page reads, like the Week (meal-plan.ts). The document is versioned and sanitized.
@@ -75,7 +76,8 @@ export type BasicSettings = {
   cooking: { weekdayMax: number | null; weekendMax: number | null; hardMax: boolean; weekday: CookingPrefs; weekend: CookingPrefs };
   planning: { meals: MealSlot[]; cookingDays: number; leftovers: typeof leftoverOptions[number]; repeatFavorites: boolean;
     variety: typeof varietyOptions[number]; novelty: typeof noveltyOptions[number]; mealRules: Record<MealSlot, MealRule> };
-  shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[] };
+  /** stores: where the person buys groceries and how (delivery, walk-in); see grocery-stores.ts. */
+  shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[]; stores: StoreChoice[] };
   setup: HouseholdSetup;
   recipeView: RecipeView;
 };
@@ -88,7 +90,7 @@ export const defaultSettings = (): BasicSettings => ({
   cooking: { weekdayMax: null, weekendMax: null, hardMax: false, weekday: noPrefs(), weekend: noPrefs() },
   planning: { meals: ["Breakfast", "Lunch", "Dinner"], cookingDays: 7, leftovers: "none", repeatFavorites: false, variety: "balanced", novelty: "balanced",
     mealRules: { Breakfast: noRule(), Lunch: noRule(), Dinner: noRule() } },
-  shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [] },
+  shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [], stores: [] },
   setup: defaultSetup(), recipeView: defaultRecipeView(),
 });
 
@@ -181,7 +183,7 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
     planning: { meals: subset(mealSlots, p.meals), cookingDays: int(p.cookingDays, 1, 7, 7), leftovers: oneOf(leftoverOptions, p.leftovers, "none"),
       repeatFavorites: bool(p.repeatFavorites), variety: oneOf(varietyOptions, p.variety, "balanced"), novelty: oneOf(noveltyOptions, p.novelty, "balanced"),
       mealRules: Object.fromEntries(mealSlots.map(m => [m, mealRule(obj(p.mealRules)[m])])) as Record<MealSlot, MealRule> },
-    shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry) },
+    shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry), stores: sanitizeStores(s.stores) },
     setup: setup(r.setup), recipeView: recipeView(r.recipeView),
   };
 }

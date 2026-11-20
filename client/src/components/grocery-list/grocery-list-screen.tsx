@@ -22,7 +22,9 @@ import { usePilotPage } from "@/hooks/use-pilot-page";
 import { currentWeek, isWeek } from "@/lib/week-plan";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
-import { Plus, Share2 } from "lucide-react";
+import { Plus, Share2, Store } from "lucide-react";
+import { StorePicker } from "@/components/store-picker";
+import { useStorePickerCopy } from "@/lib/store-picker-copy";
 import { loadSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
@@ -46,6 +48,8 @@ export default function GroceryListScreen() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(initialPrefs.checked);
   const [expansion, setExpansion] = useState(initialPrefs.expansion);
   const [shareOpen, setShareOpen] = useState(false);
+  const [storesOpen, setStoresOpen] = useState(() => new URLSearchParams(window.location.search).has("stores"));
+  const storeCopy = useStorePickerCopy();
   const [tab, setTab] = useState<"all" | "recipes" | "mine">("all");
   // Categories whose "$" button shows item prices. Display-only: expansion and checks are separate state.
   const [shownPrices, setShownPrices] = useState<Set<string>>(new Set());
@@ -436,7 +440,10 @@ export default function GroceryListScreen() {
                   data-testid={`grocery-filter-${value}`}>{copy(value)}</button>
               ))}
             </div>
-            <button type="button" className="grocery-share-button ms-auto" onClick={() => setShareOpen(true)} data-testid="button-share-export">
+            <button type="button" className="grocery-share-button ms-auto" onClick={() => setStoresOpen(true)} data-testid="button-my-stores">
+              <Store aria-hidden="true" />{storeCopy("myStores")}
+            </button>
+            <button type="button" className="grocery-share-button" onClick={() => setShareOpen(true)} data-testid="button-share-export">
               <Share2 aria-hidden="true" />{t("grocery.shareExportTitle")}
             </button>
           </div>
@@ -447,6 +454,14 @@ export default function GroceryListScreen() {
           </>}
           <p aria-live="polite" className="mt-3 text-sm font-medium">{copy("left")} · {rows.length}</p>
         </header>
+        <Dialog open={storesOpen} onOpenChange={setStoresOpen}>
+          <DialogContent className="max-h-[85dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg" data-testid="my-stores-dialog">
+            <DialogTitle>{storeCopy("heading")}</DialogTitle>
+            <DialogDescription className="sr-only">{storeCopy("helper")}</DialogDescription>
+            <StorePicker showHeading={false} />
+            <button type="button" className="grocery-primary" onClick={() => setStoresOpen(false)} data-testid="my-stores-done">{storeCopy("done")}</button>
+          </DialogContent>
+        </Dialog>
         <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} linkItems={linkItems} pantryLabel={settingsText(lang, "pantryBadge")} />
         {shoppingError && <p role="alert">{t("grocery.changeFailed")} <button type="button" className="grocery-reset" onClick={() => void reloadShopping()}>{groceryProductText(lang, "retry")}</button></p>}
         {picturesError && <p role="alert">{groceryProductText(lang, "loadError")} <button type="button" className="grocery-reset" onClick={() => void reloadPictures()}>{groceryProductText(lang, "retry")}</button></p>}
