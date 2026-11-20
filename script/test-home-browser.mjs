@@ -45,9 +45,9 @@ try {
   await go("/", `Boolean(${q("home-meals")})`);
   eq(await text("text-page-title"), "Home", "title");
   eq(await text("text-home-date"), await ev(`new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })`), "local date");
-  eq(await ev(`${q("home-add-dish")}.tagName`), "BUTTON", "+ Add a dish opens the generator, not the Week");
-  eq(await text("home-add-dish"), "+ Add a dish", "add copy");
-  eq(await text("home-nothing-today"), "No cooking planned today", "empty Today");
+  eq(await ev(`${q("home-add-dinner")}.tagName`), "BUTTON", "+ Add dinner opens the generator, not the Week");
+  eq(await text("home-add-dinner"), "+ Add dinner", "add copy");
+  eq(await ev(`[...${q("home-today")}.querySelectorAll("h3")].map(h => h.textContent)`), ["Breakfast", "Lunch", "Dinner"], "Today separates Breakfast, Lunch and Dinner");
   eq(await current('[data-testid="app-nav-header"]'), "/", "Home active");
   ok(await ev(`!${q("home-groceries")}`), "no grocery card on Home");
 
@@ -60,7 +60,7 @@ try {
   try {
     await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
     ok((await text(`home-meal-meta-${recipe.id}`)).includes("Make 2.5 servings"), "cooked today: how much to make");
-    ok(Boolean(await text("home-add-dish")), "+ Add a dish stays");
+    ok(Boolean(await text("home-add-dinner")), "+ Add dinner stays");
     await ev(`${q(`home-meal-${recipe.id}`)}.querySelector("a").click()`);
     await until(`location.pathname === "/recipe/${encodeURIComponent(recipe.id)}" && Boolean(${q("text-recipe-title")})`, "meal opens recipe");
 
@@ -99,8 +99,8 @@ try {
     await call("Emulation.setDeviceMetricsOverride", { width: 360, height: 640, deviceScaleFactor: 1, mobile: true });
     const added = `(JSON.parse(localStorage.getItem("weeklyMealsState") ?? "{}").batches ?? [])`;
     await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify({ weekStart: ${JSON.stringify(thisWeek)}, selectedIds: [], batches: [], approved: null })); fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ weekStart: ${JSON.stringify(thisWeek)}, proposed: true, selectedIds: [], batches: [], approved: null }) })`);
-    await go("/", `Boolean(${q("home-add-dish")}) && !${q("home-add-dish")}.disabled`);
-    await ev(`${q("home-add-dish")}.click()`);
+    await go("/", `Boolean(${q("home-add-dinner")}) && !${q("home-add-dinner")}.disabled`);
+    await ev(`${q("home-add-dinner")}.click()`);
     await until(`Boolean(${q("meal-generator")})`, "generator opens");
     eq(await ev(`document.querySelector('[role="dialog"] h2').textContent`), "Generate dinner", "dinner first");
     ok((await text("meal-generator-date")).startsWith("Today · "), "target date");
@@ -117,11 +117,11 @@ try {
     ok(await ev(`${q("meal-generator-ingredients")}.children.length > 0`), "ingredients shown");
     await ev(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))`);
     await until(`!${q("meal-generator")}`, "Escape closes");
-    await until(`document.activeElement === ${q("home-add-dish")}`, "focus back on + Add a dish");
+    await until(`document.activeElement === ${q("home-add-dinner")}`, "focus back on + Add dinner");
     eq(await ev(`${added}.length`), 0, "closing adds nothing");
 
     // Free text + time + style; Edit request keeps them; Try another; Add; Undo.
-    await ev(`${q("home-add-dish")}.click()`);
+    await ev(`${q("home-add-dinner")}.click()`);
     await until(`Boolean(${q("meal-generator-query")})`, "reopens");
     await ev(`${q("meal-generator-kind-breakfast")}.click()`);
     await ev(`(() => { const i = ${q("meal-generator-query")}; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(i, "eggs"); i.dispatchEvent(new Event("input", { bubbles: true })); })()`);
@@ -152,7 +152,7 @@ try {
     eq(await ev(`${added}.length`), 0, "Undo removed only that dish");
 
     // Dinner: add beside another dish, then the Week (server copy) agrees after a reload.
-    await ev(`${q("home-add-dish")}.click()`);
+    await ev(`${q("home-add-dinner")}.click()`);
     await until(`Boolean(${q("meal-generator-generate")})`, "dinner generator");
     await ev(`${q("meal-generator-generate")}.click()`);
     await until(`Boolean(${q("meal-generator-add")})`, "dinner suggestion");
@@ -173,7 +173,7 @@ try {
       ok((await text(`home-meal-meta-${recipe.id}`)).startsWith("Cooked "), "leftovers say when they were cooked");
     }
 
-    await ev(`${q("home-add-dish")}.click()`);
+    await ev(`${q("home-add-dinner")}.click()`);
     await until(`Boolean(${q("meal-generator-generate")})`, "generator");
     // Choose from my recipes: an empty list for a new owner, and back restores the request.
     await until(`Boolean(${q("meal-generator-mine")})`, "request form");

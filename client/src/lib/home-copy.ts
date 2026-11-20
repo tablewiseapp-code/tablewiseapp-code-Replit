@@ -1,6 +1,6 @@
 const copy = {
   en: {
-    title: "Home", todaysMeals: "Today", addDish: "+ Add a dish", makeServings: "Make {count} servings", cookedOn: "Cooked {date}", nothingToday: "No cooking planned today", genKind: "Kind of dish", viewWeek: "View week", addBreakfast: "+ Add breakfast", addLunch: "+ Add lunch", addDinner: "+ Add dinner",
+    title: "Home", todaysMeals: "Today", makeServings: "Make {count} servings", cookedOn: "Cooked {date}", genKind: "Kind of dish", viewWeek: "View week", addBreakfast: "+ Add breakfast", addLunch: "+ Add lunch", addDinner: "+ Add dinner",
     loading: "Loading…", loadError: "Couldn’t load this section.", retry: "Try again",
     pickEdit: "Edit settings",
     pickNoSettings: "No household settings yet.", pickHowAbout: "How about this?",
@@ -19,7 +19,7 @@ const copy = {
     genAdded: "Added to today", genUndo: "Undo", genUndoGone: "Not undone: this dish has changed.",
   },
   ru: {
-    title: "Главная", todaysMeals: "Сегодня", addDish: "+ Добавить блюдо", makeServings: "Приготовить порций: {count}", cookedOn: "Приготовлено: {date}", nothingToday: "Сегодня готовка не запланирована", genKind: "Тип блюда", viewWeek: "Открыть неделю", addBreakfast: "+ Добавить завтрак", addLunch: "+ Добавить обед", addDinner: "+ Добавить ужин",
+    title: "Главная", todaysMeals: "Сегодня", makeServings: "Приготовить порций: {count}", cookedOn: "Приготовлено: {date}", genKind: "Тип блюда", viewWeek: "Открыть неделю", addBreakfast: "+ Добавить завтрак", addLunch: "+ Добавить обед", addDinner: "+ Добавить ужин",
     loading: "Загрузка…", loadError: "Не удалось загрузить этот раздел.", retry: "Попробовать снова",
     pickEdit: "Изменить настройки",
     pickNoSettings: "Настройки семьи ещё не заданы.", pickHowAbout: "Как насчёт этого?",
@@ -38,7 +38,7 @@ const copy = {
     genAdded: "Добавлено на сегодня", genUndo: "Отменить", genUndoGone: "Не отменено: это блюдо уже изменено.",
   },
   he: {
-    title: "בית", todaysMeals: "היום", addDish: "+ הוספת מנה", makeServings: "להכין {count} מנות", cookedOn: "בושל ב{date}", nothingToday: "אין בישול מתוכנן להיום", genKind: "סוג המנה", viewWeek: "לתפריט השבועי", addBreakfast: "+ הוספת ארוחת בוקר", addLunch: "+ הוספת ארוחת צהריים", addDinner: "+ הוספת ארוחת ערב",
+    title: "בית", todaysMeals: "היום", makeServings: "להכין {count} מנות", cookedOn: "בושל ב{date}", genKind: "סוג המנה", viewWeek: "לתפריט השבועי", addBreakfast: "+ הוספת ארוחת בוקר", addLunch: "+ הוספת ארוחת צהריים", addDinner: "+ הוספת ארוחת ערב",
     loading: "טוען…", loadError: "לא ניתן לטעון את החלק הזה.", retry: "ניסיון נוסף",
     pickEdit: "עריכת הגדרות",
     pickNoSettings: "עדיין אין הגדרות למשק הבית.", pickHowAbout: "מה דעתך על זה?",
