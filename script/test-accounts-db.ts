@@ -43,7 +43,7 @@ async function main() {
 
     const db = drizzle(pool, { schema });
     await registerRoutes(server, app, { storage: {} as any, accounts: databaseAccountStore(db), weekPlans: databaseWeekPlanStore(db),
-      nutrition: async r => r as any, config: { aiEnabled: false, production: false, publicCatalog: true } });
+      nutrition: async r => r as any, config: { aiEnabled: false, production: false, publicCatalog: true, operatorEmails: ["op@example.com"] } });
     app.use(apiErrorHandler);
     server.listen(0, "127.0.0.1"); await once(server, "listening");
     const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
@@ -101,6 +101,16 @@ async function main() {
     assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, { ...ann, name: "Ann" }, "photo removed, name kept");
     await assert.rejects(pool.query("UPDATE accounts SET photo = repeat('a', 280024)"), /accounts_photo/);
     await request("PUT", "/api/auth/profile", { name: null }, session2);
+
+    // An account listed in operatorEmails is the operator (AI included) and keeps its own data; others are not.
+    const op = `tablewise_session=${(await signIn("op@example.com", "operator-pass")).cookies.tablewise_session}`;
+    assert.equal((await request("GET", "/api/operator/session", undefined, op)).data.operator, true);
+    assert.equal((await request("GET", "/api/operator/session", undefined, session)).data.operator, false);
+    assert.equal((await request("POST", "/api/recipes/generate", {}, session)).status, 403, "not an operator");
+    assert.equal((await request("POST", "/api/recipes/generate", {}, op)).status, 503, "operator passes every gate; AI is off here");
+    assert.equal((await request("PUT", "/api/week-plan", { ...plan, locked: false }, op)).status, 204);
+    assert.equal((await request("GET", "/api/week-plan?week=2026-11-16", undefined, op)).data.locked, false, "own owner, not the shared operator");
+    assert.equal((await request("GET", "/api/week-plan?week=2026-11-16", undefined, session)).data.locked, true);
 
     // Sign out ends that session only.
     assert.equal((await request("POST", "/api/auth/sign-out", undefined, session2)).status, 204);

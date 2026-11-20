@@ -1,4 +1,4 @@
-import express, { type Express, type Request, type Response, type NextFunction, type ErrorRequestHandler } from "express";
+import express, { type Express, type Request, type Response, type NextFunction, type ErrorRequestHandler, type RequestHandler } from "express";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
@@ -10,6 +10,8 @@ export type PilotConfig = {
   analyticsEnabled?: boolean;
   /** Visitors without operator sign-in may generate AI recipes and save accepted ones. Off unless explicitly enabled. */
   publicAI?: boolean;
+  /** Signed-in accounts with these emails (lowercase) get operator rights, AI included. */
+  operatorEmails?: string[];
 };
 
 export function pilotConfig(): PilotConfig {
@@ -21,6 +23,7 @@ export function pilotConfig(): PilotConfig {
     production: process.env.NODE_ENV === "production",
     analyticsEnabled: process.env.TABLEWISE_ANALYTICS_ENABLED === "true",
     publicAI: process.env.TABLEWISE_PUBLIC_AI === "true",
+    operatorEmails: (process.env.TABLEWISE_OPERATOR_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean),
   };
 }
 
@@ -58,6 +61,9 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   app.disable("x-powered-by");
   app.set("trust proxy", false);
   app.set("query parser", "simple");
+  // The account session (server/accounts.ts) is resolved first, so every gate below knows an operator account.
+  let resolveAccount: RequestHandler | undefined;
+  app.use("/api", (req, res, next) => resolveAccount ? resolveAccount(req, res, next) : next());
   const throttle = (res: Response, retry: number) => {
     res.setHeader("Retry-After", String(retry));
     res.status(429).json({ error: "Too many requests. Try again later." });
@@ -77,7 +83,9 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   const cleanupSessions = () => {
     sessions.forEach((expiry, key) => { if (expiry <= now()) sessions.delete(key); });
   };
-  const authorized = (req: Request) => {
+  const operatorAccount = (req: Request) => !!config.operatorEmails?.includes(req.res?.locals.account?.email);
+  const authorized = (req: Request) => tokenAuthorized(req) || operatorAccount(req);
+  const tokenAuthorized = (req: Request) => {
     if (!config.operatorToken) return false;
     const header = req.get("authorization");
     if (header) return header.length <= 520 &&
@@ -153,7 +161,8 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
     return cookie && /^[a-f0-9]{64}$/.test(cookie) ? digest(cookie).toString("hex") : undefined;
   };
   const owner = (req: Request, res: Response, mint: boolean): string | undefined => {
-    if (authorized(req)) return "operator";
+    // An operator account keeps its own owner; only the operator token is the shared owner "operator".
+    if (tokenAuthorized(req)) return "operator";
     if (res.locals.accountOwner) return res.locals.accountOwner as string;
     const guest = guestOwner(req);
     if (guest) return guest;
@@ -284,7 +293,8 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
   const cookie = (name: string, value: string, maxAge: number) =>
     `${name}=${value}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${config.production ? "; Secure" : ""}`;
   const forgetGuest = (res: Response) => res.append("Set-Cookie", cookie(ownerCookie, "", 0));
-  return { aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, owner, guestOwner, forgetGuest, readCookie, cookie, config };
+  const useAccounts = (handler: RequestHandler) => { resolveAccount = handler; };
+  return { useAccounts, aiPermit, requireOperator, requireAIEnabled, authorized, analyticsPilotPermit, owner, guestOwner, forgetGuest, readCookie, cookie, config };
 }
 
 export const apiErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {
