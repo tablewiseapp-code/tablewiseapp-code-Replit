@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useCanGenerate } from "@/hooks/use-can-generate";
 import { useLocation } from "wouter";
 import { Heart, Sparkles } from "lucide-react";
-import { RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { PageContainer } from "@/components/layout/page-container";
 import { GeneratedRecipeBody } from "@/components/generate-recipe";
@@ -185,41 +185,30 @@ export default function MyIdeas() {
               </div>
             ) : <p className="mt-6 text-sm text-muted-foreground" data-testid="my-ideas-tab-empty">{t("noMatches")}</p>
           ) : (
-            <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {shown.map(idea => {
                 const { recipe } = idea;
                 const planned = isInPlan(idea, plan);
-                const total = recipe.prepTime != null && recipe.cookTime != null ? recipe.prepTime + recipe.cookTime : null;
+                const methods = cookingMethods(idea).map(m => filterLabelKey[m] ? tr(filterLabelKey[m]) : m).join(", ");
                 return (
-                  <li key={idea.id} className="card relative flex flex-col p-4 transition-colors hover:border-input" data-testid={`card-idea-${idea.id}`}>
-                    <div className="flex items-start gap-3">
-                      {recipe.image && <img src={recipe.image} alt="" className="h-14 w-14 flex-shrink-0 rounded-lg object-cover" loading="lazy" />}
-                      <div className="min-w-0 flex-1">
-                        {/* The title button stretches over the whole card; the other buttons sit above it. */}
-                        <button type="button" onClick={() => open(idea)} data-testid="button-idea-view"
-                          className="text-start text-base font-semibold leading-snug text-foreground after:absolute after:inset-0 after:rounded-xl after:content-[''] focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-primary">
-                          <span className="break-words" data-testid="text-idea-title">{recipe.title}</span>
-                        </button>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {[recipe.prepTime != null && `${t("prep")} ${recipe.prepTime} ${t("min")}`, total != null && `${t("total")} ${total} ${t("min")}`,
-                            cookingMethods(idea).map(m => filterLabelKey[m] ? tr(filterLabelKey[m]) : m).join(", ")].filter(Boolean).join(" · ")}
-                        </p>
-                        <RecipeViewRows recipe={{ ...recipe, id: idea.id }} testId={`idea-view-${idea.id}`} className="mt-1" />
-                        <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                          <span className="inline-flex items-center gap-1" data-testid="badge-idea-ai"><Sparkles className="h-3 w-3" aria-hidden="true" />{t("ai")}</span>
-                          {planned && <span className="tag" data-testid="badge-idea-planned">{t("planned")}</span>}
-                        </p>
-                      </div>
-                      <button type="button" onClick={() => toggleFavorite(idea)} aria-pressed={idea.isFavorite}
+                  <li key={idea.id} data-testid={`card-idea-${idea.id}`}>
+                    <RecipeCard recipe={{ ...recipe, id: idea.id }} onOpen={() => open(idea)} titleTestId="text-idea-title"
+                      ids={{ view: `idea-view-${idea.id}` }}
+                      corner={<button type="button" onClick={() => toggleFavorite(idea)} aria-pressed={idea.isFavorite}
                         aria-label={idea.isFavorite ? t("unfavorite") : t("favorite")} data-testid="button-idea-favorite"
-                        className="relative z-10 -m-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full hover:bg-accent">
-                        <Heart className={`h-5 w-5 ${idea.isFavorite ? "fill-[#b5534a] text-[#b5534a]" : "text-[#9aa49b]"}`} aria-hidden="true" />
-                      </button>
-                    </div>
-                    <div className="relative z-10 mt-3 flex flex-wrap gap-2 self-start">
-                      <button type="button" onClick={() => openPlan(idea)} disabled={busy === idea.id} aria-busy={busy === idea.id} className={outline} data-testid="button-idea-add-to-plan">{t("addToPlan")}</button>
-                      <button type="button" onClick={() => remove(idea)} className="btn btn-text" data-testid="button-idea-remove">{t("remove")}</button>
-                    </div>
+                        className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent">
+                        <Heart className={`h-5 w-5 ${idea.isFavorite ? "fill-current text-primary" : "text-muted-foreground"}`} aria-hidden="true" />
+                      </button>}>
+                      <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        {methods && <span>{methods}</span>}
+                        <span className="inline-flex items-center gap-1" data-testid="badge-idea-ai"><Sparkles className="h-3 w-3" aria-hidden="true" />{t("ai")}</span>
+                        {planned && <span className="tag" data-testid="badge-idea-planned">{t("planned")}</span>}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => openPlan(idea)} disabled={busy === idea.id} aria-busy={busy === idea.id} className={outline} data-testid="button-idea-add-to-plan">{t("addToPlan")}</button>
+                        <button type="button" onClick={() => remove(idea)} className="btn btn-text" data-testid="button-idea-remove">{t("remove")}</button>
+                      </div>
+                    </RecipeCard>
                   </li>
                 );
               })}

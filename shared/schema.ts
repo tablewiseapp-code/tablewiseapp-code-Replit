@@ -78,8 +78,8 @@ export const recipeNutrition = pgTable("recipe_nutrition", {
   check("recipe_nutrition_data_check", sql`jsonb_typeof(${table.data}) = 'object'`),
 ]);
 // Optional for compatibility with recipes created before preparation-time metadata.
-export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName" | "stepAnalysis" | "ingredientParts" | "stepIngredients"> & {
-  stepAnalysis?: StepAnalysis | null; ingredientParts?: IngredientPart[] | null; stepIngredients?: string[][] | null;
+export type Recipe = Omit<typeof recipes.$inferSelect, "prepTime" | "creditKind" | "creditName" | "stepAnalysis" | "ingredientParts" | "stepIngredients" | "language"> & {
+  stepAnalysis?: StepAnalysis | null; ingredientParts?: IngredientPart[] | null; stepIngredients?: string[][] | null; language?: string | null;
   prepTime?: number | null; creditKind?: "chef" | "mine" | null; creditName?: string | null;
 };
 
@@ -366,3 +366,4 @@ export const recipeTranslations = pgTable("recipe_translations", {
   check("recipe_translations_language", sql`${table.language} IN ('en','ru','he')`),
   check("recipe_translations_translated_by", sql`${table.translatedBy} IN ('ai','person')`),
 ]);
+export type RecipeTranslation = Pick<typeof recipeTranslations.$inferSelect, "recipeId" | "title" | "ingredients" | "steps" | "translatedBy">;

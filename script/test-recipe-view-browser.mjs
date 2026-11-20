@@ -48,17 +48,17 @@ try {
   await click("section-recipe-view-toggle");
   await until(`Boolean(${q("recipe-view-nutrition")})`, "Recipe View opens");
   eq(await ev(`${q("recipe-view-nutrition")}.getAttribute("aria-checked")`), "true", "legacy Show nutrition kept");
-  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving · Protein 32 g · Carbs 45 g", "defaults: Protein and Carbs");
+  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving Protein 32 g Carbs 45 g", "defaults: Protein and Carbs");
   eq(await text("section-recipe-view-summary"), "Protein, Carbs · No extra details", "summary");
 
   // Preview follows every change at once; nutrient choices survive Off → On.
   await click("recipe-view-nutrient-sugars");
-  await until(`${q("recipe-view-preview-rows-nutrition")}?.innerText.includes("Sugars 3 g")`, "sugars in preview");
+  await until(`${q("recipe-view-preview-rows-nutrition")}?.innerText.replace(/\\s+/g, " ").includes("Sugars 3 g")`, "sugars in preview");
   await click("recipe-view-nutrition");
   await until(`!${q("recipe-view-preview-rows")} && !${q("recipe-view-nutrient-protein")}`, "nutrition off hides the row and the choices");
   await click("recipe-view-nutrition");
   await until(`Boolean(${q("recipe-view-preview-rows-nutrition")})`, "nutrition back on");
-  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving · Protein 32 g · Carbs 45 g · Sugars 3 g", "choices kept");
+  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving Protein 32 g Carbs 45 g Sugars 3 g", "choices kept");
   await click("recipe-view-detail-maintool"); await click("recipe-view-detail-dietarytags");
   await until(`${q("recipe-view-preview-rows-details")}?.innerText.includes("Oven")`, "details in preview");
   eq(await text("recipe-view-preview-rows-details"), "Gluten-free, Dairy-free · Oven", "details in fixed order, below nutrition");
@@ -71,7 +71,7 @@ try {
   await go("/settings", `Boolean(${q("section-recipe-view")})`);
   await click("section-recipe-view-toggle");
   await until(`Boolean(${q("recipe-view-preview-rows-details")})`, "after reload");
-  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving · Protein 32 g · Carbs 45 g · Sugars 3 g", "reload keeps nutrients");
+  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving Protein 32 g Carbs 45 g Sugars 3 g", "reload keeps nutrients");
 
   // Recipes with and without nutrition.
   const recipes = await ev(`fetch("/api/recipes").then(r => r.json())`);
@@ -82,7 +82,7 @@ try {
 
   await go("/recipes", `Boolean(${q(`card-recipe-${rich.id}`)})`);
   await until(`Boolean(${q(`recipe-view-${rich.id}-nutrition`)})`, "Recipes card nutrition");
-  ok((await text(`recipe-view-${rich.id}-nutrition`)).startsWith("Est. per serving · Protein"), "estimate label on the Recipes card");
+  ok((await text(`recipe-view-${rich.id}-nutrition`)).startsWith("Est. per serving Protein"), "estimate label on the Recipes card");
   ok((await text(`recipe-view-${rich.id}-protein`)).includes(`${per("proteinG")} g`), "protein per serving");
   eq(await ev(`Boolean(${q(`recipe-view-${bare.id}-nutrition`)})`), false, "imported recipe without nutrition: no nutrition row");
 

@@ -54,6 +54,7 @@ export const draftEdit = recipeBase.pick({ title: true, ingredients: true, steps
 export const recipePatch = recipeBase.partial().refine(value => Object.keys(value).length > 0)
   .refine(value => !value.ingredientParts || value.ingredientParts.length === value.ingredients?.length, "Send parts with their ingredient lines.")
   .refine(value => !value.stepIngredients || value.stepIngredients.length === value.steps?.length, "Send step ingredients with their steps.");
+export const readingLanguage = z.enum(["en", "ru", "he"]);
 export const recipeId = z.string().min(1).max(150).regex(/^[a-zA-Z0-9:_-]+$/);
 export const parseInput = z.object({
   transcript: z.string().trim().min(1).max(12000),

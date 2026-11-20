@@ -11,6 +11,8 @@ import { usePlannerCopy } from "@/lib/planner-copy";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
 import type { RecipeTimeMode } from "@/lib/recipe-time";
 import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
@@ -58,6 +60,7 @@ function SlotCard({ slot, day, props, onOpen }: { slot: Slot; day: BoardDay; pro
   const t = usePlannerCopy();
   const { plan, recipes, locked, mealNames, recipeHref, timeMode } = props;
   const { meal } = slot;
+  const phone = useIsMobile();
   const found = occupant(plan, meal, slot.day);
   const recipe = found ? recipes.get(found.recipeId) : undefined;
   const continued = !!found && found.startDay < slot.day;
@@ -67,7 +70,7 @@ function SlotCard({ slot, day, props, onOpen }: { slot: Slot; day: BoardDay; pro
   const label = recipe ? t("slotFilled", { day: day.long, meal: mealNames[meal], title }) : t("slotEmpty", { day: day.long, meal: mealNames[meal] });
   return (
     <article ref={drop.setNodeRef} aria-label={label} data-testid={`cell-${meal}-${slot.day}`} data-recipe={recipe?.id ?? ""}
-      className={`rounded-lg border p-2 ${drop.isOver ? "border-primary bg-primary/10" : recipe ? "border-border bg-white" : "border-dashed border-amber-300 bg-amber-50/60"}`}>
+      className={`rounded-lg border ${drop.isOver ? "border-primary bg-primary/10 p-2" : recipe && phone && !continued ? "border-transparent" : recipe ? "border-border bg-white p-2" : "border-dashed border-amber-300 bg-amber-50/60 p-2"}`}>
       <div ref={drag.setNodeRef} {...(locked || continued ? {} : drag.listeners)} className={drag.isDragging ? "opacity-40" : ""}>
         <div className="flex items-start gap-1">
           <p className="min-w-0 flex-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{mealNames[meal]}</p>
@@ -82,7 +85,10 @@ function SlotCard({ slot, day, props, onOpen }: { slot: Slot; day: BoardDay; pro
             </DropdownMenu>
           )}
         </div>
-        {recipe ? (
+        {recipe && phone && !continued ? (
+          <RecipeCard recipe={recipe} href={recipeHref(recipe.id)} mode={timeMode} titleTestId={`recipe-link-${meal}-${slot.day}`}
+            servings={found?.servings ? String(found.servings) : null} ids={{ meta: `meta-${meal}-${slot.day}`, view: `view-${meal}-${slot.day}` }} />
+        ) : recipe ? (
           <div className="space-y-1">
             <Link href={recipeHref(recipe.id)} className={`block break-words text-sm font-medium leading-snug text-foreground hover:underline ${focus}`} data-testid={`recipe-link-${meal}-${slot.day}`}>
               {continued ? "↳ " : ""}{title}

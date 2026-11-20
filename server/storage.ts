@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Recipe, type InsertRecipe, users, recipes } from "@shared/schema";
+import { type User, type InsertUser, type Recipe, type InsertRecipe, type RecipeTranslation, users, recipes, recipeTranslations } from "@shared/schema";
 import { eq, desc, getTableColumns, sql } from "drizzle-orm";
 import { recipeInput, recipePatch } from "./request-schemas";
 import { recipeCreditInput } from "../shared/recipe-credit";
@@ -35,6 +35,7 @@ export interface IStorage {
   updateRecipe(id: string, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
   updateRecipeCredit(id: string, credit: z.input<typeof recipeCreditInput>): Promise<Recipe | undefined>;
   deleteRecipe(id: string): Promise<boolean>;
+  getRecipeTranslations(language: "en" | "ru" | "he"): Promise<RecipeTranslation[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -69,6 +70,12 @@ export class DatabaseStorage implements IStorage {
     return db.select({ ...recipeColumns, image: sql<string | null>`CASE WHEN ${recipes.image} LIKE 'data:%'
       THEN '/api/recipes/' || ${recipes.id} || '/image?v=' || left(md5(${recipes.image}), 12) ELSE ${recipes.image} END` })
       .from(recipes).orderBy(desc(recipes.createdAt));
+  }
+
+  async getRecipeTranslations(language: "en" | "ru" | "he"): Promise<RecipeTranslation[]> {
+    const db = await this.database();
+    const { recipeId, title, ingredients, steps, translatedBy } = recipeTranslations;
+    return db.select({ recipeId, title, ingredients, steps, translatedBy }).from(recipeTranslations).where(eq(recipeTranslations.language, language));
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {

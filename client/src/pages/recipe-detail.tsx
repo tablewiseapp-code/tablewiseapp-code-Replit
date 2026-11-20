@@ -17,6 +17,8 @@ import { RecipeCreditLine, RecipeCreditEditor } from "@/components/recipe-credit
 import { RecipeLikeButton } from "@/components/recipe-like-button";
 import { RecipeNutritionPanel } from "@/components/recipe-nutrition";
 import { DietaryTags, RecipeViewRows } from "@/components/recipe-summary";
+import { recipePhoto } from "@/lib/recipe-photo";
+import { recipeText, useRecipeTranslations } from "@/lib/recipe-translation";
 import { useRecipeDisplay } from "@/components/recipe-display";
 import { RecipeVideo } from "@/components/youtube-import";
 import { CookingMode } from "@/components/cooking-mode";
@@ -92,7 +94,9 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
 }
 
 export default function RecipeDetail() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const translations = useRecipeTranslations();
+  const [showOriginal, setShowOriginal] = useState(false);
   const { recipeView } = useRecipeDisplay();
   const { t: view } = useRecipeViewCopy();
   const search = useSearch();
@@ -158,9 +162,13 @@ export default function RecipeDetail() {
   }
 
   const readOnly = Boolean(recipe.developmentReadOnly);
+  const photo = recipePhoto(recipe);
+  // Shown text only; scaling, grocery, timing and saves keep using the original recipe.
+  const translation = recipeText(recipe, translations.get(recipe.id), lang);
+  const text = showOriginal ? recipeText(recipe, undefined, lang) : translation;
   const base = baseServings(recipe.servings);
   const factor = servingFactor(selectedServings ?? base ?? 1, base);
-  const scaledIngredients = recipe.ingredients.map(text => scaleIngredient(text, factor));
+  const scaledIngredients = text.ingredients.map(line => scaleIngredient(line, factor));
   const analysis = currentAnalysis(recipe, recipe.stepAnalysis);
   const host = sourceHost(recipe.sourceUrl);
   const tools = recipeToolKeys(recipe.steps, recipe.equipment).map(tool => timingCopy(tool)).join(", ");
@@ -223,18 +231,27 @@ export default function RecipeDetail() {
           )}
         </div>
 
-        {recipe.image && !imageFailed && (
-          <img src={recipe.image} alt="" className="image-fade-in mb-4 aspect-[16/9] w-full rounded-lg border hairline object-cover" decoding="async"
-            sizes="(max-width: 768px) 100vw, 768px" onLoad={e => e.currentTarget.classList.add("image-loaded")}
-            onError={() => setImageFailed(true)} data-testid="img-recipe-hero" />
+        {!imageFailed && (
+          <div className="relative mb-4">
+            <img src={photo.src} alt="" className="image-fade-in aspect-[16/9] w-full rounded-lg border hairline object-cover" decoding="async"
+              sizes="(max-width: 768px) 100vw, 768px" onLoad={e => e.currentTarget.classList.add("image-loaded")}
+              onError={() => setImageFailed(true)} data-testid="img-recipe-hero" />
+            {photo.example && <span className="absolute bottom-2 start-2 rounded bg-background/80 px-1.5 py-0.5 text-xs text-muted-foreground"
+              data-testid="example-photo-hero">{t("recipe.examplePhoto")}</span>}
+          </div>
         )}
 
         <header>
           <div className="flex items-start justify-between gap-2">
-            <h1 className="page-title break-words" data-testid="text-recipe-title">{recipe.title}</h1>
+            <h1 className="page-title break-words" data-testid="text-recipe-title">{text.title}</h1>
             <RecipeLikeButton recipeId={recipe.id} />
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /><CookedBadge recipeId={recipe.id} /></div>
+          {translation.translatedBy && <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground" data-testid="text-translated">
+            {t(translation.translatedBy === "ai" ? "recipe.translatedByAI" : "recipe.translated")} ·
+            <button type="button" className="inline-flex min-h-11 items-center underline underline-offset-2" onClick={() => setShowOriginal(value => !value)}
+              data-testid="button-show-original">{t(showOriginal ? "recipe.showTranslation" : "recipe.showOriginal")}</button>
+          </p>}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-base text-foreground">
             {recipe.prepTime != null && <span className={meta} data-testid="text-prep-time"><Clock3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />{view("prep")}: {recipe.prepTime} {view("minutes")}</span>}
             {recipe.cookTime != null && <span className={meta} data-testid="text-cook-time"><Clock3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />{view("cook")}: {recipe.cookTime} {view("minutes")}</span>}
@@ -278,8 +295,8 @@ export default function RecipeDetail() {
             <h2 id="instructions-heading" className="text-lg font-semibold text-foreground" data-testid="text-steps-heading">{view("instructions")}</h2>
           </div>
           <ol className="space-y-4">
-            {recipe.steps.map((step, i) => {
-              const duration = stepDuration(step, analysis?.steps[i]);
+            {text.steps.map((step, i) => {
+              const duration = stepDuration(recipe.steps[i], analysis?.steps[i]);
               return (
                 <li key={i} className="flex gap-3" data-testid={`text-step-${i}`}>
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-primary" aria-hidden="true">{i + 1}</span>
@@ -323,7 +340,7 @@ export default function RecipeDetail() {
         )}
       </PageContainer>
 
-      {cooking && recipe.steps.length > 0 && <CookingMode key={recipe.id} recipeId={recipe.id} title={recipe.title} steps={recipe.steps} analysis={analysis}
+      {cooking && recipe.steps.length > 0 && <CookingMode key={recipe.id} recipeId={recipe.id} title={text.title} steps={text.steps} analysis={analysis}
         servings={selectedServings} scaledIngredients={scaledIngredients}
         stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => setCooking(false)} />}
 

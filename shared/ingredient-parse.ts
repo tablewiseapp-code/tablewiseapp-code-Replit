@@ -17,7 +17,7 @@ export function parseQuantity(raw: string): number | null {
 }
 
 // Canonical unit → [singular label, plural label, accepted spellings]. Stored as the key; shown as a label.
-const unitTable = {
+export const unitTable = {
   g: ["g", "g", ["g", "gr", "grs", "gram", "grams", "gramme", "grammes"]],
   kg: ["kg", "kg", ["kg", "kgs", "kilo", "kilos", "kilogram", "kilograms", "kilogramme", "kilogrammes"]],
   oz: ["oz", "oz", ["oz", "ounce", "ounces"]],

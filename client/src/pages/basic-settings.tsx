@@ -15,7 +15,8 @@ import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rul
 import { selectableDevices } from "@/lib/device-requirements";
 import { mealSlots, type MealSlot } from "@/lib/meal-plan";
 import { recipeNutrients } from "@shared/recipe-nutrition";
-import { RecipeMeta, RecipeViewRows, type RecipeViewData } from "@/components/recipe-summary";
+import { type RecipeViewData } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
 import {
   cookingPrefKeys, emptyMember, recipeDetails, householdServings, leftoverOptions, mealRecipeTypes, mealTimeLimits, noveltyOptions, portionSizes, servingLimits,
   useBasicSettings, varietyOptions, type BasicSettings, type IngredientChoice, type MealRule, type Member,
@@ -484,10 +485,9 @@ export default function BasicSettingsPage() {
               onToggle={d => edit("recipeView", { details: toggle(s.recipeView.details, d) })} testid="recipe-view-detail" />
             <div className="mt-5 pb-3" data-testid="recipe-view-preview">
               <p className="text-sm font-medium text-muted-foreground">{t("preview")}</p>
-              <div className="mt-2 rounded-lg border hairline bg-card p-3">
-                <p className="text-base font-semibold text-foreground">{t("sampleTitle")}</p>
-                <RecipeMeta recipe={sampleRecipe} testId="recipe-view-preview-meta" />
-                <RecipeViewRows recipe={sampleRecipe} view={s.recipeView} testId="recipe-view-preview-rows" className="mt-1" />
+              <div className="mt-2 max-w-sm">
+                <RecipeCard recipe={{ ...sampleRecipe, title: t("sampleTitle") }} view={s.recipeView}
+                  ids={{ meta: "recipe-view-preview-meta", view: "recipe-view-preview-rows" }} />
               </div>
             </div>
           </>)}

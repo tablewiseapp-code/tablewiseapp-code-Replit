@@ -11,6 +11,7 @@
     "check": "tsc",
     "validate": "npm run check && npm run check:pilot && npm run check:mvp && npm run check:analytics && npm run check:development-fixtures && npm run test:integration-utils && npm run test:curated-development && npm run test:optional-ai && npm run test:ingredient-groups && npm run test:ingredient-parse && npm run test:recipe-nutrition && npm run test:recipe-price && npm run test:recipe-fact-layout && npm run test:step-analysis && npm run test:home && npm run test:home-tasks && npm run test:week-suggestions",
     "test:step-analysis": "tsc --project tsconfig.step-analysis.json && tsx script/test-step-analysis.ts",
+    "test:recipe-photo": "tsx script/test-recipe-photo.ts",
     "test:step-analysis-browser": "tsx script/test-step-analysis-browser.ts",
     "test:manual-import-browser": "tsx script/test-manual-import-browser.ts",
     "test:step-analysis-postgres": "tsx script/test-step-analysis-postgres.ts",
