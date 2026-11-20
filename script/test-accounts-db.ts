@@ -56,7 +56,7 @@ async function main() {
       const cookies = Object.fromEntries(response.headers.getSetCookie().map(c => c.split(";")[0].split("=") as [string, string]));
       return { status: response.status, data, cookies };
     };
-    const plan = { weekStart: "2026-11-16", proposed: false, selectedIds: ["r1"], planAssignments: [], locked: true };
+    const plan = { weekStart: "2026-11-16", proposed: false, selectedIds: ["r1"], batches: [], approved: [] };
     const signIn = (email: string, password: string, cookie?: string) => request("POST", "/api/auth/sign-in", { email, password }, cookie);
 
     // A guest plans a Week, then signs in with a new email: the account adopts the guest's data.
@@ -81,9 +81,9 @@ async function main() {
     const session2 = `tablewise_session=${second.cookies.tablewise_session}`;
     assert.deepEqual((await request("GET", "/api/week-plan?week=2026-11-16", undefined, session2)).data, plan);
     // A session wins over a guest cookie in the same browser; the guest's data stays with the guest.
-    const other = (await request("PUT", "/api/week-plan", { ...plan, locked: false })).cookies.tablewise_owner;
+    const other = (await request("PUT", "/api/week-plan", { ...plan, approved: null })).cookies.tablewise_owner;
     assert.deepEqual((await request("GET", "/api/week-plan?week=2026-11-16", undefined, `${session2}; tablewise_owner=${other}`)).data, plan);
-    assert.equal((await request("GET", "/api/week-plan?week=2026-11-16", undefined, `tablewise_owner=${other}`)).data.locked, false);
+    assert.equal((await request("GET", "/api/week-plan?week=2026-11-16", undefined, `tablewise_owner=${other}`)).data.approved, null);
 
     // Profile: name and photo belong to the account, so every signed-in browser sees them; a guest has none.
     const jpeg = `data:image/jpeg;base64,${Buffer.from([255, 216, 255, 224, 0, 16]).toString("base64")}`;

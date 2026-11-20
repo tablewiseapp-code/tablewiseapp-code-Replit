@@ -35,12 +35,11 @@ try {
       sessionStorage.testSeed = "1";
       sessionStorage.shopping = JSON.stringify([{ key: JSON.stringify([null, "chicken thighs"]), skipped: false, priceCents: 1249, priceText: "10 chicken thighs" }]);
       localStorage.setItem("tablewise_language", "en");
-      localStorage.setItem("weeklyMealsState", JSON.stringify({
-        selectedIds: recipes.map(recipe => recipe.id),
-        planAssignments: recipes.map((recipe, index) => ({
-          recipeId: recipe.id, mealType: "Dinner", startDay: index, spanDays: 1,
-        })),
-      }));
+      // This week's approved dishes, one per day from Monday, each at the recipe's own yield.
+      const day = offset => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 + offset);
+        return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-"); };
+      const batches = recipes.map((recipe, index) => ({ id: "b" + index, recipeId: recipe.id, cookDate: day(index), serves: [{ date: day(index) }] }));
+      localStorage.setItem("weeklyMealsState", JSON.stringify({ weekStart: day(0), selectedIds: recipes.map(recipe => recipe.id), batches, approved: batches }));
     }
     const fetchActual = window.fetch.bind(window);
     window.fetch = async (resource, init) => {

@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from "react";
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recordPilotEvent } from "@/lib/pilot-analytics";
-import { addDays, currentWeek, isWeek, parseCalendarDate, plannerRecipeURL } from "@/lib/week-plan";
-import { proposeWeek, slotOptions, weekOrder } from "@/lib/week-suggestions";
+import { addDays, calendarDate, currentWeek, isWeek, plannerRecipeURL } from "@/lib/week-plan";
+import { dishOptions, proposeCookingPlan } from "@/lib/week-suggestions";
 import { useHouseholdCopy } from "@/lib/household-copy";
 import { loadWeekFilters } from "@/lib/week-filters";
 import { PlannerBoard } from "@/components/planner-board";
@@ -19,13 +19,14 @@ import { Button } from "@/components/ui/button";
 import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { matchesPlannerFilters, pageNumbers, paginate, recipeNameMatches } from "@/lib/planner-filters";
-import { FoodDeals } from "@/components/food-deals";
+import { FoodDeals, WeekDeals } from "@/components/food-deals";
+import { foodDeals, weekDeals } from "@/lib/food-deals";
 import { useWeekFilterCopy } from "@/lib/week-filter-copy";
 import { useFilterLabels, useWeekFilterChips, WeekFilterPanel } from "@/components/week-filter-panel";
 import { countWeekFilters, defaultWeekFilters, sanitizeWeekFilters, type WeekFilters } from "@/lib/week-filters";
 
 const SELECTED_PREVIEW = 5; // more selections collapse behind "Show all"
-import { availableDevices, householdServings, loadSettings, methodChoices, updateSettings, useSavedSettings } from "@/lib/basic-settings";
+import { availableDevices, householdCounts, householdServings, loadSettings, methodChoices, updateSettings, useSavedSettings } from "@/lib/basic-settings";
 import { ActivePreferences } from "@/components/active-preferences";
 import { limitingReasons, matchCounts } from "@/lib/active-preferences";
 import { checkEligibility, personalize, suggestReplacement } from "@/lib/preference-engine";
@@ -44,7 +45,7 @@ import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTim
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePlannerCopy } from "@/lib/planner-copy";
-import { fetchWeek, mealSlots, plannedSlotCount, pushWeekPlan, saveWeek, totalSlots, type MealSlot, type PlanState } from "@/lib/meal-plan";
+import { approvePlan, fetchWeek, mealSlots, pushWeekPlan, saveWeek, statusOf, type Batch, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
@@ -52,18 +53,12 @@ type Recipe = PlannerRecipe;
 
 type Filters = WeekFilters;
 
-interface PlanAssignment {
-  recipeId: string;
-  mealType: "Breakfast" | "Lunch" | "Dinner";
-  startDay: number;
-  spanDays: number;
-  servings?: number; // chosen in the recipe view; scales the grocery list
-}
-
+/** The browser copy of the current week (meal-plan.ts) plus this page's filters. The browser only changes picks and
+ * filters; the dishes (`batches`) are carried through untouched, except a pick replaced in place. */
 interface WeeklyMealsState {
   filters: Filters;
   selectedIds: string[];
-  planAssignments: PlanAssignment[];
+  batches?: Batch[];
 }
 
 const defaultFilters: Filters = defaultWeekFilters;
@@ -71,7 +66,6 @@ const defaultFilters: Filters = defaultWeekFilters;
 const defaultState: WeeklyMealsState = {
   filters: defaultFilters,
   selectedIds: [],
-  planAssignments: [],
 };
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -142,7 +136,6 @@ function WeeklyMealsContent() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [recipesError, setRecipesError] = useState<string | null>(null);
-  const [weekLocked] = useLocalStorageState<boolean>("week_locked_v1", false);
   // Pilot funnel (docs/phase-5-analytics.md). Only picks made on this page count, not a plan restored from storage.
   const pilotWeek = currentWeek();
   usePilotPage("planner_opened", pilotWeek);
@@ -198,20 +191,7 @@ function WeeklyMealsContent() {
 
     setState((prev) => {
       const selectedIds = prev.selectedIds.filter((id) => availableIds.has(id));
-      const planAssignments = prev.planAssignments.filter((assignment) => availableIds.has(assignment.recipeId));
-
-      if (
-        selectedIds.length === prev.selectedIds.length &&
-        planAssignments.length === prev.planAssignments.length
-      ) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        selectedIds,
-        planAssignments,
-      };
+      return selectedIds.length === prev.selectedIds.length ? prev : { ...prev, selectedIds };
     });
   }, [recipes, isLoadingRecipes]);
 
@@ -221,7 +201,7 @@ function WeeklyMealsContent() {
       map.set(recipe.id, getRecipeUserMeta(recipe.id));
     }
     return map;
-  }, [recipes, state.selectedIds, state.planAssignments]);
+  }, [recipes, state.selectedIds, state.batches]);
 
   const getMeta = useCallback((recipeId: string): RecipeUserMeta => {
     return recipeMetaMap.get(recipeId) ?? { isMyPick: false, rating: null };
@@ -233,12 +213,12 @@ function WeeklyMealsContent() {
   useEffect(() => {
     saveState(state);
   }, [state]);
-  useEffect(() => pushWeekPlan(), [state, weekLocked]); // after both localStorage writes; skips unchanged plans
+  useEffect(() => pushWeekPlan(), [state]); // after the localStorage write; skips unchanged plans
 
   const notify = useCallback((title: string, destructive = false) => toast({ title, variant: destructive ? "destructive" : "default" }), [toast]);
   const usedRecipeIds = useMemo(() => {
-    return new Set(state.planAssignments.map(a => a.recipeId));
-  }, [state.planAssignments]);
+    return new Set((state.batches ?? []).map(b => b.recipeId));
+  }, [state.batches]);
 
   const sortedSidebarRecipes = useMemo(() => {
     const selected = recipes.filter(r => state.selectedIds.includes(r.id));
@@ -339,10 +319,9 @@ function WeeklyMealsContent() {
   const mealCount = (meal: MealSlot) => mealEligible.filter(r => r.mealType === meal && matchesPage(r, { ...state.filters, mealType: [meal] })).length;
   const memberName = (id: string) => settings.household.members.find(m => m.id === id)?.name ?? null;
   const replaceSelected = (oldId: string, newId: string) => {
-    if (weekLocked) { notify(planCopy("locked"), true); return; }
-    // Swap in place: the selection order and any planned slots keep their positions.
+    // Swap in place: the selection order and any planned dishes keep their positions.
     setState(prev => ({ ...prev, selectedIds: prev.selectedIds.map(id => (id === oldId ? newId : id)),
-      planAssignments: prev.planAssignments.map(a => (a.recipeId === oldId ? { ...a, recipeId: newId } : a)) }));
+      ...(prev.batches ? { batches: prev.batches.map(b => (b.recipeId === oldId ? { ...b, recipeId: newId } : b)) } : {}) }));
   };
 
   const filteredRecipes = filterRecipes();
@@ -494,7 +473,7 @@ function WeeklyMealsContent() {
             {canGenerate ? t("meals.selectedShort", { count: state.selectedIds.length }) : t("meals.minimum_meals_selection")}
             {maxSelectionsHit && <span className="block text-foreground">{t("meals.max12")}</span>}
           </p>
-          <Link href="/meals" className="btn btn-primary shrink-0" data-testid="button-back-to-week">{planCopy("backToWeek")}</Link>
+          <Link href="/meals?plan" className="btn btn-primary shrink-0" data-testid="button-back-to-week">{planCopy("backToWeek")}</Link>
         </div>
         {/* Counts come from the exact lists rendered below: all → saved restrictions → page filters/search. */}
         <ActivePreferences settings={settings} counts={recipes.length ? matchCounts(personalized, filteredRecipes) : null}
@@ -590,7 +569,7 @@ function WeeklyMealsContent() {
                         <div className="mt-1 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900" role="alert" data-testid={`incompatible-${recipe.id}`}>
                           <span>{sText("incompatible")}: {fit.reasons.map(r => restrictionText(lang, r, memberName)).join("; ")}</span>
                           {replacement
-                            ? <button type="button" onClick={() => replaceSelected(recipe.id, replacement.id)} disabled={weekLocked} data-testid={`replace-${recipe.id}`}
+                            ? <button type="button" onClick={() => replaceSelected(recipe.id, replacement.id)} data-testid={`replace-${recipe.id}`}
                                 className="min-h-9 rounded-full border border-amber-300 bg-white px-3 font-medium hover:bg-amber-100 disabled:opacity-50">{sText("replaceWith", { title: replacement.title })}</button>
                             : <span className="text-amber-700">{sText("noReplacement")}</span>}
                         </div>
@@ -735,11 +714,12 @@ function WeeklyMealsContent() {
 }
 
 
-/** Week calendar: the dated week as a complete proposal (7 days × Breakfast, Lunch, Dinner), approved in one action.
- * The proposal is made once per week (plan.proposed); edits change one slot and never regenerate the rest. */
+/** The Week as a cooking plan (docs/cooking-plan.md): seven dated days, each listing the dishes cooked that day. The draft
+ * is made once per week (plan.proposed); edits change one dish or one day and never regenerate the rest. Approve cooking
+ * plan / Save changes copy the dishes to `approved`, which is what Groceries use. */
 function WeekCalendar() {
   const [, setLocation] = useLocation();
-  const { t: app, lang } = useI18n();
+  const { lang } = useI18n();
   const t = usePlannerCopy();
   const household = useHouseholdCopy();
   const { toast } = useToast();
@@ -751,8 +731,7 @@ function WeekCalendar() {
   const [recipes, setRecipes] = useState<Recipe[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [loaded, setLoaded] = useState<{ week: string; plan: PlanState; locked: boolean } | null>(null);
-  const notify = useCallback((title: string, destructive = false) => toast({ title, variant: destructive ? "destructive" : "default" }), [toast]);
+  const [loaded, setLoaded] = useState<{ week: string; plan: PlanState } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -761,60 +740,57 @@ function WeekCalendar() {
     return () => { active = false; };
   }, [attempt]);
 
-  // The Week filters narrow proposals and the picker (never the meal type: the slot decides that).
-  const fits = useCallback((r: Recipe) => matchesPlannerFilters(r, { ...loadWeekFilters(), mealType: [] }, "total", getRecipeUserMeta(r.id)), []);
+  // The Week → Plan filters narrow the draft and the picker.
+  const fits = useCallback((r: Recipe) => matchesPlannerFilters(r, loadWeekFilters(), "total", getRecipeUserMeta(r.id)), []);
   useEffect(() => {
     if (!recipes) return;
     let active = true;
     setLoaded(null);
-    fetchWeek(week).then(({ plan, locked }) => {
+    fetchWeek(week).then(plan => {
       if (!active) return;
-      const known = new Set(recipes.map(r => r.id));
-      let shown: PlanState = { ...plan, planAssignments: plan.planAssignments.filter(a => known.has(a.recipeId)) };
-      if (!locked && !shown.proposed) {
-        // Once per week: keeps what is scheduled (a partial draft) and fills only the empty slots.
-        shown = proposeWeek(shown, recipes, loadSettings(), week, fits).plan;
-        try { saveWeek(week, shown, false); } catch { /* shown anyway; saved with the next change */ }
+      let shown = plan;
+      if (!plan.proposed && plan.approved === null) {
+        // Once per week: cooking days that already have a dish keep it; the others get one.
+        shown = proposeCookingPlan(plan, recipes, loadSettings(), week, { fits }).plan;
+        try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
       }
-      setLoaded({ week, plan: shown, locked });
+      setLoaded({ week, plan: shown });
     }).catch(() => active && setFailed(true));
     return () => { active = false; };
   }, [week, recipes, fits]);
 
   const byId = useMemo(() => new Map((recipes ?? []).map(r => [r.id, r])), [recipes]);
-  const save = (plan: PlanState, locked: boolean) => {
-    if (!loaded) return false;
-    try { saveWeek(week, plan, locked); } catch { notify(t("saveFailed"), true); return false; }
-    setLoaded({ ...loaded, plan, locked });
+  // Edits apply to the latest plan, also from a toast's Undo rendered before later changes.
+  const latest = useRef(loaded);
+  latest.current = loaded;
+  const save = (plan: PlanState) => {
+    const current = latest.current;
+    if (!current) return false;
+    try { saveWeek(week, plan); } catch { toast({ title: t("saveFailed"), variant: "destructive" }); return false; }
+    latest.current = { ...current, plan };
+    setLoaded(latest.current);
     return true;
   };
   const commit = (edit: (plan: PlanState) => PlanState) => {
-    if (!loaded) return false;
-    if (loaded.locked) { notify(t("locked"), true); return false; }
-    const next = edit(loaded.plan);
-    return next !== loaded.plan && save(next, false);
+    const current = latest.current;
+    if (!current) return false;
+    const next = edit(current.plan);
+    return next !== current.plan && save(next);
   };
 
-  const date = (offset: number) => parseCalendarDate(addDays(week, offset))!;
-  const fmt = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(lang, options);
-  const range = fmt({ month: "short", day: "numeric" }).formatRange(date(0), date(6));
-  const days = weekOrder.map(day => {
-    const d = date((day + 6) % 7);
-    return { day, short: fmt({ weekday: "short", day: "numeric" }).format(d), long: fmt({ weekday: "long", month: "short", day: "numeric" }).format(d) };
-  });
-  const mealNames: Record<MealSlot, string> = { Breakfast: app("meals.breakfast"), Lunch: app("meals.lunch"), Dinner: app("meals.dinner") };
+  const range = new Intl.DateTimeFormat(lang, { month: "short", day: "numeric", timeZone: "UTC" })
+    .formatRange(new Date(`${week}T12:00:00Z`), new Date(`${addDays(week, 6)}T12:00:00Z`));
   const go = (offset: number) => setLocation(`/meals?week=${addDays(week, offset)}`);
-
   const ready = loaded?.week === week ? loaded : null;
-  const missing = ready ? totalSlots - plannedSlotCount(ready.plan) : 0;
-  const status = !ready ? "" : ready.locked ? t("statusApproved") : missing === 0 ? t("statusReady") : missing === 1 ? t("statusNeededOne") : t("statusNeeded", { count: missing });
+  const status = ready ? statusOf(ready.plan) : null;
   const approve = () => {
-    if (!ready || missing > 0 || !save(ready.plan, true)) return;
+    if (!ready || !ready.plan.batches.length || !save(approvePlan(ready.plan))) return;
     recordPilotEvent("plan_completed", week);
     // The suggested-dinner draft bookkeeping (Your household) ends with approval.
-    try { updateSettings(s => ({ ...s, setup: { ...s.setup, suggested: [], declined: [] } })); } catch { /* the lock is what matters */ }
+    try { updateSettings(s => ({ ...s, setup: { ...s.setup, suggested: [], declined: [] } })); } catch { /* the approval is what matters */ }
   };
-  const servingsFallback = householdServings(settings);
+  const planned = ready ? ready.plan.batches.flatMap(b => byId.get(b.recipeId) ?? []) : [];
+  const deals = weekDeals(foodDeals, week, planned);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -830,8 +806,9 @@ function WeekCalendar() {
                 className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5"><ChevronRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" /></button>
             </div>
           </div>
-          {ready && <p role="status" data-testid="week-status" data-state={ready.locked ? "approved" : missing ? "incomplete" : "ready"}
-            className={`rounded-full px-3 py-1 text-sm font-medium ${ready.locked ? "bg-primary text-white" : missing ? "bg-amber-50 text-amber-900" : "bg-accent text-primary"}`}>{status}</p>}
+          {status && <p role="status" data-testid="week-status" data-state={status}
+            className={`rounded-full px-3 py-1 text-sm font-medium ${status === "approved" ? "bg-primary text-white" : status === "changed" ? "bg-amber-50 text-amber-900" : "bg-accent text-primary"}`}>
+            {status === "approved" ? t("statusApproved") : status === "changed" ? t("statusChanged") : t("statusDraft")}</p>}
         </header>
 
         {failed ? (
@@ -843,14 +820,15 @@ function WeekCalendar() {
           <p className="text-sm text-muted-foreground" role="status">{t("loading")}</p>
         ) : (
           <>
-            <PlannerBoard plan={ready.plan} recipes={byId} locked={ready.locked} commit={commit} notify={notify} days={days} mealNames={mealNames}
-              recipeHref={id => plannerRecipeURL(id, week)} servingsFallback={servingsFallback} timeMode={timeMode}
+            <WeekDeals offers={deals} lang={lang} />
+            <PlannerBoard plan={ready.plan} week={week} today={week === currentWeek() ? calendarDate(new Date()) : null} lang={lang} recipes={byId}
+              commit={commit} recipeHref={b => plannerRecipeURL(b.recipeId, week, b.id)} household={householdCounts(settings)} timeMode={timeMode}
               onPicked={id => {
                 recordPilotEvent("meal_selected", week, id);
                 // Learning signal: an AI recipe was put on the plan (not that it was cooked).
                 if (byId.get(id) && isGeneratedRecipe(byId.get(id)!)) reportGenerationEvent("generated_recipe_added_to_plan");
               }}
-              options={slot => slotOptions(recipes ?? [], settings, slot, { seed: week, fits, chosen: (recipes ?? []).filter(r => ready.plan.planAssignments.some(a => a.recipeId === r.id)) })} />
+              options={day => dishOptions(recipes ?? [], settings, day, { seed: week, fits, chosen: planned })} />
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/meals?browse" className="btn btn-text -ms-2" data-testid="link-browse-recipes">{t("browse")}</Link>
               <Link href="/household" className="btn btn-text" data-testid="link-household">{household("changeHousehold")}</Link>
@@ -860,17 +838,14 @@ function WeekCalendar() {
 
         {ready && (
           <div className="sticky bottom-[var(--app-bottom-nav)] z-10 -mx-4 mt-6 flex flex-col gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-end">
-            {ready.locked ? (
-              <>
-                <button type="button" onClick={() => save(ready.plan, false)} data-testid="button-edit-week" className="btn btn-secondary">{t("edit")}</button>
-                <button type="button" onClick={() => setLocation(week === currentWeek() ? "/grocery-list" : `/grocery-list?week=${week}`)} data-testid="button-create-grocery-list"
-                  className="btn btn-primary">{t("grocery")}</button>
-              </>
+            {status === "approved" ? (
+              <button type="button" onClick={() => setLocation(week === currentWeek() ? "/grocery-list" : `/grocery-list?week=${week}`)} data-testid="button-view-groceries"
+                className="btn btn-primary">{t("groceries")}</button>
             ) : (
               <>
-                {missing > 0 && <p id="approve-hint" className="text-xs text-muted-foreground sm:me-auto">{t("approveHint")}</p>}
-                <button type="button" onClick={approve} disabled={missing > 0} aria-describedby={missing > 0 ? "approve-hint" : undefined}
-                  data-testid="button-approve-week" className="btn btn-primary">{t("approve")}</button>
+                <p id="approve-hint" className="text-xs text-muted-foreground sm:me-auto">{status === "changed" ? t("changedHint") : t("approveHint")}</p>
+                <button type="button" onClick={approve} disabled={!ready.plan.batches.length} aria-describedby="approve-hint"
+                  data-testid="button-approve-week" className="btn btn-primary">{status === "changed" ? t("saveChanges") : t("approve")}</button>
               </>
             )}
           </div>

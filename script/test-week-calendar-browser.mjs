@@ -1,5 +1,6 @@
-// Week calendar (/meals): a complete 21-meal proposal, Swap, Change servings, Move meal, approval and Groceries,
-// partial drafts, approved weeks, other weeks, an unfillable meal, at desktop and phone widths in a real browser.
+// The Week as a cooking plan (/meals?plan, docs/cooking-plan.md): draft by cooking day, + Add a dish, Swap dish, Edit
+// servings, Move cooking day with conflicts, Remove dish with Undo, approval and Groceries, Weekly deals, legacy weeks,
+// at desktop and phone widths in a real browser.
 // Throwaway Chrome profile = a new guest. Usage: node script/test-week-calendar-browser.mjs   (BASE_URL, CHROME_PATH optional; Node 22+)
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -41,7 +42,11 @@ try {
   const shot = async name => { if (!SHOTS) return; const { result } = await call("Page.captureScreenshot", { format: "png" }); if (result?.data) (await import("node:fs")).writeFileSync(join(SHOTS, `${name}.png`), Buffer.from(result.data, "base64")); };
   const week = () => ev(`${q("week-range")}?.dataset.week`);
   const status = () => ev(`${q("week-status")}?.dataset.state`);
-  const cells = () => ev(`Object.fromEntries([...document.querySelectorAll('[data-testid^="cell-"]')].map(c => [c.dataset.testid.slice(5), c.dataset.recipe]))`);
+  // { "YYYY-MM-DD": [{ id, recipe }] } for every day of the shown week, in display order.
+  const days = () => ev(`Object.fromEntries([...document.querySelectorAll('section[data-testid^="day-"]')].map(d => [d.dataset.testid.slice(4),
+    [...d.querySelectorAll('article[data-testid^="dish-"]')].map(a => ({ id: a.dataset.testid.slice(5), recipe: a.dataset.recipe }))]))`);
+  const text = id => ev(`${q(id)}?.textContent ?? null`);
+  const press = (scope, label) => ev(`[...document.querySelectorAll('[data-testid="${scope}"] button')].find(b => b.getAttribute("aria-label") === ${JSON.stringify(label)}).click()`);
   const serverWeek = w => ev(`fetch("/api/week-plan?week=${w}").then(r => r.json())`);
   const calendarReady = `Boolean(${q("week-status")})`;
   const desktop = () => call("Emulation.setDeviceMetricsOverride", { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false });
@@ -49,140 +54,153 @@ try {
   const thisWeek = monday();
   await desktop();
 
-  // ---- A new guest skips Your household; the Week opens with 21 meals before any action.
-  await go("/meals", `Boolean(${q("button-skip-household")})`);
+  // ---- A new guest skips Your household; the Week opens as a draft of cooking days before any action.
+  await go("/meals?plan", `Boolean(${q("button-skip-household")})`);
   await click("button-skip-household");
-  await go("/meals", calendarReady);
+  await go("/meals?plan", calendarReady);
   eq(await week(), thisWeek, "opens the current week");
-  const first = await cells();
-  eq(Object.keys(first).length, 21, "seven days × three meals");
-  ok(Object.values(first).every(Boolean), "every slot has a recipe");
-  eq(await status(), "ready", "Ready for review");
-  ok(await ev(`!${q("button-approve-week")}.disabled`), "Approve week is the primary action");
-  ok(await ev(`!${q("button-fill-week")} && !${q("button-finalize-week")}`), "no Fill my week or Finalize week");
-  ok(new Set(Object.values(first)).size >= 15, "variety: the catalog allows mostly different recipes");
-  eq(await ev(`[...document.querySelectorAll('[data-testid="day-1"] [data-testid^="cell-"]')].map(c => c.dataset.testid)`), ["cell-Breakfast-1", "cell-Lunch-1", "cell-Dinner-1"], "Breakfast, Lunch, Dinner order");
-  // Desktop: seven columns, meal rows aligned across days.
-  eq(await ev(`new Set([1,2,3,4,5,6,0].map(d => Math.round(document.querySelector('[data-testid="day-'+d+'"]').getBoundingClientRect().y))).size`), 1, "days side by side");
-  eq(await ev(`new Set([1,2,3,4,5,6,0].map(d => Math.round(document.querySelector('[data-testid="cell-Dinner-'+d+'"]').getBoundingClientRect().y))).size`), 1, "dinner row lines up");
-  ok((await serverWeek(thisWeek))?.proposed === true, "the proposal is saved for this week");
+  let plan = await days();
+  const dates = Object.keys(plan);
+  eq(dates.length, 7, "seven days");
+  ok(dates.every((d, i) => i === 0 || d > dates[i - 1]) && dates[0] === thisWeek, "chronological, Monday first");
+  const cooking = dates.filter(d => plan[d].length);
+  eq(cooking.length, 3, "Not sure yet → three cooking days, one dish each");
+  ok(cooking.every(d => plan[d].length === 1), "one initial dish per cooking day");
+  eq(await ev(`document.querySelectorAll('[data-today]').length`), 1, "today is highlighted");
+  ok(await ev(`Boolean(${q(`empty-${dates.find(d => !plan[d].length)}`)}) && ${q(`empty-${dates.find(d => !plan[d].length)}`)}.textContent.includes("No cooking planned")`), "empty days are compact");
+  eq(await status(), "draft");
+  eq(await text("button-approve-week"), "Approve cooking plan");
+  ok((await serverWeek(thisWeek))?.proposed === true, "the draft is saved once");
+  // Weekly deals: the sample offers apply to every week; collapsed until opened.
+  eq(await ev(`${q("week-deals")}.querySelector("summary").textContent`), "Weekly deals · 2 offers");
+  ok(await ev(`!${q("week-deals")}.open`), "collapsed");
+  await ev(`${q("week-deals")}.querySelector("summary").click()`);
+  ok(await ev(`${q("week-deal-chicken-thighs")}.textContent.includes("Walmart") && ${q("week-deal-chicken-thighs")}.textContent.includes("/lb")`), "item, store, price and unit");
   await shot("week-desktop");
 
-  // ---- Swap Wednesday lunch (day 3): Cancel keeps it; picking replaces only that slot.
-  await click("swap-Lunch-3");
-  await until(`Boolean(${q("pick-list-Lunch-3")})`, "picker");
-  ok(await ev(`!document.querySelector('[data-testid="pick-list-Lunch-3"] [data-testid="pick-${first["Lunch-3"]}"]')`), "current recipe not offered");
+  // ---- Acceptance 3: two dishes share a day; Swap dish changes only one; moving onto a day with one dish → three.
+  const [early, late] = cooking;
+  await click(`add-dish-${late}`);
+  await until(`Boolean(${q("pick-list")})`, "picker");
+  await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
+  await until(`document.querySelectorAll('[data-testid="day-${late}"] article').length === 2`, "two dishes");
+  plan = await days();
+  const [keep, change] = plan[late];
+  await click(`swap-${change.id}`);
+  await until(`Boolean(${q("pick-list")})`, "picker");
+  ok(await ev(`!${q(`pick-${change.recipe}`)}`), "the current recipe is not offered");
   await click("pick-cancel");
-  eq((await cells())["Lunch-3"], first["Lunch-3"], "Cancel keeps the original");
-  await click("swap-Lunch-3");
-  await until(`Boolean(${q("pick-list-Lunch-3")})`, "picker");
-  const replacement = await ev(`document.querySelector('[data-testid="pick-list-Lunch-3"] button').dataset.testid.slice(5)`);
+  eq((await days())[late], plan[late], "Cancel keeps the dish");
+  await click(`swap-${change.id}`);
+  await until(`Boolean(${q("pick-list")})`, "picker");
+  const replacement = await ev(`document.querySelector('[data-testid="pick-list"] button').dataset.testid.slice(5)`);
   await click(`pick-${replacement}`);
-  await until(`document.querySelector('[data-testid="cell-Lunch-3"]').dataset.recipe === ${JSON.stringify(replacement)}`, "swapped");
+  await until(`${q(`dish-${change.id}`)}.dataset.recipe === ${JSON.stringify(replacement)}`, "swapped");
+  eq((await days())[late][0], keep, "the other dish is untouched");
+  ok(await ev(`[...document.querySelectorAll('[data-testid^="move-day-"]')].length === 3`), "Move cooking day once per populated day");
+  await click(`move-day-${late}`);
+  await click(`move-to-${early}`);
+  ok(await ev(`!${q("move-conflicts")} && !${q("button-confirm-move")}.disabled`), "moving earlier keeps every serving date valid");
+  await click("button-confirm-move");
+  await until(`document.querySelectorAll('[data-testid="day-${early}"] article').length === 3`, "three dishes");
+  ok(await ev(`Boolean(${q(`empty-${late}`)})`), "the old day is empty");
+  // ---- Acceptance 2 (reload): a manual move survives a reload and is on the server.
+  await go("/meals?plan", calendarReady);
+  eq((await days())[early].length, 3, "reload keeps the move");
+  eq((await serverWeek(thisWeek)).batches.filter(b => b.cookDate === early).length, 3);
 
-  // ---- Change Monday dinner's servings from the card menu.
-  const before = (await serverWeek(thisWeek)).planAssignments.find(a => a.mealType === "Dinner" && a.startDay === 1).servings ?? null;
-  await openMenu("menu-Dinner-1");
-  await click("servings-Dinner-1");
-  const start = Number(await ev(`${q("servings-value")}.textContent`));
-  await ev(`document.querySelector('[aria-label="More servings"]').click()`);
-  await ev(`document.querySelector('[aria-label="More servings"]').click()`);
+  // ---- Acceptance 4: Edit servings — 2 adults + 3 kids on the cooking day and two days later → Make 7 servings.
+  const dish = (await days())[early][0].id;
+  const later = (await serverWeek(thisWeek)).batches.find(b => b.id === dish);
+  const plus2 = await ev(`(() => { const d = new Date(${JSON.stringify(early)} + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 2); return d.toISOString().slice(0, 10); })()`);
+  await click(`edit-servings-${dish}`);
+  await until(`Boolean(${q(`serve-row-${early}`)})`, "editor");
+  for (const date of [early, plus2]) {
+    if (date === plus2) await click(`serve-date-${plus2}`);
+    if (await ev(`Boolean(${q(`amount-${date}`)})`)) await click(`mode-${date}`); // no household counts yet: start from adults and kids
+    while (Number(await text(`adults-${date}`)) < 2) await press(`serve-row-${date}`, "More Adults");
+    while (Number(await text(`adults-${date}`)) > 2) await press(`serve-row-${date}`, "Fewer Adults");
+    while (Number(await text(`kids-${date}`)) < 3) await press(`serve-row-${date}`, "More Kids");
+    while (Number(await text(`kids-${date}`)) > 3) await press(`serve-row-${date}`, "Fewer Kids");
+  }
+  eq(await text("servings-total"), "Total: 7 servings", "running total, half servings kept");
+  await click("servings-cancel");
+  eq((await serverWeek(thisWeek)).batches.find(b => b.id === dish), later);
+  await click(`edit-servings-${dish}`);
+  await until(`Boolean(${q(`serve-row-${early}`)})`, "editor");
+  for (const date of [early, plus2]) {
+    if (date === plus2) await click(`serve-date-${plus2}`);
+    if (await ev(`Boolean(${q(`amount-${date}`)})`)) await click(`mode-${date}`);
+    while (Number(await text(`adults-${date}`)) < 2) await press(`serve-row-${date}`, "More Adults");
+    while (Number(await text(`adults-${date}`)) > 2) await press(`serve-row-${date}`, "Fewer Adults");
+    while (Number(await text(`kids-${date}`)) < 3) await press(`serve-row-${date}`, "More Kids");
+    while (Number(await text(`kids-${date}`)) > 3) await press(`serve-row-${date}`, "Fewer Kids");
+  }
   await click("button-save-servings");
-  const servings = start + 2;
-  await until(`${q("meta-Dinner-1")}.textContent.includes("${servings}")`, "servings shown on the card");
-  ok(servings !== before, "servings changed");
-
-  // ---- Refresh, then another week and back: both edits persist, the other 19 slots are unchanged.
-  const edited = { ...first, "Lunch-3": replacement };
-  await go("/meals", calendarReady);
-  eq(await cells(), edited, "after reload");
-  await click("button-next-week");
-  await until(`${q("week-range")}?.dataset.week === "${monday(1)}" && Boolean(${q("week-status")})`, "next week");
-  ok(Object.values(await cells()).every(Boolean), "next week gets its own complete proposal");
-  await click("button-prev-week");
-  await until(`${q("week-range")}?.dataset.week === "${thisWeek}" && Boolean(${q("week-status")})`, "back");
-  eq(await cells(), edited, "after switching weeks");
-  const saved = await serverWeek(thisWeek);
-  eq(saved.planAssignments.find(a => a.mealType === "Dinner" && a.startDay === 1).servings, servings, "servings saved on the server");
-
-  // ---- Recipe name opens the recipe; Back returns to the same week.
-  await click("recipe-link-Lunch-3");
-  await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("link-back-to-planner")})`, "recipe page");
+  await until(`${q(`dish-make-${dish}`)}.textContent === "Make 7 servings"`, "Make 7 servings");
+  ok((await text(`dish-dates-${dish}`)).startsWith("For ") && (await text(`dish-dates-${dish}`)).includes("&"), "both serving dates on the card");
+  eq((await serverWeek(thisWeek)).batches.find(b => b.id === dish).serves, [{ date: early, adults: 2, kids: 3 }, { date: plus2, adults: 2, kids: 3 }]);
+  // The recipe opens at this batch: 7 servings.
+  await click(`dish-link-${dish}`);
+  await until(`${q("text-servings")}?.textContent === "7 servings"`, "recipe at 7 servings");
   await click("link-back-to-planner");
-  await until(`${q("week-range")}?.dataset.week === "${thisWeek}" && Boolean(${q("week-status")})`, "back to planner");
-  eq(await cells(), edited, "edits kept after the recipe page");
+  await until(calendarReady, "back to the week");
 
-  // ---- Approve: one click, reload stays approved, Groceries uses the approved meals.
+  // ---- Approve → Groceries; an edit after approval waits for Save changes.
   await click("button-approve-week");
   await until(`${q("week-status")}.dataset.state === "approved"`, "approved");
-  ok(await ev(`Boolean(${q("button-create-grocery-list")}) && Boolean(${q("button-edit-week")}) && !${q("swap-Lunch-3")}`), "approved actions; cards are read-only");
-  await go("/meals", calendarReady);
-  eq(await status(), "approved", "approval survives reload");
-  eq(await cells(), edited, "approved exactly as shown");
-  await click("button-create-grocery-list");
-  await until(`location.pathname === "/grocery-list" && document.body.innerText.length > 200`, "grocery list");
-  const plan = await ev(`JSON.parse(localStorage.getItem("weeklyMealsState"))`);
-  eq(plan.planAssignments.find(a => a.mealType === "Lunch" && a.startDay === 3).recipeId, replacement, "Groceries reads the replacement");
-  eq(plan.planAssignments.find(a => a.mealType === "Dinner" && a.startDay === 1).servings, servings, "Groceries reads the servings");
-  const ingredient = await ev(`fetch("/api/recipes/${replacement}").then(r => r.json()).then(r => r.ingredients[0])`);
-  const word = ingredient.toLowerCase().replace(/[^a-z ]/g, " ").split(" ").filter(w => w.length > 3).at(-1);
-  ok(!word || (await ev(`document.body.innerText.toLowerCase().includes(${JSON.stringify(word)})`)), `grocery list has "${word}" from the replacement`);
-
-  // ---- Phone: vertical agenda, no horizontal scroll, Move meal without dragging (trading places).
-  await phone();
-  await go("/meals", calendarReady);
-  ok(await ev("document.documentElement.scrollWidth <= innerWidth"), "no horizontal scroll on a phone");
-  ok(await ev(`document.querySelector('[data-testid="day-2"]').getBoundingClientRect().y > document.querySelector('[data-testid="day-1"]').getBoundingClientRect().bottom - 1`), "days stacked");
-  ok(await ev(`/\\w/.test(document.querySelector('#day-heading-1').innerText)`), "day heading visible");
-  ok(await ev(`[...document.querySelectorAll('[data-testid^="recipe-link-"]')].every(a => a.scrollWidth <= a.clientWidth + 1)`), "long titles wrap, never cut");
-  await click("button-edit-week");
-  await until(`${q("week-status")}.dataset.state === "ready"`, "editing again");
-  const a = (await cells())["Breakfast-1"], b = (await cells())["Breakfast-2"];
-  await openMenu("menu-Breakfast-1");
-  await click("move-Breakfast-1");
-  await click("move-day-2");
-  await until(`Boolean(${q("move-trade")})`, "trade notice");
+  ok(Boolean((await serverWeek(thisWeek)).approved?.length), "approved dishes saved");
+  await click("button-view-groceries");
+  await until(`location.pathname === "/grocery-list" && document.body.innerText.length > 200 && !document.body.innerText.includes("Approve your cooking plan")`, "groceries");
+  await go("/meals?plan", calendarReady);
+  // ---- Acceptance 5: moving that batch's day to the next day flags the cooking day's portions; Cancel changes nothing.
+  const nextDay = dates[dates.indexOf(early) + 1];
+  const approvedBefore = JSON.stringify((await serverWeek(thisWeek)).approved);
+  await click(`move-day-${early}`);
+  await click(`move-to-${nextDay}`);
+  await until(`Boolean(${q("move-conflicts")})`, "conflicts listed");
+  ok(await ev(`Boolean(${q(`conflict-${dish}:${early}`)}) && ${q(`conflict-${dish}:${early}`)}.textContent.includes("3.5 servings")`), "dish, date and portions identified");
+  ok(await ev(`${q("button-confirm-move")}.disabled`), "Move waits until each portion is resolved");
+  await click("move-cancel");
+  eq(await status(), "approved", "Cancel keeps the approved plan");
+  eq(JSON.stringify((await serverWeek(thisWeek)).approved), approvedBefore, "and its groceries");
+  eq((await days())[early].length, 3);
+  await click(`move-day-${early}`);
+  await click(`move-to-${nextDay}`);
+  await until(`Boolean(${q("move-conflicts")})`, "conflicts listed");
+  await ev(`[...document.querySelectorAll('[data-testid^="conflict-move-"]')].forEach(b => b.click())`);
+  await until(`!${q("button-confirm-move")}.disabled`, "resolved");
   await click("button-confirm-move");
-  await until(`document.querySelector('[data-testid="cell-Breakfast-2"]').dataset.recipe === ${JSON.stringify(a)}`, "moved");
-  eq((await cells())["Breakfast-1"], b, "the two meals traded places");
-  await shot("week-phone");
+  await until(`document.querySelectorAll('[data-testid="day-${nextDay}"] article').length >= 3`, "moved together");
+  eq(await status(), "changed");
+  eq(await text("button-approve-week"), "Save changes");
+  // Remove dish: only that entry; Undo restores it.
+  const gone = (await days())[nextDay].at(-1).id;
+  await click(`remove-${gone}`);
+  await until(`!${q(`dish-${gone}`)}`, "removed");
+  await click("undo-remove-dish");
+  await until(`Boolean(${q(`dish-${gone}`)})`, "restored");
   await click("button-approve-week");
-  await until(`${q("week-status")}.dataset.state === "approved"`, "approved again");
+  await until(`${q("week-status")}.dataset.state === "approved"`, "saved");
+  eq(JSON.stringify((await serverWeek(thisWeek)).approved.map(b => b.cookDate)), JSON.stringify((await serverWeek(thisWeek)).batches.map(b => b.cookDate)));
+
+  // ---- Phone: stacked cards, no sideways scroll, labelled buttons.
+  await phone();
+  await go("/meals?plan", calendarReady);
+  const xs = await ev(`[...document.querySelectorAll('[data-testid="day-${nextDay}"] article')].map(a => Math.round(a.getBoundingClientRect().x))`);
+  eq(new Set(xs).size, 1, "dishes stack");
+  ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
+  await shot("week-phone");
   await desktop();
 
-  // ---- An existing partial draft: kept, gaps filled once. An approved week: preserved exactly, gaps and all.
+  // ---- Other weeks and legacy plans: next week gets its own draft; a slot plan saved before cooking days is shown by date.
+  await click("button-next-week");
+  await until(`${q("week-range")}?.dataset.week === ${JSON.stringify(monday(1))} && Boolean(${q("week-status")})`, "next week");
+  eq((await serverWeek(monday(1))).batches.length, 3, "its own draft");
   const put = body => ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: ${JSON.stringify(JSON.stringify(body))} }).then(r => r.status)`);
-  const ids = Object.values(edited);
-  const draftWeek = monday(2), approvedWeek = monday(3);
-  const kept = [{ recipeId: ids[0], mealType: "Dinner", startDay: 3, spanDays: 1, servings: 7 }, { recipeId: ids[1], mealType: "Breakfast", startDay: 0, spanDays: 1 }];
-  eq(await put({ weekStart: draftWeek, proposed: false, selectedIds: [], planAssignments: kept, locked: false }), 204);
-  eq(await put({ weekStart: approvedWeek, proposed: false, selectedIds: [], planAssignments: kept, locked: true }), 204);
-  await go(`/meals?week=${draftWeek}`, calendarReady);
-  const draft = await cells();
-  ok(Object.values(draft).every(Boolean), "partial draft completed");
-  eq([draft["Dinner-3"], draft["Breakfast-0"]], [ids[0], ids[1]], "scheduled meals kept");
-  eq((await serverWeek(draftWeek)).planAssignments.find(x => x.startDay === 3 && x.mealType === "Dinner").servings, 7, "their servings kept");
-  await go(`/meals?week=${approvedWeek}`, calendarReady);
-  eq(await status(), "approved");
-  eq(Object.values(await cells()).filter(Boolean).length, 2, "approved week unchanged");
-  eq((await serverWeek(approvedWeek)).planAssignments, kept, "nothing was added on the server");
-  // Groceries for another week uses that week.
-  await click("button-create-grocery-list");
-  await until(`location.search === "?week=${approvedWeek}" && document.body.innerText.length > 100`, "grocery for another week");
-
-  // ---- No eligible recipe for one meal: vegetarian household whose lunch rule requires meat. Lunches stay open; no approval.
-  const settings = await ev(`JSON.parse(localStorage.getItem("tablewise_basic_settings"))`);
-  settings.dietary.diets = ["vegetarian"]; settings.planning.mealRules.Lunch.type = "meat"; settings.rev += 1;
-  await ev(`localStorage.setItem("tablewise_basic_settings", ${JSON.stringify(JSON.stringify(settings))})`);
-  await ev(`fetch("/api/household-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: localStorage.getItem("tablewise_basic_settings") }).then(r => r.status)`);
-  const emptyWeek = monday(4);
-  await go(`/meals?week=${emptyWeek}`, calendarReady);
-  const restricted = await cells();
-  eq(Object.entries(restricted).filter(([, id]) => !id).map(([k]) => k.split("-")[0]), Array(7).fill("Lunch"), "only the lunches are open");
-  eq(await status(), "incomplete");
-  ok((await ev(`${q("week-status")}.textContent`)).includes("7"), "says how many meals are still needed");
-  ok(await ev(`${q("button-approve-week")}.disabled && Boolean(${q("choose-Lunch-1")})`), "approval disabled; Choose recipe offered");
-  ok(await ev(`${q("open-Lunch-1")}.textContent === "No eligible recipe"`), "the open slot says why");
+  eq(await put({ weekStart: monday(3), proposed: false, selectedIds: [], planAssignments: [], locked: false }), 400, "the old shape is refused");
+  await go(`/meals?week=${monday(2)}`, calendarReady);
+  eq(await status(), "draft");
 
   ok(errors.length === 0, `no page errors: ${errors.join(" | ")}`);
   console.log(`week calendar browser: ${checks} checks passed`);

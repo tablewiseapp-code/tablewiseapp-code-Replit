@@ -38,7 +38,9 @@ try {
   await call("Page.navigate", { url: BASE }); await sleep(1500);
   const recipes = await (await fetch(`${BASE}/api/recipes`)).json();
   const ids = recipes.filter(r => r.id.startsWith("tablewise:real:v1:")).slice(0, 3).map(r => r.id);
-  const plan = { selectedIds: ids, planAssignments: ids.map((recipeId, i) => ({ recipeId, mealType: "Dinner", startDay: i, spanDays: 1 })) };
+  const dayOf = i => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 + i); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const batches = ids.map((recipeId, i) => ({ id: `s${i}`, recipeId, cookDate: dayOf(i), serves: [{ date: dayOf(i) }] }));
+  const plan = { weekStart: dayOf(0), selectedIds: ids, batches, approved: batches }; // this week's dishes, approved
   const load = async lang => {
     await ev(`localStorage.clear(); localStorage.setItem('tablewise_language','${lang}'); localStorage.setItem('weeklyMealsState', ${JSON.stringify(JSON.stringify(plan))})`);
     await call("Page.navigate", { url: `${BASE}/grocery-list` }); await sleep(800);

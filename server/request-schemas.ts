@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { batchProblem, isCalendarDate, shiftDate } from "../shared/cooking-plan";
 import { creditKind, creditName, recipeCreditInput } from "../shared/recipe-credit";
 import { analysisMatches, stepAnalysisSchema } from "../shared/step-timing";
 import { ingredientPartSchema } from "../shared/ingredient-parse";
@@ -90,20 +91,25 @@ export const homeTaskInput = z.object({
   completedAt: z.string().datetime({ offset: true }).nullable(),
   createdAt: z.string().datetime({ offset: true }).optional(),
 }).strict();
-// The Week: the whole plan in one PUT. Caps match /meals (12 recipes, 21 slots, 7 days).
+// The Week: the whole cooking plan in one PUT (docs/cooking-plan.md). `approved` is what Groceries use.
 /** A calendar week, named by its Monday ("2026-11-16"). */
 export const weekStart = z.string().regex(/^20\d\d-\d\d-\d\d$/).refine(v => new Date(`${v}T12:00:00Z`).toISOString().startsWith(v) && new Date(`${v}T12:00:00Z`).getUTCDay() === 1);
+const calendarDay = z.string().refine(isCalendarDate);
+const half = z.number().positive().max(100).refine(n => Number.isInteger(n * 2));
+const count = z.number().int().min(0).max(20);
+const batch = z.object({
+  id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), recipeId, cookDate: calendarDay,
+  serves: z.array(z.object({ date: calendarDay, adults: count.optional(), kids: count.optional(), servings: half.optional() }).strict()).min(1).max(14),
+  yield: half.optional(),
+}).strict().refine(b => batchProblem(b) === null);
+const batches = z.array(batch).max(42).refine(list => new Set(list.map(b => b.id)).size === list.length);
 export const weekPlanInput = z.object({
   weekStart,
   proposed: z.boolean(),
   selectedIds: z.array(recipeId).max(12),
-  planAssignments: z.array(z.object({
-    recipeId, mealType: z.enum(["Breakfast", "Lunch", "Dinner"]),
-    startDay: z.number().int().min(0).max(6), spanDays: z.number().int().min(1).max(7),
-    servings: z.number().positive().max(100).optional(),
-  }).strict().refine(a => a.startDay + a.spanDays <= 7)).max(21),
-  locked: z.boolean(),
-}).strict();
+  batches,
+  approved: batches.nullable(),
+}).strict().refine(p => [...p.batches, ...(p.approved ?? [])].every(b => b.cookDate >= p.weekStart && b.cookDate <= shiftDate(p.weekStart, 6)));
 // My Basic Settings: an opaque document the client sanitizes field by field. The server only checks its shape and size.
 // ponytail: not field-validated here; it is read back only by its owner's own client, which sanitizes it.
 export const householdSettingsInput = z.object({ version: z.literal(2), rev: z.number().int().min(0) }).passthrough()

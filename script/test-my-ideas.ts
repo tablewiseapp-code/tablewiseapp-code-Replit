@@ -31,8 +31,8 @@ assert.deepEqual(ideas.cookingMethods(a), ["Oven"]);
 ideas.updateIdea(a.id, { isFavorite: true, recipeId: "r-1" });
 assert.equal(ideas.listIdeas().find(i => i.id === a.id)!.isFavorite, true);
 const saved = ideas.listIdeas().find(i => i.id === a.id)!;
-assert.equal(ideas.isInPlan(saved, { selectedIds: [], planAssignments: [{ recipeId: "r-1", mealType: "Dinner", startDay: 1, spanDays: 1 }] }), true);
-assert.equal(ideas.isInPlan(b, { selectedIds: ["r-1"], planAssignments: [] }), false, "unsaved ideas are never 'in plan'");
+assert.equal(ideas.isInPlan(saved, { selectedIds: [], approved: null, batches: [{ id: "x", recipeId: "r-1", cookDate: "2026-11-17", serves: [{ date: "2026-11-17" }] }] }), true);
+assert.equal(ideas.isInPlan(b, { selectedIds: ["r-1"], batches: [], approved: null }), false, "unsaved ideas are never 'in plan'");
 
 // 3. Events: recipe_generated recorded once per idea; anonymous session; no recording when off.
 assert.equal(ideas.trackRecipeEvent("recipe_generated", a.id), true);

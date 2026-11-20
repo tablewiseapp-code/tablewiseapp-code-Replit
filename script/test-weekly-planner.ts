@@ -1,53 +1,14 @@
 import assert from "node:assert/strict";
-import { addToPlan, checkAdd, moveOrSwap, moveTo, occupant, setRecipeAt, plannedSlotCount, removeAt, repeatOn, setServingsAt, totalSlots, type PlanState } from "../client/src/lib/meal-plan";
+import { addBatch, emptyPlan, moveCookingDay, removeBatch, setServes, swapBatch } from "../client/src/lib/meal-plan";
 
-const empty = (): PlanState => ({ selectedIds: ["a", "b"], planAssignments: [] });
-
-// Assign to all 7 days x 3 meals; the same recipe can fill many slots.
-let plan = empty();
-for (let day = 0; day < 7; day++) for (const meal of ["Breakfast", "Lunch", "Dinner"] as const) plan = addToPlan(plan, { recipeId: "a", day, meal });
-assert.equal(plannedSlotCount(plan), totalSlots);
-
-// Occupied slot: never overwritten without replace.
-plan = addToPlan(empty(), { recipeId: "a", day: 1, meal: "Dinner" });
-assert.equal(addToPlan(plan, { recipeId: "b", day: 1, meal: "Dinner" }), plan);
-assert.equal(checkAdd(plan, { recipeId: "b", day: 1, meal: "Dinner" }).status, "conflict");
-assert.equal(occupant(addToPlan(plan, { recipeId: "b", day: 1, meal: "Dinner" }, true), "Dinner", 1)?.recipeId, "b");
-assert.equal(addToPlan(plan, { recipeId: "a", day: 1, meal: "Dinner" }), plan, "no duplicate in the same slot");
-
-// Repeat: fills free slots only, reports skipped, keeps servings, leaves occupied slots alone.
-const rep = repeatOn(addToPlan(plan, { recipeId: "b", day: 2, meal: "Dinner" }), "a",
-  [{ day: 1, meal: "Dinner" }, { day: 2, meal: "Dinner" }, { day: 3, meal: "Dinner" }], 4);
-assert.deepEqual([rep.added, rep.skipped], [1, 2]);
-assert.equal(occupant(rep.plan, "Dinner", 2)?.recipeId, "b");
-assert.equal(occupant(rep.plan, "Dinner", 3)?.servings, 4);
-
-// Remove one occurrence without touching the others; the recipe stays shortlisted.
-const two = repeatOn(plan, "a", [{ day: 4, meal: "Dinner" }], null).plan;
-const removed = removeAt(two, "Dinner", 1);
-assert.equal(plannedSlotCount(removed), 1);
-assert.ok(occupant(removed, "Dinner", 4));
-assert.deepEqual(removed.selectedIds, two.selectedIds);
-assert.equal(removeAt(removed, "Lunch", 0), removed, "removing an empty slot changes nothing");
-
-// Linked multi-day assignments (existing +/- data) stay linked on remove and move.
-const span: PlanState = { selectedIds: ["a"], planAssignments: [{ recipeId: "a", mealType: "Dinner", startDay: 1, spanDays: 3 }] };
-assert.equal(plannedSlotCount(span), 3);
-assert.equal(plannedSlotCount(removeAt(span, "Dinner", 2)), 0);
-assert.equal(moveTo(span, { day: 1, meal: "Dinner" }, { day: 5, meal: "Dinner" }), span, "span would fall off the week");
-assert.equal(moveTo(span, { day: 1, meal: "Dinner" }, { day: 4, meal: "Dinner" }).planAssignments[0].startDay, 4);
-
-// Move: free slot ok, occupied slot refused, servings preserved.
-const moved = moveTo(setServingsAt(plan, "Dinner", 1, 6), { day: 1, meal: "Dinner" }, { day: 5, meal: "Lunch" });
-assert.equal(occupant(moved, "Dinner", 1), null);
-assert.equal(occupant(moved, "Lunch", 5)?.servings, 6);
-const blocked = addToPlan(plan, { recipeId: "b", day: 5, meal: "Dinner" });
-assert.equal(moveTo(blocked, { day: 1, meal: "Dinner" }, { day: 5, meal: "Dinner" }), blocked);
-
-// Partial week and purity.
-assert.equal(plannedSlotCount(plan), 1);
-const frozen = JSON.stringify(plan); repeatOn(plan, "a", [{ day: 6, meal: "Lunch" }]); removeAt(plan, "Dinner", 1);
+// Cooking-plan edits are pure (the full rules are in test-week-suggestions.ts).
+const plan = addBatch(emptyPlan("2026-11-16"), "a", "2026-11-17", { adults: 2, kids: 0 }, "x");
+const frozen = JSON.stringify(plan);
+swapBatch(plan, "x", "b"); setServes(plan, "x", [{ date: "2026-11-18", servings: 3 }]); removeBatch(plan, "x");
+moveCookingDay(plan, "2026-11-17", "2026-11-16", {}, () => 1);
 assert.equal(JSON.stringify(plan), frozen, "helpers never mutate their input");
+assert.equal(swapBatch(plan, "x", "a"), plan, "swapping in the same recipe changes nothing");
+assert.equal(addBatch(emptyPlan(), "a", "2026-11-17", null, "y").batches[0].serves[0].date, "2026-11-17");
 
 // Recipe pagination: 12 per page, no duplicates or gaps, clamped page.
 {
@@ -90,20 +51,5 @@ assert.equal(JSON.stringify(plan), frozen, "helpers never mutate their input");
   const sent = mealsGenerationFilters({ ...none, dietary: ["Gluten-free", "Halal"], deal: "ground-beef", cookingLevel: "easy" });
   assert.deepEqual(sent.filters.dietary, ["Gluten-free"]);
   assert.deepEqual(sent.notApplied, ["dietary", "cookingLevel", "deal"]);
-}
-// Move meal: a free target moves; an occupied one trades places, so both meals stay scheduled with their servings.
-{
-  const two: PlanState = { selectedIds: [], planAssignments: [
-    { recipeId: "a", mealType: "Dinner", startDay: 1, spanDays: 1, servings: 6 }, { recipeId: "b", mealType: "Lunch", startDay: 3, spanDays: 1, servings: 2 }] };
-  const traded = moveOrSwap(two, { day: 1, meal: "Dinner" }, { day: 3, meal: "Lunch" });
-  assert.deepEqual([occupant(traded, "Lunch", 3)?.recipeId, occupant(traded, "Lunch", 3)?.servings], ["a", 6]);
-  assert.deepEqual([occupant(traded, "Dinner", 1)?.recipeId, occupant(traded, "Dinner", 1)?.servings], ["b", 2]);
-  assert.equal(occupant(moveOrSwap(two, { day: 1, meal: "Dinner" }, { day: 0, meal: "Breakfast" }), "Breakfast", 0)?.recipeId, "a");
-  assert.equal(moveOrSwap(two, { day: 2, meal: "Dinner" }, { day: 3, meal: "Lunch" }), two, "nothing to move");
-  // Swap / Choose recipe: one slot changes, its servings stay, every other slot is untouched.
-  const swapped = setRecipeAt(two, { day: 3, meal: "Lunch" }, "c");
-  assert.deepEqual(swapped.planAssignments, [two.planAssignments[0], { ...two.planAssignments[1], recipeId: "c" }]);
-  assert.deepEqual(setRecipeAt(two, { day: 0, meal: "Lunch" }, "d", 4).planAssignments.at(-1), { recipeId: "d", mealType: "Lunch", startDay: 0, spanDays: 1, servings: 4 });
-  assert.equal(setRecipeAt(two, { day: 1, meal: "Dinner" }, "a"), two);
 }
 console.log("weekly planner checks passed");

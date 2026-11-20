@@ -35,7 +35,7 @@ const readState = (): Record<string, unknown> => {
 export const loadWeekFilters = () => sanitizeWeekFilters(readState().filters);
 /** Changes only the filters; the plan in the same browser copy is kept. */
 export function saveWeekFilters(filters: WeekFilters) {
-  try { localStorage.setItem(planStorageKey, JSON.stringify({ selectedIds: [], planAssignments: [], ...readState(), filters })); } catch { /* filters are a convenience */ }
+  try { localStorage.setItem(planStorageKey, JSON.stringify({ selectedIds: [], batches: [], approved: null, ...readState(), filters })); } catch { /* filters are a convenience */ }
 }
 
 /** Filters that differ from the defaults (the time limit counts only when changed). */

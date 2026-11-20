@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { baseServings, formatQuantity, scaleIngredient, servingFactor } from "../client/src/lib/ingredient-scale";
 import { cleanStep, stepDuration } from "../client/src/lib/recipe-steps";
-import { addToPlan, checkAdd, maxPlannedRecipes, plannedServingsFactor, type PlanState } from "../client/src/lib/meal-plan";
+import { addBatch, emptyPlan, maxDishes, setServes, type PlanState } from "../client/src/lib/meal-plan";
+import { batchFactor } from "../shared/cooking-plan";
 import { ingredientRows, ingredientSections, readIngredientView, saveIngredientView, ingredientViewKey } from "../client/src/lib/ingredient-view";
 import * as cooking from "../client/src/lib/cooking-session";
 import * as timer from "../client/src/lib/step-timer";
@@ -52,34 +53,23 @@ assert.equal(isMockNutrition(mock), true); assert.equal(usableNutrition(mock), n
 assert.equal(isMockNutrition(nutrition("other", ["placeholder values"])), true);
 assert.equal(usableNutrition(real), real); assert.equal(usableNutrition(null), null);
 
-// Planner: free slot, duplicate, conflict (explicit replace only), full plan, servings, spans.
-const empty: PlanState = { selectedIds: [], planAssignments: [] };
-const free = addToPlan(empty, { recipeId: "a", day: 2, meal: "Dinner", servings: 6 });
-assert.deepEqual(free.planAssignments, [{ recipeId: "a", mealType: "Dinner", startDay: 2, spanDays: 1, servings: 6 }]);
-assert.deepEqual(free.selectedIds, ["a"]); assert.deepEqual(empty, { selectedIds: [], planAssignments: [] }, "input plan is not mutated");
-assert.equal(checkAdd(free, { recipeId: "a", day: 2, meal: "Dinner" }).status, "same");
-assert.equal(addToPlan(free, { recipeId: "a", day: 2, meal: "Dinner" }), free);
-assert.equal(checkAdd(free, { recipeId: "b", day: 2, meal: "Dinner" }).status, "conflict");
-assert.equal(addToPlan(free, { recipeId: "b", day: 2, meal: "Dinner" }), free, "never overwrites without replace");
-const replaced = addToPlan(free, { recipeId: "b", day: 2, meal: "Dinner" }, true);
-assert.deepEqual(replaced.planAssignments.map(a => a.recipeId), ["b"]); assert.deepEqual(replaced.selectedIds, ["b"]);
-assert.equal(checkAdd(free, { recipeId: "b", day: 2, meal: "Lunch" }).status, "free");
-const spanned: PlanState = { selectedIds: ["a"], planAssignments: [{ recipeId: "a", mealType: "Dinner", startDay: 1, spanDays: 3 }] };
-assert.equal(checkAdd(spanned, { recipeId: "b", day: 3, meal: "Dinner" }).status, "conflict", "a multi-day span occupies its days");
-assert.equal(checkAdd(spanned, { recipeId: "b", day: 4, meal: "Dinner" }).status, "free");
+// Add to plan: a dish on a date, beside what is there; unrelated planner state is preserved; the plan caps at maxDishes.
+const empty = emptyPlan();
+const free = addBatch(empty, "a", "2026-11-18", null, "d1");
+assert.deepEqual(free.batches, [{ id: "d1", recipeId: "a", cookDate: "2026-11-18", serves: [{ date: "2026-11-18" }] }]);
+assert.deepEqual(empty, emptyPlan(), "input plan is not mutated");
+assert.equal(addBatch(free, "a", "2026-11-18", null, "d2").batches.length, 2, "a second batch of the same recipe is its own dish");
 const keep = { ...free, other: { x: 1 } } as PlanState;
-assert.deepEqual((addToPlan(keep, { recipeId: "b", day: 0, meal: "Lunch" }) as PlanState & { other: unknown }).other, { x: 1 }, "unrelated planner state is preserved");
-const full: PlanState = { selectedIds: Array.from({ length: maxPlannedRecipes }, (_, i) => `r${i}`), planAssignments: [] };
-assert.equal(checkAdd(full, { recipeId: "new", day: 0, meal: "Lunch" }).status, "full");
-assert.equal(addToPlan(full, { recipeId: "new", day: 0, meal: "Lunch" }), full);
-assert.equal(checkAdd(full, { recipeId: "r1", day: 0, meal: "Lunch" }).status, "free", "an already-selected recipe fits a full plan");
+assert.deepEqual((addBatch(keep, "b", "2026-11-16", null) as PlanState & { other: unknown }).other, { x: 1 }, "unrelated planner state is preserved");
+const full: PlanState = { ...empty, batches: Array.from({ length: maxDishes }, (_, i) => ({ id: `x${i}`, recipeId: "r", cookDate: "2026-11-16", serves: [{ date: "2026-11-16" }] })) };
+assert.equal(addBatch(full, "new", "2026-11-16", null), full);
 
-// Grocery integration: planned servings scale what the grocery list shows.
-assert.equal(plannedServingsFactor(free.planAssignments, "a", 4), 1.5);
-assert.equal(plannedServingsFactor(free.planAssignments, "a", null), 1);
-assert.equal(plannedServingsFactor([{ recipeId: "a", mealType: "Lunch", startDay: 0, spanDays: 1 }], "a", 4), 1, "no servings chosen: unchanged");
-assert.equal(plannedServingsFactor([...free.planAssignments, { recipeId: "a", mealType: "Lunch", startDay: 0, spanDays: 1, servings: 8 }], "a", 4), 2);
-assert.equal(scaleIngredient("400 g canned tomatoes", plannedServingsFactor(free.planAssignments, "a", 4)), "600 g canned tomatoes");
+// Grocery integration: a dish's servings scale from the original yield.
+const six = setServes(free, "d1", [{ date: "2026-11-18", servings: 6 }]).batches[0];
+assert.equal(batchFactor(six, 4), 1.5);
+assert.equal(batchFactor(six, null), null);
+assert.equal(batchFactor(free.batches[0], 4), 1, "no servings chosen: the recipe's own yield");
+assert.equal(scaleIngredient("400 g canned tomatoes", batchFactor(six, 4)!), "600 g canned tomatoes");
 
 // Ingredient view: order preserved, category is presentation only, ids stable across scaling/views, duplicates distinct.
 const stored = ["1 onion, thinly sliced", "6 boneless skinless chicken thighs", "2 tbsp sunflower oil", "1 onion, thinly sliced", "a pinch of mystery", "100 g Greek yogurt"];

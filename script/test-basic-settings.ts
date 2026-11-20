@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { defaultSettings, emptyMember, householdServings, loadSettings, methodChoices, availableDevices, sanitizeSettings, settingsKey, updateSettings,
   type BasicSettings } from "../client/src/lib/basic-settings";
 import { inferDeviceRequirements, satisfiesDevices, deviceRequirementsOf } from "../client/src/lib/device-requirements";
-import { checkEligibility, fillWeek, mealReasons, personalize, rankRecipe, suggestReplacement, type EngineRecipe } from "../client/src/lib/preference-engine";
+import { checkEligibility, mealReasons, personalize, rankRecipe, suggestReplacement, type EngineRecipe } from "../client/src/lib/preference-engine";
 import { restrictionText, settingsText } from "../client/src/lib/settings-copy";
 import { evaluateMeat } from "../shared/food-rules";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
@@ -173,17 +173,12 @@ test("a soft time limit only lowers ranking; a hard maximum excludes", () => {
   assert.ok(rankRecipe(long, soft).concerns.includes("overTime"));
   assert.equal(checkEligibility(long, { ...soft, cooking: { ...soft.cooking, hardMax: true } }).eligible, false);
 });
-test("each day type ranks with its own preferences (list = weekday; Fill my week = that day's set)", () => {
+test("each day type ranks with its own preferences (list = weekday)", () => {
   const quickOne = recipe({ id: "quick", prepTime: 5, cookTime: 15, steps: ["Simmer in a saucepan for 15 minutes."] });
   const batchOne = recipe({ id: "batch", prepTime: 20, cookTime: 70, tags: ["Dinner", "Batch cooking"], steps: ["Simmer in a saucepan for an hour."] });
   const s = withSettings(s => ({ ...s, cooking: { ...s.cooking, weekday: { ...s.cooking.weekday, quick: true }, weekend: { ...s.cooking.weekend, batch: true } } }));
   assert.ok(rankRecipe(quickOne, s).score > rankRecipe(batchOne, s).score, "list uses weekday preferences");
   assert.ok(rankRecipe(batchOne, s, { day: "weekend" }).score > rankRecipe(quickOne, s, { day: "weekend" }).score);
-  const plan = fillWeek({ selectedIds: ["quick", "batch"], planAssignments: [] }, [quickOne, batchOne],
-    { ...s, planning: { ...s.planning, meals: ["Dinner"], cookingDays: 7 } });
-  const byDay = Object.fromEntries(plan.plan.planAssignments.map(a => [a.startDay, a.recipeId]));
-  assert.equal(byDay[0], "batch", "Sunday (weekend) gets the batch recipe");
-  assert.equal(byDay[1], "quick", "Monday (weekday) gets the quick recipe");
 });
 test("an incompatible selected recipe gets a compatible replacement of the same meal type", () => {
   const oven = recipe({ id: "oven", steps: ["Bake in the oven for 30 minutes."] });
@@ -331,35 +326,6 @@ test("filter order never changes results: every application order of the same fi
   const { cuisine: _drop, ...legacy } = empty;
   assert.equal(baseline.filter(r => matchesPlannerFilters(r, legacy, "total", meta)).length, baseline.length);
 });
-// ---------- Fill my week ----------
-test("Fill my week uses cooking days, meals, servings and leftovers, and never removes existing plans", () => {
-  const dinners = [1, 2, 3, 4].map(i => recipe({ id: `d${i}`, steps: ["Simmer in a saucepan for 20 minutes."] }));
-  const settings = withSettings(s => ({ ...s, household: { ...s.household, servingsMode: "fixed", fixedServings: 3 },
-    planning: { ...s.planning, meals: ["Dinner"], cookingDays: 3, leftovers: "often" } }));
-  const existing = { recipeId: "d4", mealType: "Dinner" as const, startDay: 1, spanDays: 1 };
-  const plan = { selectedIds: dinners.map(d => d.id), planAssignments: [existing] };
-  const { plan: filled, added } = fillWeek(plan, dinners, settings);
-  assert.ok(filled.planAssignments.includes(existing), "existing assignment kept");
-  assert.ok(added > 0);
-  const fresh = filled.planAssignments.filter(a => a !== existing);
-  assert.ok(fresh.every(a => a.mealType === "Dinner" && a.servings === 3 * a.spanDays));
-  assert.ok(fresh.some(a => a.spanDays === 2), "leftovers span two days");
-  assert.ok(fresh.every(a => a.spanDays === 1 || !fresh.some(o => o.startDay === a.startDay + 1)), "leftover days are not cooking days");
-  assert.ok(!fresh.some(a => a.recipeId === "d4"), "already planned recipe not added twice");
-  const occupied = new Set<string>();
-  for (const a of filled.planAssignments) for (let d = a.startDay; d < a.startDay + a.spanDays; d++) {
-    assert.ok(!occupied.has(`${a.mealType}${d}`), "no double-booked slot"); occupied.add(`${a.mealType}${d}`);
-  }
-  // 4 cooking days with leftovers cover 7 days of dinners.
-  const four = dinners.concat([5, 6].map(i => recipe({ id: `d${i}`, steps: ["Simmer in a saucepan for 20 minutes."] })));
-  const week = fillWeek({ selectedIds: four.map(d => d.id), planAssignments: [] }, four, { ...settings, planning: { ...settings.planning, cookingDays: 4 } });
-  assert.equal(week.added, 4);
-  assert.equal(week.plan.planAssignments.reduce((n, a) => n + a.spanDays, 0), 7);
-  const blocked = fillWeek(plan, dinners, { ...settings, kitchen: { devices: ["Oven"] } });
-  assert.equal(blocked.added, 0);
-  assert.equal(blocked.skippedIneligible.length, 4);
-});
-
 // ---------- Meal-specific recipe type and cooking time ----------
 type Rules = BasicSettings["planning"]["mealRules"];
 const withRules = (rules: Partial<Rules>, patch: (s: BasicSettings) => BasicSettings = s => s) =>
@@ -384,10 +350,6 @@ test("existing users keep their settings: no meal rules = Both and their weekday
   assert.deepEqual(old.planning.mealRules, { Breakfast: { type: "both", max: null }, Lunch: { type: "both", max: null }, Dinner: { type: "both", max: null } });
   assert.equal(old.cooking.weekdayMax, 30); assert.equal(old.cooking.weekendMax, 60); assert.equal(old.planning.cookingDays, 5);
   assert.deepEqual(loadSettings(memory({ [settingsKey]: JSON.stringify({ devices: ["Oven"] }) })).planning.mealRules, defaultSettings().planning.mealRules);
-  // Weekday limit still steers Fill my week: a 50-minute dinner is not used on a weekday when a 25-minute one fits.
-  const slow = recipe({ id: "slow", prepTime: 20, cookTime: 30 }), quick = recipe({ id: "quick", prepTime: 5, cookTime: 20 });
-  const s = { ...old, planning: { ...old.planning, meals: ["Dinner" as const], cookingDays: 1 } };
-  assert.equal(fillWeek({ selectedIds: [], planAssignments: [] }, [slow, quick], s).plan.planAssignments[0].recipeId, "quick");
 });
 test("meatless excludes meat, poultry and seafood; meat includes them; both accepts either; eggs and dairy are meatless", () => {
   const meats = [["2 chicken breasts"], ["400 g beef mince"], ["4 rashers bacon"], ["2 salmon fillets"], ["200 g prawns"], ["1 tin tuna"], ["300 g mussels"]];
@@ -489,10 +451,6 @@ test("Fill my week uses each meal's own rules for each slot; replacements respec
     recipe({ id: "stew", mealType: "Dinner", ingredients: ["beans", "tomatoes"], prepTime: 10, cookTime: 30 }),
     recipe({ id: "roast", mealType: "Dinner", ingredients: ["lamb"], prepTime: 20, cookTime: 60 }),
   ];
-  const { plan } = fillWeek({ selectedIds: selected.map(r => r.id), planAssignments: [] }, selected, s);
-  const at = (meal: string) => plan.planAssignments.find(a => a.mealType === meal)?.recipeId;
-  assert.equal(at("Breakfast"), "porridge"); assert.equal(at("Lunch"), "wrap");
-  assert.equal(at("Dinner"), "stew", "Dinner's own 45 min replaces the 10 min weekday time; the 80 min roast never fits");
   const pool = [selected[0], recipe({ id: "yogurt", mealType: "Breakfast", ingredients: ["yogurt", "berries"], prepTime: 5, cookTime: 0 }),
     recipe({ id: "ham", mealType: "Breakfast", ingredients: ["ham", "bread"], prepTime: 5, cookTime: 0 })];
   assert.equal(suggestReplacement(pool[0], pool, ["bacon"], s)?.id, "yogurt");
@@ -569,14 +527,12 @@ test("breakfast on the real catalog: liked muffins come first, nothing is hidden
   assert.ok(firstPage.every(r => /muffin/i.test(r.title)), firstPage.map(r => r.title).join(", "));
   assert.deepEqual(personalize(breakfasts, withKids(kid("Mia"), kid("Sam")), { meals: ["Breakfast"] }).eligible.map(e => e.recipe.id), plain, "empty likes keep today's order");
 });
-test("lunch and dinner use the same likes; Fill my week puts the liked recipe into the slot", () => {
+test("lunch and dinner use the same likes", () => {
   const s = withKids(kid("Mia", ["pizza", "soup"]));
   const lunch = [recipe({ id: "wrap", title: "Chicken Wrap", mealType: "Lunch" }), recipe({ id: "soup", title: "Tomato Soup", mealType: "Lunch", tags: ["Lunch", "Soup"] })];
   assert.equal(personalize(lunch, s, { meals: ["Lunch"] }).eligible[0].recipe.id, "soup");
   const dinner = [recipe({ id: "stew", title: "Beef Stew" }), recipe({ id: "pizza", title: "Margherita Pizza" })];
-  const plan = { selectedIds: [], planAssignments: [] } as never;
-  const one = { ...s, planning: { ...s.planning, meals: ["Dinner" as const], cookingDays: 1 } };
-  assert.equal(fillWeek(plan, dinner, one).plan.planAssignments[0].recipeId, "pizza");
+  assert.equal(personalize(dinner, s, { meals: ["Dinner"] }).eligible[0].recipe.id, "pizza");
 });
 test("food preference copy is translated in English, Russian and Hebrew", () => {
   for (const lang of ["en", "ru", "he"]) for (const key of ["foodPrefs", "foodPrefsHint", "memberLikes", "memberDislikes", "ing_muffins", "ing_pizza", "likedByMember", "likedByMany"]) {

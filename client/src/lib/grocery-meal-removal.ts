@@ -1,7 +1,8 @@
 import { parseIngredientLine } from "@shared/ingredient-parse";
 import { ingredientGroup } from "./ingredient-groups";
 import { baseServings, scaleIngredient } from "./ingredient-scale";
-import { maxPlannedRecipes, occupant, type PlanAssignment, type PlanState } from "./meal-plan";
+import { restoreBatch, type Batch, type PlanState } from "./meal-plan";
+import { batchFactor } from "@shared/cooking-plan";
 import type { PlannerRecipe } from "./planner-recipes";
 
 export type GroceryRecipe = Pick<PlannerRecipe, "id" | "title" | "ingredients" | "servings">;
@@ -31,15 +32,16 @@ export type RecipeGroceryRow = {
   proteinRecipes: Set<string>;
 };
 
-/** Groceries come from scheduled meals only, scaled to each meal's servings. Shortlisted-only, declined and replaced recipes add nothing. */
-export function buildRecipeGroceryRows(plan: PlanState, catalog: GroceryRecipe[]) {
-  const selected = new Set(plan.planAssignments.map(a => a.recipeId));
+/** Groceries come from the approved dishes only (Approve cooking plan / Save changes). Each dish counts once, scaled from
+ * the recipe's original quantities by its own total: servings to make / original yield. A recipe with no known yield
+ * adds its quantities once per dish. Dishes served in another week still count in the week they are cooked. */
+export function buildRecipeGroceryRows(batches: readonly Batch[], catalog: GroceryRecipe[]) {
+  const byId = new Map(catalog.map(recipe => [recipe.id, recipe]));
   const rows = new Map<string, RecipeGroceryRow & { quantity: number | null }>();
-  for (const recipe of catalog) {
-    if (!selected.has(recipe.id)) continue;
-    const base = baseServings(recipe.servings);
-    const assignments = plan.planAssignments.filter(a => a.recipeId === recipe.id);
-    const factor = base ? assignments.reduce((sum, a) => sum + (a.servings || base), 0) / base : assignments.length;
+  for (const batch of batches) {
+    const recipe = byId.get(batch.recipeId);
+    if (!recipe) continue;
+    const factor = batchFactor(batch, baseServings(recipe.servings)) ?? 1;
     const proteins = recipe.ingredients.flatMap((line, index) =>
       ingredientGroup(line) === "protein" && !optional.test(line) ? [index] : []);
     recipe.ingredients.forEach((line, index) => {
@@ -59,41 +61,35 @@ export function buildRecipeGroceryRows(plan: PlanState, catalog: GroceryRecipe[]
   return rows;
 }
 
-/** Meals that use a recipe: its day slots (only scheduled meals are on the grocery list). */
-export function groceryMealsFor(plan: PlanState, recipeIds: Set<string>): PlanAssignment[] {
-  return plan.planAssignments.filter(a => recipeIds.has(a.recipeId));
+/** The approved dishes that use a recipe (only those are on the grocery list). */
+export function groceryMealsFor(plan: PlanState, recipeIds: Set<string>): Batch[] {
+  return (plan.approved ?? []).filter(b => recipeIds.has(b.recipeId));
 }
 
-export function removeGroceryMeals(plan: PlanState, remove: PlanAssignment[]) {
-  const keys = new Set(remove.map(assignmentKey));
-  const recipeIds = new Set(remove.map(a => a.recipeId));
-  const planAssignments = plan.planAssignments.filter(a => !keys.has(assignmentKey(a)));
-  const remainingIds = new Set(planAssignments.map(a => a.recipeId));
-  return {
-    ...plan,
-    planAssignments,
-    selectedIds: plan.selectedIds.filter(id => !recipeIds.has(id) || remainingIds.has(id)),
-  };
+/** Removing a main protein with its dishes: they leave both the plan and its approved copy, so Groceries change at once
+ * and an approved week stays approved. Other dishes, including another batch of the same recipe, stay. */
+export function removeGroceryMeals(plan: PlanState, remove: Batch[]): PlanState {
+  const ids = new Set(remove.map(b => b.id));
+  return { ...plan, batches: plan.batches.filter(b => !ids.has(b.id)), approved: plan.approved && plan.approved.filter(b => !ids.has(b.id)) };
 }
 
-export function assignmentKey(a: PlanAssignment) {
-  return JSON.stringify([a.recipeId, a.mealType, a.startDay, a.spanDays, a.servings]);
-}
+export const assignmentKey = (b: Batch) => b.id;
 
 export function groceryPlanVersion(plan: PlanState) {
-  return JSON.stringify([plan.selectedIds, plan.planAssignments.map(assignmentKey)]);
+  return JSON.stringify([plan.batches.map(b => b.id), (plan.approved ?? []).map(b => b.id)]);
 }
 
-export function restoreGroceryMeals(current: PlanState, removed: PlanAssignment[], before: PlanState): PlanState | null {
-  const selectedIds = [...current.selectedIds];
-  const removedIds = new Set(removed.map(a => a.recipeId));
-  for (const [index, id] of before.selectedIds.entries()) {
-    if (removedIds.has(id) && !selectedIds.includes(id)) selectedIds.splice(index, 0, id);
+/** Undo: the dishes return to the plan and, where they were approved, to the approved copy. null when one is back already. */
+export function restoreGroceryMeals(current: PlanState, removed: Batch[], before: PlanState): PlanState | null {
+  if (removed.some(b => current.batches.some(x => x.id === b.id) || current.approved?.some(x => x.id === b.id))) return null;
+  let next = current;
+  for (const batch of removed) {
+    const planned = before.batches.find(b => b.id === batch.id);
+    if (planned) next = restoreBatch(next, planned, before.batches.indexOf(planned));
+    const index = before.approved?.findIndex(b => b.id === batch.id) ?? -1;
+    if (index >= 0 && next.approved) { const approved = [...next.approved]; approved.splice(index, 0, before.approved![index]); next = { ...next, approved }; }
   }
-  if (selectedIds.length > maxPlannedRecipes || removed.some(a =>
-    Array.from({ length: a.spanDays }, (_, day) => occupant(current, a.mealType, a.startDay + day)).some(Boolean),
-  )) return null;
-  return { ...current, selectedIds, planAssignments: [...current.planAssignments, ...removed.filter(a => a.spanDays > 0)] };
+  return next;
 }
 
 export function remainingGroceryText(ingredient: string, purchases: Iterable<string>) {

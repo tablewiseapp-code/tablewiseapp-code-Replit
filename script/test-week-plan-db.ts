@@ -31,6 +31,7 @@ async function main() {
     await pool.query(`INSERT INTO week_plans (owner_id, selected_ids, plan_assignments) VALUES ('old', '[]', '[]')`);
     await pool.query(readFileSync("migrations/0020_week_plans_by_week.sql", "utf8"));
     assert.equal((await pool.query("SELECT week_start = date_trunc('week', now())::date AS ok FROM week_plans")).rows[0].ok, true, "an existing plan becomes this week");
+    await pool.query(readFileSync("migrations/0022_week_plan_approved.sql", "utf8"));
     await pool.query("DELETE FROM week_plans");
     assert.deepEqual(await describe(), pushed, "migrations match Drizzle schema");
 
@@ -47,32 +48,46 @@ async function main() {
       const data = response.headers.get("content-type")?.includes("json") ? await response.json() : undefined;
       return { status: response.status, data, cookie: response.headers.get("set-cookie")?.split(";")[0] };
     };
-    const plan = { weekStart: "2026-11-16", proposed: true, selectedIds: ["r1"], planAssignments: [{ recipeId: "r1", mealType: "Dinner", startDay: 2, spanDays: 2, servings: 4 }], locked: false };
+    // Sunday cooking for Sunday and next Tuesday: two adults and three kids, then a direct 3.5 servings.
+    const dish = { id: "sun", recipeId: "r1", cookDate: "2026-11-22", serves: [{ date: "2026-11-22", adults: 2, kids: 3 }, { date: "2026-11-24", servings: 3.5 }] };
+    const plan = { weekStart: "2026-11-16", proposed: true, selectedIds: ["r1"], batches: [dish], approved: null };
+    const serve = (patch: object) => ({ ...plan, batches: [{ ...dish, serves: [{ ...dish.serves[0], ...patch }] }] });
 
     assert.equal((await request("GET")).data, null, "no owner: no plan");
     assert.equal((await request("PUT", plan, undefined, false)).status, 403, "same-origin only");
-    for (const bad of [{ ...plan, extra: 1 }, { ...plan, planAssignments: [{ ...plan.planAssignments[0], startDay: 6 }] },
-      { ...plan, weekStart: "2026-11-17" }, { ...plan, weekStart: "2026-02-30" }, { ...plan, proposed: undefined },
-      { ...plan, selectedIds: Array.from({ length: 13 }, (_, i) => `r${i}`) }, { ...plan, planAssignments: [{ ...plan.planAssignments[0], mealType: "Snack" }] }])
+    for (const bad of [{ ...plan, extra: 1 }, { ...plan, weekStart: "2026-11-17" }, { ...plan, weekStart: "2026-02-30" }, { ...plan, proposed: undefined },
+      { ...plan, selectedIds: Array.from({ length: 13 }, (_, i) => `r${i}`) },
+      { ...plan, planAssignments: [{ recipeId: "r1", mealType: "Dinner", startDay: 2, spanDays: 1 }] },
+      serve({ date: "2026-11-21" }), serve({ servings: 2.3 }), serve({ kids: 1.5 }), serve({ date: "2026-11-31" }),
+      { ...plan, batches: [{ ...dish, serves: [] }] }, { ...plan, batches: [{ ...dish, serves: [dish.serves[0], dish.serves[0]] }] },
+      { ...plan, batches: [{ ...dish, cookDate: "2026-11-23", serves: [{ date: "2026-11-23" }] }] }, { ...plan, batches: [dish, dish] },
+      { ...plan, approved: [{ ...dish, cookDate: "2026-11-15", serves: [{ date: "2026-11-15" }] }] }])
       assert.equal((await request("PUT", bad)).status, 400, JSON.stringify(bad));
 
     const saved = await request("PUT", plan);
     assert.equal(saved.status, 204);
     const cookie = saved.cookie!;
     assert.deepEqual((await request("GET", undefined, cookie)).data, plan);
-    const locked = { ...plan, locked: true };
+    const locked = { ...plan, approved: [dish] };
     assert.equal((await request("PUT", locked, cookie)).status, 204, "replace whole plan");
     assert.deepEqual((await request("GET", undefined, cookie)).data, locked);
 
     assert.equal((await request("GET", undefined, cookie, true, "2026-11-23")).data, null, "each week is its own plan");
-    const next = { ...plan, weekStart: "2026-11-23", locked: false, planAssignments: [] };
+    const next = { ...plan, weekStart: "2026-11-23", batches: [] };
     assert.equal((await request("PUT", next, cookie)).status, 204);
     assert.deepEqual((await request("GET", undefined, cookie, true, "2026-11-23")).data, next);
     assert.deepEqual((await request("GET", undefined, cookie)).data, locked, "saving next week leaves this week alone");
     assert.equal((await request("GET", undefined, cookie, true, "2026-11-17")).status, 400, "a week starts on Monday");
-    const stranger = await request("PUT", { weekStart: "2026-11-16", proposed: false, selectedIds: [], planAssignments: [], locked: false });
+    const stranger = await request("PUT", { weekStart: "2026-11-16", proposed: false, selectedIds: [], batches: [], approved: null });
     assert.notEqual(stranger.cookie, cookie);
     assert.deepEqual((await request("GET", undefined, cookie)).data, locked, "another owner's save does not touch mine");
+    assert.equal((await pool.query("SELECT bool_and(locked) AS ok FROM week_plans WHERE approved_batches IS NOT NULL")).rows[0].ok, true, "approved and unchanged → locked");
+    // A week saved before cooking days: slots become dated dishes; a locked one stays approved.
+    const store = databaseWeekPlanStore(drizzle(pool, { schema }));
+    await pool.query(`INSERT INTO week_plans (owner_id, week_start, selected_ids, plan_assignments, locked) VALUES ('legacy', '2026-11-16', '["r1"]',
+      '[{"recipeId":"r1","mealType":"Dinner","startDay":0,"spanDays":1,"servings":4}]', true)`);
+    const converted = [{ id: "legacy-0", recipeId: "r1", cookDate: "2026-11-22", serves: [{ date: "2026-11-22", servings: 4 }] }];
+    assert.deepEqual(await store.get("legacy", "2026-11-16"), { weekStart: "2026-11-16", proposed: false, selectedIds: ["r1"], batches: converted, approved: converted });
     console.log("week plan db: ok");
   } finally {
     server.close();

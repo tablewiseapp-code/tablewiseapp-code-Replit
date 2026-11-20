@@ -1,8 +1,9 @@
-// Your household → a suggested week of dinners, from the catalog only (works with AI off). Pure and deterministic.
+// Your household → a suggested cooking plan, from the catalog only (works with AI off). Pure and deterministic.
 // Hard restrictions come from checkEligibility (preference-engine.ts), the one rule every suggestion uses; this file only
 // picks evenings and ranks the eligible recipes. Plan days: 0 = Sunday … 6 = Saturday, as in meal-plan.ts.
-import { householdServings, type BasicSettings } from "./basic-settings";
-import { mealSlots, maxPlannedRecipes, occupant, type MealSlot, type PlanAssignment, type PlanState, type Slot } from "./meal-plan";
+import { householdCounts, type BasicSettings } from "./basic-settings";
+import { addBatch, cookedOn, mealSlots, type MealSlot, type PlanState } from "./meal-plan";
+import { dateInWeek } from "@shared/cooking-plan";
 import { checkEligibility, rankRecipe, total, weeknightLimit, type EngineRecipe, type Eligibility } from "./preference-engine";
 
 export const weekOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon … Sun
@@ -43,7 +44,6 @@ export const effort = (r: EngineRecipe) => (r.stepCount ?? 0) + r.ingredients.le
 export function dinnerEligibility(recipe: EngineRecipe, settings: BasicSettings, day?: number): Eligibility {
   return checkEligibility(recipe, settings, undefined, DINNER, day);
 }
-const dinners = <T extends EngineRecipe>(catalog: readonly T[]) => catalog.filter(r => r.mealType === DINNER);
 
 /** The Week → Plan filters (same state on /meals and /household), as a yes/no per recipe. Applied after the restrictions. */
 export type Fits<T> = (recipe: T) => boolean;
@@ -62,98 +62,54 @@ export function rankedForDay<T extends EngineRecipe>(catalog: readonly T[], sett
     .sort((a, b) => b.score - a.score || a.tie - b.tie).map(x => x.r);
 }
 
-export type OpenEvening = { day: number; reason: "noMatch" | "filtered" | "allUsed" | "full"; excluded: { eligibility: Eligibility }[] };
-/** Why an evening has no suggestion: nothing passes the restrictions, every match is already in the week, or the week is
- * full. null = there are matches left (the evening was left open on purpose). */
-export function openEvening<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, day: number, planned: Set<string>, fits: Fits<T> = any): OpenEvening | null {
-  const evaluated = dinners(catalog).map(r => ({ r, eligibility: dinnerEligibility(r, settings, day) }));
-  const allowed = evaluated.filter(e => e.eligibility.eligible);
-  if (!allowed.length) return { day, reason: "noMatch", excluded: evaluated };
-  const eligible = allowed.filter(e => fits(e.r));
-  if (!eligible.length) return { day, reason: "filtered", excluded: [] };
-  if (eligible.every(e => planned.has(e.r.id))) return { day, reason: "allUsed", excluded: [] };
-  return planned.size >= maxPlannedRecipes ? { day, reason: "full", excluded: [] } : null;
-}
+/** Restrictions apply to the dish's own meal type (a breakfast recipe follows the breakfast rules). */
+type Slot = { day: number; meal: MealSlot };
+const dedupe = <T extends { id: string }>(list: T[]) => { const seen = new Set<string>(); return list.filter(r => !seen.has(r.id) && !!seen.add(r.id)); };
+const isChallenge = (settings: BasicSettings, day: number) => challengeDays(settings, cookingEvenings(settings)).includes(day);
 
-/** The draft week. Removes the previous unapproved suggestion, keeps every dinner the person placed, fills the cooking
- * evenings that are empty. Leaves other evenings open. Never relaxes a restriction: an evening with no match stays open. */
-export function suggestWeek<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, seed: string, fits: Fits<T> = any) {
-  const prior = new Set(settings.setup.suggested);
-  const assignments: PlanAssignment[] = plan.planAssignments.filter(a => !(a.mealType === DINNER && prior.has(a.recipeId)));
-  const evenings = cookingEvenings(settings);
-  const challenges = challengeDays(settings, evenings);
-  const servings = householdServings(settings);
-  const used = new Set(assignments.map(a => a.recipeId));
-  const chosen: EngineRecipe[] = catalog.filter(r => used.has(r.id));
-  const suggested: string[] = [], open: OpenEvening[] = [];
-  for (const day of [...challenges, ...evenings.filter(d => !challenges.includes(d))]) {
-    if (occupant({ ...plan, planAssignments: assignments }, DINNER, day)) continue;
-    const pick = used.size < maxPlannedRecipes ? rankedForDay(catalog, settings, day, { exclude: used, chosen, challenge: challenges.includes(day), seed, fits })[0] : undefined;
-    if (!pick) { const why = openEvening(catalog, settings, day, used, fits); if (why) open.push(why); continue; }
-    assignments.push({ recipeId: pick.id, mealType: DINNER, startDay: day, spanDays: 1, ...(servings ? { servings } : {}) });
-    used.add(pick.id); chosen.push(pick); suggested.push(pick.id);
-  }
-  // The shortlist keeps scheduled recipes first; replaced suggestions leave it. Unscheduled recipes add nothing to Groceries.
-  const scheduled = [...new Set(assignments.map(a => a.recipeId))];
-  const selectedIds = [...scheduled, ...plan.selectedIds.filter(id => !used.has(id) && !prior.has(id))].slice(0, maxPlannedRecipes);
-  return { plan: { ...plan, selectedIds, planAssignments: assignments }, suggested, open, evenings };
-}
-
-/** "Swap dinner": the next eligible recipe for the same evening that is not in the week and was not declined. */
-export function swapDinner<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, day: number, seed: string, fits: Fits<T> = any) {
-  const current = occupant(plan, DINNER, day);
-  if (!current) return null;
-  const planned = new Set(plan.planAssignments.map(a => a.recipeId));
-  const exclude = new Set([...planned, ...settings.setup.declined, current.recipeId]);
-  const chosen = catalog.filter(r => planned.has(r.id) && r.id !== current.recipeId);
-  const evenings = cookingEvenings(settings);
-  const pick = rankedForDay(catalog, settings, day, { exclude, chosen, challenge: challengeDays(settings, evenings).includes(day), seed, fits })[0];
-  if (!pick) return null;
-  return { recipe: pick, plan: replaceDinner(plan, day, pick.id) };
-}
-
-/** Puts another recipe on an evening's dinner, keeping its servings; the old recipe leaves the shortlist if nothing else uses it. */
-export function replaceDinner(plan: PlanState, day: number, recipeId: string): PlanState {
-  const current = occupant(plan, DINNER, day);
-  if (!current || current.recipeId === recipeId) return plan;
-  const planAssignments = plan.planAssignments.map(a => (a === current ? { ...a, recipeId } : a));
-  const stillUsed = planAssignments.some(a => a.recipeId === current.recipeId);
-  const selectedIds = [...new Set([...plan.selectedIds.filter(id => stillUsed || id !== current.recipeId), recipeId])];
-  return { ...plan, selectedIds, planAssignments };
-}
-
-// ---- The full week: 7 days × Breakfast, Lunch, Dinner ----
-/** Alternatives for one slot (Swap, Choose recipe), best first. The Week filters narrow them; when no recipe passes the
- * filters, every recipe that passes the restrictions is offered instead. Restrictions are never relaxed. */
-export function slotOptions<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, { day, meal }: Slot,
+/** + Add a dish / Swap dish / the draft: eligible recipes for that weekday, best first: dinners, then lunches, then
+ * breakfasts. The Week filters narrow them; when no recipe passes the filters, every recipe that passes the restrictions
+ * is offered instead. Restrictions are never relaxed. */
+export function dishOptions<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, day: number,
   { exclude, chosen, seed = "", fits = any }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; seed?: string; fits?: Fits<T> } = {}): T[] {
-  const challenge = meal === DINNER && challengeDays(settings, cookingEvenings(settings)).includes(day);
-  const ranked = (f: Fits<T>) => rankedForDay(catalog, settings, day, { meal, exclude, chosen, challenge, seed, fits: f });
+  const challenge = isChallenge(settings, day);
+  const ranked = (f: Fits<T>) => dedupe([...mealSlots].reverse().flatMap(meal =>
+    rankedForDay(catalog, settings, day, { meal, exclude, chosen, challenge: challenge && meal === DINNER, seed, fits: f })));
   const filtered = ranked(fits);
   return filtered.length ? filtered : ranked(any);
 }
+export type { Slot };
 
-/** The proposed week. Keeps every scheduled meal and fills each empty slot with the best eligible recipe of that meal,
- * preferring one not yet in the week (a recipe repeats only when the eligible ones run out). Deterministic for a seed.
- * Returns the slots with no eligible recipe; they stay empty. */
-export function proposeWeek<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, seed: string, fits: Fits<T> = any) {
-  const servings = householdServings(settings);
-  const assignments = [...plan.planAssignments];
-  const uses = new Map<string, number>();
-  for (const a of assignments) uses.set(a.recipeId, (uses.get(a.recipeId) ?? 0) + 1);
-  const open: Slot[] = [];
-  for (const meal of [...mealSlots].reverse()) for (const day of weekOrder) { // dinners first: they have the most rules
-    if (occupant({ ...plan, planAssignments: assignments }, meal, day)) continue;
-    const chosen = catalog.filter(r => uses.has(r.id));
-    const options = slotOptions(catalog, settings, { day, meal }, { chosen, seed, fits });
-    if (!options.length) { open.push({ day, meal }); continue; }
-    const pick = options.reduce((best, r) => ((uses.get(r.id) ?? 0) < (uses.get(best.id) ?? 0) ? r : best)); // least used, then best ranked
-    assignments.push({ recipeId: pick.id, mealType: meal, startDay: day, spanDays: 1, ...(servings ? { servings } : {}) });
-    uses.set(pick.id, (uses.get(pick.id) ?? 0) + 1);
+/** The draft cooking plan (made once per week; docs/cooking-plan.md). Every preferred weekday is a cooking day, more are
+ * added until the weekly count is met (cookingEvenings). A cooking day that already has a dish keeps it; an empty one
+ * gets one dish not yet in the week (a recipe repeats only when the eligible ones run out). Deterministic for a seed. */
+export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, weekStart: string,
+  { fits = any, newId }: { fits?: Fits<T>; newId?: () => string } = {}) {
+  const household = householdCounts(settings);
+  const days = cookingEvenings(settings);
+  const challenges = challengeDays(settings, days);
+  let next: PlanState = plan;
+  const used = new Set(plan.batches.map(b => b.recipeId));
+  const suggested: string[] = [];
+  for (const day of [...challenges, ...days.filter(d => !challenges.includes(d))]) { // the challenge evening picks first
+    const date = dateInWeek(weekStart, day);
+    if (cookedOn(next, date).length) continue;
+    const chosen = catalog.filter(r => used.has(r.id));
+    const pick = dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits })[0]
+      ?? dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits })[0];
+    if (!pick) continue;
+    next = addBatch(next, pick.id, date, household, newId?.());
+    used.add(pick.id); suggested.push(pick.id);
   }
-  return { plan: { ...plan, planAssignments: assignments, proposed: true }, open };
+  return { plan: { ...next, proposed: true }, suggested, days };
+}
+
+/** Your household → "Suggest my week" again: the earlier unapproved suggestions are replaced, dishes the person placed stay. */
+export function resuggest<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, weekStart: string, fits: Fits<T> = any) {
+  const prior = new Set(settings.setup.suggested);
+  return proposeCookingPlan({ ...plan, batches: plan.batches.filter(b => !prior.has(b.recipeId)) }, catalog, settings, weekStart, { fits });
 }
 
 /** First visit: no household answers, no saved settings and an empty Week. Returning people and anyone with a plan skip it. */
 export const needsHouseholdSetup = (settings: BasicSettings, plan: PlanState) =>
-  settings.setup.status === "new" && settings.rev === 0 && plan.selectedIds.length === 0 && plan.planAssignments.length === 0;
+  settings.setup.status === "new" && settings.rev === 0 && plan.selectedIds.length === 0 && plan.batches.length === 0;

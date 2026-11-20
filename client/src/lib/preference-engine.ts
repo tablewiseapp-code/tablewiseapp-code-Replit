@@ -3,8 +3,8 @@
 import { evaluateAllergen, evaluateDiet, evaluateMeat, matchesFoodPref, mentionsTerm, recipeCuisine,
   type Allergen, type DietPattern, type RuleStatus } from "@shared/food-rules";
 import { satisfiesDevices, unmetGroups, type DeviceId, type DeviceRequirements } from "./device-requirements";
-import { availableDevices, householdServings, type BasicSettings, type Member } from "./basic-settings";
-import { mealSlots, occupant, type MealSlot, type PlanAssignment, type PlanState } from "./meal-plan";
+import { availableDevices, type BasicSettings, type Member } from "./basic-settings";
+import { mealSlots, type MealSlot } from "./meal-plan";
 import type { RecipeToolKey } from "./recipe-tools";
 
 export type EngineRecipe = {
@@ -197,46 +197,3 @@ export function suggestReplacement<T extends EngineRecipe>(target: T, recipes: r
   return personalize(candidates, settings, { ...ctx, meals: mealSlots }).eligible[0]?.recipe ?? null;
 }
 
-// ---- Automatic week filling from the selected recipes (never removes or moves anything already planned) ----
-// Which days to cook on (plan days: Sun=0 … Sat=6). Without leftovers: weekdays first. With leftovers: every other
-// day first, so the next day's same meal is free for the leftovers (4 cooking days + leftovers covers the week).
-const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
-const LEFTOVER_DAY_ORDER = [0, 2, 4, 6, 1, 3, 5];
-const isWeekend = (day: number) => day === 0 || day === 6;
-
-export function fillWeek<T extends EngineRecipe>(plan: PlanState, selected: readonly T[], settings: BasicSettings, ctx: RankContext = {}):
-  { plan: PlanState; added: number; skippedIneligible: string[] } {
-  const cookingDays = (settings.planning.leftovers === "none" ? DAY_ORDER : LEFTOVER_DAY_ORDER).slice(0, settings.planning.cookingDays).sort((a, b) => a - b);
-  const meals = settings.planning.meals.length ? settings.planning.meals : (["Dinner"] as MealSlot[]);
-  const servings = householdServings(settings);
-  // Every recipe is checked against its own meal's rules; a recipe only ever fills a slot of its own meal type.
-  const { eligible, excluded } = personalize(selected, settings, { ...ctx, meals: mealSlots });
-  const planned = new Set(plan.planAssignments.map(a => a.recipeId));
-  const pool = eligible.map(e => e.recipe).filter(r => !planned.has(r.id));
-  const assignments: PlanAssignment[] = [...plan.planAssignments];
-  const free = (meal: MealSlot, day: number) => !occupant({ ...plan, planAssignments: assignments }, meal, day);
-  const leftoverSpan = (r: T) => settings.planning.leftovers === "often" || (settings.planning.leftovers === "sometimes" && r.tags.includes("Batch cooking")) ? 2 : 1;
-  let added = 0;
-  for (const meal of [...meals].sort((a, b) => mealSlots.indexOf(b) - mealSlots.indexOf(a))) { // dinner first
-    for (const day of cookingDays) {
-      if (!free(meal, day)) continue;
-      // A meal's own time limit (already enforced above) replaces the weekday/weekend time for that meal.
-      const own = settings.planning.mealRules[meal].max;
-      const max = own !== null ? null : isWeekend(day) ? settings.cooking.weekendMax ?? settings.cooking.weekdayMax : settings.cooking.weekdayMax ?? settings.cooking.weekendMax;
-      const fits = (r: T) => r.mealType === meal && (max == null || total(r) == null || total(r)! <= max);
-      // Prefer recipes within that day's time; with a soft limit, fall back to the best remaining one.
-      // Order the remaining recipes by that day's own preferences (weekday or weekend).
-      const dayType = isWeekend(day) ? "weekend" as const : "weekday" as const;
-      const ranked = pool.map((r, i) => ({ r, i, score: rankRecipe(r, settings, { ...ctx, day: dayType }).score }))
-        .sort((a, b) => b.score - a.score || a.i - b.i).map(x => x.r);
-      const pick = ranked.find(fits) ?? (settings.cooking.hardMax ? undefined : ranked.find(r => r.mealType === meal));
-      if (!pick) continue;
-      // Leftovers cover the next day's same meal when it is still empty; servings double to cook enough.
-      const span = leftoverSpan(pick) === 2 && day < 6 && free(meal, day + 1) ? 2 : 1;
-      assignments.push({ recipeId: pick.id, mealType: meal, startDay: day, spanDays: span, ...(servings ? { servings: servings * span } : {}) });
-      pool.splice(pool.indexOf(pick), 1);
-      added++;
-    }
-  }
-  return { plan: { ...plan, planAssignments: assignments }, added, skippedIneligible: excluded.map(e => e.recipe.id) };
-}

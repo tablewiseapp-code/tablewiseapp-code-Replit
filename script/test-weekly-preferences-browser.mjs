@@ -152,16 +152,18 @@ try {
   const dinners = baseline.filter(id => all.find(r => r.id === id)?.tags?.[0] === "Dinner");
   const keep = baseline[0];
   const blocked = all.find(r => r.title === "Macaroni cheese")?.id;
+  const wednesday = await ev(`(d => { d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 + 2); return \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, "0")}-\${String(d.getDate()).padStart(2, "0")}\`; })(new Date())`);
   await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify({ filters: { maxMinutes: null, dietary: [], mealType: [], cookingMethod: [], source: [], proteinType: [], withNotes: false, modifiedByMe: false, myPicks: false, minRating: null, servings: null, mustInclude: [], mustExclude: [] },
     selectedIds: ${JSON.stringify([...new Set([keep, ...dinners.slice(0, 5), blocked].filter(Boolean))])}, expandedSections: [], showMoreFilters: false,
-    planAssignments: [{ recipeId: ${JSON.stringify(keep)}, mealType: "Lunch", startDay: 3, spanDays: 1 }] }))`);
+    batches: [{ id: "keep", recipeId: ${JSON.stringify(keep)}, cookDate: ${JSON.stringify(wednesday)}, serves: [{ date: ${JSON.stringify(wednesday)} }] }], approved: null }))`);
   await openMeals();
   if (blocked) ok(await ev(`!!${q(`incompatible-${blocked}`)}`), "incompatible selected meal is warned, not removed");
   await ev(`${q("button-back-to-week")}.click()`); await until(q("week-status"), "Week calendar");
-  const plan = await ev(`JSON.parse(localStorage.getItem("weeklyMealsState")).planAssignments`);
-  ok(plan.some(a => a.recipeId === keep && a.mealType === "Lunch" && a.startDay === 3), "existing plan entry kept");
-  const filled = plan.filter(a => !(a.recipeId === keep && a.mealType === "Lunch"));
-  ok(filled.length === 20 && filled.every(a => a.servings === 2 && a.recipeId !== blocked), "the proposal fills the other 20 meals: household servings, never the incompatible pick");
+  const plan = await ev(`JSON.parse(localStorage.getItem("weeklyMealsState")).batches`);
+  ok(plan.some(b => b.id === "keep" && b.recipeId === keep && b.cookDate === wednesday), "existing dish kept");
+  const filled = plan.filter(b => b.id !== "keep");
+  ok(filled.length === 3 && filled.every(b => b.recipeId !== blocked && b.serves.length === 1 && b.serves[0].date === b.cookDate),
+    "the draft adds one dish per cooking day, never the incompatible pick");
   await resetPage();
 
   // Recipes open at the household's servings (Dana + Leo = 2), scaling the ingredients.

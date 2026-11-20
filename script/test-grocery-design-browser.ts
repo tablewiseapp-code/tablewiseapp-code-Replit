@@ -25,17 +25,19 @@ try {
   const originalPlan = await tab.evaluate(`localStorage.getItem("weeklyMealsState")`);
   assert.equal(originalPlan, null, "Use a fresh disposable browser profile.");
   await tab.wait(`!document.querySelector('[aria-busy="true"]')`);
-  assert.ok(await tab.evaluate(`document.body.innerText.includes("No meals planned yet")`));
+  assert.ok(await tab.evaluate(`document.body.innerText.includes("Approve your cooking plan to build groceries")`));
   await tab.evaluate(`(async()=>{
     const recipes=await (await fetch("/api/recipes")).json();
     const chosen=recipes.slice(0,3);
     window.__groceryExpected=[...new Set(chosen.flatMap(r=>r.ingredients).map(x=>x.toLowerCase()))].sort();
+    const day=i=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7+i);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
+    const dishes=chosen.map((r,i)=>({id:"d"+i,recipeId:r.id,cookDate:day(i),serves:[{date:day(i)}]}));
     localStorage.setItem("weeklyMealsState",JSON.stringify({
       filters:{maxMinutes:null,dietary:[],mealType:[],cookingMethod:[],source:[],
         proteinType:[],withNotes:false,modifiedByMe:false,myPicks:false,minRating:null,
         servings:null,mustInclude:[],mustExclude:[]},
       selectedIds:chosen.map(r=>r.id),expandedSections:[],showMoreFilters:false,
-      planAssignments:chosen.map((r,i)=>({recipeId:r.id,mealType:"Dinner",startDay:i,spanDays:1}))
+      weekStart:day(0),batches:dishes,approved:dishes
     }));
   })()`);
   seededPlan = true;

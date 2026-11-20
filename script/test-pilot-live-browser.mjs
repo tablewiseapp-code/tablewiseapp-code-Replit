@@ -66,9 +66,10 @@ try {
   await until(el("button-approve-week"), "week calendar");
   assert.equal(names("plan_completed").length, 0);
   await ev(`${el("button-approve-week")}.click()`); await sleep(800);
-  assert.equal(names("plan_completed").length, 1, "locking the week completes the plan");
-  // Unlock and lock again in the same week: still one completion.
-  await ev(`${el("button-edit-week")}.click()`); await sleep(200);
+  assert.equal(names("plan_completed").length, 1, "approving the cooking plan completes the plan");
+  // Change the approved plan and Save changes in the same week: still one completion.
+  await ev(`document.querySelector('[data-testid^="remove-"]').click()`); await sleep(200);
+  await until(`${el("week-status")}?.dataset.state === "changed"`, "changed");
   await ev(`${el("button-approve-week")}.click()`); await sleep(800);
   assert.equal(names("plan_completed").length, 1);
 

@@ -37,7 +37,9 @@ try {
     await call("Emulation.setDeviceMetricsOverride", { width, height: 812, deviceScaleFactor: 1, mobile: width < 600 });
     await go("/", "true");
     const ids = recipes.slice(0, 3).map(r => r.id);
-    const plan = { selectedIds: ids, planAssignments: ids.map((recipeId, i) => ({ recipeId, mealType: "Dinner", startDay: i, spanDays: 1 })) };
+    const dayOf = i => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 + i); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+    const batches = ids.map((recipeId, i) => ({ id: `s${i}`, recipeId, cookDate: dayOf(i), serves: [{ date: dayOf(i) }] }));
+    const plan = { weekStart: dayOf(0), selectedIds: ids, batches, approved: batches }; // this week's dishes, approved
     await ev(`localStorage.clear(); localStorage.setItem('tablewise_language','en'); localStorage.setItem('weeklyMealsState', ${JSON.stringify(JSON.stringify(plan))})`);
 
     // Recipes: cards show title, time/servings and dietary labels only — no internal tags or "not specified" filler.

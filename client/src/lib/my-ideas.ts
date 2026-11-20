@@ -110,7 +110,7 @@ export function getBudget(): BudgetPreference {
 }
 export function setBudget(value: BudgetPreference) { store().setItem(budgetKey, value); }
 export const isInPlan = (idea: Idea, plan: PlanState) => Boolean(idea.recipeId &&
-  (plan.selectedIds.includes(idea.recipeId) || plan.planAssignments.some(a => a.recipeId === idea.recipeId)));
+  (plan.selectedIds.includes(idea.recipeId) || plan.batches.some(b => b.recipeId === idea.recipeId)));
 
 // ---- Activity tracking: local only, bounded, no personal details. Off switch = nothing is recorded or sent. ----
 export type RecipeEventType = "recipe_generated" | "recipe_viewed" | "recipe_favorited" | "recipe_added_to_plan" | "recipe_regenerated" | "recipe_deleted";

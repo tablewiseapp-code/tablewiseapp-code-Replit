@@ -13,12 +13,12 @@ import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
 import { selectableDevices } from "@/lib/device-requirements";
 import { challengeWhen, cookingStyles, householdServings, loadSettings, servingLimits, updateSettings,
   weeknightTimeOptions, type BasicSettings, type CookingStyle } from "@/lib/basic-settings";
-import { isWeekLocked, mealSlots, readPlan, writePlan } from "@/lib/meal-plan";
+import { mealSlots, readPlan, writePlan } from "@/lib/meal-plan";
 import { matchesPlannerFilters, WEEK_DEFAULT_MAX_MINUTES } from "@/lib/planner-filters";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { checkEligibility } from "@/lib/preference-engine";
 import { loadWeekFilters, saveWeekFilters, type WeekFilters } from "@/lib/week-filters";
-import { cookingEvenings, suggestWeek, weekOrder } from "@/lib/week-suggestions";
+import { cookingEvenings, resuggest, weekOrder } from "@/lib/week-suggestions";
 import { currentWeek } from "@/lib/week-plan";
 import { allergens, type Allergen, type DietPattern } from "@shared/food-rules";
 
@@ -147,8 +147,9 @@ export default function Household() {
     setBusy(true); setError(null);
     try {
       const saved = updateSettings(x => ({ ...draft, rev: x.rev, setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined } }));
-      if (isWeekLocked()) { toast({ title: t("keptLocked") }); setLocation("/meals?plan"); return; }
-      const result = suggestWeek(readPlan(), planner, saved, currentWeek(), fits);
+      // An approved cooking plan is never changed here.
+      if (readPlan().approved !== null) { toast({ title: t("keptLocked") }); setLocation("/meals?plan"); return; }
+      const result = resuggest(readPlan(), planner, saved, currentWeek(), fits);
       writePlan(result.plan);
       updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [] } }));
       setLocation("/meals?plan");

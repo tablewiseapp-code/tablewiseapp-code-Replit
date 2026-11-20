@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { builtInDealCategories, foodDeals, suggestedDealCategories } from "@/lib/food-deals";
+import { builtInDealCategories, foodDeals, suggestedDealCategories, type FoodDeal } from "@/lib/food-deals";
+import { usePlannerCopy } from "@/lib/planner-copy";
 import { useWeekFilterCopy } from "@/lib/week-filter-copy";
 
 // A category is a built-in key ("protein") or a name the person typed ("custom:Snacks").
@@ -92,5 +93,29 @@ export function FoodDeals({ activeDeal, onShowRecipes }: { activeDeal: string | 
         </DialogContent>
       </Dialog>
     </section>
+  );
+}
+
+/** The Week's "Weekly deals · N offers" row: collapsed, and absent when no offer applies to the shown week. */
+export function WeekDeals({ offers, lang }: { offers: { deal: FoodDeal; dish: string | null }[]; lang: string }) {
+  const c = useWeekFilterCopy();
+  const t = usePlannerCopy();
+  if (!offers.length) return null;
+  const day = new Intl.DateTimeFormat(lang, { month: "short", day: "numeric", timeZone: "UTC" });
+  return (
+    <details className="mb-4 rounded-lg border border-border bg-white px-3" data-testid="week-deals">
+      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">
+        {offers.length === 1 ? t("dealsOne") : t("deals", { count: offers.length })}
+      </summary>
+      <ul className="divide-y divide-border pb-2">
+        {offers.map(({ deal, dish }) => (
+          <li key={deal.id} className="py-2 text-sm" data-testid={`week-deal-${deal.id}`}>
+            <p className="font-medium text-foreground">{c(`deal_${deal.id}`)}{dish && <span className="ms-2 text-primary" data-testid={`week-deal-dish-${deal.id}`}>{t("dealFor", { title: dish })}</span>}</p>
+            <p className="text-muted-foreground"><bdi>{deal.store}</bdi> · <bdi className="tabular-nums">{c("perLb", { price: deal.price })}</bdi> · {deal.expires
+              ? t("dealUntil", { date: day.format(new Date(`${deal.expires}T12:00:00Z`)) }) : t("dealSample")}</p>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

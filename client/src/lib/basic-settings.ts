@@ -292,6 +292,13 @@ export function householdServings(s: BasicSettings): number | null {
   const total = s.household.members.reduce((sum, m) => sum + portionFactor[m.portion ?? s.household.portion], 0);
   return Math.min(servingLimits.max, Math.max(1, Math.ceil(total)));
 }
+/** Who eats one serving date of a dish: adults and kids from the household members; a fixed number (Your household)
+ * counts as adults. null = no household set up (a new dish then makes the recipe's own yield). */
+export function householdCounts(s: BasicSettings): { adults: number; kids: number } | null {
+  const members = s.household.members;
+  if (members.length) return { adults: members.filter(m => m.kind === "adult").length, kids: members.filter(m => m.kind === "child").length };
+  return s.household.servingsMode === "fixed" ? { adults: s.household.fixedServings, kids: 0 } : null;
+}
 export const newMemberId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`).replace(/[^A-Za-z0-9_-]/g, "");
 export const emptyMember = (kind: Member["kind"], name: string): Member =>
   ({ id: newMemberId(), name, kind, diets: [], allergies: [], customAllergies: [], dislikes: [], favorites: [], portion: null });

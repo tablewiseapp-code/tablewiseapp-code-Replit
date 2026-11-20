@@ -1,77 +1,53 @@
-// Writes to the same "weeklyMealsState" the /meals planner and the grocery list already read.
-// Postgres (week_plans, one row per calendar week) is the source of truth; localStorage is the synchronous copy of the
-// current calendar week that every page reads. Other weeks are read and written on the server only (fetchWeek, saveWeek).
+// The Week as a cooking plan (docs/cooking-plan.md): dated dishes, each cooked once and serving one or more dates.
+// Postgres (week_plans, one row per calendar week) is the source of truth; localStorage "weeklyMealsState" is the
+// synchronous copy of the current calendar week that every page reads. Other weeks are read and written on the server
+// only (fetchWeek, saveWeek). The same key also holds the recipe browser's filters, which these writes keep.
+import { defaultServe, fromLegacy, isLegacyPlan, planStatus, shiftDate, type Batch, type HouseholdCounts, type Serve } from "@shared/cooking-plan";
 import { currentWeek } from "./week-plan";
 
+export type { Batch, Serve } from "@shared/cooking-plan";
+/** A recipe's meal type (catalog data, Settings meal rules). The plan itself has no meal slots. */
 export const mealSlots = ["Breakfast", "Lunch", "Dinner"] as const;
 export type MealSlot = typeof mealSlots[number];
-export type PlanAssignment = { recipeId: string; mealType: MealSlot; startDay: number; spanDays: number; servings?: number };
-/** weekStart: the Monday of the plan's week. proposed: the full-week proposal was made, so empty slots stay empty. */
-export type PlanState = { selectedIds: string[]; planAssignments: PlanAssignment[]; weekStart?: string; proposed?: boolean } & Record<string, unknown>;
+/** selectedIds: the recipe browser's picks. approved: the dishes as last approved (Groceries use them); null = never.
+ * proposed: the week's draft was made once, so it is not made again. */
+export type PlanState = { selectedIds: string[]; batches: Batch[]; approved: Batch[] | null; weekStart?: string; proposed?: boolean } & Record<string, unknown>;
 export const planStorageKey = "weeklyMealsState";
+/** Before cooking days the approval was a separate browser flag; read once for conversion, cleared on sign-out. */
 export const lockStorageKey = "week_locked_v1";
-export const maxPlannedRecipes = 12; // same cap as /meals
+export const maxPlannedRecipes = 12; // the recipe browser's picks
+export const maxDishes = 42;
+export const emptyPlan = (weekStart?: string): PlanState => ({ selectedIds: [], batches: [], approved: null, ...(weekStart ? { weekStart, proposed: false } : {}) });
+export const newBatchId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 36);
 
-export type AddRequest = { recipeId: string; day: number; meal: MealSlot; servings?: number | null };
-export type AddCheck =
-  | { status: "free" }
-  | { status: "same" }                                  // this recipe already occupies the slot
-  | { status: "conflict"; existing: PlanAssignment }    // another recipe occupies the slot
-  | { status: "full" };                                 // plan has no room for a new recipe
-
-export const occupant = (plan: PlanState, meal: MealSlot, day: number) =>
-  plan.planAssignments.find(a => a.mealType === meal && day >= a.startDay && day < a.startDay + a.spanDays) ?? null;
-
-export function checkAdd(plan: PlanState, { recipeId, day, meal }: AddRequest): AddCheck {
-  const existing = occupant(plan, meal, day);
-  if (existing) return existing.recipeId === recipeId ? { status: "same" } : { status: "conflict", existing };
-  return !plan.selectedIds.includes(recipeId) && plan.selectedIds.length >= maxPlannedRecipes ? { status: "full" } : { status: "free" };
+/** A stored plan in any earlier shape → today's shape. Breakfast/Lunch/Dinner slots become dated dishes. */
+function normalize(parsed: Record<string, unknown>, week: string): PlanState {
+  const { planAssignments, ...rest } = parsed;
+  const selectedIds = Array.isArray(parsed.selectedIds) ? parsed.selectedIds as string[] : [];
+  if (!Array.isArray(parsed.batches) && isLegacyPlan(planAssignments)) {
+    const batches = fromLegacy(typeof parsed.weekStart === "string" ? parsed.weekStart : week, planAssignments);
+    let locked = false;
+    try { locked = JSON.parse(localStorage.getItem(lockStorageKey) ?? "false") === true; } catch { /* draft */ }
+    return { ...rest, selectedIds, batches, approved: locked ? batches : null };
+  }
+  return { ...rest, selectedIds, batches: Array.isArray(parsed.batches) ? parsed.batches as Batch[] : [], approved: Array.isArray(parsed.approved) ? parsed.approved as Batch[] : null };
 }
-
-/** Pure: returns a new plan. A conflicting assignment is only removed when `replace` is true. */
-export function addToPlan(plan: PlanState, request: AddRequest, replace = false): PlanState {
-  const check = checkAdd(plan, request);
-  if (check.status === "same" || check.status === "full" || (check.status === "conflict" && !replace)) return plan;
-  const kept = check.status === "conflict" ? plan.planAssignments.filter(a => a !== check.existing) : plan.planAssignments;
-  const servings = request.servings && request.servings > 0 ? { servings: request.servings } : {};
-  const selected = plan.selectedIds.includes(request.recipeId) ? plan.selectedIds : [...plan.selectedIds, request.recipeId];
-  const stillUsed = new Set(kept.map(a => a.recipeId));
-  // Drop the replaced recipe from the shortlist only if nothing else uses it.
-  const selectedIds = check.status === "conflict" && !stillUsed.has(check.existing.recipeId) && check.existing.recipeId !== request.recipeId
-    ? selected.filter(id => id !== check.existing.recipeId) : selected;
-  return { ...plan, selectedIds, planAssignments: [...kept, { recipeId: request.recipeId, mealType: request.meal, startDay: request.day, spanDays: 1, ...servings }] };
-}
-
-/** Undo of one addToPlan: `before` is the plan it was applied to. Returns null (nothing to undo) unless the slot still holds
- * exactly the assignment that add created, so a later edit is never overwritten. Restores what the add replaced. */
-export function undoAdd(plan: PlanState, before: PlanState, { recipeId, day, meal }: AddRequest): PlanState | null {
-  const now = occupant(plan, meal, day);
-  if (!now || now.recipeId !== recipeId || now.startDay !== day || now.spanDays !== 1 || occupant(before, meal, day)?.recipeId === recipeId) return null;
-  const replaced = occupant(before, meal, day);
-  const planAssignments = [...plan.planAssignments.filter(a => a !== now), ...(replaced ? [replaced] : [])];
-  const used = new Set(planAssignments.map(a => a.recipeId));
-  const selectedIds = [...plan.selectedIds.filter(id => id !== recipeId || before.selectedIds.includes(id) || used.has(id)),
-    ...(replaced && !plan.selectedIds.includes(replaced.recipeId) ? [replaced.recipeId] : [])];
-  return { ...plan, selectedIds, planAssignments };
-}
-
 export function readPlan(): PlanState {
   try {
     const parsed = JSON.parse(localStorage.getItem(planStorageKey) ?? "null");
-    if (parsed && typeof parsed === "object") return { ...parsed, selectedIds: Array.isArray(parsed.selectedIds) ? parsed.selectedIds : [], planAssignments: Array.isArray(parsed.planAssignments) ? parsed.planAssignments : [] };
+    if (parsed && typeof parsed === "object") return normalize(parsed, currentWeek());
   } catch { /* fall through to an empty plan */ }
-  return { selectedIds: [], planAssignments: [] };
+  return emptyPlan();
 }
-export const isWeekLocked = () => { try { return JSON.parse(localStorage.getItem(lockStorageKey) ?? "false") === true; } catch { return false; } };
 /** Throws when the browser refuses the write, so the caller can show an error. */
 export function writePlan(plan: PlanState) { localStorage.setItem(planStorageKey, JSON.stringify(plan)); pushWeekPlan(); }
 
 // ---- Server copy ----
-type ServerWeek = { weekStart: string; proposed: boolean; selectedIds: string[]; planAssignments: PlanAssignment[]; locked: boolean };
-const body = (week: string, plan: PlanState, locked: boolean) =>
-  JSON.stringify({ weekStart: week, proposed: plan.proposed === true, selectedIds: plan.selectedIds, planAssignments: plan.planAssignments, locked } satisfies ServerWeek);
+type ServerWeek = { weekStart: string; proposed: boolean; selectedIds: string[]; batches: Batch[]; approved: Batch[] | null };
+const body = (week: string, plan: PlanState) =>
+  JSON.stringify({ weekStart: week, proposed: plan.proposed === true, selectedIds: plan.selectedIds, batches: plan.batches, approved: plan.approved } satisfies ServerWeek);
 const copyWeek = () => readPlan().weekStart ?? currentWeek(); // a tab left open past Sunday still saves the week it shows
-const synced = () => body(copyWeek(), readPlan(), isWeekLocked());
+const synced = () => body(copyWeek(), readPlan());
 const lastQueued = new Map<string, string>();
 let queue = Promise.resolve();
 function put(week: string, text: string) {
@@ -81,7 +57,7 @@ function put(week: string, text: string) {
     .then(r => { if (!r.ok) throw new Error(); })
     .catch(() => { if (lastQueued.get(week) === text) lastQueued.delete(week); }); // retried on the next change
 }
-/** Sends the browser copy (the current week) to the server when the plan or lock changed. Requests go one at a time, in order. */
+/** Sends the browser copy (the current week) to the server when it changed. Requests go one at a time, in order. */
 export function pushWeekPlan() { put(copyWeek(), synced()); }
 
 /** Run once before pages read the plan. The server copy of the current week wins; a browser plan with no server copy is
@@ -92,99 +68,104 @@ export async function syncWeekPlan() {
   if (!response.ok) return;
   const server: ServerWeek | null = await response.json();
   const local = readPlan();
+  localStorage.removeItem(lockStorageKey); // folded into `approved` by readPlan
   if (!server) {
     const fresh = local.weekStart === undefined || local.weekStart === week;
-    if (!fresh) localStorage.setItem(lockStorageKey, "false");
-    localStorage.setItem(planStorageKey, JSON.stringify(fresh ? { ...local, weekStart: week } : { ...local, weekStart: week, proposed: false, selectedIds: [], planAssignments: [] }));
-    if (readPlan().selectedIds.length || readPlan().planAssignments.length || isWeekLocked()) pushWeekPlan();
+    localStorage.setItem(planStorageKey, JSON.stringify(fresh ? { ...local, weekStart: week } : { ...local, ...emptyPlan(week) }));
+    if (readPlan().selectedIds.length || readPlan().batches.length) pushWeekPlan();
     return;
   }
-  localStorage.setItem(planStorageKey, JSON.stringify({ ...local, weekStart: week, proposed: server.proposed, selectedIds: server.selectedIds, planAssignments: server.planAssignments }));
-  localStorage.setItem(lockStorageKey, JSON.stringify(server.locked));
+  localStorage.setItem(planStorageKey, JSON.stringify({ ...local, weekStart: week, proposed: server.proposed, selectedIds: server.selectedIds, batches: server.batches, approved: server.approved }));
   lastQueued.set(week, synced());
 }
 
-/** Any week's plan and lock. The current week comes from the browser copy; others from the server (empty if never saved). */
-export async function fetchWeek(week: string): Promise<{ plan: PlanState; locked: boolean }> {
-  if (week === currentWeek()) return { plan: readPlan(), locked: isWeekLocked() };
+/** Any week's plan. The current week comes from the browser copy; others from the server (empty if never saved). */
+export async function fetchWeek(week: string): Promise<PlanState> {
+  if (week === currentWeek()) return readPlan();
   const response = await fetch(`/api/week-plan?week=${week}`);
   if (!response.ok) throw new Error("week");
   const server: ServerWeek | null = await response.json();
-  if (!server) return { plan: { selectedIds: [], planAssignments: [], weekStart: week, proposed: false }, locked: false };
-  lastQueued.set(week, body(week, server, server.locked));
-  return { plan: { selectedIds: server.selectedIds, planAssignments: server.planAssignments, weekStart: week, proposed: server.proposed }, locked: server.locked };
+  if (!server) return emptyPlan(week);
+  lastQueued.set(week, body(week, { ...emptyPlan(), ...server }));
+  return { selectedIds: server.selectedIds, batches: server.batches, approved: server.approved, weekStart: week, proposed: server.proposed };
 }
 /** Saves any week. The current week goes through the browser copy (Home and Groceries read it); throws when the browser refuses. */
-export function saveWeek(week: string, plan: PlanState, locked: boolean) {
-  if (week !== currentWeek()) return put(week, body(week, plan, locked));
+export function saveWeek(week: string, plan: PlanState) {
+  if (week !== currentWeek()) return put(week, body(week, plan));
   localStorage.setItem(planStorageKey, JSON.stringify({ ...readPlan(), ...plan, weekStart: week }));
-  localStorage.setItem(lockStorageKey, JSON.stringify(locked));
   pushWeekPlan();
 }
+export const statusOf = (plan: PlanState) => planStatus(plan.batches, plan.approved);
+/** Approve cooking plan / Save changes: Groceries now use exactly these dishes. */
+export const approvePlan = (plan: PlanState): PlanState => ({ ...plan, approved: structuredClone(plan.batches) });
 
-/** Grocery scale for a recipe: planned servings / original servings. Several assignments: the largest wins. */
-export function plannedServingsFactor(assignments: PlanAssignment[], recipeId: string, original: number | null): number {
-  const planned = Math.max(0, ...assignments.filter(a => a.recipeId === recipeId).map(a => a.servings ?? 0));
-  return original && planned ? planned / original : 1;
+// ---- Edits (pure; each returns a new plan, or the same object when nothing changed) ----
+export const cookedOn = (plan: PlanState, date: string) => plan.batches.filter(b => b.cookDate === date);
+/** Dishes cooked earlier that are eaten on this date (Home: "Cooked Sun"). */
+export const servedFrom = (plan: PlanState, date: string) => plan.batches.filter(b => b.cookDate !== date && b.serves.some(s => s.date === date));
+
+/** + Add a dish: a new dish on that date, beside any already there; its first serving date is the cooking date. */
+export function addBatch(plan: PlanState, recipeId: string, cookDate: string, household: HouseholdCounts | null, id = newBatchId()): PlanState {
+  if (plan.batches.length >= maxDishes) return plan;
+  return { ...plan, batches: [...plan.batches, { id, recipeId, cookDate, serves: [defaultServe(cookDate, household)] }] };
+}
+/** Swap dish: another recipe in the same place; dates and portions stay, the yield comes from the new recipe. */
+export function swapBatch(plan: PlanState, id: string, recipeId: string): PlanState {
+  const found = plan.batches.find(b => b.id === id);
+  if (!found || found.recipeId === recipeId) return plan;
+  const { yield: _old, ...rest } = found;
+  return { ...plan, batches: plan.batches.map(b => (b === found ? { ...rest, recipeId } : b)) };
+}
+/** Edit servings: the dish's serving dates and amounts (and a yield the recipe lacks). */
+export function setServes(plan: PlanState, id: string, serves: Serve[], recipeYield?: number): PlanState {
+  const sorted = [...serves].sort((a, b) => a.date.localeCompare(b.date));
+  return { ...plan, batches: plan.batches.map(b => {
+    if (b.id !== id) return b;
+    const { yield: _old, ...rest } = b;
+    return { ...rest, serves: sorted, ...(recipeYield ? { yield: recipeYield } : b.yield ? { yield: b.yield } : {}) };
+  }) };
+}
+export const removeBatch = (plan: PlanState, id: string): PlanState => ({ ...plan, batches: plan.batches.filter(b => b.id !== id) });
+/** Undo of Remove dish: back in its place, unless it is there again already. */
+export function restoreBatch(plan: PlanState, batch: Batch, index: number): PlanState {
+  if (plan.batches.some(b => b.id === batch.id)) return plan;
+  const batches = [...plan.batches];
+  batches.splice(Math.min(index, batches.length), 0, batch);
+  return { ...plan, batches };
 }
 
-// ---- Planner edits (pure; each returns a new plan, or the same object when nothing changed) ----
-export type Slot = { day: number; meal: MealSlot };
-export const totalSlots = 21;
-/** Occupied slots (a linked multi-day assignment fills one slot per day). */
-export const plannedSlotCount = (plan: PlanState) => plan.planAssignments.reduce((sum, a) => sum + a.spanDays, 0);
-
-/** Removes the whole assignment occupying the slot (a multi-day assignment is one linked entry). The recipe stays shortlisted. */
-export function removeAt(plan: PlanState, meal: MealSlot, day: number): PlanState {
-  const found = occupant(plan, meal, day);
-  return found ? { ...plan, planAssignments: plan.planAssignments.filter(a => a !== found) } : plan;
-}
-
-/** Moves an assignment to a free slot, keeping its span; refuses when any target day is taken or off the week. */
-export function moveTo(plan: PlanState, from: Slot, to: Slot): PlanState {
-  const found = occupant(plan, from.meal, from.day);
-  if (!found || (from.meal === to.meal && found.startDay === to.day)) return plan;
-  if (to.day + found.spanDays > 7) return plan;
-  const rest = plan.planAssignments.filter(a => a !== found);
-  const blocked = Array.from({ length: found.spanDays }, (_, i) => occupant({ ...plan, planAssignments: rest }, to.meal, to.day + i)).some(Boolean);
-  return blocked ? plan : { ...plan, planAssignments: [...rest, { ...found, mealType: to.meal, startDay: to.day }] };
-}
-
-/** Move meal: to a free slot it moves; onto an occupied single-day slot the two meals trade places, so both stay scheduled. */
-export function moveOrSwap(plan: PlanState, from: Slot, to: Slot): PlanState {
-  const a = occupant(plan, from.meal, from.day), b = occupant(plan, to.meal, to.day);
-  if (!a || a === b) return plan;
-  if (!b) return moveTo(plan, from, to);
-  if (a.spanDays > 1 || b.spanDays > 1) return plan;
-  return { ...plan, planAssignments: plan.planAssignments.map(x =>
-    x === a ? { ...a, mealType: to.meal, startDay: to.day } : x === b ? { ...b, mealType: from.meal, startDay: from.day } : x) };
-}
-
-/** Swap / Choose recipe: puts a recipe on one slot. A filled slot keeps its servings; the shortlist is not touched. */
-export function setRecipeAt(plan: PlanState, { day, meal }: Slot, recipeId: string, servings?: number | null): PlanState {
-  const found = occupant(plan, meal, day);
-  if (found?.recipeId === recipeId) return plan;
-  if (found) return { ...plan, planAssignments: plan.planAssignments.map(a => (a === found ? { ...a, recipeId } : a)) };
-  return { ...plan, planAssignments: [...plan.planAssignments, { recipeId, mealType: meal, startDay: day, spanDays: 1, ...(servings && servings > 0 ? { servings } : {}) }] };
-}
-
-/** Adds one single-day assignment of the recipe per free slot; occupied slots are skipped, never replaced. */
-export function repeatOn(plan: PlanState, recipeId: string, slots: Slot[], servings?: number | null): { plan: PlanState; added: number; skipped: number } {
-  let next = plan, added = 0;
-  for (const { day, meal } of slots) {
-    if (checkAdd(next, { recipeId, day, meal }).status !== "free") continue;
-    next = addToPlan(next, { recipeId, day, meal, servings });
-    added++;
+/** Serving dates that would fall before the new cooking date when every dish of `from` moves to `to`. */
+export type MoveConflict = { batchId: string; date: string };
+export const moveConflicts = (plan: PlanState, from: string, to: string): MoveConflict[] =>
+  cookedOn(plan, from).flatMap(b => b.serves.filter(s => s.date < to).map(s => ({ batchId: b.id, date: s.date })));
+/** Move cooking day: every dish of `from` moves to `to`, beside what is there. A conflicting serving date is moved to `to`
+ * ("move", added to that date's amount if it already has one) or dropped ("remove"); `amount` gives a date's servings.
+ * Returns null when a conflict is unresolved or a dish would be left with no serving date; nothing is applied then. */
+export function moveCookingDay(plan: PlanState, from: string, to: string, resolve: Record<string, "move" | "remove">,
+  amount: (batch: Batch, serve: Serve) => number): PlanState | null {
+  if (from === to) return plan;
+  const moved: Batch[] = [];
+  for (const b of cookedOn(plan, from)) {
+    const keep = b.serves.filter(s => s.date >= to);
+    const late = b.serves.filter(s => s.date < to);
+    if (late.some(s => !resolve[`${b.id}:${s.date}`])) return null;
+    const carried = late.filter(s => resolve[`${b.id}:${s.date}`] === "move").reduce((sum, s) => sum + amount(b, s), 0);
+    let serves = keep;
+    if (carried > 0) {
+      const there = keep.find(s => s.date === to);
+      serves = there ? keep.map(s => (s === there ? { date: to, servings: amount(b, there) + carried } : s)) : [{ date: to, servings: carried }, ...keep];
+    }
+    if (!serves.length) return null;
+    moved.push({ ...b, cookDate: to, serves: serves.sort((x, y) => x.date.localeCompare(y.date)) });
   }
-  return { plan: next, added, skipped: slots.length - added };
+  const byId = new Map(moved.map(b => [b.id, b]));
+  // Moved dishes go after the dishes already on the destination.
+  return { ...plan, batches: [...plan.batches.filter(b => !byId.has(b.id)), ...moved] };
 }
-
-export function setServingsAt(plan: PlanState, meal: MealSlot, day: number, servings: number): PlanState {
-  const found = occupant(plan, meal, day);
-  if (!found || !(servings > 0)) return plan;
-  return { ...plan, planAssignments: plan.planAssignments.map(a => a === found ? { ...a, servings } : a) };
-}
-
-/** Assignments that cover a weekday (0 = Sunday, as `Date.getDay()`), in Breakfast, Lunch, Dinner order. The plan is not dated. */
-export const mealsOnDay = (plan: PlanState, day: number) =>
-  mealSlots.flatMap(meal => plan.planAssignments.filter(a => a.mealType === meal && day >= a.startDay && day < a.startDay + a.spanDays));
+/** The serving dates the editor offers: the cooking date through the end of the following week. */
+export const servingDateChoices = (cookDate: string, weekStart: string) => {
+  const last = shiftDate(weekStart, 13);
+  const out: string[] = [];
+  for (let d = cookDate; d <= last; d = shiftDate(d, 1)) out.push(d);
+  return out;
+};

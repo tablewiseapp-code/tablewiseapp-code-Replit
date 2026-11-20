@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { householdSettings, weekPlans } from "@shared/schema";
+import { fromLegacy, isLegacyPlan, sameBatches, type Batch } from "@shared/cooking-plan";
 import type { z } from "zod";
 import type { weekPlanInput } from "./request-schemas";
 
@@ -17,11 +18,19 @@ export function databaseWeekPlanStore(connection?: Database): WeekPlanStore {
   return {
     async get(ownerId, weekStart) {
       const [row] = await (await database()).select().from(weekPlans).where(and(eq(weekPlans.ownerId, ownerId), eq(weekPlans.weekStart, weekStart)));
-      return row ? { weekStart: row.weekStart, proposed: row.proposed, selectedIds: row.selectedIds, planAssignments: row.planAssignments, locked: row.locked } : null;
+      if (!row) return null;
+      // A week saved before cooking days: its slots become dated dishes; an approved (locked) one stays approved.
+      if (isLegacyPlan(row.planAssignments)) {
+        const batches = fromLegacy(row.weekStart, row.planAssignments);
+        return { weekStart: row.weekStart, proposed: row.proposed, selectedIds: row.selectedIds, batches, approved: row.locked ? batches : null };
+      }
+      return { weekStart: row.weekStart, proposed: row.proposed, selectedIds: row.selectedIds,
+        batches: row.planAssignments as Batch[], approved: (row.approvedBatches as Batch[] | null) ?? null };
     },
-    async save(ownerId, plan) {
-      await (await database()).insert(weekPlans).values({ ownerId, ...plan })
-        .onConflictDoUpdate({ target: [weekPlans.ownerId, weekPlans.weekStart], set: { ...plan, updatedAt: new Date() } });
+    async save(ownerId, { batches, approved, ...plan }) {
+      const values = { ...plan, planAssignments: batches, approvedBatches: approved, locked: sameBatches(batches, approved) };
+      await (await database()).insert(weekPlans).values({ ownerId, ...values })
+        .onConflictDoUpdate({ target: [weekPlans.ownerId, weekPlans.weekStart], set: { ...values, updatedAt: new Date() } });
     },
   };
 }

@@ -9,8 +9,9 @@ import { homeText } from "@/lib/home-copy";
 import { householdText } from "@/lib/household-copy";
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { activePreferenceChips } from "@/lib/active-preferences";
-import { cookingStyles, householdServings, loadSettings, servingLimits, type CookingStyle } from "@/lib/basic-settings";
-import { addToPlan, checkAdd, isWeekLocked, readPlan, writePlan, type AddRequest, type MealSlot, type PlanState } from "@/lib/meal-plan";
+import { cookingStyles, householdCounts, householdServings, loadSettings, servingLimits, type CookingStyle } from "@/lib/basic-settings";
+import { addBatch, maxDishes, mealSlots, newBatchId, readPlan, setServes, writePlan, type MealSlot } from "@/lib/meal-plan";
+import { calendarDate } from "@/lib/week-plan";
 import { generateMeals, generatorTimes, type GeneratorInput, type NoMatch } from "@/lib/meal-generator";
 import { total } from "@/lib/preference-engine";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
@@ -20,11 +21,12 @@ import { myRecipesKey, type MyRecipes, type Recipe } from "@/lib/storage";
 
 // Diets the catalog marks explicitly (the same four Your household offers).
 const flowDiets = ["vegetarian", "vegan", "glutenFree", "dairyFree"] as const;
-export type MealTarget = { meal: MealSlot; day: number };
-export type MealAdded = { before: PlanState; request: AddRequest };
+/** `meal` is the kind of recipe searched first (the person can change it); the dish is cooked on `date`. */
+export type MealTarget = { meal: MealSlot; day: number; date: string };
+export type MealAdded = { batchId: string; recipeId: string; date: string };
 
-/** Home "+ Add breakfast/lunch/dinner": a request (words, time, style, household) → one catalog recipe → Add to that meal.
- * The target is fixed when the sheet opens. The Week changes only on Add; servings and diets edited here stay in this flow. */
+/** Home "+ Add a dish": a request (kind, words, time, style, household) → one catalog recipe → Add to today, a new dish
+ * cooked today beside any already there. The Week changes only on Add; servings and diets edited here stay in this flow. */
 export function MealGenerator({ target, catalog, onClose, onAdded }: {
   target: MealTarget | null; catalog: Recipe[]; onClose: (focusSlot: MealSlot) => void; onAdded: (added: MealAdded) => void;
 }) {
@@ -39,48 +41,46 @@ export function MealGenerator({ target, catalog, onClose, onAdded }: {
 function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTarget; catalog: Recipe[]; onAdded: (added: MealAdded) => void; onClose: () => void }) {
   const { t, lang } = useI18n();
   const { t: view } = useRecipeViewCopy();
-  const { meal, day } = target;
-  const mealName = t(`meals.${meal.toLowerCase()}`);
-  const text = (key: Parameters<typeof homeText>[1], values: Record<string, string | number> = {}) =>
-    homeText(lang, key, { meal: mealName.toLocaleLowerCase(lang), Meal: mealName, ...values });
+  const { day, date: cookDate } = target;
   const h = (key: Parameters<typeof householdText>[1], values?: Record<string, string | number>) => householdText(lang, key, values);
 
   const [settings] = useState(loadSettings);
-  const [input, setInput] = useState<GeneratorInput>(() => ({ meal, day, query: "", maxMinutes: null, style: "quick",
+  const [input, setInput] = useState<GeneratorInput>(() => ({ meal: target.meal, day, query: "", maxMinutes: null, style: "quick",
     servings: householdServings(settings), diets: [...settings.dietary.diets] }));
+  const meal = input.meal;
+  const mealName = t(`meals.${meal.toLowerCase()}`);
+  const text = (key: Parameters<typeof homeText>[1], values: Record<string, string | number> = {}) =>
+    homeText(lang, key, { meal: mealName.toLocaleLowerCase(lang), Meal: mealName, ...values });
   const [step, setStep] = useState<"form" | "result" | "mine">("form");
   const [editing, setEditing] = useState(false);
   const [result, setResult] = useState<{ recipes: PlannerRecipe[]; noMatch: NoMatch | null } | null>(null);
   const [index, setIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const done = useRef(false); // set synchronously: a second tap before React re-renders must not add again
-  const [problem, setProblem] = useState<"error" | "locked" | "full" | null>(null);
-  // The slot was filled elsewhere while the sheet was open: what is there now, and the recipe the person wanted.
-  const [changed, setChanged] = useState<{ now: string; pick: string } | null>(null);
+  const [problem, setProblem] = useState<"error" | "full" | null>(null);
   const planner = useMemo(() => toPlannerRecipes(catalog), [catalog]);
   const byId = useMemo(() => new Map(catalog.map(r => [r.id, r])), [catalog]);
   const mine = useQuery<MyRecipes>({ queryKey: myRecipesKey, enabled: step === "mine" });
 
   const set = (patch: Partial<GeneratorInput>) => setInput(x => ({ ...x, ...patch }));
-  const generate = () => { setResult(generateMeals(planner, settings, input)); setIndex(0); setProblem(null); setChanged(null); setStep("result"); };
+  const generate = () => { setResult(generateMeals(planner, settings, input)); setIndex(0); setProblem(null); setStep("result"); };
   const recipe = result && index < result.recipes.length ? byId.get(result.recipes[index].id) ?? null : null;
   const planned = result && index < result.recipes.length ? result.recipes[index] : null;
 
-  // One assignment per tap: the guard plus addToPlan's own "same recipe already here" check.
-  const add = (recipeId: string, replace = false) => {
+  // One dish per tap. Servings changed in this sheet become that date's amount; otherwise the household's adults and kids.
+  const add = (recipeId: string) => {
     if (done.current) return;
     setProblem(null);
-    if (isWeekLocked()) { setProblem("locked"); return; }
     const before = readPlan();
-    const request = { recipeId, day, meal, servings: input.servings };
-    const check = checkAdd(before, request);
-    if (check.status === "conflict" && !replace) { setChanged({ now: check.existing.recipeId, pick: recipeId }); return; }
-    if (check.status === "full") { setProblem("full"); return; }
+    if (before.batches.length >= maxDishes) { setProblem("full"); return; }
     setSaving(true); done.current = true;
+    const batchId = newBatchId();
     try {
-      if (check.status !== "same") writePlan(addToPlan(before, request, replace));
+      let next = addBatch(before, recipeId, cookDate, householdCounts(settings), batchId);
+      if (input.servings && input.servings !== householdServings(settings)) next = setServes(next, batchId, [{ date: cookDate, servings: input.servings }]);
+      writePlan(next);
     } catch { setProblem("error"); setSaving(false); done.current = false; return; }
-    onAdded({ before, request });
+    onAdded({ batchId, recipeId, date: cookDate });
     onClose();
   };
 
@@ -93,12 +93,8 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
 
   const pill = "chip min-h-11";
   const notices = <>
-    {changed && <div role="alert" className="grid gap-2 rounded-lg bg-foreground/5 p-3 text-sm" data-testid="meal-generator-changed">
-      <p>{text("genChanged", { title: byId.get(changed.now)?.title ?? "" })}</p>
-      <button type="button" className="btn btn-secondary w-fit" disabled={saving} onClick={() => add(changed.pick, true)} data-testid="meal-generator-replace">{text("genReplace")}</button>
-    </div>}
     {problem && <p role="alert" className="text-sm text-destructive" data-testid="meal-generator-problem">
-      {problem === "locked" ? view("planLocked") : problem === "full" ? view("planFull", { count: readPlan().selectedIds.length }) : text("genSaveError")}</p>}
+      {problem === "full" ? view("planFull", { count: readPlan().batches.length }) : text("genSaveError")}</p>}
   </>;
   const back = <button type="button" className="btn btn-text -ms-2" onClick={() => setStep("form")} data-testid="meal-generator-back">{text("genBack")}</button>;
 
@@ -116,6 +112,13 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
       </DialogHeader>
 
       {step === "form" && <>
+        <fieldset className="grid gap-2">
+          <legend className="mb-2 text-sm font-medium">{text("genKind")}</legend>
+          <div className="flex flex-wrap gap-2">
+            {mealSlots.map(m => <button key={m} type="button" className={pill} aria-pressed={meal === m}
+              onClick={() => set({ meal: m })} data-testid={`meal-generator-kind-${m.toLowerCase()}`}>{t(`meals.${m.toLowerCase()}`)}</button>)}
+          </div>
+        </fieldset>
         <div className="grid gap-2">
           <label htmlFor="meal-generator-query" className="text-sm font-medium">{text("genQ")}</label>
           <input id="meal-generator-query" type="text" enterKeyHint="search" autoComplete="off" value={input.query} maxLength={200}
@@ -198,7 +201,7 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
           {recipe ? <>
             <button type="button" className="btn btn-primary w-full" disabled={saving} onClick={() => add(recipe.id)} data-testid="meal-generator-add">
               {saving ? text("genAdding") : text("genAdd")}</button>
-            <button type="button" className="btn btn-secondary w-full" onClick={() => { setIndex(i => i + 1); setChanged(null); setProblem(null); }} data-testid="meal-generator-another">{text("genAnother")}</button>
+            <button type="button" className="btn btn-secondary w-full" onClick={() => { setIndex(i => i + 1); setProblem(null); }} data-testid="meal-generator-another">{text("genAnother")}</button>
           </> : <button type="button" className="btn btn-primary w-full" onClick={() => setStep("form")} data-testid="meal-generator-edit-filters">{text("genEditFilters")}</button>}
           {back}
         </div>

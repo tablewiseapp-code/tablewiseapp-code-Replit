@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { useQueryClient } from "@tanstack/react-query";
-import { recipePlannerURL } from "@/lib/week-plan";
+import { isWeek, recipePlannerURL } from "@/lib/week-plan";
 import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
 import { recipeToolKeys } from "@/lib/recipe-tools";
 import { baseServings, scaleIngredient, scaledStepIngredients, servingFactor, servingLimits } from "@/lib/ingredient-scale";
@@ -22,6 +22,8 @@ import { RecipeVideo } from "@/components/youtube-import";
 import { CookingMode } from "@/components/cooking-mode";
 import { hasCookingProgress } from "@/lib/cooking-session";
 import { AddToMealPlanDialog } from "@/components/add-to-meal-plan";
+import { fetchWeek } from "@/lib/meal-plan";
+import { batchTotal, batchYield } from "@shared/cooking-plan";
 import { CookedBadge, MyCookingExperience } from "@/components/my-cooking-experience";
 import { AnalysisWarnings, currentAnalysis, StepTiming } from "@/components/step-timing";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -107,6 +109,8 @@ export default function RecipeDetail() {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [selectedServings, setSelectedServings] = useState<number | null>(null);
+  // Opened from a dish on the Week (?week=&batch=): that batch's total and yield, scaled from the original quantities.
+  const [plannedYield, setPlannedYield] = useState<number | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   // ?cook (Home → Suggest a recipe → Start cooking) opens Zen mode straight away.
@@ -129,6 +133,15 @@ export default function RecipeDetail() {
         // Open at the household's servings (My Basic Settings) when the recipe can be scaled.
         const base = baseServings(value.servings);
         setSelectedServings(base === null ? null : householdServings(loadSettings()) ?? base);
+        setPlannedYield(null);
+        const query = new URLSearchParams(search), batchId = query.get("batch"), week = query.get("week");
+        if (batchId && week && isWeek(week)) fetchWeek(week).then(plan => {
+          const batch = plan.batches.find(b => b.id === batchId && b.recipeId === value.id);
+          const planned = batch && batchYield(batch, base);
+          if (!batch || !planned) return;
+          setPlannedYield(planned);
+          setSelectedServings(batchTotal(batch, base));
+        }).catch(() => undefined);
         setPrepTime(value.prepTime == null ? "" : String(value.prepTime));
         setCookTime(value.cookTime == null ? "" : String(value.cookTime));
       })
@@ -158,7 +171,7 @@ export default function RecipeDetail() {
   }
 
   const readOnly = Boolean(recipe.developmentReadOnly);
-  const base = baseServings(recipe.servings);
+  const base = plannedYield ?? baseServings(recipe.servings);
   const factor = servingFactor(selectedServings ?? base ?? 1, base);
   const scaledIngredients = recipe.ingredients.map(text => scaleIngredient(text, factor));
   const analysis = currentAnalysis(recipe, recipe.stepAnalysis);
@@ -327,7 +340,7 @@ export default function RecipeDetail() {
         servings={selectedServings} scaledIngredients={scaledIngredients}
         stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => setCooking(false)} />}
 
-      <AddToMealPlanDialog open={planOpen} onOpenChange={setPlanOpen} recipe={recipe} servings={selectedServings} plannerHref="/meals" />
+      <AddToMealPlanDialog open={planOpen} onOpenChange={setPlanOpen} recipe={recipe} plannerHref="/meals?plan" />
 
       <Dialog open={timesOpen} onOpenChange={setTimesOpen}>
         <DialogContent className="max-w-md">

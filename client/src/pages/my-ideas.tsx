@@ -270,7 +270,7 @@ export default function MyIdeas() {
         </DialogContent>
       </Dialog>
       {planning && <AddToMealPlanDialog open onOpenChange={o => { if (!o) { setPlanning(null); setPlanVersion(v => v + 1); } }}
-        recipe={planning} servings={null} plannerHref="/meals"
+        recipe={planning} plannerHref="/meals?plan"
         onSaved={() => { trackRecipeEvent("recipe_added_to_plan", planning.ideaId); setPlanVersion(v => v + 1); }} />}
     </div>
   );

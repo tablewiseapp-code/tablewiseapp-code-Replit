@@ -11,7 +11,7 @@ import { GroceryNote } from "./grocery-note";
 import { useI18n } from "@/lib/i18n";
 import { fetchRecipes } from "@/lib/storage";
 import { readGroceryPrefs, saveGroceryPrefs, toggleCategory } from "@/lib/grocery-progress";
-import { fetchWeek, planStorageKey, readPlan, saveWeek, writePlan, type PlanAssignment, type PlanState } from "@/lib/meal-plan";
+import { emptyPlan, fetchWeek, planStorageKey, readPlan, saveWeek, writePlan, type PlanState } from "@/lib/meal-plan";
 import { assignmentKey, buildRecipeGroceryRows, groceryMealsFor, groceryMeasure, groceryPlanVersion, groceryQuantityText, remainingGroceryText, removeGroceryMeals, restoreGroceryMeals } from "@/lib/grocery-meal-removal";
 import { buildShoppingList, groceryShoppingQueryKey as shoppingQuery, type Extra, type ShoppingPreference, type ShoppingRow } from "@/lib/grocery-items";
 import { shoppingCopy } from "@/lib/grocery-shopping-copy";
@@ -59,18 +59,17 @@ export default function GroceryListScreen() {
   // Another week's list (/grocery-list?week=Monday from the Week calendar) reads and saves that week on the server;
   // otherwise the current week's browser copy, as before.
   const [otherWeek] = useState(() => { const w = new URLSearchParams(window.location.search).get("week"); return w && isWeek(w) && w !== currentWeek() ? w : null; });
-  const [plan, setPlan] = useState<PlanState>(() => otherWeek ? { selectedIds: [], planAssignments: [] } : readPlan());
-  const [otherLocked, setOtherLocked] = useState(false);
+  const [plan, setPlan] = useState<PlanState>(() => otherWeek ? emptyPlan() : readPlan());
   const [weekPending, setWeekPending] = useState(!!otherWeek);
   useEffect(() => {
     if (!otherWeek) return;
-    fetchWeek(otherWeek).then(w => { setPlan(w.plan); setOtherLocked(w.locked); })
+    fetchWeek(otherWeek).then(setPlan)
       .catch(() => toast({ title: t("grocery.changeFailed"), variant: "destructive" })).finally(() => setWeekPending(false));
   }, [otherWeek]);
   const shownPlan = useRef(plan);
   shownPlan.current = plan;
   const latestPlan = () => otherWeek ? shownPlan.current : readPlan();
-  const storePlan = (next: PlanState) => otherWeek ? saveWeek(otherWeek, next, otherLocked) : writePlan(next);
+  const storePlan = (next: PlanState) => otherWeek ? saveWeek(otherWeek, next) : writePlan(next);
   const [busy, setBusy] = useState(false);
   const { data: shopping = [], isError: shoppingError, isPending: shoppingPending, refetch: reloadShopping } =
     useQuery<ShoppingPreference[]>({ queryKey: shoppingQuery, refetchOnMount: "always" });
@@ -100,8 +99,9 @@ export default function GroceryListScreen() {
   // Products the user added by hand ("I'm out of onion"), stored per owner on the server.
   const [extras, setExtras] = useState<Extra[]>([]);
   const [addOpen, setAddOpen] = useState(() => new URLSearchParams(window.location.search).has("add"));
-  const { planAssignments } = plan;
-  usePilotPage("grocery_list_opened", currentWeek(), planAssignments.length > 0);
+  // Groceries use the approved dishes only (docs/cooking-plan.md); draft edits wait for Save changes.
+  const approved = plan.approved ?? [];
+  usePilotPage("grocery_list_opened", currentWeek(), approved.length > 0);
   // Notes per item, stored per owner on the server. The list still works if they cannot be loaded.
   const { data: notes = {} } = useQuery<Record<string, string>>({ queryKey: ["/api/grocery-notes"] });
   const { data: pictures = {}, isPending: picturesLoading, isError: picturesError, refetch: reloadPictures } = useQuery<Record<string, string | null>>({ queryKey: ["/api/grocery-item-photos"] });
@@ -140,7 +140,7 @@ export default function GroceryListScreen() {
     return () => { active = false; };
   }, []);
 
-  const recipeRows = useMemo(() => buildRecipeGroceryRows(plan, recipes), [plan, recipes]);
+  const recipeRows = useMemo(() => buildRecipeGroceryRows(plan.approved ?? [], recipes), [plan, recipes]);
   const { activeRows, manualRows, purchasedRows, recipePurchases } = buildShoppingList(recipeRows, extras, checkedItems, skipped);
   const categoryOf = (row: ShoppingRow) => {
     if (row.category && categories.includes(row.category)) return row.category;
@@ -251,7 +251,7 @@ export default function GroceryListScreen() {
   const nextPlan = removeGroceryMeals(plan, selectedMeals);
   const preview = { dropped: [] as string[], reduced: [] as string[], kept: [] as string[] };
   if (selectedMeals.length) {
-    const nextRows = buildRecipeGroceryRows(nextPlan, recipes);
+    const nextRows = buildRecipeGroceryRows(nextPlan.approved ?? [], recipes);
     for (const [key, row] of recipeRows) {
       const after = nextRows.get(key);
       if (after?.ingredient === row.ingredient || skipped.has(key)) continue;
@@ -453,7 +453,7 @@ export default function GroceryListScreen() {
         {!rows.length && (
           <p className="grocery-success" role="status" data-testid="grocery-shopping-complete">
             {tab === "mine" ? copy("emptyMine") : purchasedRows.length ? copy("done") : t("grocery.noMeals")}
-            {tab !== "mine" && !purchasedRows.length && <button className="grocery-share-button mt-2" onClick={() => setLocation("/meals")}>{t("grocery.goToPlan")}</button>}
+            {tab !== "mine" && !purchasedRows.length && <button className="grocery-share-button mt-2" onClick={() => setLocation(otherWeek ? `/meals?week=${otherWeek}` : "/meals?plan")}>{t("grocery.goToPlan")}</button>}
           </p>
         )}
         <div className="grocery-list">
@@ -511,14 +511,14 @@ export default function GroceryListScreen() {
           <DialogDescription>{affected.length ? copy("protein") : copy("only")}</DialogDescription>
           {affected.length > 0 && <ul>
             {affected.map(a => {
-              const day = a.spanDays ? new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 4 + a.startDay))) : null;
+              const day = new Intl.DateTimeFormat(locale, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${a.cookDate}T12:00:00Z`));
               const key = assignmentKey(a);
               return <li key={key}><label className="flex min-h-11 items-center gap-2">
                 <input type="checkbox" checked={mealKeys.has(key)} onChange={event => {
                   const checked = event.target.checked;
                   setMealKeys(previous => checked ? new Set([...previous, key]) : new Set([...previous].filter(value => value !== key)));
                 }} />
-                <span>{recipes.find(recipe => recipe.id === a.recipeId)?.title} · {day ? `${day} · ${t(`meals.${a.mealType.toLowerCase()}`)}` : copy("notOnDay")}</span>
+                <span>{recipes.find(recipe => recipe.id === a.recipeId)?.title} · {day}</span>
               </label></li>;
             })}
           </ul>}

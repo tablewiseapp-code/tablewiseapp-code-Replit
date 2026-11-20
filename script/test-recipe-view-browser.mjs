@@ -109,10 +109,10 @@ try {
   for (const nutrient of ["calories", "fat", "fiber", "sodium"]) await click(`recipe-view-nutrient-${nutrient}`);
   for (const detail of ["preptime", "cooktime"]) await click(`recipe-view-detail-${detail}`);
   await saved();
-  const today = await ev("new Date().getDay()");
+  const today = await ev(`(d => \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, "0")}-\${String(d.getDate()).padStart(2, "0")}\`)(new Date())`);
   const three = recipes.filter(r => r.nutrition && !/mock/i.test(r.nutrition.model) && /^\d+$/.test((r.servings ?? "").trim())).slice(0, 3);
-  const plan = { selectedIds: three.map(r => r.id), planAssignments: three.map((r, i) => ({ recipeId: r.id, mealType: ["Breakfast", "Lunch", "Dinner"][i], startDay: today, spanDays: 1 })) };
-  const saveWeek = await ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: ${JSON.stringify(JSON.stringify({ weekStart: thisWeek, proposed: false, selectedIds: plan.selectedIds, planAssignments: plan.planAssignments, locked: false }))} }).then(async r => r.status < 300 || r.status + " " + await r.text())`);
+  const batches = three.map((r, i) => ({ id: `t${i}`, recipeId: r.id, cookDate: today, serves: [{ date: today }] }));
+  const saveWeek = await ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: ${JSON.stringify(JSON.stringify({ weekStart: thisWeek, proposed: true, selectedIds: [], batches, approved: null }))} }).then(async r => r.status < 300 || r.status + " " + await r.text())`);
   eq(saveWeek, true, "Week saved");
   await size(390, 844, true);
   await go("/", `Boolean(${q(`home-meal-view-${three[2].id}-nutrition`)})`);

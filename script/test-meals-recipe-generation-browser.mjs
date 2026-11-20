@@ -72,7 +72,7 @@ try {
   await call("Page.navigate", { url: BASE }); await sleep(1500);
   const state = { filters: { maxMinutes: 30, dietary: ["Gluten-free"], mealType: ["Dinner"], cookingMethod: ["Air fryer"], source: [], proteinType: [],
     withNotes: false, modifiedByMe: false, myPicks: true, minRating: null, servings: null, mustInclude: [], mustExclude: [] },
-    selectedIds: [], expandedSections: ["time", "dietary"], showMoreFilters: false, planAssignments: [] };
+    selectedIds: [], expandedSections: ["time", "dietary"], showMoreFilters: false, batches: [], approved: null };
   await ev(`localStorage.clear(); localStorage.setItem('tablewise_language','en'); localStorage.setItem('tablewise:time-display:v1','preparation');
     localStorage.setItem('weeklyMealsState', ${JSON.stringify(JSON.stringify(state))})`);
   await call("Fetch.enable", { patterns: [{ urlPattern: "*/api/recipes*", requestStage: "Request" }] });
@@ -137,10 +137,10 @@ try {
 
   // Plan it: the planner's normal flow; the added-to-plan signal fires (not 'cooked').
   await click("button-back-to-week");
-  await until(el("swap-Dinner-2"), "week calendar");
-  await click("swap-Dinner-2"); await until(el("pick-ai-test-1"), "picker offers the accepted recipe");
+  await until(`Boolean(document.querySelector('[data-testid^="add-dish-"]'))`, "week");
+  await ev(`document.querySelector('[data-testid^="add-dish-"]').click()`); await until(el("pick-ai-test-1"), "picker offers the accepted recipe");
   await click("pick-ai-test-1");
-  await until(`JSON.parse(localStorage.getItem('weeklyMealsState')).planAssignments.some(a => a.recipeId === 'ai-test-1')`, "assignment saved");
+  await until(`JSON.parse(localStorage.getItem('weeklyMealsState')).batches.some(b => b.recipeId === 'ai-test-1')`, "dish saved");
   for (let i = 0; i < 20 && !events.includes("generated_recipe_added_to_plan"); i++) await sleep(100);
   assert.ok(events.includes("generated_recipe_added_to_plan"));
   assert.ok(!events.some(name => /cook/.test(name)));

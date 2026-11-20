@@ -3,7 +3,10 @@ import { Link } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
-import { mealSlots, mealsOnDay, readPlan, undoAdd, writePlan, type MealSlot } from "@/lib/meal-plan";
+import { cookedOn, readPlan, removeBatch, servedFrom, writePlan, type Batch } from "@/lib/meal-plan";
+import { batchTotal } from "@shared/cooking-plan";
+import { baseServings } from "@/lib/ingredient-scale";
+import { calendarDate, currentWeek, plannerRecipeURL } from "@/lib/week-plan";
 import { MealGenerator, type MealAdded, type MealTarget } from "@/components/meal-generator";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
@@ -12,12 +15,10 @@ import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
-import { RecipeViewRows, useServingsText } from "@/components/recipe-summary";
+import { RecipeViewRows } from "@/components/recipe-summary";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import type { Recipe } from "@/lib/storage";
 
-const mealKey = { Breakfast: "meals.breakfast", Lunch: "meals.lunch", Dinner: "meals.dinner" } as const;
-const addKey = { Breakfast: "addBreakfast", Lunch: "addLunch", Dinner: "addDinner" } as const;
 
 function SectionState({ error, retry, text }: { error: boolean; retry: () => void; text: (k: "loading" | "loadError" | "retry") => string }) {
   return error
@@ -29,35 +30,40 @@ function SectionState({ error, retry, text }: { error: boolean; retry: () => voi
 export default function Home() {
   const { t, lang, dir } = useI18n();
   const text = (key: Parameters<typeof homeText>[1], values?: Record<string, string | number>) => homeText(lang, key, values);
-  // Local date and weekday: the plan is not dated, so "today" is today's weekday in the current plan.
+  // Today: the local calendar date in the current week's plan.
   const [now] = useState(() => new Date());
+  const today = calendarDate(now);
   const [plan, setPlan] = useState(readPlan);
   const [generating, setGenerating] = useState<MealTarget | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const catalog = useRecipeCatalog();
   const { toast } = useToast();
-  const mealName = (slot: MealSlot) => t(mealKey[slot]).toLocaleLowerCase(lang);
-  // Focus goes back to the meal's row: the + Add button, or the recipe that replaced it.
-  const focusSlot = (slot: MealSlot) => requestAnimationFrame(() =>
-    document.querySelector<HTMLElement>(`[data-testid="home-slot-${slot.toLowerCase()}"] a, [data-testid="home-slot-${slot.toLowerCase()}"] button`)?.focus());
-  const added = ({ before, request }: MealAdded) => {
+  // Focus goes back to the Today section's + Add a dish button.
+  const focusAdd = () => requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid="home-add-dish"]`)?.focus());
+  const added = ({ batchId, recipeId, date }: MealAdded) => {
     setPlan(readPlan());
-    toast({ title: text("genAdded", { meal: mealName(request.meal) }), action: <ToastAction altText={text("genUndo")} data-testid="home-meal-undo" onClick={() => {
-      // Only this assignment is undone, and only while the slot still holds it.
-      const undone = undoAdd(readPlan(), before, request);
-      if (!undone) { toast({ title: text("genUndoGone") }); return; }
-      try { writePlan(undone); setPlan(readPlan()); } catch { toast({ variant: "destructive", title: text("genSaveError") }); }
+    toast({ title: text("genAdded"), action: <ToastAction altText={text("genUndo")} data-testid="home-meal-undo" onClick={() => {
+      // Only this dish is undone, and only while it is still that recipe on that date.
+      const current = readPlan();
+      const dish = current.batches.find(b => b.id === batchId);
+      if (!dish || dish.recipeId !== recipeId || dish.cookDate !== date) { toast({ title: text("genUndoGone") }); return; }
+      try { writePlan(removeBatch(current, batchId)); setPlan(readPlan()); } catch { toast({ variant: "destructive", title: text("genSaveError") }); }
     }}>{text("genUndo")}</ToastAction> });
   };
 
-  const today = mealsOnDay(plan, now.getDay());
-  const servingsText = useServingsText();
-  /** "35 min total · 4 servings": the Week's servings for this meal, else the recipe's; unknown values are left out. */
-  const meta = (recipe: Recipe, servings?: number | null) => {
-    const minutes = recipeStageMinutes(recipe, "total");
-    return [minutes !== null ? t("card.totalMinutes", { count: minutes }) : null, servingsText(servings ? String(servings) : recipe.servings)].filter(Boolean).join(" · ");
-  };
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
+  const cooking = cookedOn(plan, today).filter(b => recipes.has(b.recipeId));
+  const eating = servedFrom(plan, today).filter(b => recipes.has(b.recipeId));
+  const number = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  const weekday = new Intl.DateTimeFormat(lang, { weekday: "short", timeZone: "UTC" });
+  /** "35 min total · Make 4 servings" for a dish cooked today; "Cooked Sun" for one cooked earlier. */
+  const meta = (recipe: Recipe, batch: Batch, cookedToday: boolean) => {
+    const minutes = recipeStageMinutes(recipe, "total");
+    return [cookedToday && minutes !== null ? t("card.totalMinutes", { count: minutes }) : null,
+      cookedToday ? text("makeServings", { count: number.format(batchTotal(batch, baseServings(recipe.servings))) })
+        : text("cookedOn", { date: weekday.format(new Date(`${batch.cookDate}T12:00:00Z`)) })].filter(Boolean).join(" · ");
+  };
+  const todays = [...cooking.map(b => [b, true] as const), ...eating.map(b => [b, false] as const)];
 
   const tx = useHomeTaskText();
   const tasks = useHomeTasks();
@@ -80,43 +86,32 @@ export default function Home() {
               <h2 id="home-meals" className="text-base font-semibold">{text("todaysMeals")}</h2>
               <Link href="/meals?plan" className="btn btn-text">{text("viewWeek")}</Link>
             </div>
-            {today.length > 0 && (catalog.isPending || catalog.isError) ? (
+            {plan.batches.some(b => b.cookDate === today || b.serves.some(x => x.date === today)) && (catalog.isPending || catalog.isError) ? (
               <SectionState error={catalog.isError} retry={() => catalog.refetch()} text={text} />
+            ) : todays.length === 0 ? (
+              <p className="py-2 text-sm text-muted-foreground" data-testid="home-nothing-today">{text("nothingToday")}</p>
             ) : (
-              mealSlots.map(slot => {
-                const rows = today.filter(a => a.mealType === slot && recipes.has(a.recipeId));
-                return (
-                  <div key={slot} className="flex items-start gap-3" data-testid={`home-slot-${slot.toLowerCase()}`}>
-                    <h3 className="w-24 shrink-0 break-words pt-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t(mealKey[slot])}</h3>
-                    {rows.length === 0 ? (
-                      <button type="button" onClick={() => setGenerating({ meal: slot, day: now.getDay() })} disabled={!catalog.data} data-testid={`home-add-${slot.toLowerCase()}`}
-                        className="flex min-h-11 flex-1 items-center rounded-md py-1 text-start text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-                        {text(addKey[slot])}
-                      </button>
-                    ) : (
-                    <ul className="min-w-0 flex-1">
-                      {rows.map(a => {
-                        const recipe = recipes.get(a.recipeId)!;
-                        return (
-                          <li key={`${slot}-${a.recipeId}`}>
-                            <Link href={`/recipe/${encodeURIComponent(recipe.id)}`} data-testid={`home-meal-${recipe.id}`}
-                              className="flex min-h-11 items-center gap-3 rounded-md py-1 hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-                              {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />}
-                              <span className="min-w-0">
-                                <span className="block text-sm font-medium">{recipe.title}</span>
-                                {meta(recipe, a.servings) && <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, a.servings)}</span>}
-                                <RecipeViewRows recipe={recipe} testId={`home-meal-view-${recipe.id}`} />
-                              </span>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    )}
-                  </div>
-                );
-              })
+              <ul data-testid="home-today">
+                {todays.map(([batch, cookedToday]) => {
+                  const recipe = recipes.get(batch.recipeId)!;
+                  return (
+                    <li key={batch.id}>
+                      <Link href={plannerRecipeURL(recipe.id, currentWeek(), batch.id)} data-testid={`home-meal-${recipe.id}`}
+                        className="flex min-h-11 items-center gap-3 rounded-md py-1 hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                        {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />}
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium">{recipe.title}</span>
+                          <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>
+                          <RecipeViewRows recipe={recipe} testId={`home-meal-view-${recipe.id}`} />
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
+            <button type="button" onClick={() => setGenerating({ meal: "Dinner", day: now.getDay(), date: today })} disabled={!catalog.data} data-testid="home-add-dish"
+              className="btn btn-text -ms-2">{text("addDish")}</button>
             {/* Available even when today is empty; never changes the Week or groceries. */}
             <button type="button" onClick={() => setSuggesting(true)} disabled={!catalog.data} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
           </section>
@@ -133,7 +128,7 @@ export default function Home() {
           </details>
         </div>
       </PageContainer>
-      <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={slot => { setGenerating(null); focusSlot(slot); }} onAdded={added} />
+      <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={() => { setGenerating(null); focusAdd(); }} onAdded={added} />
       <MealSuggestion meal={suggesting ? "Dinner" : null} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setSuggesting(false)} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>

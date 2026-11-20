@@ -6,6 +6,7 @@ import { groceryExtras, groceryShoppingItems, recipes, weekPlans } from "../shar
 import { buildRecipeGroceryRows } from "../client/src/lib/grocery-meal-removal";
 import { buildShoppingList } from "../client/src/lib/grocery-items";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
+import { fromLegacy, isLegacyPlan, type Batch } from "../shared/cooking-plan";
 
 async function main() {
   if (process.env.NODE_ENV === "production") throw new Error("Local development seeding only.");
@@ -14,7 +15,8 @@ async function main() {
   const extras = await db.select().from(groceryExtras);
   let count = 0;
   for (const plan of await db.select().from(weekPlans)) {
-    const rows = buildRecipeGroceryRows({ selectedIds: plan.selectedIds, planAssignments: plan.planAssignments } as never, catalog);
+    const approved = isLegacyPlan(plan.planAssignments) ? (plan.locked ? fromLegacy(plan.weekStart, plan.planAssignments) : []) : (plan.approvedBatches ?? []) as Batch[];
+    const rows = buildRecipeGroceryRows(approved, catalog);
     const own = extras.filter(extra => extra.ownerId === plan.ownerId);
     const { activeRows } = buildShoppingList(rows, own, new Set(), new Set());
     if (!activeRows.length) continue;

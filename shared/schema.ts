@@ -292,7 +292,11 @@ export const weekPlans = pgTable("week_plans", {
   ownerId: varchar("owner_id", { length: 64 }).notNull(),
   weekStart: date("week_start").notNull(),
   selectedIds: jsonb("selected_ids").$type<string[]>().notNull(),
-  planAssignments: jsonb("plan_assignments").$type<{ recipeId: string; mealType: "Breakfast" | "Lunch" | "Dinner"; startDay: number; spanDays: number; servings?: number }[]>().notNull(),
+  /** The dishes (shared/cooking-plan.ts Batch[]). Rows saved before cooking days hold Breakfast/Lunch/Dinner slots; read through fromLegacy. */
+  planAssignments: jsonb("plan_assignments").$type<unknown[]>().notNull(),
+  /** The dishes as last approved; Groceries use these. null = never approved. */
+  approvedBatches: jsonb("approved_batches").$type<unknown[]>(),
+  /** The dishes equal the approved copy (kept for older readers). */
   locked: boolean("locked").default(false).notNull(),
   /** The full-week proposal was made; empty slots are not filled again. */
   proposed: boolean("proposed").default(false).notNull(),

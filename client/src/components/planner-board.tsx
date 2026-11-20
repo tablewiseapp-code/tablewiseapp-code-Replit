@@ -1,10 +1,13 @@
+// The Week's cooking days (docs/cooking-plan.md): one group per date, Monday to Sunday. A dish appears once, on the day it
+// is cooked; its card shows how much to make and the dates it serves. Every action is a visible, labelled button.
 import { useState } from "react";
 import { Link } from "wouter";
-import { DndContext, MouseSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
-import { Minus, MoreHorizontal, Plus, Search } from "lucide-react";
+import { Minus, Plus, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { mealSlots, moveOrSwap, occupant, setRecipeAt, setServingsAt, type MealSlot, type PlanState, type Slot } from "@/lib/meal-plan";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
+import { addBatch, cookedOn, moveConflicts, moveCookingDay, removeBatch, restoreBatch, servingDateChoices, setServes, swapBatch, type Batch, type PlanState, type Serve } from "@/lib/meal-plan";
+import { batchTotal, batchYield, halfServings, serveAmount, shiftDate, weekdayOf, type HouseholdCounts } from "@shared/cooking-plan";
 import { baseServings } from "@/lib/ingredient-scale";
 import { recipeNameMatches } from "@/lib/planner-filters";
 import { usePlannerCopy } from "@/lib/planner-copy";
@@ -16,156 +19,167 @@ const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outli
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
 const primary = `${pill} bg-primary text-white hover:bg-primary-hover disabled:opacity-50`;
 const secondary = `${pill} border border-border bg-white text-foreground hover:bg-accent`;
+const text = `inline-flex min-h-11 items-center rounded-full px-2 text-sm font-medium text-primary hover:bg-accent ${focus}`;
 const choice = (active: boolean) =>
-  `min-h-11 rounded-lg border px-1 text-sm ${focus} ${active ? "border-primary bg-primary text-white" : "border-border bg-white text-foreground"}`;
+  `min-h-11 rounded-lg border px-2 text-sm ${focus} ${active ? "border-primary bg-primary text-white" : "border-border bg-white text-foreground"}`;
 
 type Modal =
-  | { kind: "pick"; slot: Slot }
-  | { kind: "move"; slot: Slot }
-  | { kind: "servings"; slot: Slot };
-
-/** One day of the shown week, in display order (Monday first). `day` is the plan day (0 = Sunday). */
-export type BoardDay = { day: number; short: string; long: string };
+  | { kind: "add"; date: string }
+  | { kind: "swap"; batch: Batch }
+  | { kind: "servings"; batch: Batch }
+  | { kind: "move"; date: string };
 
 type Props = {
   plan: PlanState;
+  week: string;
+  /** Today's date when the shown week is the current one. */
+  today: string | null;
+  lang: string;
   recipes: Map<string, PlannerRecipe>;
-  locked: boolean;
-  /** Applies an edit and persists it. Returns false when nothing was saved (the page shows the error). */
+  /** Applies an edit and saves it. Returns false when nothing was saved (the page shows the error). */
   commit: (edit: (plan: PlanState) => PlanState) => boolean;
-  notify: (message: string, destructive?: boolean) => void;
-  days: BoardDay[];
-  mealNames: Record<MealSlot, string>;
-  recipeHref: (recipeId: string) => string;
-  /** Eligible recipes for one slot, best first (Swap and Choose recipe). */
-  options: (slot: Slot) => PlannerRecipe[];
+  recipeHref: (batch: Batch) => string;
+  /** Eligible recipes for a weekday (0 = Sunday), best first (+ Add a dish, Swap dish). */
+  options: (day: number) => PlannerRecipe[];
   onPicked?: (recipeId: string) => void;
-  servingsFallback: number | null;
+  household: HouseholdCounts | null;
   timeMode: RecipeTimeMode;
 };
 
-function Stepper({ value, onChange, label, fewer, more }: { value: number; onChange: (value: number) => void; label: string; fewer: string; more: string }) {
-  return (
-    <div role="group" aria-label={label} className="inline-flex items-center rounded-full border border-border">
-      <button type="button" aria-label={fewer} disabled={value <= 1} onClick={() => onChange(value - 1)} className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Minus className="h-4 w-4" aria-hidden="true" /></button>
-      <span className="min-w-8 text-center text-sm font-medium" aria-live="polite" data-testid="servings-value">{value}</span>
-      <button type="button" aria-label={more} disabled={value >= 99} onClick={() => onChange(value + 1)} className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Plus className="h-4 w-4" aria-hidden="true" /></button>
-    </div>
-  );
+export function useDateText(lang: string) {
+  const day = new Intl.DateTimeFormat(lang, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+  const long = new Intl.DateTimeFormat(lang, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
+  const list = new Intl.ListFormat(lang, { style: "short", type: "conjunction" });
+  const at = (date: string) => new Date(`${date}T12:00:00Z`);
+  const number = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  return { short: (date: string) => day.format(at(date)), long: (date: string) => long.format(at(date)),
+    list: (dates: string[]) => list.format(dates.map(d => day.format(at(d)))), number: (n: number) => number.format(n) };
 }
+const yieldOf = (batch: Batch, recipe: PlannerRecipe | undefined) => batchYield(batch, baseServings(recipe?.servings));
 
-function SlotCard({ slot, day, props, onOpen }: { slot: Slot; day: BoardDay; props: Props; onOpen: (modal: Modal) => void }) {
+function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen: (modal: Modal) => void }) {
   const t = usePlannerCopy();
-  const { plan, recipes, locked, mealNames, recipeHref, timeMode } = props;
-  const { meal } = slot;
-  const found = occupant(plan, meal, slot.day);
-  const recipe = found ? recipes.get(found.recipeId) : undefined;
-  const continued = !!found && found.startDay < slot.day;
-  const drop = useDroppable({ id: `drop-${meal}-${slot.day}`, data: slot, disabled: locked });
-  const drag = useDraggable({ id: `slot-${meal}-${slot.day}`, data: { from: slot }, disabled: locked || !recipe || continued });
-  const title = recipe?.title ?? "";
-  const label = recipe ? t("slotFilled", { day: day.long, meal: mealNames[meal], title }) : t("slotEmpty", { day: day.long, meal: mealNames[meal] });
+  const toastApi = useToast();
+  const { plan, recipes, lang, timeMode, commit } = props;
+  const dates = useDateText(lang);
+  const recipe = recipes.get(batch.recipeId);
+  if (!recipe) return null;
+  const recipeYield = yieldOf(batch, recipe);
+  const total = batchTotal(batch, baseServings(recipe.servings));
+  const remove = () => {
+    const index = plan.batches.findIndex(b => b.id === batch.id);
+    if (!commit(p => removeBatch(p, batch.id))) return;
+    toastApi.toast({ title: t("removed", { title: recipe.title }), action: <ToastAction altText={t("undo")} data-testid="undo-remove-dish"
+      onClick={() => commit(p => restoreBatch(p, batch, index))}>{t("undo")}</ToastAction> });
+  };
   return (
-    <article ref={drop.setNodeRef} aria-label={label} data-testid={`cell-${meal}-${slot.day}`} data-recipe={recipe?.id ?? ""}
-      className={`rounded-lg border p-2 ${drop.isOver ? "border-primary bg-primary/10" : recipe ? "border-border bg-white" : "border-dashed border-amber-300 bg-amber-50/60"}`}>
-      <div ref={drag.setNodeRef} {...(locked || continued ? {} : drag.listeners)} className={drag.isDragging ? "opacity-40" : ""}>
-        <div className="flex items-start gap-1">
-          <p className="min-w-0 flex-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{mealNames[meal]}</p>
-          {recipe && !locked && !continued && (
-            <DropdownMenu>
-              <DropdownMenuTrigger aria-label={t("more", { title })} data-testid={`menu-${meal}-${slot.day}`}
-                className={`-me-1 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-foreground/5 ${focus}`}><MoreHorizontal className="h-4 w-4" aria-hidden="true" /></DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => onOpen({ kind: "servings", slot })} data-testid={`servings-${meal}-${slot.day}`}>{t("changeServings")}</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onOpen({ kind: "move", slot })} data-testid={`move-${meal}-${slot.day}`}>{t("move")}</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-        {recipe ? (
-          <div className="space-y-1">
-            <Link href={recipeHref(recipe.id)} className={`block break-words text-sm font-medium leading-snug text-foreground hover:underline ${focus}`} data-testid={`recipe-link-${meal}-${slot.day}`}>
-              {continued ? "↳ " : ""}{title}
-            </Link>
-            <RecipeMeta recipe={{ ...recipe, servings: found?.servings ? String(found.servings) : recipe.servings }} mode={timeMode}
-              className="gap-x-3 text-xs [&_svg]:h-3.5 [&_svg]:w-3.5" testId={`meta-${meal}-${slot.day}`} />
-            <RecipeViewRows recipe={recipe} testId={`view-${meal}-${slot.day}`} />
-          </div>
-        ) : (
-          <p className="text-sm text-amber-900" data-testid={`open-${meal}-${slot.day}`}>{locked ? "—" : t("noEligible")}</p>
-        )}
+    <article className="flex flex-col gap-1 rounded-lg border border-border bg-white p-3" data-testid={`dish-${batch.id}`} data-recipe={recipe.id}
+      aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
+      {recipe.image && <Link href={props.recipeHref(batch)} tabIndex={-1} aria-hidden="true">
+        <img src={recipe.image} alt="" className="mb-1 aspect-[16/9] w-full rounded-md object-cover" /></Link>}
+      <Link href={props.recipeHref(batch)} className={`break-words text-base font-semibold leading-snug text-foreground hover:underline ${focus}`} data-testid={`dish-link-${batch.id}`}>
+        {recipe.title}
+      </Link>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <RecipeMeta recipe={{ ...recipe, servings: null }} mode={timeMode} className="text-sm" />
+        <span className="font-semibold text-foreground" data-testid={`dish-make-${batch.id}`}>
+          {recipeYield === null && total === 0 ? t("yieldNeeded") : t("make", { count: dates.number(total) })}
+        </span>
       </div>
-      {!locked && !continued && (
-        <button type="button" onClick={() => onOpen({ kind: "pick", slot })} data-testid={`${recipe ? "swap" : "choose"}-${meal}-${slot.day}`}
-          className={`mt-1 -ms-1 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-medium text-primary hover:bg-accent ${focus}`}>
-          {recipe ? t("swap") : t("choose")}
-        </button>
-      )}
+      <p className="text-sm text-muted-foreground" data-testid={`dish-dates-${batch.id}`}>{t("forDates", { dates: dates.list(batch.serves.map(s => s.date)) })}</p>
+      <RecipeViewRows recipe={recipe} testId={`dish-view-${batch.id}`} />
+      <div className="-ms-2 mt-1 flex flex-wrap gap-x-1">
+        <button type="button" className={text} onClick={() => onOpen({ kind: "servings", batch })} data-testid={`edit-servings-${batch.id}`}>{t("editServings")}</button>
+        <button type="button" className={text} onClick={() => onOpen({ kind: "swap", batch })} data-testid={`swap-${batch.id}`}>{t("swapDish")}</button>
+        <button type="button" className={`${text} text-muted-foreground`} onClick={remove} data-testid={`remove-${batch.id}`}>{t("removeDish")}</button>
+      </div>
     </article>
   );
 }
 
 export function PlannerBoard(props: Props) {
-  const { plan, recipes, locked, commit, notify, days, mealNames, options, onPicked, servingsFallback } = props;
+  const { plan, week, today, lang, recipes, commit, options, onPicked, household } = props;
   const t = usePlannerCopy();
+  const { toast } = useToast();
+  const dates = useDateText(lang);
   const [modal, setModal] = useState<Modal | null>(null);
-  // Mouse drags after a short move; touch needs a long press, so scrolling the agenda on a phone never starts a drag.
-  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }));
-  const dayOf = (day: number) => days.find(d => d.day === day)!;
-  const name = ({ day, meal }: Slot) => ({ day: dayOf(day).long, meal: mealNames[meal].toLowerCase() });
   const close = () => setModal(null);
-  const move = (from: Slot, to: Slot) => { if (commit(p => moveOrSwap(p, from, to))) notify(t("moved", name(to))); };
+  const days = Array.from({ length: 7 }, (_, i) => shiftDate(week, i));
 
-  const onDragEnd = ({ active, over }: DragEndEvent) => {
-    const to = over?.data.current as Slot | undefined;
-    const from = active.data.current?.from as Slot | undefined;
-    if (to && from && !locked) move(from, to);
-  };
-
-  const current = modal ? occupant(plan, modal.slot.meal, modal.slot.day) : null;
   return (
-    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-      {/* One layout: a stacked agenda on phones; on wide screens seven columns whose meal rows line up (subgrid). */}
-      <div className="space-y-5 lg:grid lg:grid-cols-7 lg:grid-rows-[auto_repeat(3,auto)] lg:gap-x-2 lg:gap-y-2 lg:space-y-0" data-testid="week-calendar">
-        {days.map(day => (
-          <section key={day.day} aria-labelledby={`day-heading-${day.day}`} className="space-y-2 lg:row-span-4 lg:grid lg:grid-rows-subgrid lg:gap-y-2 lg:space-y-0" data-testid={`day-${day.day}`}>
-            <h2 id={`day-heading-${day.day}`} className="text-base font-medium text-foreground lg:text-sm">
-              <span className="lg:hidden">{day.long}</span><span className="hidden lg:inline">{day.short}</span>
+    <>
+      <div className="divide-y divide-border border-y border-border" data-testid="week-calendar">
+        {days.map(date => {
+          const dishes = cookedOn(plan, date).filter(b => recipes.has(b.recipeId));
+          const isToday = date === today;
+          const heading = (
+            <h2 id={`day-${date}`} className={`text-base font-semibold lg:w-44 lg:shrink-0 lg:pt-1 ${isToday ? "text-primary" : "text-foreground"}`}>
+              {dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}
             </h2>
-            {mealSlots.map(meal => <SlotCard key={meal} slot={{ day: day.day, meal }} day={day} props={props} onOpen={setModal} />)}
-          </section>
-        ))}
+          );
+          const add = <button type="button" className={text} onClick={() => setModal({ kind: "add", date })} data-testid={`add-dish-${date}`}>{t("addDish")}</button>;
+          return (
+            <section key={date} aria-labelledby={`day-${date}`} data-testid={`day-${date}`} data-today={isToday || undefined}
+              className={`py-3 lg:flex lg:gap-6 ${isToday ? "bg-accent/40 -mx-2 px-2" : ""}`}>
+              {heading}
+              {dishes.length === 0 ? (
+                <div className="flex flex-wrap items-center gap-x-3 lg:flex-1" data-testid={`empty-${date}`}>
+                  <p className="text-sm text-muted-foreground">{t("noCooking")}</p>{add}
+                </div>
+              ) : (
+                <div className="mt-2 lg:mt-0 lg:flex-1">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
+                  </div>
+                  <div className="-ms-2 mt-2 flex flex-wrap gap-x-1">
+                    {add}
+                    <button type="button" className={text} onClick={() => setModal({ kind: "move", date })} data-testid={`move-day-${date}`}>{t("moveDay")}</button>
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
 
       <Dialog open={!!modal} onOpenChange={open => !open && close()}>
-        <DialogContent className="max-w-md" data-testid="planner-dialog">
-          {modal?.kind === "pick" && (
-            <PickForm slot={modal.slot} currentId={current?.recipeId ?? null} title={t(current ? "swapTitle" : "chooseTitle", name(modal.slot))}
-              options={options(modal.slot)} onClose={close}
+        <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto" data-testid="planner-dialog">
+          {modal?.kind === "add" && (
+            <PickForm title={t("addTitle", { date: dates.long(modal.date) })} options={options(weekdayOf(modal.date))} currentId={null} onClose={close}
               onPick={recipe => {
-                if (!commit(p => setRecipeAt(p, modal.slot, recipe.id, servingsFallback ?? baseServings(recipe.servings)))) return;
+                if (!commit(p => addBatch(p, recipe.id, modal.date, household))) return;
                 onPicked?.(recipe.id);
-                notify(t("swapped", { ...name(modal.slot), title: recipe.title }));
+                toast({ title: t("added", { title: recipe.title, date: dates.short(modal.date) }) });
                 close();
               }} />
           )}
-          {modal?.kind === "move" && current && (
-            <MoveForm from={modal.slot} plan={plan} title={recipes.get(current.recipeId)?.title ?? ""} days={days} mealNames={mealNames}
-              titleOf={id => recipes.get(id)?.title ?? ""} onClose={close} onSubmit={to => { move(modal.slot, to); close(); }} />
+          {modal?.kind === "swap" && (
+            <PickForm title={t("swapTitle", { title: recipes.get(modal.batch.recipeId)?.title ?? "" })} options={options(weekdayOf(modal.batch.cookDate))}
+              currentId={modal.batch.recipeId} onClose={close}
+              onPick={recipe => {
+                if (!commit(p => swapBatch(p, modal.batch.id, recipe.id))) return;
+                onPicked?.(recipe.id);
+                toast({ title: t("swapped", { title: recipe.title }) });
+                close();
+              }} />
           )}
-          {modal?.kind === "servings" && current && (
-            <ServingsForm title={recipes.get(current.recipeId)?.title ?? ""} initial={current.servings ?? servingsFallback ?? baseServings(recipes.get(current.recipeId)?.servings) ?? 1}
-              onClose={close} onSubmit={value => commit(p => setServingsAt(p, modal.slot.meal, modal.slot.day, value)) && close()} />
+          {modal?.kind === "servings" && (
+            <ServingsForm batch={modal.batch} recipe={recipes.get(modal.batch.recipeId)} week={week} lang={lang} household={household} onClose={close}
+              onSubmit={(serves, recipeYield) => commit(p => setServes(p, modal.batch.id, serves, recipeYield)) && close()} />
+          )}
+          {modal?.kind === "move" && (
+            <MoveForm plan={plan} from={modal.date} days={days} recipes={recipes} lang={lang} onClose={close}
+              onSubmit={next => { if (commit(() => next)) { toast({ title: t("moved", { date: dates.short(next.batches.at(-1)!.cookDate) }) }); close(); } }} />
           )}
         </DialogContent>
       </Dialog>
-    </DndContext>
+    </>
   );
 }
 
-/** The recipe picker for one slot: eligible alternatives, best first, with a name search. Cancel keeps the current recipe. */
-function PickForm({ slot, currentId, title, options, onPick, onClose }: {
-  slot: Slot; currentId: string | null; title: string; options: PlannerRecipe[]; onPick: (recipe: PlannerRecipe) => void; onClose: () => void;
+/** The recipe picker for a day: eligible recipes, best first, with a name search. Cancel changes nothing. */
+function PickForm({ title, currentId, options, onPick, onClose }: {
+  title: string; currentId: string | null; options: PlannerRecipe[]; onPick: (recipe: PlannerRecipe) => void; onClose: () => void;
 }) {
   const t = usePlannerCopy();
   const [query, setQuery] = useState("");
@@ -181,7 +195,7 @@ function PickForm({ slot, currentId, title, options, onPick, onClose }: {
         <input type="search" value={query} onChange={e => setQuery(e.target.value)} aria-label={t("search")} placeholder={t("search")} maxLength={120}
           className="min-h-11 w-full rounded-full border border-border bg-white ps-9 pe-3 text-base" data-testid="pick-search" />
       </div>
-      <ul className="max-h-[50vh] space-y-2 overflow-y-auto" data-testid={`pick-list-${slot.meal}-${slot.day}`}>
+      <ul className="max-h-[50vh] space-y-2 overflow-y-auto" data-testid="pick-list">
         {shown.length === 0 && <li className="text-sm text-muted-foreground">{t("noOptions")}</li>}
         {shown.map(recipe => (
           <li key={recipe.id}>
@@ -198,63 +212,144 @@ function PickForm({ slot, currentId, title, options, onPick, onClose }: {
   );
 }
 
-/** Move meal without dragging: pick a day and meal. An occupied target trades places with this meal. */
-function MoveForm({ from, plan, title, days, mealNames, titleOf, onSubmit, onClose }: {
-  from: Slot; plan: PlanState; title: string; days: BoardDay[]; mealNames: Record<MealSlot, string>; titleOf: (id: string) => string;
-  onSubmit: (to: Slot) => void; onClose: () => void;
+function Stepper({ value, onChange, label, fewer, more, testId }: { value: number; onChange: (value: number) => void; label: string; fewer: string; more: string; testId: string }) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex items-center gap-1">
+      <span className="w-14 text-xs text-muted-foreground">{label}</span>
+      <span className="inline-flex items-center rounded-full border border-border">
+        <button type="button" aria-label={fewer} disabled={value <= 0} onClick={() => onChange(value - 1)} className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Minus className="h-4 w-4" aria-hidden="true" /></button>
+        <span className="min-w-6 text-center text-sm font-medium" aria-live="polite" data-testid={testId}>{value}</span>
+        <button type="button" aria-label={more} disabled={value >= 20} onClick={() => onChange(value + 1)} className={`flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40 ${focus}`}><Plus className="h-4 w-4" aria-hidden="true" /></button>
+      </span>
+    </div>
+  );
+}
+
+type Row = { on: boolean; mode: "counts" | "amount"; adults: number; kids: number; amount: string };
+/** Edit servings: pick serving dates (any, from the cooking day to the end of next week) and, per date, adults and kids or
+ * a direct amount in half servings. The total updates as you go; Cancel discards everything. */
+function ServingsForm({ batch, recipe, week, lang, household, onSubmit, onClose }: {
+  batch: Batch; recipe: PlannerRecipe | undefined; week: string; lang: string; household: HouseholdCounts | null;
+  onSubmit: (serves: Serve[], recipeYield?: number) => void; onClose: () => void;
 }) {
   const t = usePlannerCopy();
-  const [day, setDay] = useState(from.day);
-  const [meal, setMeal] = useState<MealSlot>(from.meal);
-  const same = day === from.day && meal === from.meal;
-  const other = same ? null : occupant(plan, meal, day);
+  const dates = useDateText(lang);
+  const original = baseServings(recipe?.servings);
+  const known = batchYield(batch, original);
+  const [yieldText, setYieldText] = useState(known ? String(known) : "");
+  const recipeYield = known ?? (Number(yieldText) > 0 ? halfServings(Number(yieldText)) : null);
+  const fresh = (): Row => household ? { on: true, mode: "counts", adults: household.adults, kids: household.kids, amount: "" }
+    : { on: true, mode: "amount", adults: 0, kids: 0, amount: recipeYield ? String(recipeYield) : "" };
+  const [rows, setRows] = useState<Record<string, Row>>(() => Object.fromEntries(batch.serves.map(s => [s.date,
+    s.servings === undefined && (s.adults !== undefined || s.kids !== undefined)
+      ? { on: true, mode: "counts", adults: s.adults ?? 0, kids: s.kids ?? 0, amount: "" }
+      : { on: true, mode: "amount", adults: household?.adults ?? 0, kids: household?.kids ?? 0, amount: s.servings !== undefined ? String(s.servings) : known ? String(known) : "" }])));
+  const set = (date: string, patch: Partial<Row>) => setRows(r => ({ ...r, [date]: { ...(r[date] ?? fresh()), ...patch } }));
+  const amountOf = (row: Row) => row.mode === "counts" ? row.adults + row.kids * 0.5 : Number(row.amount) > 0 ? halfServings(Number(row.amount)) : 0;
+  const selected = Object.entries(rows).filter(([, row]) => row.on).sort(([a], [b]) => a.localeCompare(b));
+  const total = selected.reduce((sum, [, row]) => sum + amountOf(row), 0);
+  const error = !known && !recipeYield ? t("errYield") : !selected.length ? t("errNoDates") : !(total > 0) || selected.some(([, r]) => r.mode === "amount" && !(amountOf(r) > 0)) ? t("errTotal") : null;
+  const save = () => {
+    if (error) return;
+    const serves: Serve[] = selected.map(([date, row]) => row.mode === "counts" ? { date, adults: row.adults, kids: row.kids } : { date, servings: amountOf(row) });
+    onSubmit(serves, known ? undefined : recipeYield ?? undefined);
+  };
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{t("moveTitle", { title })}</DialogTitle>
-        <DialogDescription className="sr-only">{t("day")} / {t("meal")}</DialogDescription>
+        <DialogTitle>{t("servingsTitle", { title: recipe?.title ?? "" })}</DialogTitle>
+        <DialogDescription className="sr-only">{t("servingDates")}</DialogDescription>
       </DialogHeader>
-      <div className="space-y-4">
-        <fieldset>
-          <legend className="mb-2 text-xs font-medium text-muted-foreground">{t("day")}</legend>
-          <div className="grid grid-cols-7 gap-1.5">
-            {days.map(d => (
-              <button key={d.day} type="button" aria-pressed={day === d.day} aria-label={d.long} onClick={() => setDay(d.day)} data-testid={`move-day-${d.day}`} className={`${choice(day === d.day)} text-xs`}>{d.short}</button>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend className="mb-2 text-xs font-medium text-muted-foreground">{t("meal")}</legend>
-          <div className="grid grid-cols-3 gap-1.5">
-            {mealSlots.map(slot => (
-              <button key={slot} type="button" aria-pressed={meal === slot} onClick={() => setMeal(slot)} data-testid={`move-meal-${slot}`} className={choice(meal === slot)}>{mealNames[slot]}</button>
-            ))}
-          </div>
-        </fieldset>
-        {other && <p role="status" className="rounded-lg bg-foreground/5 p-3 text-sm" data-testid="move-trade">
-          {t("moveTrade", { day: days.find(d => d.day === day)!.long, meal: mealNames[meal].toLowerCase(), title: titleOf(other.recipeId) })}</p>}
-        <DialogFooter className="gap-2 sm:gap-2">
-          <button type="button" className={secondary} onClick={onClose}>{t("cancel")}</button>
-          <button type="button" disabled={same} onClick={() => onSubmit({ day, meal })} data-testid="button-confirm-move" className={primary}>{t("moveBtn")}</button>
-        </DialogFooter>
-      </div>
+      {!known && <label className="grid gap-1 text-sm">
+        <span>{t("yieldAsk")}</span>
+        <input type="number" inputMode="decimal" min={0.5} step={0.5} value={yieldText} onChange={e => setYieldText(e.target.value)} aria-label={t("yieldLabel")}
+          className="min-h-11 w-28 rounded-lg border border-border bg-white px-3 text-base" data-testid="servings-yield" />
+      </label>}
+      <fieldset>
+        <legend className="mb-2 text-xs font-medium text-muted-foreground">{t("servingDates")}</legend>
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+          {servingDateChoices(batch.cookDate, week).map(date => (
+            <button key={date} type="button" aria-pressed={!!rows[date]?.on} aria-label={dates.long(date)} data-testid={`serve-date-${date}`}
+              onClick={() => set(date, { on: !rows[date]?.on })} className={`${choice(!!rows[date]?.on)} text-xs`}>{dates.short(date)}</button>
+          ))}
+        </div>
+      </fieldset>
+      <ul className="space-y-3">
+        {selected.map(([date, row]) => (
+          <li key={date} className="rounded-lg bg-foreground/5 p-2" data-testid={`serve-row-${date}`}>
+            <p className="text-sm font-medium">{dates.long(date)} · {dates.number(amountOf(row))}</p>
+            {row.mode === "counts" ? <div className="flex flex-wrap gap-x-4">
+              <Stepper label={t("adults")} value={row.adults} onChange={v => set(date, { adults: v })} fewer={t("fewer", { who: t("adults") })} more={t("more", { who: t("adults") })} testId={`adults-${date}`} />
+              <Stepper label={t("kids")} value={row.kids} onChange={v => set(date, { kids: v })} fewer={t("fewer", { who: t("kids") })} more={t("more", { who: t("kids") })} testId={`kids-${date}`} />
+            </div> : <input type="number" inputMode="decimal" min={0.5} max={100} step={0.5} value={row.amount} onChange={e => set(date, { amount: e.target.value })}
+              aria-label={t("amountFor", { date: dates.long(date) })} className="min-h-11 w-28 rounded-lg border border-border bg-white px-3 text-base" data-testid={`amount-${date}`} />}
+            <button type="button" className={`${text} -ms-2`} data-testid={`mode-${date}`}
+              onClick={() => set(date, row.mode === "counts" ? { mode: "amount", amount: String(amountOf(row) || "") } : { mode: "counts" })}>
+              {row.mode === "counts" ? t("setAmount") : t("useCounts")}</button>
+          </li>
+        ))}
+      </ul>
+      <p className="text-base font-semibold" aria-live="polite" data-testid="servings-total">{t("total", { count: dates.number(total) })}</p>
+      {error && <p role="alert" className="text-sm text-destructive" data-testid="servings-error">{error}</p>}
+      <DialogFooter className="gap-2 sm:gap-2">
+        <button type="button" className={secondary} onClick={onClose} data-testid="servings-cancel">{t("cancel")}</button>
+        <button type="button" className={primary} onClick={save} disabled={!!error} data-testid="button-save-servings">{t("save")}</button>
+      </DialogFooter>
     </>
   );
 }
 
-function ServingsForm({ title, initial, onSubmit, onClose }: { title: string; initial: number; onSubmit: (value: number) => void; onClose: () => void }) {
+/** Move cooking day: every dish of the day moves together. Portions that would come before the new cooking day are listed
+ * by dish, date and amount; each is moved to the new day or removed before Move is enabled. Applied as one change. */
+function MoveForm({ plan, from, days, recipes, lang, onSubmit, onClose }: {
+  plan: PlanState; from: string; days: string[]; recipes: Map<string, PlannerRecipe>; lang: string;
+  onSubmit: (next: PlanState) => void; onClose: () => void;
+}) {
   const t = usePlannerCopy();
-  const [value, setValue] = useState(initial);
+  const dates = useDateText(lang);
+  const [to, setTo] = useState<string | null>(null);
+  const [resolve, setResolve] = useState<Record<string, "move" | "remove">>({});
+  const amount = (batch: Batch, serve: Serve) => serveAmount(serve, yieldOf(batch, recipes.get(batch.recipeId)));
+  const conflicts = to ? moveConflicts(plan, from, to) : [];
+  const next = to ? moveCookingDay(plan, from, to, resolve, amount) : null;
+  const unresolved = conflicts.some(c => !resolve[`${c.batchId}:${c.date}`]);
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{t("servingsTitle", { title })}</DialogTitle>
-        <DialogDescription className="sr-only">{t("servingsLabel")}</DialogDescription>
+        <DialogTitle>{t("moveTitle", { date: dates.long(from) })}</DialogTitle>
+        <DialogDescription className="sr-only">{t("moveTo")}</DialogDescription>
       </DialogHeader>
-      <Stepper value={value} onChange={setValue} label={t("servingsLabel")} fewer={t("fewer")} more={t("more2")} />
+      <fieldset>
+        <legend className="mb-2 text-xs font-medium text-muted-foreground">{t("moveTo")}</legend>
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+          {days.filter(d => d !== from).map(d => (
+            <button key={d} type="button" aria-pressed={to === d} aria-label={dates.long(d)} data-testid={`move-to-${d}`}
+              onClick={() => { setTo(d); setResolve({}); }} className={`${choice(to === d)} text-xs`}>{dates.short(d)}</button>
+          ))}
+        </div>
+      </fieldset>
+      {to && conflicts.length > 0 && <div className="space-y-2" data-testid="move-conflicts">
+        <p className="text-sm">{t("moveConflicts")}</p>
+        {conflicts.map(c => {
+          const batch = plan.batches.find(b => b.id === c.batchId)!;
+          const key = `${c.batchId}:${c.date}`;
+          return <div key={key} role="group" aria-label={t("conflictRow", { title: recipes.get(batch.recipeId)?.title ?? "", date: dates.short(c.date), count: "" })}
+            className="rounded-lg bg-foreground/5 p-2" data-testid={`conflict-${key}`}>
+            <p className="text-sm font-medium">{t("conflictRow", { title: recipes.get(batch.recipeId)?.title ?? "", date: dates.long(c.date),
+              count: dates.number(amount(batch, batch.serves.find(s => s.date === c.date)!)) })}</p>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              <button type="button" aria-pressed={resolve[key] === "move"} className={choice(resolve[key] === "move")} data-testid={`conflict-move-${key}`}
+                onClick={() => setResolve(r => ({ ...r, [key]: "move" }))}>{t("conflictMove", { date: dates.short(to) })}</button>
+              <button type="button" aria-pressed={resolve[key] === "remove"} className={choice(resolve[key] === "remove")} data-testid={`conflict-remove-${key}`}
+                onClick={() => setResolve(r => ({ ...r, [key]: "remove" }))}>{t("conflictRemove")}</button>
+            </div>
+          </div>;
+        })}
+      </div>}
+      {to && !next && <p role="status" className="text-sm text-muted-foreground" data-testid="move-problem">{unresolved ? t("moveUnresolved") : t("moveEmpty")}</p>}
       <DialogFooter className="gap-2 sm:gap-2">
-        <button type="button" className={secondary} onClick={onClose}>{t("cancel")}</button>
-        <button type="button" className={primary} onClick={() => onSubmit(value)} data-testid="button-save-servings">{t("save")}</button>
+        <button type="button" className={secondary} onClick={onClose} data-testid="move-cancel">{t("cancel")}</button>
+        <button type="button" disabled={!next} onClick={() => next && onSubmit(next)} data-testid="button-confirm-move" className={primary}>{t("moveBtn")}</button>
       </DialogFooter>
     </>
   );
