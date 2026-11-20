@@ -4,7 +4,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { cookedOn, readPlan, removeBatch, servedFrom, writePlan, type Batch } from "@/lib/meal-plan";
-import { batchTotal } from "@shared/cooking-plan";
+import { batchTotal, mealOf, mealSlots, type MealSlot } from "@shared/cooking-plan";
 import { baseServings } from "@/lib/ingredient-scale";
 import { calendarDate, currentWeek, plannerRecipeURL } from "@/lib/week-plan";
 import { MealGenerator, type MealAdded, type MealTarget } from "@/components/meal-generator";
@@ -15,7 +15,6 @@ import { MealSuggestion } from "@/components/meal-suggestion";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
-import { RecipeViewRows } from "@/components/recipe-summary";
 import { RecipeCard } from "@/components/recipe-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { recipeStageMinutes } from "@/lib/recipe-time";
@@ -40,8 +39,8 @@ export default function Home() {
   const [suggesting, setSuggesting] = useState(false);
   const catalog = useRecipeCatalog();
   const { toast } = useToast();
-  // Focus goes back to the Today section's + Add a dish button.
-  const focusAdd = () => requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid="home-add-dish"]`)?.focus());
+  // Focus goes back to that meal's + Add button.
+  const focusAdd = (meal: MealSlot) => requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid="home-add-${meal.toLowerCase()}"]`)?.focus());
   const added = ({ batchId, recipeId, date }: MealAdded) => {
     setPlan(readPlan());
     toast({ title: text("genAdded"), action: <ToastAction altText={text("genUndo")} data-testid="home-meal-undo" onClick={() => {
@@ -91,25 +90,35 @@ export default function Home() {
             </div>
             {plan.batches.some(b => b.cookDate === today || b.serves.some(x => x.date === today)) && (catalog.isPending || catalog.isError) ? (
               <SectionState error={catalog.isError} retry={() => catalog.refetch()} text={text} />
-            ) : todays.length === 0 ? (
-              <p className="py-2 text-sm text-muted-foreground" data-testid="home-nothing-today">{text("nothingToday")}</p>
             ) : (
-              <ul data-testid="home-today" className="grid gap-3">
-                {todays.map(([batch, cookedToday]) => {
-                  const recipe = recipes.get(batch.recipeId)!;
-                  const href = plannerRecipeURL(recipe.id, currentWeek(), batch.id);
-                  const line = <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>;
+              // Breakfast, Lunch and Dinner, as in the Week (2026-11-20); each meal has its own + Add.
+              <div data-testid="home-today" className="grid gap-2">
+                {mealSlots.map(meal => {
+                  const list = todays.filter(([batch]) => mealOf(batch) === meal);
+                  const name = t(`meals.${meal.toLowerCase()}`);
                   return (
-                    <li key={batch.id}>
-                      <RecipeCard recipe={{ ...recipe, servings: null }} href={href} row={!phone} testId={`home-meal-${recipe.id}`}
-                        ids={{ view: `home-meal-view-${recipe.id}` }}>{line}</RecipeCard>
-                    </li>
+                    <div key={meal} data-testid={`home-slot-${meal.toLowerCase()}`} className={list.length ? "" : "flex flex-wrap items-center gap-x-3"}>
+                      <h3 className="w-28 text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</h3>
+                      {list.length > 0 && <ul className="mt-1 grid gap-3">
+                        {list.map(([batch, cookedToday]) => {
+                          const recipe = recipes.get(batch.recipeId)!;
+                          const href = plannerRecipeURL(recipe.id, currentWeek(), batch.id);
+                          const line = <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>;
+                          return (
+                            <li key={batch.id}>
+                              <RecipeCard recipe={{ ...recipe, servings: null }} href={href} row={!phone} testId={`home-meal-${recipe.id}`}
+                                ids={{ view: `home-meal-view-${recipe.id}` }}>{line}</RecipeCard>
+                            </li>
+                          );
+                        })}
+                      </ul>}
+                      <button type="button" onClick={() => setGenerating({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
+                        data-testid={`home-add-${meal.toLowerCase()}`} className="btn btn-text -ms-2">{text(`add${meal}`)}</button>
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
             )}
-            <button type="button" onClick={() => setGenerating({ meal: "Dinner", day: now.getDay(), date: today })} disabled={!catalog.data} data-testid="home-add-dish"
-              className="btn btn-text -ms-2">{text("addDish")}</button>
             {/* Available even when today is empty; never changes the Week or groceries. */}
             <button type="button" onClick={() => setSuggesting(true)} disabled={!catalog.data} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
           </section>
@@ -126,7 +135,7 @@ export default function Home() {
           </details>
         </div>
       </PageContainer>
-      <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={() => { setGenerating(null); focusAdd(); }} onAdded={added} />
+      <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={meal => { setGenerating(null); focusAdd(meal); }} onAdded={added} />
       <MealSuggestion meal={suggesting ? "Dinner" : null} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setSuggesting(false)} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
