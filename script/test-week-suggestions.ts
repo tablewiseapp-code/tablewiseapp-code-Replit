@@ -150,6 +150,8 @@ const deals: FoodDeal[] = [
 assert.deepEqual(weekDeals([], WEEK, []), [], "zero offers → no row");
 const offers = weekDeals(deals, WEEK, [teriyaki]);
 assert.deepEqual(offers.map(o => [o.deal.id, o.dish]), [["thighs", teriyaki.title], ["beef", null]], "matching offer first; expired one hidden");
+assert.deepEqual(weekDeals(deals, WEEK, [teriyaki], ["a"]).map(o => o.deal.id), ["beef"], "only My stores when chosen");
+assert.deepEqual(weekDeals(deals, WEEK, [teriyaki], ["Elsewhere"]), [], "no offer from my stores → no row");
 
 // ---- Plans saved before cooking days become dated dishes; a locked one stays approved (server/week-plans.ts).
 const legacy = fromLegacy(WEEK, [{ recipeId: "r1", mealType: "Dinner", startDay: 0, spanDays: 1, servings: 4 }, { recipeId: "r2", mealType: "Lunch", startDay: 3, spanDays: 2 }]);

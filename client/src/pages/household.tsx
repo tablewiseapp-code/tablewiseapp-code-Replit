@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
+import { StorePicker } from "@/components/store-picker";
 import { WeekFilterPanel, useWeekFilterChips } from "@/components/week-filter-panel";
 import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy } from "@/lib/household-copy";
@@ -146,7 +147,9 @@ export default function Household() {
     if (!catalog.data) { setError("catalog"); return; }
     setBusy(true); setError(null);
     try {
-      const saved = updateSettings(x => ({ ...draft, rev: x.rev, setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined } }));
+      // Stores are saved by the picker as they are tapped: keep the latest, not the draft's copy.
+      const saved = updateSettings(x => ({ ...draft, rev: x.rev, shopping: { ...draft.shopping, stores: x.shopping.stores },
+        setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined } }));
       // An approved cooking plan is never changed here.
       if (readPlan().approved !== null) { toast({ title: t("keptLocked") }); setLocation("/meals?plan"); return; }
       const result = resuggest(readPlan(), planner, saved, currentWeek(), fits);
@@ -259,6 +262,9 @@ export default function Household() {
         </header>
 
         {order.map(key => groups[key]())}
+
+        {/* Optional: Continue works with no store chosen. */}
+        <div className="border-b hairline py-4"><StorePicker /></div>
 
         <div className="sticky bottom-[var(--app-bottom-nav)] z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
           <p className="text-xs font-medium text-muted-foreground">{t("summary")}</p>

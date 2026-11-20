@@ -16,6 +16,8 @@ import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
 import { RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import type { Recipe } from "@/lib/storage";
 
@@ -51,6 +53,7 @@ export default function Home() {
     }}>{text("genUndo")}</ToastAction> });
   };
 
+  const phone = useIsMobile();
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
   const cooking = cookedOn(plan, today).filter(b => recipes.has(b.recipeId));
   const eating = servedFrom(plan, today).filter(b => recipes.has(b.recipeId));
@@ -91,20 +94,24 @@ export default function Home() {
             ) : todays.length === 0 ? (
               <p className="py-2 text-sm text-muted-foreground" data-testid="home-nothing-today">{text("nothingToday")}</p>
             ) : (
-              <ul data-testid="home-today">
+              <ul data-testid="home-today" className={phone ? "grid gap-3" : ""}>
                 {todays.map(([batch, cookedToday]) => {
                   const recipe = recipes.get(batch.recipeId)!;
+                  const href = plannerRecipeURL(recipe.id, currentWeek(), batch.id);
+                  const line = <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>;
                   return (
                     <li key={batch.id}>
-                      <Link href={plannerRecipeURL(recipe.id, currentWeek(), batch.id)} data-testid={`home-meal-${recipe.id}`}
+                      {phone ? <RecipeCard recipe={{ ...recipe, servings: null }} href={href} testId={`home-meal-${recipe.id}`}
+                        ids={{ view: `home-meal-view-${recipe.id}` }}>{line}</RecipeCard> :
+                      <Link href={href} data-testid={`home-meal-${recipe.id}`}
                         className="flex min-h-11 items-center gap-3 rounded-md py-1 hover:bg-foreground/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                         {recipe.image && <img src={recipe.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" />}
                         <span className="min-w-0">
                           <span className="block text-sm font-medium">{recipe.title}</span>
-                          <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>
+                          {line}
                           <RecipeViewRows recipe={recipe} testId={`home-meal-view-${recipe.id}`} />
                         </span>
-                      </Link>
+                      </Link>}
                     </li>
                   );
                 })}

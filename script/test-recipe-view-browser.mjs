@@ -48,17 +48,17 @@ try {
   await click("section-recipe-view-toggle");
   await until(`Boolean(${q("recipe-view-nutrition")})`, "Recipe View opens");
   eq(await ev(`${q("recipe-view-nutrition")}.getAttribute("aria-checked")`), "true", "legacy Show nutrition kept");
-  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving · Protein 32 g · Carbs 45 g", "defaults: Protein and Carbs");
+  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving Protein 32 g Carbs 45 g", "defaults: Protein and Carbs");
   eq(await text("section-recipe-view-summary"), "Protein, Carbs · No extra details", "summary");
 
   // Preview follows every change at once; nutrient choices survive Off → On.
   await click("recipe-view-nutrient-sugars");
-  await until(`${q("recipe-view-preview-rows-nutrition")}?.innerText.includes("Sugars 3 g")`, "sugars in preview");
+  await until(`${q("recipe-view-preview-rows-nutrition")}?.innerText.replace(/\\s+/g, " ").includes("Sugars 3 g")`, "sugars in preview");
   await click("recipe-view-nutrition");
   await until(`!${q("recipe-view-preview-rows")} && !${q("recipe-view-nutrient-protein")}`, "nutrition off hides the row and the choices");
   await click("recipe-view-nutrition");
   await until(`Boolean(${q("recipe-view-preview-rows-nutrition")})`, "nutrition back on");
-  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving · Protein 32 g · Carbs 45 g · Sugars 3 g", "choices kept");
+  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving Protein 32 g Carbs 45 g Sugars 3 g", "choices kept");
   await click("recipe-view-detail-maintool"); await click("recipe-view-detail-dietarytags");
   await until(`${q("recipe-view-preview-rows-details")}?.innerText.includes("Oven")`, "details in preview");
   eq(await text("recipe-view-preview-rows-details"), "Gluten-free, Dairy-free · Oven", "details in fixed order, below nutrition");
@@ -71,7 +71,7 @@ try {
   await go("/settings", `Boolean(${q("section-recipe-view")})`);
   await click("section-recipe-view-toggle");
   await until(`Boolean(${q("recipe-view-preview-rows-details")})`, "after reload");
-  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving · Protein 32 g · Carbs 45 g · Sugars 3 g", "reload keeps nutrients");
+  eq(await text("recipe-view-preview-rows-nutrition"), "Per serving Protein 32 g Carbs 45 g Sugars 3 g", "reload keeps nutrients");
 
   // Recipes with and without nutrition.
   const recipes = await ev(`fetch("/api/recipes").then(r => r.json())`);
@@ -82,7 +82,7 @@ try {
 
   await go("/recipes", `Boolean(${q(`card-recipe-${rich.id}`)})`);
   await until(`Boolean(${q(`recipe-view-${rich.id}-nutrition`)})`, "Recipes card nutrition");
-  ok((await text(`recipe-view-${rich.id}-nutrition`)).startsWith("Est. per serving · Protein"), "estimate label on the Recipes card");
+  ok((await text(`recipe-view-${rich.id}-nutrition`)).startsWith("Est. per serving Protein"), "estimate label on the Recipes card");
   ok((await text(`recipe-view-${rich.id}-protein`)).includes(`${per("proteinG")} g`), "protein per serving");
   eq(await ev(`Boolean(${q(`recipe-view-${bare.id}-nutrition`)})`), false, "imported recipe without nutrition: no nutrition row");
 
@@ -118,8 +118,8 @@ try {
   await go("/", `Boolean(${q(`home-meal-view-${three[2].id}-nutrition`)})`);
   for (const r of three) ok((await text(`home-meal-view-${r.id}-nutrition`)).includes("Calories"), `Home shows nutrition for ${r.id}`);
   ok((await text(`home-meal-meta-${three[0].id}`)).length > 0, "Home shows time or servings");
-  const fit = await ev(`({ page: document.scrollingElement.scrollHeight, view: innerHeight, wide: document.scrollingElement.scrollWidth })`);
-  ok(fit.page <= fit.view, `Home fits one phone screen with every field on (${fit.page} > ${fit.view})`);
+  const fit = await ev(`({ wide: document.scrollingElement.scrollWidth })`);
+  // Today's meals are full recipe cards on a phone (2026-11-20): Home may scroll down, never sideways.
   ok(fit.wide <= 390, "no sideways scroll");
   await click("home-suggest-recipe");
   await until(`Boolean(${q("meal-suggestion-cook")})`, "suggestion");

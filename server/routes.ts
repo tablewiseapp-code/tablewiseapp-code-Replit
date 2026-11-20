@@ -9,7 +9,7 @@ import type { IStorage } from "./storage";
 import { isMissingPreparationColumn } from "./storage";
 import OpenAI, { toFile } from "openai";
 import { installPilotSecurity, pilotConfig, type PilotConfig } from "./security";
-import { recipeInput, recipePatch, recipeId, parseInput, audioInput } from "./request-schemas";
+import { recipeInput, recipePatch, recipeId, parseInput, audioInput, readingLanguage } from "./request-schemas";
 import { analyticsBatchSchema, validEventTimes } from "../shared/pilot-analytics";
 import { pilotEventStore, AnalyticsCapacityError, type PilotEventStore } from "./pilot-analytics";
 import type { NutritionEnricher } from "./recipe-nutrition";
@@ -45,7 +45,8 @@ import { analyzePreferences, PROMPT_VERSION } from "./recipe-personalization";
 import { randomUUID } from "crypto";
 import type { z } from "zod";
 
-export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "updateRecipeCredit" | "deleteRecipe">;
+export type RecipeStorage = Pick<IStorage, "getAllRecipes" | "getRecipe" | "createRecipe" | "updateRecipe" | "updateRecipeCredit" | "deleteRecipe">
+  & Partial<Pick<IStorage, "getRecipeTranslations">>;
 export type RouteDependencies = {
   storage?: RecipeStorage;
   nutrition?: NutritionEnricher;
@@ -125,12 +126,10 @@ export async function registerRoutes(
   installAccounts(app, security, dependencies.accounts ?? databaseAccountStore(), dependencies.now);
   const storage = dependencies.storage ?? (await import("./storage")).storage;
   const recipeMarks = dependencies.recipeMarks ?? databaseRecipeMarkStore();
-  // Development-only saved reads. No model calls, migrations or public paid endpoint.
-  // Custom storage adapters must supply their own corresponding nutrition reader.
-  const nutrition = developmentCredits
-    ? dependencies.nutrition ?? (!dependencies.storage
-      ? await (await import("./recipe-nutrition")).databaseNutritionEnricher() : undefined)
-    : undefined;
+  // Saved nutrition estimates on every recipe read, in development and production (product owner, 2026-11-20).
+  // Reads recipe_nutrition only: no model calls. Custom storage adapters must supply their own nutrition reader.
+  const nutrition = dependencies.nutrition ?? (!dependencies.storage
+    ? await (await import("./recipe-nutrition")).databaseNutritionEnricher() : undefined);
   const withNutrition = async <T extends NutritionInput>(rows: T[]) => nutrition ? nutrition(rows) : rows;
   const analyzeRecipe = createRecipeAnalyzer(dependencies.now);
   const parseCached = recipeParseCache<z.infer<typeof recipeInput>>(dependencies.now);
@@ -252,6 +251,18 @@ export async function registerRoutes(
     } catch {
       console.error("api_failure operation=recipe_source_get");
       res.status(500).json({ error: "Failed to fetch source" });
+    }
+  });
+
+  // Every stored translation into one reading language; the client shows it in place of the original text.
+  app.get("/api/recipes/translations/:lang", async (req, res) => {
+    const language = readingLanguage.safeParse(req.params.lang);
+    if (!language.success) return res.status(400).json({ error: "Invalid language." });
+    try {
+      res.json(await storage.getRecipeTranslations?.(language.data) ?? []);
+    } catch {
+      console.error("api_failure operation=recipe_translations");
+      res.status(500).json({ error: "Failed to fetch translations" });
     }
   });
 

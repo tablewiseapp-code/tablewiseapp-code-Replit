@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { PageContainer } from "@/components/layout/page-container";
 import { RecipeCreditLine } from "@/components/recipe-credit";
 import { ChevronDown, Plus } from "lucide-react";
-import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
 
 export default function RecipeList() {
   const { t } = useI18n();
@@ -150,30 +150,13 @@ export default function RecipeList() {
 
 function RecipeGrid({ recipes }: { recipes: Recipe[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {recipes.map((recipe) => (
-        <div key={recipe.id} className="relative">
-          <Link
-            href={`/recipe/${recipe.id}`}
-            className="card flex h-full flex-col p-4 pe-14 transition-colors hover:border-input"
-            data-testid={`card-recipe-${recipe.id}`}
-          >
-            {recipe.image && (
-              <img src={recipe.image} alt="" loading="lazy" decoding="async"
-                className="image-fade-in mb-3 aspect-[16/9] w-full rounded-lg object-cover"
-                onLoad={(e) => e.currentTarget.classList.add("image-loaded")}
-                onError={(e) => { e.currentTarget.hidden = true; }}
-                data-testid={`img-recipe-${recipe.id}`} />
-            )}
-            <h3 className="text-base font-semibold leading-snug text-foreground break-words" data-testid={`text-recipe-title-${recipe.id}`}>
-              {recipe.title}
-            </h3>
-            <RecipeMeta recipe={recipe} className="mt-2" testId={`text-recipe-info-${recipe.id}`} />
-            <div className="mt-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
-            <RecipeViewRows recipe={recipe} testId={`recipe-view-${recipe.id}`} className="mt-2" />
-          </Link>
-          <div className="absolute end-2 top-2"><RecipeLikeButton recipeId={recipe.id} /></div>
-        </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {recipes.map(recipe => (
+        <RecipeCard key={recipe.id} recipe={recipe} href={`/recipe/${recipe.id}`} testId={`card-recipe-${recipe.id}`}
+          titleTestId={`text-recipe-title-${recipe.id}`} corner={<RecipeLikeButton recipeId={recipe.id} />}
+          ids={{ meta: `text-recipe-info-${recipe.id}`, view: `recipe-view-${recipe.id}`, img: `img-recipe-${recipe.id}`, example: `example-photo-${recipe.id}` }}>
+          <div className="text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /></div>
+        </RecipeCard>
       ))}
     </div>
   );

@@ -123,12 +123,17 @@ export function RecipeViewRows({ recipe, view, testId, className = "" }: { recip
     return main ? [{ detail, text: tool(main) }] : [];
   });
   if (!shown.length && !facts.length) return null;
-  return <div className={`space-y-0.5 text-xs text-muted-foreground ${className}`} data-testid={id}>
-    {serving && shown.length > 0 && <p className="flex flex-wrap gap-x-1" data-testid={`${id}-nutrition`}>
-      <span>{s(serving.estimated ? "estPerServing" : "perServing")}</span>
-      {shown.map(n => <span key={n} className="whitespace-nowrap tabular-nums" data-testid={`${id}-${n}`}>
-        <span aria-hidden="true">· </span>{s(`nutrient_${n}`)} {amount(n, serving.values[n]!)}</span>)}
-    </p>}
+  const heading = s(serving?.estimated ? "estPerServing" : "perServing");
+  return <div className={`mt-3.5 space-y-2 border-t border-border pt-3 text-xs text-muted-foreground ${className}`} data-testid={id}>
+    {serving && shown.length > 0 && <section aria-label={heading} data-testid={`${id}-nutrition`}>
+      <h4 className="mb-2 text-xs font-medium">{heading}</h4>
+      <dl className="grid grid-cols-[repeat(auto-fit,minmax(48px,1fr))] gap-2">
+        {shown.map(n => <div key={n} data-testid={`${id}-${n}`}>
+          <dt>{s(`nutrient_${n}`)}</dt>
+          <dd className="mt-0.5 text-[0.93rem] font-semibold tabular-nums text-foreground">{amount(n, serving.values[n]!)}</dd>
+        </div>)}
+      </dl>
+    </section>}
     {facts.length > 0 && <p className="flex flex-wrap gap-x-1" data-testid={`${id}-details`}>
       {facts.map(({ detail, text }, i) => <span key={detail} data-testid={`${id}-${detail}`}>{i > 0 && <span aria-hidden="true">· </span>}{text}</span>)}
     </p>}

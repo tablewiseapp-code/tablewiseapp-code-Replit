@@ -108,7 +108,7 @@ Made once per week (`proposed`), the first time an unapproved week is opened. Sa
 - An offer shows when it has no end date, or ends on or after the week's Monday.
 - Offers that match a planned dish's ingredients come first, with "For {dish}".
 - Expanded, each shows item, store, price per unit and end date.
-- There is no store filter, because households cannot choose stores yet.
+- Only offers from My stores (Basic Settings, store picker) show; with no store chosen, every offer shows.
 
 ## Week boundaries
 

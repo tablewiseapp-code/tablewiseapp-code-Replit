@@ -21,6 +21,7 @@ import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/pla
 import { matchesPlannerFilters, pageNumbers, paginate, recipeNameMatches } from "@/lib/planner-filters";
 import { FoodDeals, WeekDeals } from "@/components/food-deals";
 import { foodDeals, weekDeals } from "@/lib/food-deals";
+import { storeName } from "@/lib/grocery-stores";
 import { useWeekFilterCopy } from "@/lib/week-filter-copy";
 import { useFilterLabels, useWeekFilterChips, WeekFilterPanel } from "@/components/week-filter-panel";
 import { countWeekFilters, defaultWeekFilters, sanitizeWeekFilters, type WeekFilters } from "@/lib/week-filters";
@@ -40,7 +41,7 @@ import { isGeneratedRecipe, mealsGenerationBody, reportGenerationEvent, type Fil
 import { RecipeIngredients } from "@/components/recipe-ingredients";
 import { NutritionDetailsToggle, useRecipeDisplay } from "@/components/recipe-display";
 import { usableNutrition } from "@shared/recipe-nutrition";
-import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
 import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTime } from "@/components/recipe-time-display";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
@@ -601,7 +602,7 @@ function WeeklyMealsContent() {
               </h2>
             )}
             <RecipeDisplayToolbar />
-            <div id="meal-results" className="space-y-2 scroll-mt-24">
+            <div id="meal-results" className="grid scroll-mt-24 gap-4 sm:grid-cols-2 xl:grid-cols-3 [&>:not(article)]:col-span-full">
               {recipes.length > 0 && eligibleRecipes.length === 0 ? (
                 // Every recipe breaks a hard restriction: say which ones, never fall back to incompatible suggestions.
                 <div className="rounded-xl border hairline bg-white p-5" role="status" data-testid="no-match-settings">
@@ -634,11 +635,8 @@ function WeeklyMealsContent() {
                   const isArranging = arrangingRecipe === recipe.id;
 
                   return (
-                    <article key={recipe.id} className="card p-4" aria-labelledby={`recipe-title-${recipe.id}`} data-testid={`recipe-card-${recipe.id}`}>
-                      <div className="flex items-start gap-3">
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <h3 id={`recipe-title-${recipe.id}`} className="break-words text-base font-medium leading-snug text-foreground">{recipe.title}</h3>
-                          <RecipeMeta recipe={recipe} mode={timeMode} testId={`meals-catalog-meta-${recipe.id}`} />
+                    <RecipeCard key={recipe.id} recipe={recipe} href={`/recipe/${recipe.id}`} mode={timeMode} testId={`recipe-card-${recipe.id}`}
+                      ids={{ meta: `meals-catalog-meta-${recipe.id}`, view: `meals-catalog-view-${recipe.id}` }}>
                           {(meta.isMyPick || meta.rating || likedNote.has(recipe.id)) && (
                             <div className="flex flex-wrap items-center gap-2 text-sm">
                               {meta.isMyPick && <span className="tag">{`★ ${t("meals.myPicks")}`}</span>}
@@ -646,16 +644,13 @@ function WeeklyMealsContent() {
                               {likedNote.has(recipe.id) && <span className="text-primary" data-testid={`recipe-liked-${recipe.id}`}>{likedNote.get(recipe.id)}</span>}
                             </div>
                           )}
-                          <RecipeViewRows recipe={recipe} testId={`meals-catalog-view-${recipe.id}`} />
-                        </div>
+                      <div className="flex flex-wrap items-center gap-2">
                         <button type="button" onClick={() => toggleSelection(recipe.id)} aria-pressed={isSelected}
                           aria-label={`${isSelected ? t("meals.added") : t("meals.add")}: ${recipe.title}`}
-                          className="btn btn-secondary shrink-0" data-testid={`button-add-${recipe.id}`}>
+                          className="btn btn-secondary" data-testid={`button-add-${recipe.id}`}>
                           {isSelected ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
                           {isSelected ? t("meals.added") : t("meals.add")}
                         </button>
-                      </div>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         <Link href={`/recipe/${recipe.id}`} className="btn btn-text" data-testid={`button-open-${recipe.id}`}
                           aria-label={`${t("card.viewRecipe")}: ${recipe.title}`}>{t("card.viewRecipe")}</Link>
                         <button type="button" onClick={() => setExpandedRecipe(isExpanded ? null : recipe.id)} aria-expanded={isExpanded}
@@ -665,7 +660,7 @@ function WeeklyMealsContent() {
                       </div>
 
                       {isExpanded && (
-                        <div id={`recipe-details-${recipe.id}`} className="mt-3 space-y-3 border-t hairline pt-3 text-sm" data-testid={`recipe-details-${recipe.id}`}>
+                        <div id={`recipe-details-${recipe.id}`} className="space-y-3 border-t hairline pt-3 text-sm" data-testid={`recipe-details-${recipe.id}`}>
                           <MealRecipeFacts recipe={recipe} context="catalog" interactive={isArranging} showLink={false} actions={
                             <button type="button" onClick={() => setArrangingRecipe(isArranging ? null : recipe.id)} aria-pressed={isArranging}
                               className="btn btn-text" data-testid={`button-arrange-${recipe.id}`}>
@@ -677,7 +672,7 @@ function WeeklyMealsContent() {
                           </div>
                         </div>
                       )}
-                    </article>
+                    </RecipeCard>
                   );
                 })
               )}
@@ -790,7 +785,7 @@ function WeekCalendar() {
     try { updateSettings(s => ({ ...s, setup: { ...s.setup, suggested: [], declined: [] } })); } catch { /* the approval is what matters */ }
   };
   const planned = ready ? ready.plan.batches.flatMap(b => byId.get(b.recipeId) ?? []) : [];
-  const deals = weekDeals(foodDeals, week, planned);
+  const deals = weekDeals(foodDeals, week, planned, settings.shopping.stores.map(storeName));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

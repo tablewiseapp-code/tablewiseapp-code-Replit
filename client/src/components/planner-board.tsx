@@ -13,7 +13,8 @@ import { recipeNameMatches } from "@/lib/planner-filters";
 import { usePlannerCopy } from "@/lib/planner-copy";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
 import type { RecipeTimeMode } from "@/lib/recipe-time";
-import { RecipeMeta, RecipeViewRows } from "@/components/recipe-summary";
+import { RecipeMeta } from "@/components/recipe-summary";
+import { RecipeCard } from "@/components/recipe-card";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
@@ -72,28 +73,25 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
     toastApi.toast({ title: t("removed", { title: recipe.title }), action: <ToastAction altText={t("undo")} data-testid="undo-remove-dish"
       onClick={() => commit(p => restoreBatch(p, batch, index))}>{t("undo")}</ToastAction> });
   };
+  // The shared recipe card (photo, title linking to this batch, time, Recipe View); the plan's own lines and buttons below.
   return (
-    <article className="flex flex-col gap-1 rounded-lg border border-border bg-white p-3" data-testid={`dish-${batch.id}`} data-recipe={recipe.id}
+    <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
-      {recipe.image && <Link href={props.recipeHref(batch)} tabIndex={-1} aria-hidden="true">
-        <img src={recipe.image} alt="" className="mb-1 aspect-[16/9] w-full rounded-md object-cover" /></Link>}
-      <Link href={props.recipeHref(batch)} className={`break-words text-base font-semibold leading-snug text-foreground hover:underline ${focus}`} data-testid={`dish-link-${batch.id}`}>
-        {recipe.title}
-      </Link>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <RecipeMeta recipe={{ ...recipe, servings: null }} mode={timeMode} className="text-sm" />
-        <span className="font-semibold text-foreground" data-testid={`dish-make-${batch.id}`}>
-          {recipeYield === null && total === 0 ? t("yieldNeeded") : t("make", { count: dates.number(total) })}
-        </span>
-      </div>
-      <p className="text-sm text-muted-foreground" data-testid={`dish-dates-${batch.id}`}>{t("forDates", { dates: dates.list(batch.serves.map(s => s.date)) })}</p>
-      <RecipeViewRows recipe={recipe} testId={`dish-view-${batch.id}`} />
-      <div className="-ms-2 mt-1 flex flex-wrap gap-x-1">
-        <button type="button" className={text} onClick={() => onOpen({ kind: "servings", batch })} data-testid={`edit-servings-${batch.id}`}>{t("editServings")}</button>
-        <button type="button" className={text} onClick={() => onOpen({ kind: "swap", batch })} data-testid={`swap-${batch.id}`}>{t("swapDish")}</button>
-        <button type="button" className={`${text} text-muted-foreground`} onClick={remove} data-testid={`remove-${batch.id}`}>{t("removeDish")}</button>
-      </div>
-    </article>
+      <RecipeCard recipe={{ ...recipe, servings: null }} href={props.recipeHref(batch)} mode={timeMode} titleTestId={`dish-link-${batch.id}`}
+        ids={{ view: `dish-view-${batch.id}` }}>
+        <div className="grid gap-1">
+          <p className="text-base font-semibold text-foreground" data-testid={`dish-make-${batch.id}`}>
+            {recipeYield === null && total === 0 ? t("yieldNeeded") : t("make", { count: dates.number(total) })}
+          </p>
+          <p className="text-sm text-muted-foreground" data-testid={`dish-dates-${batch.id}`}>{t("forDates", { dates: dates.list(batch.serves.map(s => s.date)) })}</p>
+        </div>
+        <div className="-ms-2 flex flex-wrap gap-x-1">
+          <button type="button" className={text} onClick={() => onOpen({ kind: "servings", batch })} data-testid={`edit-servings-${batch.id}`}>{t("editServings")}</button>
+          <button type="button" className={text} onClick={() => onOpen({ kind: "swap", batch })} data-testid={`swap-${batch.id}`}>{t("swapDish")}</button>
+          <button type="button" className={`${text} text-muted-foreground`} onClick={remove} data-testid={`remove-${batch.id}`}>{t("removeDish")}</button>
+        </div>
+      </RecipeCard>
+    </div>
   );
 }
 

@@ -44,7 +44,7 @@ try {
   const status = () => ev(`${q("week-status")}?.dataset.state`);
   // { "YYYY-MM-DD": [{ id, recipe }] } for every day of the shown week, in display order.
   const days = () => ev(`Object.fromEntries([...document.querySelectorAll('section[data-testid^="day-"]')].map(d => [d.dataset.testid.slice(4),
-    [...d.querySelectorAll('article[data-testid^="dish-"]')].map(a => ({ id: a.dataset.testid.slice(5), recipe: a.dataset.recipe }))]))`);
+    [...d.querySelectorAll('[data-testid^="dish-"][data-recipe]')].map(a => ({ id: a.dataset.testid.slice(5), recipe: a.dataset.recipe }))]))`);
   const text = id => ev(`${q(id)}?.textContent ?? null`);
   const press = (scope, label) => ev(`[...document.querySelectorAll('[data-testid="${scope}"] button')].find(b => b.getAttribute("aria-label") === ${JSON.stringify(label)}).click()`);
   const serverWeek = w => ev(`fetch("/api/week-plan?week=${w}").then(r => r.json())`);
@@ -83,7 +83,7 @@ try {
   await click(`add-dish-${late}`);
   await until(`Boolean(${q("pick-list")})`, "picker");
   await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
-  await until(`document.querySelectorAll('[data-testid="day-${late}"] article').length === 2`, "two dishes");
+  await until(`document.querySelectorAll('[data-testid="day-${late}"] [data-recipe]').length === 2`, "two dishes");
   plan = await days();
   const [keep, change] = plan[late];
   await click(`swap-${change.id}`);
@@ -102,7 +102,7 @@ try {
   await click(`move-to-${early}`);
   ok(await ev(`!${q("move-conflicts")} && !${q("button-confirm-move")}.disabled`), "moving earlier keeps every serving date valid");
   await click("button-confirm-move");
-  await until(`document.querySelectorAll('[data-testid="day-${early}"] article').length === 3`, "three dishes");
+  await until(`document.querySelectorAll('[data-testid="day-${early}"] [data-recipe]').length === 3`, "three dishes");
   ok(await ev(`Boolean(${q(`empty-${late}`)})`), "the old day is empty");
   // ---- Acceptance 2 (reload): a manual move survives a reload and is on the server.
   await go("/meals?plan", calendarReady);
@@ -171,7 +171,7 @@ try {
   await ev(`[...document.querySelectorAll('[data-testid^="conflict-move-"]')].forEach(b => b.click())`);
   await until(`!${q("button-confirm-move")}.disabled`, "resolved");
   await click("button-confirm-move");
-  await until(`document.querySelectorAll('[data-testid="day-${nextDay}"] article').length >= 3`, "moved together");
+  await until(`document.querySelectorAll('[data-testid="day-${nextDay}"] [data-recipe]').length >= 3`, "moved together");
   eq(await status(), "changed");
   eq(await text("button-approve-week"), "Save changes");
   // Remove dish: only that entry; Undo restores it.
@@ -187,7 +187,7 @@ try {
   // ---- Phone: stacked cards, no sideways scroll, labelled buttons.
   await phone();
   await go("/meals?plan", calendarReady);
-  const xs = await ev(`[...document.querySelectorAll('[data-testid="day-${nextDay}"] article')].map(a => Math.round(a.getBoundingClientRect().x))`);
+  const xs = await ev(`[...document.querySelectorAll('[data-testid="day-${nextDay}"] [data-recipe]')].map(a => Math.round(a.getBoundingClientRect().x))`);
   eq(new Set(xs).size, 1, "dishes stack");
   ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
   await shot("week-phone");

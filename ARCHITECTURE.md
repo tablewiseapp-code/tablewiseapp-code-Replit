@@ -56,7 +56,7 @@ docs/                  product definition and per-feature notes
 | `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history |
 | `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (signed-in accounts; guests see it with saving disabled) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
-| `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form; `?week=Monday` builds it from that week's plan (read and saved on the server) |
+| `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form; `?week=Monday` builds it from that week's plan (read and saved on the server); `?stores` opens My stores |
 | `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
 | `/settings` | `pages/basic-settings.tsx` | Basic Settings |
 | `/household` | `pages/household.tsx` | Your household; first visit lands here (`FirstVisit` in `App.tsx`) when settings are unsaved and the Week is empty |
@@ -68,7 +68,8 @@ Tables are defined in `shared/schema.ts`.
 
 | Table | Purpose | Scope |
 |---|---|---|
-| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones); `step_ingredients` holds one list per step of the ingredient lines that step uses (`[]` = none, NULL = no data; dropped when steps change without it) | global, shared by all visitors |
+| `recipes` | catalog; `ingredient_parts` holds parsed quantity/unit per ingredient line for manually imported recipes (NULL for older ones); `step_ingredients` holds one list per step of the ingredient lines that step uses (`[]` = none, NULL = no data; dropped when steps change without it); `language` is the language it was written in (NULL before 2026-11-20) | global, shared by all visitors |
+| `recipe_translations` | a recipe's title, ingredient names and steps in one reading language (`en`, `ru`, `he`), in the original's order; quantity and unit stay in `ingredient_parts`; `translated_by` `ai` or `person`. Read by `GET /api/recipes/translations/:lang` and shown by `client/src/lib/recipe-translation.ts` (cards, recipe page, cooking mode); written only by the backfill `script/translate-recipes.ts`; `script/sample-recipe-translations.sql` loads two Spanish examples | global |
 | `recipe_nutrition` | cached nutrition | global |
 | `recipe_generations` | AI drafts and their status | per owner |
 | `cooking_sessions` | "I made it", rating, notes | per owner |
@@ -83,7 +84,7 @@ Tables are defined in `shared/schema.ts`.
 | `recipe_sources` | where an imported recipe came from (YouTube link, video id, status `mock` until real extraction exists); one per recipe, one per owner and video | per owner (operator-only writes, like recipes) |
 | `home_tasks` | Home tasks: name, due date (calendar date), priority, optional resized JPEG photo, completed and created times; id is client-generated so Undo after Delete restores the same task | per owner |
 | `household_tasks` | seeded suggested task names in three languages | global |
-| `household_settings` | Basic Settings, Your household and Recipe View (`recipeView`; settings saved before it read the Week's old browser switch `tablewise:nutrition-details:v1` once) as one JSON document, sanitized by the client (`client/src/lib/basic-settings.ts`); `GET`/`PUT /api/household-settings` | per owner |
+| `household_settings` | Basic Settings, Your household, My stores (`shopping.stores`: store id and methods; the catalog and its logos are `client/src/lib/grocery-stores.ts` and `client/public/store-logos/`) and Recipe View (`recipeView`; settings saved before it read the Week's old browser switch `tablewise:nutrition-details:v1` once) as one JSON document, sanitized by the client (`client/src/lib/basic-settings.ts`); `GET`/`PUT /api/household-settings` | per owner |
 | `week_plans` | the Week: `week_start` (Monday), the browser's picked recipe ids, the dishes in `plan_assignments` (`Batch[]` from `shared/cooking-plan.ts`: recipe, cooking date, serving dates with adults/kids or servings, optional yield), the dishes as last approved in `approved_batches` (NULL = never; Groceries use these; migration 0022), `locked` (the two are equal) and `proposed` (the draft was made); one row per owner and week, replaced whole on each save (`GET /api/week-plan?week=`, `PUT /api/week-plan` with `batches` and `approved`). Rows saved with Breakfast/Lunch/Dinner slots are converted when read (`fromLegacy`) | per owner |
 | `recipe_marks` | recipes an owner liked or imported (`kind` `liked` or `imported`); `GET /api/my-recipes`, `PUT`/`DELETE /api/recipe-likes/:id` | per owner |
 | `accounts` | email (lowercase, unique), scrypt `password_hash` (nullable, for a future Google-only account), the `owner_id` every owner-scoped table uses, optional `display_name` and `photo` (resized JPEG data URL) with a `photo_version` for its cacheable link | per account |
@@ -98,7 +99,7 @@ The Week is stored in `week_plans`, one row per calendar week. The browser keeps
 - **Owner:** random `tablewise_owner` HttpOnly cookie, one year. Only its SHA-256 is stored. Read it through the helpers in `server/security.ts`; never trust an owner ID from the request body.
 - **Account:** `POST /api/auth/sign-in` (same-origin, budgeted, 10 attempts per email per 15 minutes) finds the account by email or, for a new email, creates it with the guest's owner and drops the guest cookie. It sets a `tablewise_session` HttpOnly cookie; only its SHA-256 is stored. Middleware in `server/accounts.ts` puts the session's owner in `res.locals.accountOwner`, and `owner()` prefers it over the guest cookie, so feature routes need no change. `POST /api/auth/sign-out` ends that session; `GET /api/auth/me` returns the email (null for a guest), name and a versioned photo link (`GET /api/auth/photo?v=N`). `PUT /api/auth/profile` (same-origin, budgeted; a guest gets 401) changes the name or photo. On sign-in and sign-out the client drops the Week's and Basic Settings' browser copies and reloads, so nothing passes to the next person on a shared browser.
 - **Google sign-in (not built):** add a `google_sub` column and two routes, one redirecting to Google and one callback that verifies the ID token, finds or creates the account by verified email, then starts a session the same way. The callback is a cross-site redirect, so the session cookie would need `SameSite=Lax`.
-- **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart.
+- **Operator:** shared token in `TABLEWISE_OPERATOR_TOKEN`. Sessions are in memory, last one hour, and are lost on restart. An account whose email is in `TABLEWISE_OPERATOR_EMAILS` is also the operator while signed in (2026-11-20); its data stays under its own owner, not the shared "operator" owner. The account session is resolved before the security gate (`useAccounts` in `server/security.ts`). Emails are not verified, so create that account before setting the variable.
 - **Anyone may:** read the catalog, plan, keep their own Basic Settings (`PUT /api/household-settings`, same-origin), use groceries and cooking mode, record their own cooking history, keep their own Home tasks (`PUT`/`DELETE /api/home-tasks/:id`, same-origin) and Week plan (`PUT /api/week-plan`, same-origin), and like a recipe (`PUT`/`DELETE /api/recipe-likes/:id`, same-origin).
 - **Signed-in account (or operator) only:** save a typed or pasted recipe (`POST /api/import-recipe`, same-origin, 10 a minute and 200 a day across all visitors; a guest gets 401). The import is recorded in `recipe_marks` for "Imported by me".
 - **Share link:** a grocery share link carries a role, `view` < `add` (tick, add items, notes) < `edit` (change and remove items). The owner who made it can also change the role and turn the link off. `server/routes.ts` checks the role on every request (`shared/grocery-access.ts`).
@@ -112,6 +113,7 @@ Names only. Never print or commit values. Production secrets are set in the Repl
 |---|---|
 | `DATABASE_URL` | Postgres connection |
 | `TABLEWISE_OPERATOR_TOKEN` | enables operator sign-in |
+| `TABLEWISE_OPERATOR_EMAILS` | comma-separated account emails; a signed-in account with one of them is the operator (AI included) and keeps its own owner |
 | `TABLEWISE_PUBLIC_CATALOG_REVIEWED` | when not `true`, catalog reads return 503 |
 | `TABLEWISE_AI_ENABLED` | when not `true`, AI routes return 503 |
 | `TABLEWISE_PUBLIC_AI` | when `true`, anonymous visitors may use AI generation |

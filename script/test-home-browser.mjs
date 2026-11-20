@@ -79,7 +79,8 @@ try {
     for (const [width, height] of [[375, 667], [360, 640]]) {
       await call("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: true });
       await go("/", `Boolean(${q("home-task-count")})`); await sleep(300);
-      ok(await ev(`document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth`), `${width}px: Home does not scroll`);
+      // Today's meals are full recipe cards on a phone (2026-11-20), so Home may scroll down, never sideways.
+      ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), `${width}px: Home does not scroll sideways`);
     }
     eq(await text("home-task-count"), "15", "task count beside the title");
     ok(await ev(`!${q("home-task-preview")}.open`), "tasks collapsed");

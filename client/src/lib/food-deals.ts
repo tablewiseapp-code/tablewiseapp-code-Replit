@@ -13,10 +13,11 @@ export const foodDeals: readonly FoodDeal[] = [
 ];
 export const foodDealById = (id: string) => foodDeals.find(deal => deal.id === id);
 
-/** Weekly deals on the cooking plan: offers still running on the week's Monday, those for a planned dish's ingredient
- * first, each with the first dish it is for. ponytail: no store filter, there is no household store setting yet. */
-export function weekDeals(deals: readonly FoodDeal[], weekStart: string, dishes: readonly { title: string; ingredients: readonly string[] }[]) {
-  return deals.filter(deal => !deal.expires || deal.expires >= weekStart)
+/** Weekly deals on the cooking plan: offers still running on the week's Monday from My stores (every store when none is
+ * chosen), those for a planned dish's ingredient first, each with the first dish it is for. `stores`: store names. */
+export function weekDeals(deals: readonly FoodDeal[], weekStart: string, dishes: readonly { title: string; ingredients: readonly string[] }[], stores: readonly string[] = []) {
+  const mine = new Set(stores.map(name => name.trim().toLowerCase()));
+  return deals.filter(deal => (!deal.expires || deal.expires >= weekStart) && (!mine.size || mine.has(deal.store.toLowerCase())))
     .map(deal => ({ deal, dish: dishes.find(d => d.ingredients.some(line => deal.terms.some(term => ingredientMatches(line, term))))?.title ?? null }))
     .sort((a, b) => Number(b.dish !== null) - Number(a.dish !== null));
 }
