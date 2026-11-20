@@ -5,8 +5,12 @@
 /** One serving date of a dish. `servings` (direct, in half servings) replaces adults + kids × 0.5. With neither, the
  * date eats the recipe's original yield (a household without counts, or a plan saved before cooking days). */
 export type Serve = { date: string; adults?: number; kids?: number; servings?: number };
-/** One planned dish: cooked once on `cookDate`. `yield` is asked for when the recipe states none. */
-export type Batch = { id: string; recipeId: string; cookDate: string; serves: Serve[]; yield?: number };
+export const mealSlots = ["Breakfast", "Lunch", "Dinner"] as const;
+export type MealSlot = typeof mealSlots[number];
+/** One planned dish: cooked once on `cookDate` for `meal`. `yield` is asked for when the recipe states none. */
+export type Batch = { id: string; recipeId: string; cookDate: string; serves: Serve[]; yield?: number; meal?: MealSlot };
+/** Dishes saved before meals (2026-11-20) and the draft's dishes are dinners. */
+export const mealOf = (batch: Batch): MealSlot => batch.meal ?? "Dinner";
 export type HouseholdCounts = { adults: number; kids: number };
 
 export const shiftDate = (date: string, days: number) => {
@@ -65,7 +69,8 @@ export function fromLegacy(weekStart: string, items: LegacyAssignment[]): Batch[
     const cookDate = dateInWeek(weekStart, a.startDay);
     const span = Math.max(1, a.spanDays);
     const each = a.servings ? Math.max(0.5, halfServings(a.servings / span)) : undefined;
-    return { id: `legacy-${index}`, recipeId: a.recipeId, cookDate,
+    const meal = mealSlots.find(m => m === a.mealType);
+    return { id: `legacy-${index}`, recipeId: a.recipeId, cookDate, ...(meal ? { meal } : {}),
       serves: Array.from({ length: span }, (_, i) => ({ date: shiftDate(cookDate, i), ...(each ? { servings: each } : {}) })) };
   });
 }

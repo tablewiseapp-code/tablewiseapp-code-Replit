@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { batchProblem, isCalendarDate, shiftDate } from "../shared/cooking-plan";
+import { batchProblem, isCalendarDate, mealSlots, shiftDate } from "../shared/cooking-plan";
 import { creditKind, creditName, recipeCreditInput } from "../shared/recipe-credit";
 import { analysisMatches, stepAnalysisSchema } from "../shared/step-timing";
 import { ingredientPartSchema } from "../shared/ingredient-parse";
@@ -101,7 +101,7 @@ const count = z.number().int().min(0).max(20);
 const batch = z.object({
   id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), recipeId, cookDate: calendarDay,
   serves: z.array(z.object({ date: calendarDay, adults: count.optional(), kids: count.optional(), servings: half.optional() }).strict()).min(1).max(14),
-  yield: half.optional(),
+  yield: half.optional(), meal: z.enum(mealSlots).optional(),
 }).strict().refine(b => batchProblem(b) === null);
 const batches = z.array(batch).max(42).refine(list => new Set(list.map(b => b.id)).size === list.length);
 export const weekPlanInput = z.object({

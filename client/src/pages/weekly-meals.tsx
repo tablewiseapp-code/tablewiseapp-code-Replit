@@ -823,7 +823,7 @@ function WeekCalendar() {
                 // Learning signal: an AI recipe was put on the plan (not that it was cooked).
                 if (byId.get(id) && isGeneratedRecipe(byId.get(id)!)) reportGenerationEvent("generated_recipe_added_to_plan");
               }}
-              options={day => dishOptions(recipes ?? [], settings, day, { seed: week, fits, chosen: planned })} />
+              options={(day, meal) => dishOptions(recipes ?? [], settings, day, { seed: week, fits, chosen: planned, meal })} />
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/meals?browse" className="btn btn-text -ms-2" data-testid="link-browse-recipes">{t("browse")}</Link>
               <Link href="/household" className="btn btn-text" data-testid="link-household">{household("changeHousehold")}</Link>

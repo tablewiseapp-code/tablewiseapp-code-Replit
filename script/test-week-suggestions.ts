@@ -8,7 +8,8 @@ import { buildRecipeGroceryRows } from "../client/src/lib/grocery-meal-removal";
 import { toPlannerRecipes, type PlannerRecipe } from "../client/src/lib/planner-recipes";
 import { cookingEvenings, dishOptions, needsHouseholdSetup, proposeCookingPlan, resuggest } from "../client/src/lib/week-suggestions";
 import { weekDeals, type FoodDeal } from "../client/src/lib/food-deals";
-import { batchFactor, batchTotal, fromLegacy, planStatus, serveAmount, weekdayOf } from "../shared/cooking-plan";
+import { batchFactor, batchTotal, fromLegacy, mealOf, planStatus, serveAmount, weekdayOf } from "../shared/cooking-plan";
+import { weekPlanInput } from "../server/request-schemas";
 import { baseServings } from "../client/src/lib/ingredient-scale";
 
 const WEEK = "2026-11-16"; // Mon 16 … Sun 22
@@ -156,8 +157,8 @@ assert.deepEqual(weekDeals(deals, WEEK, [teriyaki], ["Elsewhere"]), [], "no offe
 // ---- Plans saved before cooking days become dated dishes; a locked one stays approved (server/week-plans.ts).
 const legacy = fromLegacy(WEEK, [{ recipeId: "r1", mealType: "Dinner", startDay: 0, spanDays: 1, servings: 4 }, { recipeId: "r2", mealType: "Lunch", startDay: 3, spanDays: 2 }]);
 assert.deepEqual(legacy, [
-  { id: "legacy-0", recipeId: "r1", cookDate: "2026-11-22", serves: [{ date: "2026-11-22", servings: 4 }] },
-  { id: "legacy-1", recipeId: "r2", cookDate: "2026-11-18", serves: [{ date: "2026-11-18" }, { date: "2026-11-19" }] },
+  { id: "legacy-0", recipeId: "r1", cookDate: "2026-11-22", meal: "Dinner", serves: [{ date: "2026-11-22", servings: 4 }] },
+  { id: "legacy-1", recipeId: "r2", cookDate: "2026-11-18", meal: "Lunch", serves: [{ date: "2026-11-18" }, { date: "2026-11-19" }] },
 ]);
 assert.equal(planStatus(legacy, JSON.parse(JSON.stringify(legacy))), "approved");
 
@@ -174,4 +175,15 @@ if (process.env.CATALOG_URL) {
     console.log(label, p.batches.map(b => `${b.cookDate}:${names.get(b.recipeId)!.title}`).join(" | "));
   }
 }
+// Meals (2026-11-20): a dish keeps the meal it was added for; older dishes and the draft's are dinners.
+const lunch = addBatch(empty(), "r1", "2026-11-17", null, "l1", "Lunch");
+assert.equal(mealOf(lunch.batches[0]), "Lunch");
+assert.equal(mealOf(swapBatch(lunch, "l1", "r2").batches[0]), "Lunch", "Swap keeps the meal");
+assert.equal(mealOf(addBatch(empty(), "r1", "2026-11-17", null, "d1").batches[0]), "Dinner", "no meal = dinner");
+const breakfast = recipe("Oat porridge", 10, 2, ["Gluten-free"]) as { tags: string[] }; breakfast.tags = ["Breakfast", "Gluten-free"];
+const withBreakfast = [...catalog, ...toPlannerRecipes([breakfast] as never)];
+assert.equal(dishOptions(withBreakfast, defaultSettings(), 2, { meal: "Breakfast" })[0].title, "Oat porridge", "+ Add breakfast offers breakfasts first");
+assert.notEqual(dishOptions(withBreakfast, defaultSettings(), 2)[0].title, "Oat porridge", "+ Add a dish still starts with dinners");
+const body = (meal: unknown) => ({ weekStart: WEEK, proposed: true, selectedIds: [], batches: [{ id: "x", recipeId: "r1", cookDate: WEEK, serves: [{ date: WEEK }], meal }], approved: null });
+assert.ok(weekPlanInput.safeParse(body("Lunch")).success && !weekPlanInput.safeParse(body("Snack")).success, "the server accepts only the three meals");
 console.log("week suggestions: ok");

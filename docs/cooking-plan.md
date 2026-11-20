@@ -16,8 +16,8 @@ The screen answers two questions at a glance: **what am I cooking each day, and 
 - **Weekly deals · N offers:** a collapsed row under the header. It is shown only when an offer applies to the shown week (see Deals).
 - **Days:**
   - Seven groups, Monday to Sunday, each headed by weekday and date. Today is highlighted in the current week.
-  - A day with dishes lists their cards, then "+ Add a dish" and "Move cooking day" (once per day).
-  - An empty day is one compact line: "No cooking planned" and "+ Add a dish".
+  - Each day is split into **Breakfast, Lunch and Dinner** (product owner, 2026-11-20), in that order. Each meal lists its dishes' cards, then its own "+ Add breakfast", "+ Add lunch" or "+ Add dinner".
+  - A day with dishes ends with "Move cooking day" (once per day).
 - **Width:**
   - Desktop: the date sits beside the day's cards, which form a grid.
   - Phone: everything stacks.
@@ -33,6 +33,7 @@ Every action is a visible, labelled button that works by tap, click and keyboard
 
 Each planned dish (one batch) appears once, on the day it is cooked. Its card shows:
 
+- **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner) and shows under it. Swap, Edit servings and Move cooking day keep it. A dish saved without one (before 2026-11-20) and the draft's dishes are Dinner; Breakfast/Lunch/Dinner slots of older weeks keep their meal.
 - **Title.** It opens the recipe at this batch (`/recipe/:id?week=…&batch=…`), scaled to the batch total. Back returns to the week.
 - **Time**, per the recipe time setting.
 - **"Make X servings"**, the amount to prepare. Half servings are shown as written, e.g. 3.5.
@@ -63,7 +64,7 @@ Ingredient scale      = Make X servings / the recipe's original yield
 
 | Button | What it does |
 |---|---|
-| + Add a dish | Opens the recipe picker for that date and adds the pick beside the dishes already there. |
+| + Add breakfast / lunch / dinner | Opens the recipe picker for that date and meal and adds the pick to that meal, beside the dishes already there. |
 | Swap dish | Replaces only that dish's recipe. The cooking date, serving dates and portions stay; quantities use the new recipe's yield. |
 | Edit servings | Changes the dish's dates and amounts, as above. |
 | Move cooking day | Moves every dish of that day, together, to another day of the shown week; dishes already there stay. See below for portions that would land before the new day. |
@@ -76,7 +77,7 @@ Ingredient scale      = Make X servings / the recipe's original yield
 - Move is enabled only when every portion is resolved and every dish keeps at least one serving date.
 - The move is applied as one change. Cancel changes nothing.
 
-The picker offers eligible catalog recipes for that weekday, best first: dinners, then lunches, then breakfasts. The rules:
+The picker offers eligible catalog recipes for that weekday, best first: the chosen meal's recipes (Swap: the dish's meal), then the others, dinners before lunches before breakfasts. The rules:
 
 - A recipe's own meal rules and the weekday limits apply through `checkEligibility`.
 - The Week → Plan filters narrow the list. When nothing passes them, the restrictions alone decide.
@@ -91,7 +92,7 @@ Made once per week (`proposed`), the first time an unapproved week is opened. Sa
   - The chef challenge day counts as a preferred weekday.
   - If the count is higher, days are added one at a time. Each added day is the one farthest from its nearest cooking day, with Sunday and Monday adjacent; ties go to the earlier day in Monday-first order.
   - With no preferred days, the days are spread the same way. "Not sure yet" means three.
-- **Dishes:** each cooking day without a dish gets one eligible recipe not yet in the week. A recipe repeats only when the eligible ones run out.
+- **Dishes:** each cooking day without a dish gets one eligible recipe not yet in the week, dinners first, placed under Dinner. A recipe repeats only when the eligible ones run out.
 - **Changes are kept:** reopening the week keeps swaps, extra dishes, serving edits and moves. A moved cooking day changes that week only.
 
 ## Approval and Groceries

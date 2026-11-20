@@ -67,7 +67,9 @@ try {
   eq(cooking.length, 3, "Not sure yet → three cooking days, one dish each");
   ok(cooking.every(d => plan[d].length === 1), "one initial dish per cooking day");
   eq(await ev(`document.querySelectorAll('[data-today]').length`), 1, "today is highlighted");
-  ok(await ev(`Boolean(${q(`empty-${dates.find(d => !plan[d].length)}`)}) && ${q(`empty-${dates.find(d => !plan[d].length)}`)}.textContent.includes("No cooking planned")`), "empty days are compact");
+  const free = dates.find(d => !plan[d].length);
+  eq(await ev(`[...${q(`day-${free}`)}.querySelectorAll("h3")].map(h => h.textContent)`), ["Breakfast", "Lunch", "Dinner"], "each day separates Breakfast, Lunch and Dinner");
+  eq(await text(`add-dish-${free}-breakfast`), "+ Add breakfast", "each meal has its own add");
   eq(await status(), "draft");
   eq(await text("button-approve-week"), "Approve cooking plan");
   ok((await serverWeek(thisWeek))?.proposed === true, "the draft is saved once");
@@ -80,7 +82,7 @@ try {
 
   // ---- Acceptance 3: two dishes share a day; Swap dish changes only one; moving onto a day with one dish → three.
   const [early, late] = cooking;
-  await click(`add-dish-${late}`);
+  await click(`add-dish-${late}-dinner`);
   await until(`Boolean(${q("pick-list")})`, "picker");
   await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
   await until(`document.querySelectorAll('[data-testid="day-${late}"] [data-recipe]').length === 2`, "two dishes");
@@ -103,7 +105,7 @@ try {
   ok(await ev(`!${q("move-conflicts")} && !${q("button-confirm-move")}.disabled`), "moving earlier keeps every serving date valid");
   await click("button-confirm-move");
   await until(`document.querySelectorAll('[data-testid="day-${early}"] [data-recipe]').length === 3`, "three dishes");
-  ok(await ev(`Boolean(${q(`empty-${late}`)})`), "the old day is empty");
+  ok(await ev(`!${q(`day-${late}`)}.querySelector("[data-recipe]")`), "the old day is empty");
   // ---- Acceptance 2 (reload): a manual move survives a reload and is on the server.
   await go("/meals?plan", calendarReady);
   eq((await days())[early].length, 3, "reload keeps the move");
@@ -182,7 +184,7 @@ try {
   await until(`Boolean(${q(`dish-${gone}`)})`, "restored");
   await click("button-approve-week");
   await until(`${q("week-status")}.dataset.state === "approved"`, "saved");
-  eq(JSON.stringify((await serverWeek(thisWeek)).approved.map(b => b.cookDate)), JSON.stringify((await serverWeek(thisWeek)).batches.map(b => b.cookDate)));
+  await until(`fetch("/api/week-plan?week=${thisWeek}").then(r => r.json()).then(w => JSON.stringify(w.approved) === JSON.stringify(w.batches))`, "the server has the approved dishes"); // the save is queued, not awaited
 
   // ---- Phone: stacked cards, no sideways scroll, labelled buttons.
   await phone();
