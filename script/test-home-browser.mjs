@@ -61,7 +61,7 @@ try {
     await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
     ok((await text(`home-meal-meta-${recipe.id}`)).includes("Make 2.5 servings"), "cooked today: how much to make");
     ok(Boolean(await text("home-add-dish")), "+ Add a dish stays");
-    await ev(`${q(`home-meal-${recipe.id}`)}.click()`);
+    await ev(`${q(`home-meal-${recipe.id}`)}.querySelector("a").click()`);
     await until(`location.pathname === "/recipe/${encodeURIComponent(recipe.id)}" && Boolean(${q("text-recipe-title")})`, "meal opens recipe");
 
     // ---- Mobile and Hebrew.
@@ -85,7 +85,8 @@ try {
     eq(await text("home-task-count"), "15", "task count beside the title");
     ok(await ev(`!${q("home-task-preview")}.open`), "tasks collapsed");
     eq(await labels('[data-testid="app-nav-bottom"] a'), ["Home", "Groceries", "Tasks"], "bottom tabs");
-    ok(await ev(`${q("home-task-preview")}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top`), "meals and collapsed tasks above the tabs");
+    await ev("scrollTo(0, document.documentElement.scrollHeight)"); await sleep(100); // phone cards make Home taller than the screen
+    ok(await ev(`${q("home-task-preview")}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top`), "collapsed tasks scroll clear of the tabs");
     await ev(`${q("home-task-preview")}.querySelector("summary").click()`);
     eq(await ev(`document.querySelectorAll('[data-testid="home-task"]').length`), 15, "opened: every open task");
     ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");

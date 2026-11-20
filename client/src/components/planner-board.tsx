@@ -15,6 +15,7 @@ import type { PlannerRecipe } from "@/lib/planner-recipes";
 import type { RecipeTimeMode } from "@/lib/recipe-time";
 import { RecipeMeta } from "@/components/recipe-summary";
 import { RecipeCard } from "@/components/recipe-card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
@@ -61,6 +62,7 @@ const yieldOf = (batch: Batch, recipe: PlannerRecipe | undefined) => batchYield(
 function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen: (modal: Modal) => void }) {
   const t = usePlannerCopy();
   const toastApi = useToast();
+  const phone = useIsMobile();
   const { plan, recipes, lang, timeMode, commit } = props;
   const dates = useDateText(lang);
   const recipe = recipes.get(batch.recipeId);
@@ -77,7 +79,7 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
   return (
     <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
-      <RecipeCard recipe={{ ...recipe, servings: null }} href={props.recipeHref(batch)} mode={timeMode} titleTestId={`dish-link-${batch.id}`}
+      <RecipeCard recipe={{ ...recipe, servings: null }} row={!phone} href={props.recipeHref(batch)} mode={timeMode} titleTestId={`dish-link-${batch.id}`}
         ids={{ view: `dish-view-${batch.id}` }}>
         <div className="grid gap-1">
           <p className="text-base font-semibold text-foreground" data-testid={`dish-make-${batch.id}`}>
@@ -126,7 +128,7 @@ export function PlannerBoard(props: Props) {
                 </div>
               ) : (
                 <div className="mt-2 lg:mt-0 lg:flex-1">
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-3 xl:grid-cols-2">
                     {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
                   </div>
                   <div className="-ms-2 mt-2 flex flex-wrap gap-x-1">
