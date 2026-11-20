@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import { addBatch, cookedOn, moveConflicts, moveCookingDay, removeBatch, restoreBatch, servingDateChoices, setServes, swapBatch, type Batch, type PlanState, type Serve } from "@/lib/meal-plan";
-import { batchTotal, batchYield, halfServings, serveAmount, shiftDate, weekdayOf, type HouseholdCounts } from "@shared/cooking-plan";
+import { batchTotal, batchYield, halfServings, mealOf, mealSlots, serveAmount, shiftDate, weekdayOf, type HouseholdCounts, type MealSlot } from "@shared/cooking-plan";
 import { baseServings } from "@/lib/ingredient-scale";
 import { recipeNameMatches } from "@/lib/planner-filters";
 import { usePlannerCopy } from "@/lib/planner-copy";
+import { useI18n } from "@/lib/i18n";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
 import type { RecipeTimeMode } from "@/lib/recipe-time";
 import { RecipeMeta } from "@/components/recipe-summary";
@@ -26,7 +27,7 @@ const choice = (active: boolean) =>
   `min-h-11 rounded-lg border px-2 text-sm ${focus} ${active ? "border-primary bg-primary text-white" : "border-border bg-white text-foreground"}`;
 
 type Modal =
-  | { kind: "add"; date: string }
+  | { kind: "add"; date: string; meal: MealSlot }
   | { kind: "swap"; batch: Batch }
   | { kind: "servings"; batch: Batch }
   | { kind: "move"; date: string };
@@ -41,8 +42,8 @@ type Props = {
   /** Applies an edit and saves it. Returns false when nothing was saved (the page shows the error). */
   commit: (edit: (plan: PlanState) => PlanState) => boolean;
   recipeHref: (batch: Batch) => string;
-  /** Eligible recipes for a weekday (0 = Sunday), best first (+ Add a dish, Swap dish). */
-  options: (day: number) => PlannerRecipe[];
+  /** Eligible recipes for a weekday (0 = Sunday), best first, `meal`'s own first (+ Add breakfast, Swap dish). */
+  options: (day: number, meal?: MealSlot) => PlannerRecipe[];
   onPicked?: (recipeId: string) => void;
   household: HouseholdCounts | null;
   timeMode: RecipeTimeMode;
@@ -100,8 +101,11 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
 export function PlannerBoard(props: Props) {
   const { plan, week, today, lang, recipes, commit, options, onPicked, household } = props;
   const t = usePlannerCopy();
+  const { t: ti } = useI18n();
   const { toast } = useToast();
   const dates = useDateText(lang);
+  const mealName = (meal: MealSlot) => ti(`meals.${meal.toLowerCase()}`);
+  const addLabel = { Breakfast: t("addBreakfast"), Lunch: t("addLunch"), Dinner: t("addDinner") };
   const [modal, setModal] = useState<Modal | null>(null);
   const close = () => setModal(null);
   const days = Array.from({ length: 7 }, (_, i) => shiftDate(week, i));
@@ -117,26 +121,27 @@ export function PlannerBoard(props: Props) {
               {dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}
             </h2>
           );
-          const add = <button type="button" className={text} onClick={() => setModal({ kind: "add", date })} data-testid={`add-dish-${date}`}>{t("addDish")}</button>;
+          // Breakfast, Lunch and Dinner, each with its dishes and its own "+ Add" (2026-11-20).
           return (
             <section key={date} aria-labelledby={`day-${date}`} data-testid={`day-${date}`} data-today={isToday || undefined}
               className={`py-3 lg:flex lg:gap-6 ${isToday ? "bg-accent/40 -mx-2 px-2" : ""}`}>
               {heading}
-              {dishes.length === 0 ? (
-                <div className="flex flex-wrap items-center gap-x-3 lg:flex-1" data-testid={`empty-${date}`}>
-                  <p className="text-sm text-muted-foreground">{t("noCooking")}</p>{add}
-                </div>
-              ) : (
-                <div className="mt-2 lg:mt-0 lg:flex-1">
-                  <div className="grid gap-3 xl:grid-cols-2">
-                    {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
-                  </div>
-                  <div className="-ms-2 mt-2 flex flex-wrap gap-x-1">
-                    {add}
-                    <button type="button" className={text} onClick={() => setModal({ kind: "move", date })} data-testid={`move-day-${date}`}>{t("moveDay")}</button>
-                  </div>
-                </div>
-              )}
+              <div className="mt-1 space-y-1 lg:mt-0 lg:flex-1">
+                {mealSlots.map(meal => {
+                  const list = dishes.filter(b => mealOf(b) === meal);
+                  return (
+                    <div key={meal} data-testid={`meal-${date}-${meal.toLowerCase()}`} className={list.length ? "" : "flex flex-wrap items-center gap-x-3"}>
+                      <h3 className="w-28 text-xs font-medium uppercase tracking-wide text-muted-foreground">{mealName(meal)}</h3>
+                      {list.length > 0 && <div className="mt-1 grid gap-3 xl:grid-cols-2">
+                        {list.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
+                      </div>}
+                      <button type="button" className={`${text} -ms-2`} onClick={() => setModal({ kind: "add", date, meal })}
+                        data-testid={`add-dish-${date}-${meal.toLowerCase()}`}>{addLabel[meal]}</button>
+                    </div>
+                  );
+                })}
+                {dishes.length > 0 && <button type="button" className={`${text} -ms-2`} onClick={() => setModal({ kind: "move", date })} data-testid={`move-day-${date}`}>{t("moveDay")}</button>}
+              </div>
             </section>
           );
         })}
@@ -145,16 +150,16 @@ export function PlannerBoard(props: Props) {
       <Dialog open={!!modal} onOpenChange={open => !open && close()}>
         <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto" data-testid="planner-dialog">
           {modal?.kind === "add" && (
-            <PickForm title={t("addTitle", { date: dates.long(modal.date) })} options={options(weekdayOf(modal.date))} currentId={null} onClose={close}
+            <PickForm title={t("addMealTitle", { meal: mealName(modal.meal), date: dates.long(modal.date) })} options={options(weekdayOf(modal.date), modal.meal)} currentId={null} onClose={close}
               onPick={recipe => {
-                if (!commit(p => addBatch(p, recipe.id, modal.date, household))) return;
+                if (!commit(p => addBatch(p, recipe.id, modal.date, household, undefined, modal.meal))) return;
                 onPicked?.(recipe.id);
                 toast({ title: t("added", { title: recipe.title, date: dates.short(modal.date) }) });
                 close();
               }} />
           )}
           {modal?.kind === "swap" && (
-            <PickForm title={t("swapTitle", { title: recipes.get(modal.batch.recipeId)?.title ?? "" })} options={options(weekdayOf(modal.batch.cookDate))}
+            <PickForm title={t("swapTitle", { title: recipes.get(modal.batch.recipeId)?.title ?? "" })} options={options(weekdayOf(modal.batch.cookDate), mealOf(modal.batch))}
               currentId={modal.batch.recipeId} onClose={close}
               onPick={recipe => {
                 if (!commit(p => swapBatch(p, modal.batch.id, recipe.id))) return;

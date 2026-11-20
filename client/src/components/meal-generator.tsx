@@ -76,7 +76,7 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
     setSaving(true); done.current = true;
     const batchId = newBatchId();
     try {
-      let next = addBatch(before, recipeId, cookDate, householdCounts(settings), batchId);
+      let next = addBatch(before, recipeId, cookDate, householdCounts(settings), batchId, meal);
       if (input.servings && input.servings !== householdServings(settings)) next = setServes(next, batchId, [{ date: cookDate, servings: input.servings }]);
       writePlan(next);
     } catch { setProblem("error"); setSaving(false); done.current = false; return; }

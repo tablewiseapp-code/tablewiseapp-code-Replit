@@ -2,13 +2,12 @@
 // Postgres (week_plans, one row per calendar week) is the source of truth; localStorage "weeklyMealsState" is the
 // synchronous copy of the current calendar week that every page reads. Other weeks are read and written on the server
 // only (fetchWeek, saveWeek). The same key also holds the recipe browser's filters, which these writes keep.
-import { defaultServe, fromLegacy, isLegacyPlan, planStatus, shiftDate, type Batch, type HouseholdCounts, type Serve } from "@shared/cooking-plan";
+import { defaultServe, fromLegacy, isLegacyPlan, planStatus, shiftDate, type Batch, type HouseholdCounts, type MealSlot, type Serve } from "@shared/cooking-plan";
 import { currentWeek } from "./week-plan";
 
 export type { Batch, Serve } from "@shared/cooking-plan";
 /** A recipe's meal type (catalog data, Settings meal rules). The plan itself has no meal slots. */
-export const mealSlots = ["Breakfast", "Lunch", "Dinner"] as const;
-export type MealSlot = typeof mealSlots[number];
+export { mealSlots, type MealSlot } from "@shared/cooking-plan";
 /** selectedIds: the recipe browser's picks. approved: the dishes as last approved (Groceries use them); null = never.
  * proposed: the week's draft was made once, so it is not made again. */
 export type PlanState = { selectedIds: string[]; batches: Batch[]; approved: Batch[] | null; weekStart?: string; proposed?: boolean } & Record<string, unknown>;
@@ -105,9 +104,9 @@ export const cookedOn = (plan: PlanState, date: string) => plan.batches.filter(b
 export const servedFrom = (plan: PlanState, date: string) => plan.batches.filter(b => b.cookDate !== date && b.serves.some(s => s.date === date));
 
 /** + Add a dish: a new dish on that date, beside any already there; its first serving date is the cooking date. */
-export function addBatch(plan: PlanState, recipeId: string, cookDate: string, household: HouseholdCounts | null, id = newBatchId()): PlanState {
+export function addBatch(plan: PlanState, recipeId: string, cookDate: string, household: HouseholdCounts | null, id = newBatchId(), meal?: MealSlot): PlanState {
   if (plan.batches.length >= maxDishes) return plan;
-  return { ...plan, batches: [...plan.batches, { id, recipeId, cookDate, serves: [defaultServe(cookDate, household)] }] };
+  return { ...plan, batches: [...plan.batches, { id, recipeId, cookDate, serves: [defaultServe(cookDate, household)], ...(meal ? { meal } : {}) }] };
 }
 /** Swap dish: another recipe in the same place; dates and portions stay, the yield comes from the new recipe. */
 export function swapBatch(plan: PlanState, id: string, recipeId: string): PlanState {

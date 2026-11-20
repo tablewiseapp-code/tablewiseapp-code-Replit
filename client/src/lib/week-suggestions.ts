@@ -71,9 +71,11 @@ const isChallenge = (settings: BasicSettings, day: number) => challengeDays(sett
  * breakfasts. The Week filters narrow them; when no recipe passes the filters, every recipe that passes the restrictions
  * is offered instead. Restrictions are never relaxed. */
 export function dishOptions<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, day: number,
-  { exclude, chosen, seed = "", fits = any }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; seed?: string; fits?: Fits<T> } = {}): T[] {
+  { exclude, chosen, seed = "", fits = any, meal: first }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; seed?: string; fits?: Fits<T>; meal?: MealSlot } = {}): T[] {
   const challenge = isChallenge(settings, day);
-  const ranked = (f: Fits<T>) => dedupe([...mealSlots].reverse().flatMap(meal =>
+  // That meal's recipes first (+ Add breakfast), then dinners, lunches, breakfasts.
+  const order = [...mealSlots].reverse().sort((a, b) => Number(b === first) - Number(a === first));
+  const ranked = (f: Fits<T>) => dedupe(order.flatMap(meal =>
     rankedForDay(catalog, settings, day, { meal, exclude, chosen, challenge: challenge && meal === DINNER, seed, fits: f })));
   const filtered = ranked(fits);
   return filtered.length ? filtered : ranked(any);
