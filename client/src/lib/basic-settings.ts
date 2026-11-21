@@ -45,9 +45,11 @@ export type HouseholdSetup = {
   challenge: { when: typeof challengeWhen[number]; day: number | null };
   /** Dinners the last suggestion placed and not yet approved, and dinners swapped out of this draft. */
   suggested: string[]; declined: string[];
+  /** planKey() of the settings the Week was last planned with (or kept with); null = not recorded yet. */
+  plannedWith: string | null;
 };
 export const defaultSetup = (): HouseholdSetup => ({ status: "new", style: "everyday", evenings: null, fixedDays: [], noRestrictions: false, weeknightMax: { Breakfast: null, Lunch: null, Dinner: null },
-  challenge: { when: "day", day: null }, suggested: [], declined: [] });
+  challenge: { when: "day", day: null }, suggested: [], declined: [], plannedWith: null });
 
 /** Settings → Recipe View: what every recipe card shows besides name, time and servings. */
 export const recipeDetails = ["prepTime", "cookTime", "dietaryTags", "mainTool"] as const;
@@ -127,6 +129,7 @@ function setup(raw: unknown): HouseholdSetup {
     })) as Record<MealSlot, number | null>,
     challenge: { when: oneOf(challengeWhen, c.when, "day"), day: Number.isInteger(c.day) && (c.day as number) >= 0 && (c.day as number) <= 6 ? c.day as number : null },
     suggested: ids(r.suggested), declined: ids(r.declined),
+    plannedWith: typeof r.plannedWith === "string" && /^[0-9a-z]{1,16}$/.test(r.plannedWith) ? r.plannedWith : null,
   };
 }
 
@@ -304,3 +307,14 @@ export function householdCounts(s: BasicSettings): { adults: number; kids: numbe
 export const newMemberId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`).replace(/[^A-Za-z0-9_-]/g, "");
 export const emptyMember = (kind: Member["kind"], name: string): Member =>
   ({ id: newMemberId(), name, kind, diets: [], allergies: [], customAllergies: [], dislikes: [], favorites: [], portion: null });
+
+/** A short key of every setting that changes which dishes are planned (not name, stores, Recipe View or the draft
+ * bookkeeping). The Week asks to update when it differs from setup.plannedWith. */
+export function planKey(s: BasicSettings): string {
+  const { status: _status, suggested: _suggested, declined: _declined, plannedWith: _plannedWith, ...setup } = s.setup;
+  const { stores: _stores, ...shopping } = s.shopping;
+  const text = JSON.stringify([{ ...s.household, members: s.household.members.map(({ name: _name, ...m }) => m) }, s.dietary, s.kitchen, s.cooking, s.planning, shopping, setup]);
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}

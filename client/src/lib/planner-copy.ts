@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n";
 
 const en = {
   title: "Weekly cooking plan", prevWeek: "Previous week", nextWeek: "Next week", today: "Today",
+  prefsChanged: "Your preferences have been changed", prefsChangedBody: "Update the week to plan it again from your new preferences. This replaces this week's dishes.", updateWeek: "Update the week", keepWeek: "Keep my week",
   statusDraft: "Draft", statusApproved: "Approved", statusChanged: "Changes not saved",
   approve: "Approve plan", saveChanges: "Save changes", groceries: "View groceries",
   approveHint: "Approval builds your grocery list.", changedHint: "Save changes to update your groceries.",
@@ -28,6 +29,7 @@ const en = {
 };
 const ru: typeof en = {
   title: "План готовки на неделю", prevWeek: "Предыдущая неделя", nextWeek: "Следующая неделя", today: "Сегодня",
+  prefsChanged: "Ваши предпочтения изменились", prefsChangedBody: "Обновите неделю, чтобы спланировать её заново по новым предпочтениям. Блюда этой недели будут заменены.", updateWeek: "Обновить неделю", keepWeek: "Оставить мою неделю",
   statusDraft: "Черновик", statusApproved: "Утверждено", statusChanged: "Изменения не сохранены",
   approve: "Утвердить план", saveChanges: "Сохранить изменения", groceries: "Список покупок",
   approveHint: "После утверждения появится список покупок.", changedHint: "Сохраните изменения, чтобы обновить список покупок.",
@@ -52,6 +54,7 @@ const ru: typeof en = {
 };
 const he: typeof en = {
   title: "תוכנית הבישול השבועית", prevWeek: "השבוע הקודם", nextWeek: "השבוע הבא", today: "היום",
+  prefsChanged: "ההעדפות שלכם השתנו", prefsChangedBody: "עדכנו את השבוע כדי לתכנן אותו מחדש לפי ההעדפות החדשות. המנות של השבוע הזה יוחלפו.", updateWeek: "עדכון השבוע", keepWeek: "השארת השבוע שלי",
   statusDraft: "טיוטה", statusApproved: "מאושר", statusChanged: "השינויים לא נשמרו",
   approve: "אישור התוכנית", saveChanges: "שמירת השינויים", groceries: "לרשימת הקניות",
   approveHint: "האישור בונה את רשימת הקניות.", changedHint: "שמרו את השינויים כדי לעדכן את רשימת הקניות.",

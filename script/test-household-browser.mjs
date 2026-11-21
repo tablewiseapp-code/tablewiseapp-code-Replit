@@ -137,9 +137,12 @@ try {
   await go("/household", `Boolean(${q("q-filters-summary")})`);
   ok((await ev(`${q("q-filters-summary")}.textContent`)).startsWith("Any"), "Your household shows the Week page filter");
 
-  // ---- Suggest my week rebuilds an approved week from the answers; Groceries wait for Save changes.
+  // ---- Changed answers leave the Week as it is; the Week asks, and "Update the week" rebuilds it (Groceries wait for Save changes).
   await click("diet-glutenFree"); await click("button-suggest-week");
-  await until(`location.pathname === "/meals" && ${q("week-status")}?.dataset.state === "changed"`, "rebuilt week, not saved");
+  await until(`location.pathname === "/meals" && Boolean(${q("prefs-changed")})`, "asked to update");
+  eq(await ev(`${q("week-status")}.dataset.state`), "approved", "nothing changed before the answer");
+  await click("button-update-week");
+  await until(`!${q("prefs-changed")} && ${q("week-status")}?.dataset.state === "changed"`, "rebuilt week, not saved");
   eq((await dishes()).map(b => weekday(b.cookDate)), [1, 3, 5], "one dish on each of the three cooking days");
 
   // ---- Home: Suggest a recipe uses the same rule (gluten-free now set), changes nothing, Start cooking opens Zen mode.

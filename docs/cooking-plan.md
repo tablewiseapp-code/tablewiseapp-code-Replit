@@ -95,6 +95,7 @@ Made once per week (`proposed`), the first time an unapproved week is opened. Sa
   - With no preferred days, the days are spread the same way. "Not sure yet" means three.
 - **Dishes:** each cooking day without a dish gets one eligible recipe not yet in the week, dinners first, placed under Dinner. A recipe repeats only when the eligible ones run out.
 - **Changes are kept:** reopening the week keeps swaps, extra dishes, serving edits and moves. A moved cooking day changes that week only.
+- **Preferences changed** (2026-11-20): `setup.plannedWith` in Basic Settings holds `planKey` of the settings the Week was last planned or kept with (dish-affecting fields only). When it differs on this or a later week with dishes, a dialog "Your preferences have been changed" offers "Update the week" (all dishes of this week replaced by a new draft; status "Changes not saved" if it was approved) and "Keep my week". Either answer records the new key, so it asks once per change. Your household's "Suggest my week" builds the draft only when the Week is empty.
 
 ## Approval and Groceries
 

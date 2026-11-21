@@ -108,7 +108,7 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
   return (
     <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} data-meal={mealOf(batch)} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
-      <RecipeCard recipe={{ ...recipe, servings: null }} compact href={props.recipeHref(batch)} meta={meta} view={view}
+      <RecipeCard recipe={recipe} compact href={props.recipeHref(batch)} meta={meta} view={view}
         titleTestId={`dish-link-${batch.id}`} ids={{ view: `dish-view-${batch.id}` }}>
         <div className="-ms-2 -mt-2 flex items-center gap-1">
           <button type="button" className={`${icon} hover:text-foreground`} onClick={() => onOpen({ kind: "swap", batch })}

@@ -185,3 +185,13 @@ assert.notEqual(dishOptions(withBreakfast, defaultSettings(), 2)[0].title, "Oat 
 const body = (meal: unknown) => ({ weekStart: WEEK, proposed: true, selectedIds: [], batches: [{ id: "x", recipeId: "r1", cookDate: WEEK, serves: [{ date: WEEK }], meal }], approved: null });
 assert.ok(weekPlanInput.safeParse(body("Lunch")).success && !weekPlanInput.safeParse(body("Snack")).success, "the server accepts only the three meals");
 console.log("week suggestions: ok");
+
+// ---- planKey: changes with what plans dishes, not with names, stores or the draft bookkeeping.
+{
+  const { planKey, defaultSettings } = await import("../client/src/lib/basic-settings");
+  const base = defaultSettings();
+  assert.notEqual(planKey({ ...base, setup: { ...base.setup, evenings: 3 } }), planKey(base), "evenings change the key");
+  assert.equal(planKey({ ...base, setup: { ...base.setup, suggested: ["x"], plannedWith: "abc" } }), planKey(base), "bookkeeping does not");
+  assert.equal(planKey({ ...base, shopping: { ...base.shopping, stores: [{ id: "walmart", methods: ["delivery"] }] as never } }), planKey(base), "stores do not");
+  console.log("plan key: ok");
+}

@@ -27,7 +27,8 @@ import { useFilterLabels, useWeekFilterChips, WeekFilterPanel } from "@/componen
 import { countWeekFilters, defaultWeekFilters, sanitizeWeekFilters, type WeekFilters } from "@/lib/week-filters";
 
 const SELECTED_PREVIEW = 5; // more selections collapse behind "Show all"
-import { availableDevices, householdCounts, householdServings, loadSettings, methodChoices, updateSettings, useSavedSettings } from "@/lib/basic-settings";
+import { availableDevices, householdCounts, householdServings, loadSettings, methodChoices, planKey, updateSettings, useSavedSettings } from "@/lib/basic-settings";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ActivePreferences } from "@/components/active-preferences";
 import { limitingReasons, matchCounts } from "@/lib/active-preferences";
 import { checkEligibility, personalize, suggestReplacement } from "@/lib/preference-engine";
@@ -754,6 +755,10 @@ function WeekCalendar() {
         // Once per week: cooking days that already have a dish keep it; the others get one.
         shown = proposeCookingPlan(plan, recipes, loadSettings(), week, { fits }).plan;
         try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
+        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s) } })); } catch { /* asks again later */ }
+      } else if (loadSettings().setup.plannedWith === null && loadSettings().rev > 0) {
+        // Settings saved before 2026-11-20 recorded nothing: take them as what this Week was planned with.
+        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s) } })); } catch { /* asks nothing */ }
       }
       setLoaded({ week, plan: shown });
     }).catch(() => active && setFailed(true));
@@ -784,6 +789,22 @@ function WeekCalendar() {
   const go = (offset: number) => setLocation(`/meals?week=${addDays(week, offset)}`);
   const ready = loaded?.week === week ? loaded : null;
   const status = ready ? statusOf(ready.plan) : null;
+  // Preferences that change dishes were saved after this Week was planned: ask once per change (product owner, 2026-11-20).
+  // ponytail: one key for all weeks; a later week planned with the new settings also clears the question for this one.
+  const [asked, setAsked] = useState<string | null>(null);
+  const key = planKey(settings);
+  const prefsChanged = !!ready && week >= currentWeek() && ready.plan.batches.length > 0 && !!recipes
+    && settings.setup.plannedWith !== null && settings.setup.plannedWith !== key && asked !== key;
+  const acknowledge = (suggested?: string[]) => {
+    setAsked(key);
+    try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s), ...(suggested ? { suggested, declined: [] } : {}) } })); } catch { /* asked again next visit */ }
+  };
+  const updateWeek = () => {
+    const current = latest.current;
+    if (!current || !recipes) return;
+    const result = proposeCookingPlan({ ...current.plan, batches: [] }, recipes, loadSettings(), week, { fits });
+    if (save(result.plan)) acknowledge(result.suggested);
+  };
   const approve = () => {
     // From the latest plan, so a second tap (or a retry) on an already approved plan does nothing.
     const current = latest.current?.week === week ? latest.current.plan : null;
@@ -853,6 +874,18 @@ function WeekCalendar() {
             </div>
           </>
         )}
+        <AlertDialog open={prefsChanged} onOpenChange={open => { if (!open) acknowledge(); }}>
+          <AlertDialogContent data-testid="prefs-changed">
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("prefsChanged")}</AlertDialogTitle>
+              <AlertDialogDescription>{t("prefsChangedBody")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-keep-week">{t("keepWeek")}</AlertDialogCancel>
+              <AlertDialogAction data-testid="button-update-week" onClick={updateWeek}>{t("updateWeek")}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </PageContainer>
     </div>
   );

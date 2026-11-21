@@ -12,7 +12,7 @@ import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
 import { selectableDevices } from "@/lib/device-requirements";
 import { challengeWhen, cookingStyles, householdServings, loadSettings, servingLimits, updateSettings,
-  weeknightTimeOptions, type BasicSettings, type CookingStyle } from "@/lib/basic-settings";
+  planKey, weeknightTimeOptions, type BasicSettings, type CookingStyle } from "@/lib/basic-settings";
 import { mealSlots, readPlan, writePlan } from "@/lib/meal-plan";
 import { matchesPlannerFilters, WEEK_DEFAULT_MAX_MINUTES } from "@/lib/planner-filters";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
@@ -147,11 +147,13 @@ export default function Household() {
     try {
       // Stores are saved by the picker as they are tapped: keep the latest, not the draft's copy.
       const saved = updateSettings(x => ({ ...draft, rev: x.rev, shopping: { ...draft.shopping, stores: x.shopping.stores },
-        setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined } }));
-      // The answers rebuild the whole Week (product owner, 2026-11-20); an approved Week keeps its groceries until Save changes.
-      const result = proposeCookingPlan({ ...readPlan(), batches: [] }, planner, saved, currentWeek(), { fits });
-      writePlan(result.plan);
-      updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [] } }));
+        setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined, plannedWith: x.setup.plannedWith ?? planKey(x) } }));
+      // A Week with dishes is never changed here: the Week asks "update the week?" when the answers changed (2026-11-20).
+      if (!readPlan().batches.length) {
+        const result = proposeCookingPlan(readPlan(), planner, saved, currentWeek(), { fits });
+        writePlan(result.plan);
+        updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [], plannedWith: planKey(x) } }));
+      }
       setLocation("/meals?plan");
     } catch { setError("save"); setBusy(false); }
   };
