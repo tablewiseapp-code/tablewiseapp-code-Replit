@@ -150,7 +150,8 @@ export function installAccounts(app: Express, security: Security, store: Account
     const input = signInInput.safeParse(req.body);
     if (!input.success) return res.status(400).json({ error: "invalid" });
     const { email, password } = input.data;
-    if (failures.take(`email:${hash(email)}`, 10, 900_000)) return res.status(429).json({ error: "too_many" });
+    const key = `email:${hash(email)}`;
+    if (failures.take(key, 10, 900_000)) return res.status(429).json({ error: "too_many" });
     try {
       let account = await store.find(email);
       if (!account) {
@@ -164,6 +165,8 @@ export function installAccounts(app: Express, security: Security, store: Account
         return await begin(res, account);
       }
       if (!await checkPassword(password, account.passwordHash)) return res.status(401).json({ error: "wrong_password" });
+      // Only wrong passwords count toward the limit: a successful sign-in clears it.
+      failures.reset(key);
       await begin(res, account);
     } catch {
       console.error("api_failure operation=sign_in");

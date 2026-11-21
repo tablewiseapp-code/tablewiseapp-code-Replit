@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import { Switch, Route, Redirect, useLocation, useSearch } from "wouter";
 import { readPlan, syncWeekPlan } from "@/lib/meal-plan";
 import { loadSettings, syncSettings } from "@/lib/basic-settings";
@@ -8,7 +8,8 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { I18nProvider } from "@/lib/i18n";
+import { I18nProvider, useI18n } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 import { AppNav } from "@/components/layout/app-nav";
 import { RecipeDisplayProvider } from "@/components/recipe-display";
 import RecipeView from "@/pages/recipe-view";
@@ -65,6 +66,22 @@ function Router() {
   );
 }
 
+// Without this, any render error blanks the whole app (white screen). The error is still logged to the console.
+class CrashGuard extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? <Crashed /> : this.props.children; }
+}
+function Crashed() {
+  const { t } = useI18n();
+  return (
+    <main className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
+      <p>{t("app.crashed")}</p>
+      <Button className="min-h-11" onClick={() => window.location.reload()}>{t("app.reload")}</Button>
+    </main>
+  );
+}
+
 function App() {
   // Pages read the Week synchronously, so load the server copy first. Offline or failing: use the browser copy.
   // First visit: offer sign-in or "Continue as guest" (remembered). Share links open without it.
@@ -81,11 +98,13 @@ function App() {
         <I18nProvider>
           <RecipeDisplayProvider>
           <Toaster />
+          <CrashGuard>
           {ready && (askSignIn ? <SignIn onGuest={() => setAskSignIn(false)} /> : <>
             <FirstVisit />
             <AppNav />
             <Router />
           </>)}
+          </CrashGuard>
           </RecipeDisplayProvider>
         </I18nProvider>
       </TooltipProvider>

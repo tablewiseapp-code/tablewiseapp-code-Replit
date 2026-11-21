@@ -259,7 +259,7 @@ async function main() {
       assert.equal(f.writes, 30);
     });
     await check("general request limits bound untrusted traffic regardless of X-Forwarded-For", async f => {
-      for (let i = 0; i < 120; i++) await status(f.request("/api/operator/session"), 200);
+      for (let i = 0; i < 3000; i++) await status(f.request("/api/operator/session"), 200);
       await status(f.request("/api/operator/session", "GET", undefined, { "X-Forwarded-For": "9.9.9.9" }), 429);
       f.advance(60_001); await status(f.request("/api/operator/session"), 200);
     });

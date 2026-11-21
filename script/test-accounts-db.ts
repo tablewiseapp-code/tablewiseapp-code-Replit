@@ -121,9 +121,13 @@ async function main() {
     await pool.query("UPDATE account_sessions SET expires_at = now() - interval '1 second'");
     assert.deepEqual((await request("GET", "/api/auth/me", undefined, session)).data, { email: null });
 
-    // Ten attempts per email per 15 minutes.
-    for (let i = 0; i < 7; i++) await signIn("ann@example.com", "not-the-pass");
-    assert.equal((await signIn("ann@example.com", "secret-pass")).status, 429);
+    // Ten wrong passwords per email per 15 minutes; a successful sign-in clears the count (it used to count too).
+    for (let i = 0; i < 9; i++) assert.equal((await signIn("ann@example.com", "not-the-pass")).status, 401);
+    assert.equal((await signIn("ann@example.com", "secret-pass")).status, 200, "the 10th attempt is still allowed");
+    for (let i = 0; i < 9; i++) await signIn("ann@example.com", "not-the-pass");
+    assert.equal((await signIn("ann@example.com", "secret-pass")).status, 200, "the earlier success reset the count");
+    for (let i = 0; i < 10; i++) await signIn("ann@example.com", "not-the-pass");
+    assert.equal((await signIn("ann@example.com", "secret-pass")).status, 429, "ten wrong passwords lock the email");
     console.log("accounts db: ok");
   } finally {
     server.close();

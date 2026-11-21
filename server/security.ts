@@ -52,6 +52,7 @@ export class RequestBudget {
     value.count++;
     return 0;
   }
+  reset(key: string) { this.entries.delete(key); }
 }
 
 export function installPilotSecurity(app: Express, config: PilotConfig, now = Date.now, developmentCredits = false) {
@@ -117,7 +118,8 @@ export function installPilotSecurity(app: Express, config: PilotConfig, now = Da
       // No URL, query, credentials, request/response bodies, or exception details.
       console.log(`api method=${req.method} status=${res.statusCode} durationMs=${now() - start}`);
     });
-    if (!consume(res, "all", 120, 60_000)) return;
+    // Shared by every visitor: one page load is 6-9 calls plus one per photo, so 120 locked everyone out (2026-11-21).
+    if (!consume(res, "all", 3000, 60_000)) return;
     next();
   });
   app.post("/api/operator/session",
