@@ -86,6 +86,8 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
 
   const go = (next: number) => setStep(clampStep(next, total));
   const finish = () => { clearCookingStep(recipeId); clearTimers(recipeId); onFinish(); };
+  // Leaving from the last step is finishing: the recipe page folds Ingredients and Instructions and shows "Made it?".
+  const exit = () => last ? finish() : onExit();
   const toggleZen = () => { const next = !zen; setZen(next); saveCookingZen(next); };
   const forward = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
   const backward = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
@@ -113,14 +115,14 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
     <div ref={rootRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${t("cookingMode")}: ${title}`} dir={dir}
       data-testid="cooking-mode" data-zen={zen ? "true" : "false"}
       onKeyDown={event => {
-        if (event.key === "Escape") { event.stopPropagation(); onExit(); }
+        if (event.key === "Escape") { event.stopPropagation(); exit(); }
         else if (event.key === forward && !last) go(nextStep(step, total));
         else if (event.key === backward) go(previousStep(step, total));
       }}
       className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background text-foreground outline-none">
       <header className="border-b hairline px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2">
-          <button type="button" onClick={onExit} data-testid="cooking-exit" className={`${btn} border border-border bg-white px-4`}>
+          <button type="button" onClick={exit} data-testid="cooking-exit" className={`${btn} border border-border bg-white px-4`}>
             <X className="h-4 w-4" aria-hidden="true" />{t("exitCooking")}
           </button>
           <button type="button" role="switch" aria-checked={zen} onClick={toggleZen} data-testid="cooking-zen-toggle"
