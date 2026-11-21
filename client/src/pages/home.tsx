@@ -114,7 +114,7 @@ export default function Home() {
               <SectionState error={catalog.isError} retry={() => catalog.refetch()} text={text} />
             ) : (
               // Breakfast, Lunch and Dinner, as in the Week (2026-11-20); each meal has its own + Add.
-              <div data-testid="home-today" className="grid gap-2">
+              <div data-testid="home-today" className="grid grid-cols-[minmax(0,1fr)] gap-2">
                 {mealSlots.map(meal => {
                   const list = todays.filter(([batch]) => mealOf(batch) === meal);
                   const name = t(`meals.${meal.toLowerCase()}`);
@@ -154,7 +154,7 @@ export default function Home() {
                             return <div key={batch.id}>
                               {/* One line: the name (cut short if long), the first two nutrients and "…", which shows all of them below. */}
                               <div className="flex min-w-0 max-w-xl items-baseline gap-3">
-                                <span className="truncate text-base font-semibold leading-snug text-foreground">{translations.get(recipe.id)?.title ?? recipe.title}</span>
+                                <span className="min-w-0 truncate text-base font-semibold leading-snug text-foreground">{translations.get(recipe.id)?.title ?? recipe.title}</span>
                                 {!all && <NutritionGrid recipe={recipe} testId={id} limit={2} />}
                                 {shown > 2 && <button type="button" aria-expanded={all} aria-label={text("moreNutrition")} data-testid={`${id}-more`}
                                   className="-my-3 min-h-11 shrink-0 px-2 text-sm font-semibold text-foreground underline underline-offset-4"

@@ -78,6 +78,10 @@ try {
     await ev("localStorage.setItem('tablewise_language','en')");
     await ev(`Promise.all(Array.from({ length: 15 }, (_, i) => fetch("/api/home-tasks/" + crypto.randomUUID(), { method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Home browser task " + (i + 1), dueDate: null, priority: "normal", image: null, completedAt: null }) })))`);
+    // Breakfast and lunch with nutrition: an earlier meal collapses to one line (name, two nutrients, "…") that must fit a phone.
+    const fed = await ev(`fetch("/api/recipes").then(r => r.json()).then(list => list.filter(r => r.nutrition && /^\\d+$/.test(r.servings ?? "")).sort((a, b) => b.title.length - a.title.length)[0]?.id)`);
+    ok(fed, "a recipe with nutrition");
+    await ev(`(() => { const p = JSON.parse(localStorage.getItem("weeklyMealsState")); p.batches.push(${JSON.stringify({ ...dish("b1", fed, todayDate), meal: "Breakfast" })}, ${JSON.stringify({ ...dish("l1", fed, todayDate), meal: "Lunch" })}); localStorage.setItem("weeklyMealsState", JSON.stringify(p)); })()`);
     for (const [width, height] of [[375, 667], [360, 640]]) {
       await call("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: true });
       await go("/", `Boolean(${q("home-task-count")})`); await sleep(300);
