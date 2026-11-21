@@ -36,10 +36,10 @@ Each planned dish (one batch) appears once, on the day it is cooked, as the shar
 - **Title.** It opens the recipe at this batch (`/recipe/:id?week=…&batch=…`), scaled to the batch total. Back returns to the week.
 - **One line:** meal · total time · servings · days covered, e.g. "Dinner · 45 min · 7 servings · For Mon–Tue".
   - **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner). Swap, Edit servings and Move day keep it. A dish saved without one (before 2026-11-20) and the draft's dishes are Dinner; Breakfast/Lunch/Dinner slots of older weeks keep their meal.
-  - **Time** is the total time, whatever the recipe time setting. Prep and cook times and the cooking tool stay on the recipe page.
+  - **Time** is the total time, whatever the recipe time setting. Prep and cook times show below with the Recipe View details when chosen there (2026-11-21); the cooking tool stays on the recipe page.
   - **"7 servings"** is the amount to prepare (the batch total, with any edits; half servings as written, e.g. 3.5). It is a button named "Edit servings for {recipe}" that opens Edit servings.
   - **Days covered** come from the serving dates: left out when the dish is eaten only on its cooking day; "For Mon–Wed" for consecutive days, "For Mon & Wed" for separate ones, mixed as "For Mon–Tue & Thu". Dates more than a week after cooking are written in full.
-- **Recipe View** nutrition and Dietary tags (Settings).
+- **Recipe View** nutrition, prep time, cook time and Dietary tags, as chosen in Settings.
 - **Buttons:** two icon buttons: Swap (arrows, named "Swap {recipe}") and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu.
 
 ## Servings

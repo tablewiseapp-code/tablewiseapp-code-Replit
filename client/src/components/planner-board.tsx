@@ -103,8 +103,8 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
     </p>
   );
   const icon = `inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-accent ${focus}`;
-  // Recipe View nutrition stays; prep/cook times and the cooking tool stay on the recipe page.
-  const view = { ...recipeView, details: recipeView.details.filter(d => d === "dietaryTags") };
+  // Recipe View nutrition, prep and cook time and Dietary tags as chosen in Settings; the cooking tool stays on the recipe page.
+  const view = { ...recipeView, details: recipeView.details.filter(d => d !== "mainTool") };
   return (
     <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} data-meal={mealOf(batch)} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
