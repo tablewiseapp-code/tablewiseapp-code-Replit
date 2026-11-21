@@ -267,3 +267,15 @@
   .grocery-toggle { display: flex; width: 100%; }
   .grocery-toggle button { flex: 1; padding: 0 8px; }
 }
+
+/* Whole-list estimate and search (2026-11-20). */
+.grocery-estimate { margin-top: 14px; padding: 12px 16px; border-radius: 14px; background: var(--accent); }
+.grocery-estimate p { margin: 0; }
+.grocery-estimate p + p { margin-top: 4px; }
+.grocery-search { position: relative; display: block; margin-top: 12px; }
+.grocery-search svg { position: absolute; inset-inline-start: 14px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--ml-muted); pointer-events: none; }
+.grocery-search input {
+  width: 100%; min-height: 44px; padding-inline: 40px 14px; border: 1px solid var(--ml-line); border-radius: 12px;
+  background: var(--card); color: var(--ml-ink); font: inherit; font-size: var(--text-body);
+}
+.grocery-search input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
