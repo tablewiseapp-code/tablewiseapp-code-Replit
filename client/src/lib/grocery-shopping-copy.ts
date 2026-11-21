@@ -38,6 +38,11 @@ const copy = {
   purchase: ["Mark quantity purchased", "Указать купленное количество", "סימון כמות שנקנתה"],
   quantity: ["Quantity", "Количество", "כמות"],
   save: ["Save", "Сохранить", "שמירה"],
+  walkIn: ["Walk-in estimate", "Оценка для покупки в магазине", "הערכה לקנייה בחנות"],
+  samplePrices: ["Sample prices in CAD, not from a store", "Примерные цены в CAD, не из магазина", "מחירים לדוגמה ב-CAD, לא מחנות"],
+  search: ["Find an item…", "Найти товар…", "חיפוש פריט…"],
+  searchLabel: ["Find an item", "Найти товар", "חיפוש פריט"],
+  noMatches: ["No items match your search.", "Ничего не найдено.", "לא נמצאו פריטים תואמים."],
 } as const;
 
 export function shoppingCopy(lang: Language, key: keyof typeof copy) {

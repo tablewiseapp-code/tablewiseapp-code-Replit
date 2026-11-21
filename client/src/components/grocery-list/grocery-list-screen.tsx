@@ -22,7 +22,7 @@ import { usePilotPage } from "@/hooks/use-pilot-page";
 import { currentWeek, isWeek } from "@/lib/week-plan";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { GroceryShareDialog } from "./grocery-share-dialog";
-import { Plus, Share2, Store } from "lucide-react";
+import { Plus, Search, Share2, Store } from "lucide-react";
 import { StorePicker } from "@/components/store-picker";
 import { useStorePickerCopy } from "@/lib/store-picker-copy";
 import { loadSettings } from "@/lib/basic-settings";
@@ -51,6 +51,7 @@ export default function GroceryListScreen() {
   const [storesOpen, setStoresOpen] = useState(() => new URLSearchParams(window.location.search).has("stores"));
   const storeCopy = useStorePickerCopy();
   const [tab, setTab] = useState<"all" | "recipes" | "mine">("all");
+  const [query, setQuery] = useState("");
   // Categories whose "$" button shows item prices. Display-only: expansion and checks are separate state.
   const [shownPrices, setShownPrices] = useState<Set<string>>(new Set());
   const [editingNote, setEditingNote] = useState<string | null>(null);
@@ -355,10 +356,18 @@ export default function GroceryListScreen() {
     text: row.ingredient.slice(0, 300), recipes: row.recipes.join(" · ").slice(0, 300),
     checked: row.checked, note: notes[rowMetadataKey(row)] || null,
   }));
-  const rows = tab === "mine" ? activeRows.filter(row => row.extraId) : tab === "recipes" ? activeRows.filter(row => !row.extraId) : activeRows;
+  const tabRows = tab === "mine" ? activeRows.filter(row => row.extraId) : tab === "recipes" ? activeRows.filter(row => !row.extraId) : activeRows;
+  const search = query.trim().toLowerCase();
+  // Search covers every category, collapsed ones too; the saved expansion applies again when it is cleared.
+  const rows = search ? tabRows.filter(row => [row.ingredient, ...row.recipes, notes[rowMetadataKey(row)] ?? ""]
+    .some(text => text.toLowerCase().includes(search))) : tabRows;
   const priceOf = (row: ShoppingRow) => {
     const preference = preferences.get(row.key);
-    return preference?.priceText === row.ingredient ? preference.priceCents : null;
+    if (preference?.priceText === row.ingredient && preference.priceCents !== null) return preference.priceCents;
+    // ponytail: sample price from the item text (CA$1.50–24.99, the same every time) until a store price source exists.
+    let hash = 0;
+    for (const char of row.ingredient) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return 150 + hash % 2350;
   };
   const partialMeasure = partial ? groceryMeasure(partial.ingredient) : null;
   const displayUnit = partial ? parseIngredientLine(partial.ingredient).unit : null;
@@ -372,6 +381,8 @@ export default function GroceryListScreen() {
     const priced = items.map(priceOf).filter((value): value is number => value !== null);
     return priced.length ? money(priced.reduce((sum, value) => sum + value, 0)) : null;
   };
+  // Every remaining item, whatever the filter or search shows.
+  const listTotal = activeRows.length ? subtotal(activeRows) : null;
   const togglePrices = (category: string) => setShownPrices(previous => {
     const next = new Set(previous);
     if (!next.delete(category)) next.add(category);
@@ -452,7 +463,16 @@ export default function GroceryListScreen() {
             <GroceryBulkAdd categories={categoryTranslations} onSave={async items => await addBulk(items) && (setAddOpen(false), true)}
               existing={[...manualRows.map(row => ({ text: row.ingredient, id: row.extraId })), ...activeRows.filter(row => !row.extraId).map(row => ({ text: row.ingredient }))]} />
           </>}
-          <p aria-live="polite" className="mt-3 text-sm font-medium">{copy("left")} · {rows.length}</p>
+          <p aria-live="polite" className="mt-3 text-sm font-medium">{copy("left")} · {tabRows.length}</p>
+          {listTotal && <div className="grocery-estimate" data-testid="grocery-list-estimate">
+            <p><strong>{copy("walkIn")}</strong> · <span className="tabular-nums">{listTotal}</span></p>
+            <p className="text-sm text-muted-foreground">{copy("samplePrices")}</p>
+          </div>}
+          <label className="grocery-search">
+            <Search aria-hidden="true" />
+            <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={copy("search")}
+              aria-label={copy("searchLabel")} data-testid="input-grocery-search" />
+          </label>
         </header>
         <Dialog open={storesOpen} onOpenChange={setStoresOpen}>
           <DialogContent className="max-h-[85dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg" data-testid="my-stores-dialog">
@@ -465,7 +485,8 @@ export default function GroceryListScreen() {
         <GroceryShareDialog open={shareOpen} onOpenChange={setShareOpen} categories={shareCategories} linkItems={linkItems} pantryLabel={settingsText(lang, "pantryBadge")} />
         {shoppingError && <p role="alert">{t("grocery.changeFailed")} <button type="button" className="grocery-reset" onClick={() => void reloadShopping()}>{groceryProductText(lang, "retry")}</button></p>}
         {picturesError && <p role="alert">{groceryProductText(lang, "loadError")} <button type="button" className="grocery-reset" onClick={() => void reloadPictures()}>{groceryProductText(lang, "retry")}</button></p>}
-        {!rows.length && (
+        {!rows.length && search && <p className="grocery-success" role="status" data-testid="grocery-no-matches">{copy("noMatches")}</p>}
+        {!rows.length && !search && (
           <p className="grocery-success" role="status" data-testid="grocery-shopping-complete">
             {tab === "mine" ? copy("emptyMine") : purchasedRows.length ? copy("done") : t("grocery.noMeals")}
             {tab !== "mine" && !purchasedRows.length && <button className="grocery-share-button mt-2" onClick={() => setLocation(otherWeek ? `/meals?week=${otherWeek}` : "/meals?plan")}>{t("grocery.goToPlan")}</button>}
@@ -475,7 +496,7 @@ export default function GroceryListScreen() {
           {tab === "mine" ? <ul>{rows.map(renderRow)}</ul> : categories.map(category => {
             const items = rows.filter(row => categoryOf(row) === category);
             if (!items.length) return null;
-            const collapsed = expansion[category] === "closed";
+            const collapsed = !search && expansion[category] === "closed";
             const title = categoryTranslations[category];
             const slug = category.replace(/[^a-z]+/gi, "-").toLowerCase();
             return (
@@ -499,7 +520,7 @@ export default function GroceryListScreen() {
               </section>
             );
           })}
-          {tab === "all" && purchasedRows.length > 0 && (
+          {tab === "all" && !search && purchasedRows.length > 0 && (
             <details className="grocery-category">
               <summary className="min-h-11 cursor-pointer p-3">{copy("checked")} ({purchasedRows.length})</summary>
               <ul>{purchasedRows.map(row => (
