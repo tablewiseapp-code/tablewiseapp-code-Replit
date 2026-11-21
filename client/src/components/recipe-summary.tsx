@@ -95,6 +95,45 @@ export type RecipeViewData = NutritionFields & RecipeTimeData & {
   perServing?: Partial<Record<RecipeNutrient, number>> | null;
 };
 
+/** Settings → Recipe View nutrition as on the recipe card: "Est. per serving", then name above value. Nothing when none is shown. */
+/** How many nutrients Recipe View shows for this recipe (0 when nutrition is off or unknown). */
+export function recipeViewNutrients(recipe: RecipeViewData, { showNutrition, nutrients }: RecipeView): number {
+  const serving = showNutrition ? servingNutrition(recipe) : null;
+  return serving ? recipeNutrients.filter(n => nutrients.includes(n) && serving.values[n] !== undefined).length : 0;
+}
+
+/**
+ * `small`: no visible heading (kept for screen readers) and values smaller than a dish name, for a collapsed Home meal.
+ * `limit`: only the first N nutrients, on one line ("Calories 530 kcal  Protein 25 g").
+ */
+export function NutritionGrid({ recipe, view, testId, small = false, limit }: { recipe: RecipeViewData; view?: RecipeView; testId: string; small?: boolean; limit?: number }) {
+  const { recipeView } = useRecipeDisplay();
+  const { lang } = useI18n();
+  const { showNutrition, nutrients } = view ?? recipeView;
+  const s = (key: string) => settingsText(lang, key);
+  const serving = showNutrition ? servingNutrition(recipe) : null;
+  const shown = serving ? recipeNutrients.filter(n => nutrients.includes(n) && serving.values[n] !== undefined) : [];
+  const amount = (n: RecipeNutrient, value: number) =>
+    `${value.toLocaleString(lang, { maximumFractionDigits: nutrientUnit(n) === "g" && value < 10 ? 1 : 0 })} ${s(`unit_${nutrientUnit(n)}`)}`;
+  if (!serving || !shown.length) return null;
+  if (limit) return <dl className="flex shrink-0 gap-3 whitespace-nowrap" aria-label={s(serving.estimated ? "estPerServing" : "perServing")} data-testid={`${testId}-nutrition`}>
+    {shown.slice(0, limit).map(n => <div key={n} className="flex gap-1" data-testid={`${testId}-${n}`}>
+      <dt>{s(`nutrient_${n}`)}</dt>
+      <dd className="font-semibold tabular-nums text-foreground">{amount(n, serving.values[n]!)}</dd>
+    </div>)}
+  </dl>;
+  const heading = s(serving.estimated ? "estPerServing" : "perServing");
+  return <section aria-label={heading} data-testid={`${testId}-nutrition`}>
+    {!small && <h4 className="mb-2 text-xs font-medium">{heading}</h4>}
+    <dl className="grid grid-cols-[repeat(auto-fit,minmax(48px,1fr))] gap-2">
+      {shown.map(n => <div key={n} data-testid={`${testId}-${n}`}>
+        <dt>{s(`nutrient_${n}`)}</dt>
+        <dd className={`mt-0.5 font-semibold tabular-nums text-foreground ${small ? "text-xs" : "text-[0.93rem]"}`}>{amount(n, serving.values[n]!)}</dd>
+      </div>)}
+    </dl>
+  </section>;
+}
+
 /**
  * Settings → Recipe View on any recipe card: the selected nutrition on one line (wraps on a phone), then the selected
  * extra details. A row with nothing to show is left out; so is the whole block. `view` overrides the saved preference (preview).
@@ -108,8 +147,6 @@ export function RecipeViewRows({ recipe, view, testId, className = "" }: { recip
   const id = testId ?? `recipe-view-${recipe.id}`;
   const serving = showNutrition ? servingNutrition(recipe) : null;
   const shown = serving ? recipeNutrients.filter(n => nutrients.includes(n) && serving.values[n] !== undefined) : [];
-  const amount = (n: RecipeNutrient, value: number) =>
-    `${value.toLocaleString(lang, { maximumFractionDigits: nutrientUnit(n) === "g" && value < 10 ? 1 : 0 })} ${s(`unit_${nutrientUnit(n)}`)}`;
   const facts = recipeDetails.filter(d => details.includes(d)).flatMap((detail): { detail: string; text: string }[] => {
     if (detail === "prepTime" || detail === "cookTime") {
       const minutes = recipeStageMinutes(recipe, detail === "prepTime" ? "preparation" : "cooking");
@@ -123,17 +160,8 @@ export function RecipeViewRows({ recipe, view, testId, className = "" }: { recip
     return main ? [{ detail, text: tool(main) }] : [];
   });
   if (!shown.length && !facts.length) return null;
-  const heading = s(serving?.estimated ? "estPerServing" : "perServing");
   return <div className={`mt-3.5 space-y-2 border-t border-border pt-3 text-xs text-muted-foreground ${className}`} data-testid={id}>
-    {serving && shown.length > 0 && <section aria-label={heading} data-testid={`${id}-nutrition`}>
-      <h4 className="mb-2 text-xs font-medium">{heading}</h4>
-      <dl className="grid grid-cols-[repeat(auto-fit,minmax(48px,1fr))] gap-2">
-        {shown.map(n => <div key={n} data-testid={`${id}-${n}`}>
-          <dt>{s(`nutrient_${n}`)}</dt>
-          <dd className="mt-0.5 text-[0.93rem] font-semibold tabular-nums text-foreground">{amount(n, serving.values[n]!)}</dd>
-        </div>)}
-      </dl>
-    </section>}
+    {shown.length > 0 && <NutritionGrid recipe={recipe} view={view} testId={id} />}
     {facts.length > 0 && <p className="flex flex-wrap gap-x-1" data-testid={`${id}-details`}>
       {facts.map(({ detail, text }, i) => <span key={detail} data-testid={`${id}-${detail}`}>{i > 0 && <span aria-hidden="true">· </span>}{text}</span>)}
     </p>}

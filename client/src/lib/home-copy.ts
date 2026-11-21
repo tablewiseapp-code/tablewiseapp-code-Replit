@@ -16,7 +16,7 @@ const copy = {
     genNone_search: "No {meal} recipe matches “{query}”. Try other words.",
     genChanged: "Today’s {meal} has changed to {title}. Replace it?", genReplace: "Replace", genSaveError: "Couldn’t add it. Try again.",
     genMineTitle: "My recipes", genMineEmpty: "No saved recipes yet. Tap the heart on a recipe to save it.",
-    genAdded: "Added to today", genUndo: "Undo", genUndoGone: "Not undone: this dish has changed.",
+    genAdded: "Added to today", genUndo: "Undo", genUndoGone: "Not undone: this dish has changed.", moreNutrition: "Show all nutrition",
   },
   ru: {
     title: "Главная", todaysMeals: "Сегодня", makeServings: "Приготовить порций: {count}", cookedOn: "Приготовлено: {date}", genKind: "Тип блюда", viewWeek: "Открыть неделю", addBreakfast: "+ Добавить завтрак", addLunch: "+ Добавить обед", addDinner: "+ Добавить ужин",
@@ -35,7 +35,7 @@ const copy = {
     genNone_search: "Нет рецептов ({meal}) по запросу «{query}». Попробуйте другие слова.",
     genChanged: "{Meal} на сегодня уже изменён: {title}. Заменить?", genReplace: "Заменить", genSaveError: "Не удалось добавить. Попробуйте ещё раз.",
     genMineTitle: "Мои рецепты", genMineEmpty: "Сохранённых рецептов пока нет. Нажмите на сердечко у рецепта, чтобы сохранить его.",
-    genAdded: "Добавлено на сегодня", genUndo: "Отменить", genUndoGone: "Не отменено: это блюдо уже изменено.",
+    genAdded: "Добавлено на сегодня", genUndo: "Отменить", genUndoGone: "Не отменено: это блюдо уже изменено.", moreNutrition: "Показать всю пищевую ценность",
   },
   he: {
     title: "בית", todaysMeals: "היום", makeServings: "להכין {count} מנות", cookedOn: "בושל ב{date}", genKind: "סוג המנה", viewWeek: "לתפריט השבועי", addBreakfast: "+ הוספת ארוחת בוקר", addLunch: "+ הוספת ארוחת צהריים", addDinner: "+ הוספת ארוחת ערב",
@@ -54,7 +54,7 @@ const copy = {
     genNone_search: "אין מתכונים ל{meal} שמתאימים ל„{query}”. נסו מילים אחרות.",
     genChanged: "{Meal} של היום השתנתה ל{title}. להחליף?", genReplace: "החלפה", genSaveError: "לא ניתן להוסיף. נסו שוב.",
     genMineTitle: "המתכונים שלי", genMineEmpty: "אין עדיין מתכונים שמורים. הקישו על הלב במתכון כדי לשמור אותו.",
-    genAdded: "נוסף להיום", genUndo: "ביטול", genUndoGone: "לא בוטל: המנה הזו השתנתה.",
+    genAdded: "נוסף להיום", genUndo: "ביטול", genUndoGone: "לא בוטל: המנה הזו השתנתה.", moreNutrition: "הצגת כל הערכים התזונתיים",
   },
 };
 export function homeText(lang: string, key: keyof typeof copy.en, values: Record<string, string | number> = {}): string {

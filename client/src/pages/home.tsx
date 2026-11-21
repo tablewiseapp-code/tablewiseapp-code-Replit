@@ -17,7 +17,9 @@ import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
 import { RecipeCard } from "@/components/recipe-card";
-import { RecipeMeta } from "@/components/recipe-summary";
+import { useRecipeDisplay } from "@/components/recipe-display";
+import { useRecipeTranslations } from "@/lib/recipe-translation";
+import { NutritionGrid, RecipeMeta, recipeViewNutrients } from "@/components/recipe-summary";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import type { Recipe } from "@/lib/storage";
 
@@ -39,6 +41,9 @@ export default function Home() {
   const [generating, setGenerating] = useState<MealTarget | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const catalog = useRecipeCatalog();
+  const translations = useRecipeTranslations();
+  const { recipeView } = useRecipeDisplay();
+  const [allNutrition, setAllNutrition] = useState<ReadonlySet<string>>(new Set()); // collapsed dishes showing every nutrient
   const { toast } = useToast();
   // Focus goes back to that meal's + Add button.
   const focusAdd = (meal: MealSlot) => requestAnimationFrame(() => {
@@ -137,8 +142,29 @@ export default function Home() {
                     })}
                   </ul>;
                   if (!list.length || order < 0) return (
-                    <details key={meal} data-testid={`home-slot-${meal.toLowerCase()}`}>
-                      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</summary>
+                    <details key={meal} className="group" data-testid={`home-slot-${meal.toLowerCase()}`}>
+                      <summary className="flex min-h-11 cursor-pointer flex-col justify-center">
+                        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</span>
+                        {/* Collapsed: each dish's name and nutrition, styled as on its recipe card; hidden once the cards are open. */}
+                        {list.length > 0 && <div className="mt-1 grid gap-3 pb-2 text-xs text-muted-foreground group-open:hidden" data-testid={`home-slot-${meal.toLowerCase()}-summary`}>
+                          {list.map(([batch]) => {
+                            const recipe = recipes.get(batch.recipeId)!;
+                            const all = allNutrition.has(batch.id), id = `home-slot-summary-${batch.id}`;
+                            const shown = recipeViewNutrients(recipe, recipeView);
+                            return <div key={batch.id}>
+                              {/* One line: the name (cut short if long), the first two nutrients and "…", which shows all of them below. */}
+                              <div className="flex min-w-0 max-w-xl items-baseline gap-3">
+                                <span className="truncate text-base font-semibold leading-snug text-foreground">{translations.get(recipe.id)?.title ?? recipe.title}</span>
+                                {!all && <NutritionGrid recipe={recipe} testId={id} limit={2} />}
+                                {shown > 2 && <button type="button" aria-expanded={all} aria-label={text("moreNutrition")} data-testid={`${id}-more`}
+                                  className="-my-3 min-h-11 shrink-0 px-2 text-sm font-semibold text-foreground underline underline-offset-4"
+                                  onClick={e => { e.preventDefault(); setAllNutrition(prev => { const next = new Set(prev); if (all) next.delete(batch.id); else next.add(batch.id); return next; }); }}>…</button>}
+                              </div>
+                              {all && <div className="mt-1.5"><NutritionGrid recipe={recipe} testId={id} small /></div>}
+                            </div>;
+                          })}
+                        </div>}
+                      </summary>
                       {dishes}
                       {add}
                     </details>
