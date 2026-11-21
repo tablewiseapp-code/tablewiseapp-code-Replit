@@ -355,7 +355,14 @@ export default function RecipeDetail() {
 
       {cooking && recipe.steps.length > 0 && <CookingMode key={recipe.id} recipeId={recipe.id} title={text.title} steps={text.steps} analysis={analysis}
         servings={selectedServings} scaledIngredients={scaledIngredients}
-        stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => setCooking(false)} />}
+        stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => {
+          setCooking(false);
+          // After the last step, "Made it?" comes to the top of the screen, ready to tap.
+          requestAnimationFrame(() => {
+            document.querySelector("[data-testid=my-cooking-experience]")?.scrollIntoView({ block: "start" });
+            document.querySelector<HTMLButtonElement>("[data-testid=button-made-it]")?.focus({ preventScroll: true });
+          });
+        }} />}
 
       <AddToMealPlanDialog open={planOpen} onOpenChange={setPlanOpen} recipe={recipe} plannerHref="/meals?plan" />
 
