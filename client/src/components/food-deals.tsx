@@ -97,17 +97,18 @@ export function FoodDeals({ activeDeal, onShowRecipes }: { activeDeal: string | 
   );
 }
 
-/** The Week's "Weekly deals · N offers" row: collapsed, and absent when no offer applies to the shown week. */
+/** The Week's "Weekly deals · N offers" box: always open, with a pulsing dot (still under reduced motion), and absent when no offer applies to the shown week. */
 export function WeekDeals({ offers, lang }: { offers: { deal: FoodDeal; dish: string | null }[]; lang: string }) {
   const c = useWeekFilterCopy();
   const t = usePlannerCopy();
   if (!offers.length) return null;
   const day = new Intl.DateTimeFormat(lang, { month: "short", day: "numeric", timeZone: "UTC" });
   return (
-    <details className="mb-4 rounded-lg border border-border bg-white px-3" data-testid="week-deals">
-      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">
-        {offers.length === 1 ? t("dealsOne") : t("deals", { count: offers.length })}
-      </summary>
+    <section className="mb-4 rounded-lg border border-border bg-white px-3" data-testid="week-deals">
+      <h2 className="flex min-h-11 items-center gap-2 text-sm font-medium">
+        <span aria-hidden className="size-2 shrink-0 rounded-full bg-primary animate-pulse motion-reduce:animate-none" />
+        <span data-testid="week-deals-title">{offers.length === 1 ? t("dealsOne") : t("deals", { count: offers.length })}</span>
+      </h2>
       <ul className="divide-y divide-border pb-2">
         {offers.map(({ deal, dish }) => (
           <li key={deal.id} className="flex flex-wrap items-center gap-3 py-2 text-sm" data-testid={`week-deal-${deal.id}`}>
@@ -121,6 +122,6 @@ export function WeekDeals({ offers, lang }: { offers: { deal: FoodDeal; dish: st
           </li>
         ))}
       </ul>
-    </details>
+    </section>
   );
 }

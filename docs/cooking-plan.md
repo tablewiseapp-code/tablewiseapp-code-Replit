@@ -19,7 +19,7 @@ Redesigned by the product owner on 2026-11-20 (the weekly cooking plan): the wee
   - Approved: "View groceries".
   - Changes not saved: "Save changes", with "Save changes to update your groceries."
   - A second tap on an approved plan does nothing.
-- **Weekly deals · N offers:** a collapsed row under the header. It is shown only when an offer applies to the shown week (see Deals). Each offer has "Find recipes": it opens Browse recipes (`/meals?browse&deal=<id>`) with that deal's filter, the same as its "Show recipes" there.
+- **Weekly deals · N offers:** an always-open box under the header, with a slowly pulsing dot beside its title (still when the device asks for reduced motion; product owner, 2026-11-20). It is shown only when an offer applies to the shown week (see Deals). Each offer has "Find recipes": it opens Browse recipes (`/meals?browse&deal=<id>`) with that deal's filter, the same as its "Show recipes" there.
 - **Days:** Monday to Sunday, each headed by weekday and date. Today is highlighted in the current week.
   - A **cooking day** (one with dishes) has "Move day" beside the date, its dishes in Breakfast, Lunch, Dinner order (two dinners in the order they were added), then one "+ Add dish".
   - A day without cooking is one line: the date and "+ Add dish". A day a dish only covers shows nothing more; the dish's card names it.

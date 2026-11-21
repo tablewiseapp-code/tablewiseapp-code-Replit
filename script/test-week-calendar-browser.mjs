@@ -90,10 +90,8 @@ try {
   ok(await ev(`!${q(`dish-view-${first}-details`)} || !/Prep|Cook/.test(${q(`dish-view-${first}-details`)}.textContent)`), "prep/cook stay in the recipe");
   eq(await ev(`${q(`swap-${first}`)}.getAttribute("aria-label")`), `Swap ${await ev(`${q(`dish-link-${first}`)}.textContent`)}`);
   ok((await serverWeek(thisWeek))?.proposed === true, "the draft is saved once");
-  // Weekly deals: the sample offers apply to every week; collapsed until opened.
-  eq(await ev(`${q("week-deals")}.querySelector("summary").textContent`), "Weekly deals · 2 offers");
-  ok(await ev(`!${q("week-deals")}.open`), "collapsed");
-  await ev(`${q("week-deals")}.querySelector("summary").click()`);
+  // Weekly deals: the sample offers apply to every week; always open.
+  eq(await ev(`${q("week-deals-title")}.textContent`), "Weekly deals · 2 offers");
   ok(await ev(`${q("week-deal-chicken-thighs")}.textContent.includes("Walmart") && ${q("week-deal-chicken-thighs")}.textContent.includes("/lb")`), "item, store, price and unit");
   eq(await ev(`${q("week-deal-recipes-chicken-thighs")}.getAttribute("href")`), "/meals?browse&deal=chicken-thighs");
   await shot("week-desktop");
