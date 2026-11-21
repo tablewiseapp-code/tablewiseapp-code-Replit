@@ -106,12 +106,6 @@ export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, cata
   return { plan: { ...next, proposed: true }, suggested, days };
 }
 
-/** Your household → "Suggest my week" again: the earlier unapproved suggestions are replaced, dishes the person placed stay. */
-export function resuggest<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, weekStart: string, fits: Fits<T> = any) {
-  const prior = new Set(settings.setup.suggested);
-  return proposeCookingPlan({ ...plan, batches: plan.batches.filter(b => !prior.has(b.recipeId)) }, catalog, settings, weekStart, { fits });
-}
-
 /** First visit: no household answers, no saved settings and an empty Week. Returning people and anyone with a plan skip it. */
 export const needsHouseholdSetup = (settings: BasicSettings, plan: PlanState) =>
   settings.setup.status === "new" && settings.rev === 0 && plan.selectedIds.length === 0 && plan.batches.length === 0;

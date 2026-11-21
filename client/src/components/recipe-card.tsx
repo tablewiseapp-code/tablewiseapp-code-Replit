@@ -12,32 +12,34 @@ export type RecipeCardData = RecipeViewData & { title: string; image?: string | 
 /**
  * The one recipe card: photo (or a labelled example photo), title, time and servings, then Settings → Recipe View.
  * The title opens the recipe and covers the whole card; `corner` (the like button) and `children` (credit, actions) sit above it.
- * `row` (wide screens: Home's Today's meals, the Week's slots) puts the photo on the left and the content on its right.
+ * `row` (wide screens: Home's Today's meals) puts the photo on the left and the content on its right. `compact` (the Week's
+ * dishes) is a row at every width with a small photo; `meta` replaces the time and servings line.
  * Change the look here, not at the call sites.
  */
-export function RecipeCard({ recipe, href, onOpen, corner, children, mode, servings, view, photo = true, row = false, testId, titleTestId, ids = {} }: {
+export function RecipeCard({ recipe, href, onOpen, corner, children, mode, servings, view, photo = true, row: wide = false, compact = false, meta, testId, titleTestId, ids = {} }: {
   recipe: RecipeCardData;
   /** Where the title goes; or `onOpen` for a card that opens a dialog instead of a page. */
   href?: string; onOpen?: () => void;
   corner?: ReactNode; children?: ReactNode;
-  mode?: RecipeTimeMode; servings?: string | null; view?: RecipeView; photo?: boolean; row?: boolean;
+  mode?: RecipeTimeMode; servings?: string | null; view?: RecipeView; photo?: boolean; row?: boolean; compact?: boolean; meta?: ReactNode;
   testId?: string; titleTestId?: string;
   /** Test ids of the parts, for the existing browser tests. */
   ids?: { meta?: string; view?: string; img?: string; example?: string };
 }) {
   const { t } = useI18n();
+  const row = wide || compact;
   const translated = useRecipeTranslations().get(recipe.id)?.title;
   const image = photo ? recipePhoto({ ...recipe, ingredients: recipe.ingredients ?? [] }) : null;
   const stretch = "after:absolute after:inset-0 after:rounded-[20px] after:content-[''] focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-[3px] focus-visible:after:outline-offset-[3px] focus-visible:after:outline-ring";
   const title = <span className="break-words" data-testid={titleTestId}>{translated ?? recipe.title}</span>;
   return (
     <article className={`relative flex h-full ${row ? "flex-row" : "flex-col"} rounded-[20px] border border-border bg-card text-card-foreground shadow-md shadow-foreground/5`} data-testid={testId}>
-      {image && <figure className={`relative m-0 ${row ? "w-2/5 max-w-48 shrink-0" : ""}`}>
+      {image && <figure className={`relative m-0 ${compact ? "w-24 shrink-0 sm:w-36" : row ? "w-2/5 max-w-48 shrink-0" : ""}`}>
         <img src={image.src} alt="" loading="lazy" decoding="async" data-testid={ids.img}
           className={`image-fade-in block w-full object-cover ${row ? "h-full min-h-24 rounded-s-[20px]" : "aspect-[1.96] rounded-t-[20px]"}`}
           onLoad={e => e.currentTarget.classList.add("image-loaded")}
           onError={e => { e.currentTarget.parentElement!.hidden = true; }} />
-        {image.example && <figcaption className="absolute bottom-2.5 start-3 rounded-md bg-foreground/90 px-2 py-0.5 text-[11px] text-background"
+        {image.example && <figcaption className={`absolute ${compact ? "bottom-1 start-1 whitespace-nowrap px-1.5 text-[10px]" : "bottom-2.5 start-3 px-2 text-[11px]"} rounded-md bg-foreground/90 py-0.5 text-background`}
           data-testid={ids.example}>{t("recipe.examplePhoto")}</figcaption>}
       </figure>}
       <div className={`flex min-w-0 flex-1 flex-col ${row ? "p-3" : "px-5 pb-5 pt-[18px]"} ${corner && !image ? "pe-16" : ""}`}>
@@ -45,7 +47,7 @@ export function RecipeCard({ recipe, href, onOpen, corner, children, mode, servi
           {href ? <Link href={href} className={stretch}>{title}</Link>
             : onOpen ? <button type="button" onClick={onOpen} className={`text-start ${stretch}`}>{title}</button> : title}
         </h3>
-        <RecipeMeta recipe={servings ? { ...recipe, servings } : recipe} mode={mode} testId={ids.meta} />
+        {meta ?? <RecipeMeta recipe={servings ? { ...recipe, servings } : recipe} mode={mode} testId={ids.meta} />}
         <RecipeViewRows recipe={recipe} view={view} testId={ids.view} />
         {children && <div className="relative z-10 mt-auto flex flex-col gap-3 pt-3">{children}</div>}
       </div>

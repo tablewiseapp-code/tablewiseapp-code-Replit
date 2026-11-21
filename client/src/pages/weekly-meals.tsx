@@ -20,7 +20,7 @@ import { createRecipe, fetchRecipes } from "@/lib/storage";
 import { toPlannerRecipe, toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { matchesPlannerFilters, pageNumbers, paginate, recipeNameMatches } from "@/lib/planner-filters";
 import { FoodDeals, WeekDeals } from "@/components/food-deals";
-import { foodDeals, weekDeals } from "@/lib/food-deals";
+import { foodDealById, foodDeals, weekDeals } from "@/lib/food-deals";
 import { storeName } from "@/lib/grocery-stores";
 import { useWeekFilterCopy } from "@/lib/week-filter-copy";
 import { useFilterLabels, useWeekFilterChips, WeekFilterPanel } from "@/components/week-filter-panel";
@@ -257,6 +257,13 @@ function WeeklyMealsContent() {
   const updateFilters = useCallback((updates: Partial<Filters>) => {
     setState(prev => ({ ...prev, filters: { ...prev.filters, ...updates } }));
   }, []);
+  // The Week's Weekly deals link here as ?browse&deal=<id>: apply that deal filter once, then drop it from the URL.
+  const dealParam = new URLSearchParams(useSearch()).get("deal");
+  useEffect(() => {
+    if (!dealParam) return;
+    if (foodDealById(dealParam)) updateFilters({ deal: dealParam });
+    setLocation("/meals?browse", { replace: true });
+  }, [dealParam, updateFilters, setLocation]);
 
 
 
@@ -719,7 +726,6 @@ function WeekCalendar() {
   const household = useHouseholdCopy();
   const { toast } = useToast();
   const settings = useSavedSettings();
-  const { mode: timeMode } = useRecipeTime();
   const requested = new URLSearchParams(useSearch()).get("week");
   const week = requested && isWeek(requested) ? requested : currentWeek();
   usePilotPage("planner_opened", week);
@@ -779,7 +785,9 @@ function WeekCalendar() {
   const ready = loaded?.week === week ? loaded : null;
   const status = ready ? statusOf(ready.plan) : null;
   const approve = () => {
-    if (!ready || !ready.plan.batches.length || !save(approvePlan(ready.plan))) return;
+    // From the latest plan, so a second tap (or a retry) on an already approved plan does nothing.
+    const current = latest.current?.week === week ? latest.current.plan : null;
+    if (!current || !current.batches.length || statusOf(current) === "approved" || !save(approvePlan(current))) return;
     recordPilotEvent("plan_completed", week);
     // The suggested-dinner draft bookkeeping (Your household) ends with approval.
     try { updateSettings(s => ({ ...s, setup: { ...s.setup, suggested: [], declined: [] } })); } catch { /* the approval is what matters */ }
@@ -790,20 +798,35 @@ function WeekCalendar() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <PageContainer size="xl" className="flex-1 py-4 sm:py-6">
-        <header className="mb-4 flex flex-wrap items-end gap-x-4 gap-y-2" data-testid="week-header">
+        {/* Approval sits in the header, so it is reachable before scrolling; on a phone it wraps below the date range. */}
+        <header className="mb-4 flex flex-wrap items-end gap-x-4 gap-y-3" data-testid="week-header">
           <div className="min-w-0 flex-1">
             <h1 className="page-title">{t("title")}</h1>
-            <div className="mt-1 flex items-center gap-1">
-              <button type="button" onClick={() => go(-7)} aria-label={t("prevWeek")} data-testid="button-prev-week"
-                className="-ms-3 flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5"><ChevronLeft className="h-5 w-5 rtl:rotate-180" aria-hidden="true" /></button>
-              <p className="text-base text-foreground" data-testid="week-range" data-week={week}>{range}</p>
-              <button type="button" onClick={() => go(7)} aria-label={t("nextWeek")} data-testid="button-next-week"
-                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5"><ChevronRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" /></button>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2">
+              <div className="flex items-center gap-1">
+                <button type="button" onClick={() => go(-7)} aria-label={t("prevWeek")} data-testid="button-prev-week"
+                  className="-ms-3 flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5"><ChevronLeft className="h-5 w-5 rtl:rotate-180" aria-hidden="true" /></button>
+                <p className="text-base text-foreground" data-testid="week-range" data-week={week}>{range}</p>
+                <button type="button" onClick={() => go(7)} aria-label={t("nextWeek")} data-testid="button-next-week"
+                  className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5"><ChevronRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" /></button>
+              </div>
+              {status && <p role="status" data-testid="week-status" data-state={status}
+                className={`rounded-full px-3 py-1 text-sm font-medium ${status === "approved" ? "bg-primary text-white" : status === "changed" ? "bg-amber-50 text-amber-900" : "bg-accent text-primary"}`}>
+                {status === "approved" ? t("statusApproved") : status === "changed" ? t("statusChanged") : t("statusDraft")}</p>}
             </div>
           </div>
-          {status && <p role="status" data-testid="week-status" data-state={status}
-            className={`rounded-full px-3 py-1 text-sm font-medium ${status === "approved" ? "bg-primary text-white" : status === "changed" ? "bg-amber-50 text-amber-900" : "bg-accent text-primary"}`}>
-            {status === "approved" ? t("statusApproved") : status === "changed" ? t("statusChanged") : t("statusDraft")}</p>}
+          {ready && <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end" data-testid="week-actions">
+            {status === "approved" ? (
+              <button type="button" onClick={() => setLocation(week === currentWeek() ? "/grocery-list" : `/grocery-list?week=${week}`)} data-testid="button-view-groceries"
+                className="btn btn-primary">{t("groceries")}</button>
+            ) : (
+              <>
+                <button type="button" onClick={approve} disabled={!ready.plan.batches.length} aria-describedby="approve-hint"
+                  data-testid="button-approve-week" className="btn btn-primary">{status === "changed" ? t("saveChanges") : t("approve")}</button>
+                <p id="approve-hint" className="text-xs text-muted-foreground">{status === "changed" ? t("changedHint") : t("approveHint")}</p>
+              </>
+            )}
+          </div>}
         </header>
 
         {failed ? (
@@ -817,7 +840,7 @@ function WeekCalendar() {
           <>
             <WeekDeals offers={deals} lang={lang} />
             <PlannerBoard plan={ready.plan} week={week} today={week === currentWeek() ? calendarDate(new Date()) : null} lang={lang} recipes={byId}
-              commit={commit} recipeHref={b => plannerRecipeURL(b.recipeId, week, b.id)} household={householdCounts(settings)} timeMode={timeMode}
+              commit={commit} recipeHref={b => plannerRecipeURL(b.recipeId, week, b.id)} household={householdCounts(settings)}
               onPicked={id => {
                 recordPilotEvent("meal_selected", week, id);
                 // Learning signal: an AI recipe was put on the plan (not that it was cooked).
@@ -829,21 +852,6 @@ function WeekCalendar() {
               <Link href="/household" className="btn btn-text" data-testid="link-household">{household("changeHousehold")}</Link>
             </div>
           </>
-        )}
-
-        {ready && (
-          <div className="sticky bottom-[var(--app-bottom-nav)] z-10 -mx-4 mt-6 flex flex-col gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-end">
-            {status === "approved" ? (
-              <button type="button" onClick={() => setLocation(week === currentWeek() ? "/grocery-list" : `/grocery-list?week=${week}`)} data-testid="button-view-groceries"
-                className="btn btn-primary">{t("groceries")}</button>
-            ) : (
-              <>
-                <p id="approve-hint" className="text-xs text-muted-foreground sm:me-auto">{status === "changed" ? t("changedHint") : t("approveHint")}</p>
-                <button type="button" onClick={approve} disabled={!ready.plan.batches.length} aria-describedby="approve-hint"
-                  data-testid="button-approve-week" className="btn btn-primary">{status === "changed" ? t("saveChanges") : t("approve")}</button>
-              </>
-            )}
-          </div>
         )}
       </PageContainer>
     </div>

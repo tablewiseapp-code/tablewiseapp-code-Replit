@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { builtInDealCategories, foodDeals, suggestedDealCategories, type FoodDeal } from "@/lib/food-deals";
@@ -109,10 +110,14 @@ export function WeekDeals({ offers, lang }: { offers: { deal: FoodDeal; dish: st
       </summary>
       <ul className="divide-y divide-border pb-2">
         {offers.map(({ deal, dish }) => (
-          <li key={deal.id} className="py-2 text-sm" data-testid={`week-deal-${deal.id}`}>
+          <li key={deal.id} className="flex flex-wrap items-center gap-3 py-2 text-sm" data-testid={`week-deal-${deal.id}`}>
+            <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground">{c(`deal_${deal.id}`)}{dish && <span className="ms-2 text-primary" data-testid={`week-deal-dish-${deal.id}`}>{t("dealFor", { title: dish })}</span>}</p>
             <p className="text-muted-foreground"><bdi>{deal.store}</bdi> · <bdi className="tabular-nums">{c("perLb", { price: deal.price })}</bdi> · {deal.expires
               ? t("dealUntil", { date: day.format(new Date(`${deal.expires}T12:00:00Z`)) }) : t("dealSample")}</p>
+            </div>
+            <Link href={`/meals?browse&deal=${encodeURIComponent(deal.id)}`} className="btn btn-secondary shrink-0"
+              data-testid={`week-deal-recipes-${deal.id}`}>{t("dealRecipes")}</Link>
           </li>
         ))}
       </ul>

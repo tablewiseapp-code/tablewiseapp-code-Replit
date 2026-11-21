@@ -12,7 +12,8 @@ import { activePreferenceChips } from "@/lib/active-preferences";
 import { cookingStyles, householdCounts, householdServings, loadSettings, servingLimits, type CookingStyle } from "@/lib/basic-settings";
 import { addBatch, maxDishes, mealSlots, newBatchId, readPlan, setServes, writePlan, type MealSlot } from "@/lib/meal-plan";
 import { calendarDate } from "@/lib/week-plan";
-import { generateMeals, generatorTimes, type GeneratorInput, type NoMatch } from "@/lib/meal-generator";
+import { selectableDevices } from "@/lib/device-requirements";
+import { generateMeals, generatorSettings, generatorTimes, type GeneratorInput, type NoMatch } from "@/lib/meal-generator";
 import { total } from "@/lib/preference-engine";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { baseServings, scaleIngredient, servingFactor } from "@/lib/ingredient-scale";
@@ -26,7 +27,7 @@ export type MealTarget = { meal: MealSlot; day: number; date: string };
 export type MealAdded = { batchId: string; recipeId: string; date: string };
 
 /** Home "+ Add a dish": a request (kind, words, time, style, household) → one catalog recipe → Add to today, a new dish
- * cooked today beside any already there. The Week changes only on Add; servings and diets edited here stay in this flow. */
+ * cooked today beside any already there. The Week changes only on Add; servings, diets and devices edited here stay in this flow. */
 export function MealGenerator({ target, catalog, onClose, onAdded }: {
   target: MealTarget | null; catalog: Recipe[]; onClose: (focusSlot: MealSlot) => void; onAdded: (added: MealAdded) => void;
 }) {
@@ -46,7 +47,7 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
 
   const [settings] = useState(loadSettings);
   const [input, setInput] = useState<GeneratorInput>(() => ({ meal: target.meal, day, query: "", maxMinutes: null, style: "quick",
-    servings: householdServings(settings), diets: [...settings.dietary.diets] }));
+    servings: householdServings(settings), diets: [...settings.dietary.diets], devices: settings.kitchen.devices && [...settings.kitchen.devices] }));
   const meal = input.meal;
   const mealName = t(`meals.${meal.toLowerCase()}`);
   const text = (key: Parameters<typeof homeText>[1], values: Record<string, string | number> = {}) =>
@@ -84,7 +85,7 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
     onClose();
   };
 
-  const chips = activePreferenceChips({ ...settings, dietary: { ...settings.dietary, diets: input.diets } }, lang, m => t(`meals.${m.toLowerCase()}`))
+  const chips = activePreferenceChips(generatorSettings(settings, input), lang, m => t(`meals.${m.toLowerCase()}`))
     .filter(c => c.group === "hard");
   const householdLine = [input.servings ? h("servings", { n: input.servings }) : null, ...chips.map(c => c.text),
     settings.shopping.budgetFriendly ? text("genBudget") : null].filter(Boolean).join(" · ") || text("genNoPrefs");
@@ -158,6 +159,14 @@ function GeneratorSheet({ target, catalog, onAdded, onClose }: { target: MealTar
               <div className="flex flex-wrap gap-2">
                 {flowDiets.map(d => { const on = input.diets.includes(d); return <button key={d} type="button" className={pill} aria-pressed={on} data-testid={`meal-generator-diet-${d}`}
                   onClick={() => set({ diets: on ? input.diets.filter(x => x !== d) : [...input.diets, d] })}>{settingsText(lang, `diet_${d}`)}</button>; })}
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend className="mb-2 text-sm text-muted-foreground">{text("genDevices")}</legend>
+              <div className="flex flex-wrap gap-2">
+                {selectableDevices.map(d => { const list = input.devices ?? [...selectableDevices], on = list.includes(d);
+                  return <button key={d} type="button" className={pill} aria-pressed={on} data-testid={`meal-generator-device-${d}`}
+                    onClick={() => set({ devices: on ? list.filter(x => x !== d) : [...list, d] })}>{settingsText(lang, `device_${d}`)}</button>; })}
               </div>
             </fieldset>
           </div>}

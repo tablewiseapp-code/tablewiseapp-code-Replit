@@ -18,6 +18,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 let checks = 0;
 const ok = (cond, msg) => { assert.ok(cond, msg); checks++; };
 const eq = (a, b, msg) => { assert.deepEqual(a, b, msg); checks++; };
+// The API allows 120 requests a minute for everyone (server/security.ts); wait out a spent window instead of failing on it.
+const rested = async () => {
+  for (;;) {
+    const r = await fetch(`${BASE}/api/auth/me`);
+    if (r.status !== 429) return;
+    await sleep((Number(r.headers.get("retry-after")) || 5) * 1000 + 500);
+  }
+};
 const monday = (offsetWeeks = 0) => {
   const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 + offsetWeeks * 7);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -50,9 +58,10 @@ try {
   const serverWeek = w => ev(`fetch("/api/week-plan?week=${w}").then(r => r.json())`);
   const calendarReady = `Boolean(${q("week-status")})`;
   const desktop = () => call("Emulation.setDeviceMetricsOverride", { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false });
-  const phone = () => call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  const phone = () => call("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
   const thisWeek = monday();
   await desktop();
+  await rested();
 
   // ---- A new guest skips Your household; the Week opens as a draft of cooking days before any action.
   await go("/meals?plan", `Boolean(${q("button-skip-household")})`);
@@ -68,26 +77,37 @@ try {
   ok(cooking.every(d => plan[d].length === 1), "one initial dish per cooking day");
   eq(await ev(`document.querySelectorAll('[data-today]').length`), 1, "today is highlighted");
   const free = dates.find(d => !plan[d].length);
-  eq(await ev(`[...${q(`day-${free}`)}.querySelectorAll("h3")].map(h => h.textContent)`), ["Breakfast", "Lunch", "Dinner"], "each day separates Breakfast, Lunch and Dinner");
-  eq(await text(`add-dish-${free}-breakfast`), "+ Add breakfast", "each meal has its own add");
+  ok(await ev(`!${q(`day-${free}`)}.querySelector("[data-recipe], h3")`), "a day without cooking is one line, no meal sections");
+  eq(await text(`add-dish-${free}`), "+ Add dish", "one + Add dish per day");
+  eq(await ev(`document.querySelector("h1").textContent`), "Weekly cooking plan");
   eq(await status(), "draft");
-  eq(await text("button-approve-week"), "Approve cooking plan");
+  eq(await text("button-approve-week"), "Approve plan");
+  eq(await ev(`document.getElementById("approve-hint").textContent`), "Approval builds your grocery list.");
+  ok(await ev(`${q("week-header")}.contains(${q("button-approve-week")})`), "approval sits in the header, before the days");
+  const first = plan[cooking[0]][0].id;
+  ok(await ev(`${q(`dish-meta-${first}`)}.textContent.startsWith("Dinner")`), "small meal label");
+  ok(await ev(`!${q(`dish-dates-${first}`)}`), "a dish eaten only on its cooking day shows no dates");
+  ok(await ev(`!${q(`dish-view-${first}-details`)} || !/Prep|Cook/.test(${q(`dish-view-${first}-details`)}.textContent)`), "prep/cook stay in the recipe");
+  eq(await ev(`${q(`swap-${first}`)}.getAttribute("aria-label")`), `Swap ${await ev(`${q(`dish-link-${first}`)}.textContent`)}`);
   ok((await serverWeek(thisWeek))?.proposed === true, "the draft is saved once");
   // Weekly deals: the sample offers apply to every week; collapsed until opened.
   eq(await ev(`${q("week-deals")}.querySelector("summary").textContent`), "Weekly deals · 2 offers");
   ok(await ev(`!${q("week-deals")}.open`), "collapsed");
   await ev(`${q("week-deals")}.querySelector("summary").click()`);
   ok(await ev(`${q("week-deal-chicken-thighs")}.textContent.includes("Walmart") && ${q("week-deal-chicken-thighs")}.textContent.includes("/lb")`), "item, store, price and unit");
+  eq(await ev(`${q("week-deal-recipes-chicken-thighs")}.getAttribute("href")`), "/meals?browse&deal=chicken-thighs");
   await shot("week-desktop");
 
   // ---- Acceptance 3: two dishes share a day; Swap dish changes only one; moving onto a day with one dish → three.
   const [early, late] = cooking;
+  await openMenu(`add-dish-${late}`);
   await click(`add-dish-${late}-dinner`);
   await until(`Boolean(${q("pick-list")})`, "picker");
   await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
   await until(`document.querySelectorAll('[data-testid="day-${late}"] [data-recipe]').length === 2`, "two dishes");
   plan = await days();
   const [keep, change] = plan[late];
+  eq(await ev(`[...${q(`day-${late}`)}.querySelectorAll("[data-meal]")].map(d => d.dataset.meal)`), ["Dinner", "Dinner"], "a second dinner sits beside the first");
   await click(`swap-${change.id}`);
   await until(`Boolean(${q("pick-list")})`, "picker");
   ok(await ev(`!${q(`pick-${change.recipe}`)}`), "the current recipe is not offered");
@@ -139,8 +159,9 @@ try {
     while (Number(await text(`kids-${date}`)) > 3) await press(`serve-row-${date}`, "Fewer Kids");
   }
   await click("button-save-servings");
-  await until(`${q(`dish-make-${dish}`)}.textContent === "Make 7 servings"`, "Make 7 servings");
-  ok((await text(`dish-dates-${dish}`)).startsWith("For ") && (await text(`dish-dates-${dish}`)).includes("&"), "both serving dates on the card");
+  await until(`${q(`dish-make-${dish}`)}.textContent === "7 servings"`, "7 servings");
+  const wd = d => new Date(`${d}T12:00:00Z`).toLocaleDateString("en", { weekday: "short", timeZone: "UTC" });
+  eq(await text(`dish-dates-${dish}`), `For ${wd(early)} & ${wd(plus2)}`, "separate days are listed with &");
   eq((await serverWeek(thisWeek)).batches.find(b => b.id === dish).serves, [{ date: early, adults: 2, kids: 3 }, { date: plus2, adults: 2, kids: 3 }]);
   // The recipe opens at this batch: 7 servings.
   await click(`dish-link-${dish}`);
@@ -192,6 +213,8 @@ try {
   const xs = await ev(`[...document.querySelectorAll('[data-testid="day-${nextDay}"] [data-recipe]')].map(a => Math.round(a.getBoundingClientRect().x))`);
   eq(new Set(xs).size, 1, "dishes stack");
   ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
+  ok(await ev(`[...document.querySelectorAll('[data-testid^="swap-"], [data-testid^="edit-servings-"], [data-testid^="remove-"]')].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44; })`), "Swap, servings and Remove fit and are 44px tall");
+  ok(await ev(`${q("week-actions")}.getBoundingClientRect().top > ${q("week-range")}.getBoundingClientRect().bottom - 1 && ${q("week-actions")}.querySelector("button").getBoundingClientRect().bottom < innerHeight`), "the plan action wraps below the dates, above the fold");
   await shot("week-phone");
   await desktop();
 
@@ -203,6 +226,31 @@ try {
   eq(await put({ weekStart: monday(3), proposed: false, selectedIds: [], planAssignments: [], locked: false }), 400, "the old shape is refused");
   await go(`/meals?week=${monday(2)}`, calendarReady);
   eq(await status(), "draft");
+
+  await sleep(61_000); // a fresh request window for the second half (this file alone uses about 120 a minute)
+  await rested();
+  // ---- A seven-day plan (as a slot week reads: one dinner a day, ids legacy-N) with two dishes on Monday, a breakfast for
+  // Mon & Wed and a dinner covering Tue–Thu; a breakfast added to Friday comes before its dinner.
+  const ids = [...new Set((await serverWeek(thisWeek)).batches.map(b => b.recipeId))];
+  const w4 = monday(4), d4 = i => ev(`(() => { const d = new Date(${JSON.stringify(w4)} + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + ${i}); return d.toISOString().slice(0, 10); })()`);
+  const wk = await Promise.all([0, 1, 2, 3, 4, 5, 6].map(d4));
+  const batches = wk.map((date, i) => ({ id: `legacy-${i}`, recipeId: ids[i % ids.length], cookDate: date, serves: i === 1 ? [1, 2, 3].map(j => ({ date: wk[j], servings: 2 })) : [{ date, servings: 2 }] }));
+  batches.push({ id: "nc", recipeId: ids[1 % ids.length], cookDate: wk[0], meal: "Breakfast", serves: [{ date: wk[0], servings: 2 }, { date: wk[2], servings: 2 }] });
+  eq(await put({ weekStart: w4, proposed: true, selectedIds: [], batches, approved: null }), 204);
+  await go(`/meals?week=${w4}`, calendarReady);
+  plan = await days();
+  ok(Object.values(plan).length === 7 && Object.values(plan).every(list => list.length >= 1), "all seven days are cooking days");
+  eq(await ev(`[...${q(`day-${wk[0]}`)}.querySelectorAll("[data-meal]")].map(d => d.dataset.meal)`), ["Breakfast", "Dinner"], "breakfast before dinner");
+  eq(await text("dish-dates-nc"), `For ${wd(wk[0])} & ${wd(wk[2])}`);
+  eq(await text("dish-dates-legacy-1"), `For ${wd(wk[1])}–${wd(wk[3])}`, "consecutive days as a range");
+  ok(await ev(`!${q("dish-dates-legacy-0")}`), "a one-day dish shows no dates");
+  eq(await ev(`document.querySelectorAll('[data-testid^="move-day-"]').length`), 7, "Move day beside every date");
+  await openMenu(`add-dish-${wk[4]}`);
+  await click(`add-dish-${wk[4]}-breakfast`);
+  await until(`Boolean(document.querySelector('[data-testid="pick-list"] button'))`, "picker");
+  await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
+  await until(`document.querySelectorAll('[data-testid="day-${wk[4]}"] [data-recipe]').length === 2`, "added");
+  eq(await ev(`[...${q(`day-${wk[4]}`)}.querySelectorAll("[data-meal]")].map(d => d.dataset.meal)`), ["Breakfast", "Dinner"], "sorted by meal");
 
   ok(errors.length === 0, `no page errors: ${errors.join(" | ")}`);
   console.log(`week calendar browser: ${checks} checks passed`);

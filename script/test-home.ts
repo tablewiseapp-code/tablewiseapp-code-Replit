@@ -50,4 +50,11 @@ assert.equal(ids({ query: "pancakes" }).noMatch, "search");
 assert.equal(ids({ maxMinutes: 15, query: "rice" }).noMatch, "search");
 assert.equal(ids({ meal: "Lunch" }).noMatch, "restrictions");
 assert.equal(generateMeals([catalog[2]], defaultSettings(), { ...input, maxMinutes: 30 }).noMatch, "time");
+{ // Devices edited for this meal replace the household's, only here.
+  const { generatorSettings } = await import("../client/src/lib/meal-generator");
+  const s = { ...defaultSettings(), kitchen: { devices: ["Oven" as const] } };
+  assert.deepEqual(generatorSettings(s, input).kitchen.devices, ["Oven"], "no edit keeps the household's devices");
+  assert.deepEqual(generatorSettings(s, { ...input, devices: ["Stovetop"] }).kitchen.devices, ["Stovetop"], "edited devices apply");
+  assert.deepEqual(s.kitchen.devices, ["Oven"], "Basic Settings unchanged");
+}
 console.log("home: ok");

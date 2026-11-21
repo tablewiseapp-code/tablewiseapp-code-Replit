@@ -10,6 +10,15 @@ assert.equal(JSON.stringify(plan), frozen, "helpers never mutate their input");
 assert.equal(swapBatch(plan, "x", "a"), plan, "swapping in the same recipe changes nothing");
 assert.equal(addBatch(emptyPlan(), "a", "2026-11-17", null, "y").batches[0].serves[0].date, "2026-11-17");
 
+// "For Mon–Wed & Fri": serving dates as runs of consecutive days, sorted, across a month end.
+{
+  const { dateRuns } = await import("../shared/cooking-plan");
+  assert.deepEqual(dateRuns(["2026-11-23"]), [["2026-11-23"]]);
+  assert.deepEqual(dateRuns(["2026-11-25", "2026-11-23"]), [["2026-11-23"], ["2026-11-25"]], "separate days");
+  assert.deepEqual(dateRuns(["2026-11-30", "2026-12-01", "2026-11-29", "2026-12-03"]), [["2026-11-29", "2026-11-30", "2026-12-01"], ["2026-12-03"]]);
+  assert.deepEqual(dateRuns([]), []);
+}
+
 // Recipe pagination: 12 per page, no duplicates or gaps, clamped page.
 {
   const { paginate, pageNumbers } = await import("../client/src/lib/planner-filters");
@@ -51,5 +60,11 @@ assert.equal(addBatch(emptyPlan(), "a", "2026-11-17", null, "y").batches[0].serv
   const sent = mealsGenerationFilters({ ...none, dietary: ["Gluten-free", "Halal"], deal: "ground-beef", cookingLevel: "easy" });
   assert.deepEqual(sent.filters.dietary, ["Gluten-free"]);
   assert.deepEqual(sent.notApplied, ["dietary", "cookingLevel", "deal"]);
+}
+{
+  const { currentMeal } = await import("../shared/cooking-plan");
+  const at = (h: number, m = 0) => new Date(2026, 10, 20, h, m);
+  assert.deepEqual([at(7), at(10, 59), at(11), at(12, 30), at(15, 59), at(16), at(23)].map(currentMeal),
+    ["Breakfast", "Breakfast", "Lunch", "Lunch", "Lunch", "Dinner", "Dinner"]);
 }
 console.log("weekly planner checks passed");

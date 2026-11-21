@@ -2,21 +2,22 @@
 // is cooked; its card shows how much to make and the dates it serves. Every action is a visible, labelled button.
 import { useState } from "react";
 import { Link } from "wouter";
-import { Minus, Plus, Search } from "lucide-react";
+import { ArrowLeftRight, Minus, Plus, Search, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import { addBatch, cookedOn, moveConflicts, moveCookingDay, removeBatch, restoreBatch, servingDateChoices, setServes, swapBatch, type Batch, type PlanState, type Serve } from "@/lib/meal-plan";
-import { batchTotal, batchYield, halfServings, mealOf, mealSlots, serveAmount, shiftDate, weekdayOf, type HouseholdCounts, type MealSlot } from "@shared/cooking-plan";
+import { batchTotal, batchYield, dateRuns, halfServings, mealOf, mealSlots, serveAmount, shiftDate, weekdayOf, type HouseholdCounts, type MealSlot } from "@shared/cooking-plan";
 import { baseServings } from "@/lib/ingredient-scale";
 import { recipeNameMatches } from "@/lib/planner-filters";
 import { usePlannerCopy } from "@/lib/planner-copy";
 import { useI18n } from "@/lib/i18n";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
-import type { RecipeTimeMode } from "@/lib/recipe-time";
 import { RecipeMeta } from "@/components/recipe-summary";
+import { useRecipeDisplay } from "@/components/recipe-display";
+import { recipeStageMinutes } from "@/lib/recipe-time";
 import { RecipeCard } from "@/components/recipe-card";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const pill = `inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium ${focus}`;
@@ -46,52 +47,78 @@ type Props = {
   options: (day: number, meal?: MealSlot) => PlannerRecipe[];
   onPicked?: (recipeId: string) => void;
   household: HouseholdCounts | null;
-  timeMode: RecipeTimeMode;
 };
 
 export function useDateText(lang: string) {
   const day = new Intl.DateTimeFormat(lang, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
   const long = new Intl.DateTimeFormat(lang, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
+  const weekday = new Intl.DateTimeFormat(lang, { weekday: "short", timeZone: "UTC" });
   const list = new Intl.ListFormat(lang, { style: "short", type: "conjunction" });
   const at = (date: string) => new Date(`${date}T12:00:00Z`);
   const number = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
   return { short: (date: string) => day.format(at(date)), long: (date: string) => long.format(at(date)),
-    list: (dates: string[]) => list.format(dates.map(d => day.format(at(d)))), number: (n: number) => number.format(n) };
+    list: (dates: string[]) => list.format(dates.map(d => day.format(at(d)))), number: (n: number) => number.format(n),
+    /** "Mon–Wed & Fri": the days a dish covers, null when that is only its cooking day. Weekdays alone while every date is
+     * within a week of cooking; full dates otherwise, so next week's Monday is not read as this one. */
+    covered: (cookDate: string, served: string[]) => {
+      if (served.length === 1 && served[0] === cookDate) return null;
+      const name = served.every(d => d < shiftDate(cookDate, 7)) ? (d: string) => weekday.format(at(d)) : (d: string) => day.format(at(d));
+      return list.format(dateRuns(served).map(run => run.length === 1 ? name(run[0]) : `${name(run[0])}–${name(run.at(-1)!)}`));
+    } };
 }
 const yieldOf = (batch: Batch, recipe: PlannerRecipe | undefined) => batchYield(batch, baseServings(recipe?.servings));
 
 function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen: (modal: Modal) => void }) {
   const t = usePlannerCopy();
+  const { t: ti, dir } = useI18n();
   const toastApi = useToast();
-  const phone = useIsMobile();
-  const { plan, recipes, lang, timeMode, commit } = props;
+  const { recipeView } = useRecipeDisplay();
+  const { plan, recipes, lang, commit } = props;
   const dates = useDateText(lang);
   const recipe = recipes.get(batch.recipeId);
   if (!recipe) return null;
   const recipeYield = yieldOf(batch, recipe);
   const total = batchTotal(batch, baseServings(recipe.servings));
+  const minutes = recipeStageMinutes(recipe, "total");
+  const covered = dates.covered(batch.cookDate, batch.serves.map(s => s.date));
   const remove = () => {
     const index = plan.batches.findIndex(b => b.id === batch.id);
     if (!commit(p => removeBatch(p, batch.id))) return;
     toastApi.toast({ title: t("removed", { title: recipe.title }), action: <ToastAction altText={t("undo")} data-testid="undo-remove-dish"
       onClick={() => commit(p => restoreBatch(p, batch, index))}>{t("undo")}</ToastAction> });
   };
-  // The shared recipe card (photo, title linking to this batch, time, Recipe View); the plan's own lines and buttons below.
+  // Each later part carries its "·", so a wrapped line never starts or ends with one.
+  const part = "inline-flex items-center gap-1.5 before:content-['·'] before:text-muted-foreground";
+  // One line: meal · total time · servings (opens Edit servings) · the other days it covers.
+  const meta = (
+    <p className="relative z-10 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground" data-testid={`dish-meta-${batch.id}`}>
+      <span className="font-medium text-foreground" data-testid={`dish-meal-${batch.id}`}>{ti(`meals.${mealOf(batch).toLowerCase()}`)}</span>
+      {minutes !== null && <span className={part}>{t("minutes", { count: minutes })}</span>}
+      <span className={part}><button type="button" onClick={() => onOpen({ kind: "servings", batch })} aria-label={t("editServingsFor", { title: recipe.title })}
+        className={`-my-2 inline-flex min-h-11 items-center rounded px-1 font-medium text-primary underline decoration-dotted underline-offset-4 hover:bg-accent ${focus}`}
+        data-testid={`edit-servings-${batch.id}`}>
+        <span data-testid={`dish-make-${batch.id}`}>{recipeYield === null && total === 0 ? t("yieldNeeded") : t("servings", { count: dates.number(total) })}</span>
+      </button></span>
+      {covered && <span className={part} data-testid={`dish-dates-${batch.id}`}>{t("forDates", { dates: covered })}</span>}
+    </p>
+  );
+  const icon = `inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-accent ${focus}`;
+  // Recipe View nutrition stays; prep/cook times and the cooking tool stay on the recipe page.
+  const view = { ...recipeView, details: recipeView.details.filter(d => d === "dietaryTags") };
   return (
-    <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} role="group"
+    <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} data-meal={mealOf(batch)} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
-      <RecipeCard recipe={{ ...recipe, servings: null }} row={!phone} href={props.recipeHref(batch)} mode={timeMode} titleTestId={`dish-link-${batch.id}`}
-        ids={{ view: `dish-view-${batch.id}` }}>
-        <div className="grid gap-1">
-          <p className="text-base font-semibold text-foreground" data-testid={`dish-make-${batch.id}`}>
-            {recipeYield === null && total === 0 ? t("yieldNeeded") : t("make", { count: dates.number(total) })}
-          </p>
-          <p className="text-sm text-muted-foreground" data-testid={`dish-dates-${batch.id}`}>{t("forDates", { dates: dates.list(batch.serves.map(s => s.date)) })}</p>
-        </div>
-        <div className="-ms-2 flex flex-wrap gap-x-1">
-          <button type="button" className={text} onClick={() => onOpen({ kind: "servings", batch })} data-testid={`edit-servings-${batch.id}`}>{t("editServings")}</button>
-          <button type="button" className={text} onClick={() => onOpen({ kind: "swap", batch })} data-testid={`swap-${batch.id}`}>{t("swapDish")}</button>
-          <button type="button" className={`${text} text-muted-foreground`} onClick={remove} data-testid={`remove-${batch.id}`}>{t("removeDish")}</button>
+      <RecipeCard recipe={{ ...recipe, servings: null }} compact href={props.recipeHref(batch)} meta={meta} view={view}
+        titleTestId={`dish-link-${batch.id}`} ids={{ view: `dish-view-${batch.id}` }}>
+        <div className="-ms-2 -mt-2 flex items-center gap-1">
+          <button type="button" className={`${icon} hover:text-foreground`} onClick={() => onOpen({ kind: "swap", batch })}
+            aria-label={t("swapFor", { title: recipe.title })} title={t("swap")} data-testid={`swap-${batch.id}`}>
+            <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button type="button" className={`${icon} hover:text-destructive`} onClick={remove}
+            aria-label={t("removeDishFor", { title: recipe.title })} title={t("removeDish")} data-testid={`remove-${batch.id}`}>
+            <Trash2 className="h-5 w-5" aria-hidden="true" />
+          </button>
         </div>
       </RecipeCard>
     </div>
@@ -101,11 +128,10 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
 export function PlannerBoard(props: Props) {
   const { plan, week, today, lang, recipes, commit, options, onPicked, household } = props;
   const t = usePlannerCopy();
-  const { t: ti } = useI18n();
+  const { t: ti, dir } = useI18n();
   const { toast } = useToast();
   const dates = useDateText(lang);
   const mealName = (meal: MealSlot) => ti(`meals.${meal.toLowerCase()}`);
-  const addLabel = { Breakfast: t("addBreakfast"), Lunch: t("addLunch"), Dinner: t("addDinner") };
   const [modal, setModal] = useState<Modal | null>(null);
   const close = () => setModal(null);
   const days = Array.from({ length: 7 }, (_, i) => shiftDate(week, i));
@@ -114,34 +140,38 @@ export function PlannerBoard(props: Props) {
     <>
       <div className="divide-y divide-border border-y border-border" data-testid="week-calendar">
         {days.map(date => {
-          const dishes = cookedOn(plan, date).filter(b => recipes.has(b.recipeId));
+          // Dishes cooked this day, breakfast → lunch → dinner; two dinners keep the order they were added.
+          const dishes = cookedOn(plan, date).filter(b => recipes.has(b.recipeId))
+            .sort((a, b) => mealSlots.indexOf(mealOf(a)) - mealSlots.indexOf(mealOf(b)));
           const isToday = date === today;
-          const heading = (
-            <h2 id={`day-${date}`} className={`text-base font-semibold lg:w-44 lg:shrink-0 lg:pt-1 ${isToday ? "text-primary" : "text-foreground"}`}>
-              {dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}
-            </h2>
+          const add = (
+            <DropdownMenu dir={dir} modal={false}>
+              <DropdownMenuTrigger asChild>
+                <button type="button" className={`${text} -ms-2`} aria-label={t("addDishTo", { date: dates.long(date) })} data-testid={`add-dish-${date}`}>{t("addDish")}</button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {mealSlots.map(meal => <DropdownMenuItem key={meal} className="min-h-11" onSelect={() => setModal({ kind: "add", date, meal })}
+                  data-testid={`add-dish-${date}-${meal.toLowerCase()}`}>{mealName(meal)}</DropdownMenuItem>)}
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
-          // Breakfast, Lunch and Dinner, each with its dishes and its own "+ Add" (2026-11-20).
+          // A cooking day lists its dishes; a day without cooking is one line with + Add dish.
           return (
             <section key={date} aria-labelledby={`day-${date}`} data-testid={`day-${date}`} data-today={isToday || undefined}
-              className={`py-3 lg:flex lg:gap-6 ${isToday ? "bg-accent/40 -mx-2 px-2" : ""}`}>
-              {heading}
-              <div className="mt-1 space-y-1 lg:mt-0 lg:flex-1">
-                {mealSlots.map(meal => {
-                  const list = dishes.filter(b => mealOf(b) === meal);
-                  return (
-                    <div key={meal} data-testid={`meal-${date}-${meal.toLowerCase()}`} className={list.length ? "" : "flex flex-wrap items-center gap-x-3"}>
-                      <h3 className="w-28 text-xs font-medium uppercase tracking-wide text-muted-foreground">{mealName(meal)}</h3>
-                      {list.length > 0 && <div className="mt-1 grid gap-3 xl:grid-cols-2">
-                        {list.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
-                      </div>}
-                      <button type="button" className={`${text} -ms-2`} onClick={() => setModal({ kind: "add", date, meal })}
-                        data-testid={`add-dish-${date}-${meal.toLowerCase()}`}>{addLabel[meal]}</button>
-                    </div>
-                  );
-                })}
-                {dishes.length > 0 && <button type="button" className={`${text} -ms-2`} onClick={() => setModal({ kind: "move", date })} data-testid={`move-day-${date}`}>{t("moveDay")}</button>}
+              className={`py-3 ${isToday ? "-mx-2 bg-accent/40 px-2" : ""}`}>
+              <div className="flex flex-wrap items-center justify-between gap-x-3">
+                <h2 id={`day-${date}`} className={`text-base font-semibold ${isToday ? "text-primary" : dishes.length ? "text-foreground" : "font-normal text-muted-foreground"}`}>
+                  {dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}
+                </h2>
+                {dishes.length > 0 ? <button type="button" className={text} onClick={() => setModal({ kind: "move", date })}
+                  aria-label={t("moveDayFor", { date: dates.long(date) })} data-testid={`move-day-${date}`}>{t("moveDay")}</button> : add}
               </div>
+              {dishes.length > 0 && <>
+                <div className="mt-2 grid gap-3 lg:grid-cols-2">
+                  {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
+                </div>
+                <div className="mt-1">{add}</div>
+              </>}
             </section>
           );
         })}

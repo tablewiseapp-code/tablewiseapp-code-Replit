@@ -4,7 +4,8 @@ import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
 import { cookedOn, readPlan, removeBatch, servedFrom, writePlan, type Batch } from "@/lib/meal-plan";
-import { batchTotal, mealOf, mealSlots, type MealSlot } from "@shared/cooking-plan";
+import { usePlannerCopy } from "@/lib/planner-copy";
+import { batchTotal, currentMeal, mealOf, mealSlots, type MealSlot } from "@shared/cooking-plan";
 import { baseServings } from "@/lib/ingredient-scale";
 import { calendarDate, currentWeek, plannerRecipeURL } from "@/lib/week-plan";
 import { MealGenerator, type MealAdded, type MealTarget } from "@/components/meal-generator";
@@ -17,7 +18,6 @@ import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
 import { RecipeCard } from "@/components/recipe-card";
 import { RecipeMeta } from "@/components/recipe-summary";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import type { Recipe } from "@/lib/storage";
 
@@ -41,7 +41,11 @@ export default function Home() {
   const catalog = useRecipeCatalog();
   const { toast } = useToast();
   // Focus goes back to that meal's + Add button.
-  const focusAdd = (meal: MealSlot) => requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid="home-add-${meal.toLowerCase()}"]`)?.focus());
+  const focusAdd = (meal: MealSlot) => requestAnimationFrame(() => {
+    const add = document.querySelector<HTMLElement>(`[data-testid="home-add-${meal.toLowerCase()}"]`);
+    add?.closest("details")?.setAttribute("open", ""); // an empty meal is collapsed; reopen it so focus lands
+    add?.focus();
+  });
   const added = ({ batchId, recipeId, date }: MealAdded) => {
     setPlan(readPlan());
     toast({ title: text("genAdded"), action: <ToastAction altText={text("genUndo")} data-testid="home-meal-undo" onClick={() => {
@@ -53,7 +57,19 @@ export default function Home() {
     }}>{text("genUndo")}</ToastAction> });
   };
 
-  const phone = useIsMobile();
+  // Remove dish: the same action as the Week's "⋯" menu (the whole dish, every serving date), with Undo.
+  const p = usePlannerCopy();
+  const remove = (batch: Batch, title: string) => {
+    const before = readPlan(), at = before.batches.findIndex(b => b.id === batch.id);
+    try { writePlan(removeBatch(before, batch.id)); setPlan(readPlan()); } catch { toast({ variant: "destructive", title: text("genSaveError") }); return; }
+    toast({ title: p("removed", { title }), action: <ToastAction altText={p("undo")} data-testid="home-remove-undo" onClick={() => {
+      const current = readPlan();
+      if (current.batches.some(b => b.id === batch.id)) return;
+      const batches = [...current.batches]; batches.splice(Math.min(at, batches.length), 0, batch);
+      try { writePlan({ ...current, batches }); setPlan(readPlan()); } catch { toast({ variant: "destructive", title: text("genSaveError") }); }
+    }}>{p("undo")}</ToastAction> });
+  };
+
   const recipes = new Map((catalog.data ?? []).map(r => [r.id, r]));
   const cooking = cookedOn(plan, today).filter(b => recipes.has(b.recipeId));
   const eating = servedFrom(plan, today).filter(b => recipes.has(b.recipeId));
@@ -97,25 +113,41 @@ export default function Home() {
                 {mealSlots.map(meal => {
                   const list = todays.filter(([batch]) => mealOf(batch) === meal);
                   const name = t(`meals.${meal.toLowerCase()}`);
+                  const add = <button type="button" onClick={() => setGenerating({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
+                    data-testid={`home-add-${meal.toLowerCase()}`} className="btn btn-text -ms-2">{text(`add${meal}`)}</button>;
+                  // The meal of this time of day is the big card, later meals the smaller row card; an earlier meal, or one with
+                  // nothing today, is collapsed to its name and opens to its dishes and + Add.
+                  const order = mealSlots.indexOf(meal) - mealSlots.indexOf(currentMeal(now));
+                  const dishes = list.length > 0 && <ul className={`mt-1 grid gap-3 ${order === 0 ? "max-w-xl" : ""}`}>
+                    {list.map(([batch, cookedToday]) => {
+                      const recipe = recipes.get(batch.recipeId)!;
+                      const href = plannerRecipeURL(recipe.id, currentWeek(), batch.id);
+                      const line = <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>;
+                      return (
+                        <li key={batch.id}>
+                          {/* The recipe's own servings stay on the card for per-serving nutrition; the line shows time only ("Make X servings" is below). */}
+                          <RecipeCard recipe={recipe} meta={<RecipeMeta recipe={{ ...recipe, servings: null }} />} href={href} row={order > 0} compact={order < 0}
+                            testId={`home-meal-${recipe.id}`} ids={{ view: `home-meal-view-${recipe.id}` }}>
+                            {line}
+                            <button type="button" onClick={() => remove(batch, recipe.title)} className="btn btn-text -ms-2 self-start"
+                              data-testid={`home-remove-${batch.id}`}>{p("removeDish")}</button>
+                          </RecipeCard>
+                        </li>
+                      );
+                    })}
+                  </ul>;
+                  if (!list.length || order < 0) return (
+                    <details key={meal} data-testid={`home-slot-${meal.toLowerCase()}`}>
+                      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</summary>
+                      {dishes}
+                      {add}
+                    </details>
+                  );
                   return (
-                    <div key={meal} data-testid={`home-slot-${meal.toLowerCase()}`} className={list.length ? "" : "flex flex-wrap items-center gap-x-3"}>
-                      <h3 className="w-28 text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</h3>
-                      {list.length > 0 && <ul className="mt-1 grid gap-3">
-                        {list.map(([batch, cookedToday]) => {
-                          const recipe = recipes.get(batch.recipeId)!;
-                          const href = plannerRecipeURL(recipe.id, currentWeek(), batch.id);
-                          const line = <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>;
-                          return (
-                            <li key={batch.id}>
-                              {/* The recipe's own servings stay on the card for per-serving nutrition; the line shows time only ("Make X servings" is below). */}
-                              <RecipeCard recipe={recipe} meta={<RecipeMeta recipe={{ ...recipe, servings: null }} />} href={href} row={!phone} testId={`home-meal-${recipe.id}`}
-                                ids={{ view: `home-meal-view-${recipe.id}` }}>{line}</RecipeCard>
-                            </li>
-                          );
-                        })}
-                      </ul>}
-                      <button type="button" onClick={() => setGenerating({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
-                        data-testid={`home-add-${meal.toLowerCase()}`} className="btn btn-text -ms-2">{text(`add${meal}`)}</button>
+                    <div key={meal} data-testid={`home-slot-${meal.toLowerCase()}`} data-current={order === 0 || undefined}>
+                      <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</h3>
+                      {dishes}
+                      {add}
                     </div>
                   );
                 })}

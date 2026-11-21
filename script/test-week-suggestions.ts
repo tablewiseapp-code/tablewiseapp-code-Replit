@@ -6,7 +6,7 @@ import { addBatch, approvePlan, cookedOn, emptyPlan, moveConflicts, moveCookingD
 import { checkEligibility, total } from "../client/src/lib/preference-engine";
 import { buildRecipeGroceryRows } from "../client/src/lib/grocery-meal-removal";
 import { toPlannerRecipes, type PlannerRecipe } from "../client/src/lib/planner-recipes";
-import { cookingEvenings, dishOptions, needsHouseholdSetup, proposeCookingPlan, resuggest } from "../client/src/lib/week-suggestions";
+import { cookingEvenings, dishOptions, needsHouseholdSetup, proposeCookingPlan } from "../client/src/lib/week-suggestions";
 import { weekDeals, type FoodDeal } from "../client/src/lib/food-deals";
 import { batchFactor, batchTotal, fromLegacy, mealOf, planStatus, serveAmount, weekdayOf } from "../shared/cooking-plan";
 import { weekPlanInput } from "../server/request-schemas";
@@ -55,12 +55,10 @@ assert.ok(q.plan.batches.every(b => b.serves.length === 1 && b.serves[0].date ==
 assert.equal(batchTotal(q.plan.batches[0], 4), 3.5, "two adults and three kids → 3.5 servings, half kept exactly");
 assert.equal(new Set(q.plan.batches.map(b => b.recipeId)).size, 3, "no recipe repeats while others are eligible");
 assert.deepEqual(proposeCookingPlan(empty(), catalog, quick, WEEK, { newId: ids() }).plan, q.plan, "stable across refreshes");
-// A day that already has a dish keeps it; re-suggesting replaces only earlier suggestions.
+// A day that already has a dish keeps it.
 const placed = addBatch(empty(), "r7", "2026-11-20", null, "mine");
 const kept = proposeCookingPlan(placed, catalog, quick, WEEK, { newId: ids() });
 assert.deepEqual(cookedOn(kept.plan, "2026-11-20").map(b => b.id), ["mine"], "a placed dish is never replaced");
-const again = resuggest(kept.plan, catalog, { ...quick, setup: { ...quick.setup, suggested: kept.suggested } }, WEEK);
-assert.equal(again.plan.batches.length, kept.plan.batches.length, "no duplicated dishes");
 // No household counts: a new dish makes the recipe's own yield.
 assert.equal(serveAmount(addBatch(empty(), "r1", "2026-11-17", null).batches[0].serves[0], 4), 4);
 

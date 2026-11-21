@@ -19,7 +19,6 @@ const en = {
   challengeQ: "When would you like a chef challenge?", challenge_day: "On a day I choose", challenge_any: "Any cooking day", challenge_every: "Every cooking day",
   summary: "Your choices", suggest: "Suggest my week", skip: "Skip for now", working: "Suggesting…",
   catalogError: "Couldn’t load recipes. Try again.", retry: "Try again", saveError: "Couldn’t save. Nothing was changed.",
-  keptLocked: "Your approved cooking plan was kept. Change dishes on the Week.",
   // Week → plan review
   reviewTitle: "Your dinners this week", reviewDraft: "Suggested from Your household. Approve it, or swap anything first.", reviewApproved: "Approved. Groceries use these dinners.", openNoMatch: "{day}: no dinner matches all your restrictions.", openFiltered: "{day}: no dinner matches your filters.", openAllUsed: "{day}: every matching dinner is already in your week.", openFull: "{day}: your week already has 12 recipes.", approve: "Approve week", edit: "Edit week", swap: "Swap dinner", update: "Update",
   minutes: "{n} min", timeUnknown: "Time not recorded", servings: "{n} servings", openEvening: "Open evening",
@@ -49,7 +48,6 @@ const ru: Copy = {
   challengeQ: "Когда устроить «вызов шефу»?", challenge_day: "В выбранный день", challenge_any: "В любой день готовки", challenge_every: "Каждый день готовки",
   summary: "Ваш выбор", suggest: "Предложить неделю", skip: "Пропустить", working: "Подбираем…",
   catalogError: "Не удалось загрузить рецепты. Попробуйте ещё раз.", retry: "Попробовать снова", saveError: "Не удалось сохранить. Ничего не изменено.",
-  keptLocked: "Ваш утверждённый план готовки сохранён. Блюда можно изменить на странице недели.",
   reviewTitle: "Ваши ужины на неделю", reviewDraft: "Предложено по данным «Ваша семья». Утвердите неделю или сначала замените что-нибудь.", reviewApproved: "Утверждено. Список покупок строится по этим ужинам.", openNoMatch: "{day}: ни один ужин не подходит под все ограничения.", openFiltered: "{day}: ни один ужин не подходит под ваши фильтры.", openAllUsed: "{day}: все подходящие ужины уже есть в неделе.", openFull: "{day}: в неделе уже 12 рецептов.", approve: "Утвердить неделю", edit: "Изменить неделю", swap: "Заменить ужин", update: "Изменить",
   minutes: "{n} мин", timeUnknown: "Время не указано", servings: "Порций: {n}", openEvening: "Свободный вечер",
   swapped: "{day}: {title}", noAlternative: "Других подходящих ужинов на {day} нет.",
@@ -77,7 +75,6 @@ const he: Copy = {
   challengeQ: "מתי תרצו אתגר שף?", challenge_day: "ביום שאבחר", challenge_any: "בכל ערב בישול", challenge_every: "בכל ערבי הבישול",
   summary: "הבחירות שלכם", suggest: "הציעו לי שבוע", skip: "דילוג בינתיים", working: "מציעים…",
   catalogError: "לא ניתן לטעון מתכונים. נסו שוב.", retry: "ניסיון נוסף", saveError: "לא ניתן לשמור. שום דבר לא השתנה.",
-  keptLocked: "תוכנית הבישול המאושרת שלכם נשמרה. אפשר לשנות מנות בעמוד השבוע.",
   reviewTitle: "ארוחות הערב שלכם השבוע", reviewDraft: "הוצע לפי משק הבית שלכם. אשרו, או החליפו משהו קודם.", reviewApproved: "מאושר. רשימת הקניות מבוססת על הארוחות האלה.", openNoMatch: "{day}: אף ארוחת ערב לא עומדת בכל ההגבלות.", openFiltered: "{day}: אף ארוחת ערב לא מתאימה למסננים שלכם.", openAllUsed: "{day}: כל הארוחות המתאימות כבר בשבוע.", openFull: "{day}: בשבוע כבר יש 12 מתכונים.", approve: "אישור השבוע", edit: "עריכת השבוע", swap: "החלפת ארוחה", update: "עדכון",
   minutes: "{n} דק׳", timeUnknown: "הזמן לא מתועד", servings: "{n} מנות", openEvening: "ערב פנוי",
   swapped: "{day}: {title}", noAlternative: "אין ארוחת ערב אחרת שמתאימה להעדפות שלכם ליום {day}.",

@@ -2,6 +2,7 @@
 // with AI off. Restrictions go through checkEligibility and are never relaxed; the inputs only narrow and order.
 import type { DietPattern } from "@shared/food-rules";
 import type { BasicSettings, CookingStyle } from "./basic-settings";
+import type { DeviceId } from "./device-requirements";
 import type { MealSlot } from "./meal-plan";
 import { checkEligibility, rankRecipe, total, type EngineRecipe } from "./preference-engine";
 import { effort } from "./week-suggestions";
@@ -9,8 +10,8 @@ import { effort } from "./week-suggestions";
 export const generatorTimes = [null, 15, 30] as const;
 export type GeneratorInput = {
   meal: MealSlot; day: number; query: string; maxMinutes: typeof generatorTimes[number]; style: CookingStyle;
-  /** This meal only: servings and diets start from the household and never change Basic Settings. */
-  servings: number | null; diets: DietPattern[];
+  /** This meal only: servings, diets and devices start from the household and never change Basic Settings. */
+  servings: number | null; diets: DietPattern[]; devices?: DeviceId[] | null;
 };
 /** Why nothing was found, in the order the inputs narrow: restrictions, then time, then the search words. */
 export type NoMatch = "restrictions" | "time" | "search";
@@ -28,9 +29,10 @@ export const termHits = (r: EngineRecipe, terms: string[]) => {
   return terms.filter(t => new RegExp(`\\b${escape(t)}(e?s)?\\b`, "u").test(text)).length;
 };
 
-/** The settings for this meal: the household's, with this flow's diets. Allergies, devices and meal rules always apply. */
+/** The settings for this meal: the household's, with this flow's diets and devices. Allergies and meal rules always apply. */
 export const generatorSettings = (settings: BasicSettings, input: GeneratorInput): BasicSettings =>
-  ({ ...settings, dietary: { ...settings.dietary, diets: input.diets } });
+  ({ ...settings, dietary: { ...settings.dietary, diets: input.diets },
+    kitchen: input.devices === undefined ? settings.kitchen : { devices: input.devices } });
 
 const styleTarget: Record<CookingStyle, number> = { quick: 0, everyday: 0.4, chef: 1 };
 

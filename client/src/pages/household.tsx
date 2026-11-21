@@ -8,7 +8,6 @@ import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy } from "@/lib/household-copy";
 import { settingsText } from "@/lib/settings-copy";
 import { useWeekFilterCopy } from "@/lib/week-filter-copy";
-import { useToast } from "@/hooks/use-toast";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
 import { selectableDevices } from "@/lib/device-requirements";
@@ -19,7 +18,7 @@ import { matchesPlannerFilters, WEEK_DEFAULT_MAX_MINUTES } from "@/lib/planner-f
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { checkEligibility } from "@/lib/preference-engine";
 import { loadWeekFilters, saveWeekFilters, type WeekFilters } from "@/lib/week-filters";
-import { cookingEvenings, resuggest, weekOrder } from "@/lib/week-suggestions";
+import { cookingEvenings, proposeCookingPlan, weekOrder } from "@/lib/week-suggestions";
 import { currentWeek } from "@/lib/week-plan";
 import { allergens, type Allergen, type DietPattern } from "@shared/food-rules";
 
@@ -75,7 +74,6 @@ export default function Household() {
   const c = useWeekFilterCopy();
   const s = (key: string) => settingsText(lang, key);
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const catalog = useRecipeCatalog();
   const [initial] = useState(loadSettings);
   // One draft for every answer: switching style only changes what is shown, never what was entered.
@@ -150,9 +148,8 @@ export default function Household() {
       // Stores are saved by the picker as they are tapped: keep the latest, not the draft's copy.
       const saved = updateSettings(x => ({ ...draft, rev: x.rev, shopping: { ...draft.shopping, stores: x.shopping.stores },
         setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined } }));
-      // An approved cooking plan is never changed here.
-      if (readPlan().approved !== null) { toast({ title: t("keptLocked") }); setLocation("/meals?plan"); return; }
-      const result = resuggest(readPlan(), planner, saved, currentWeek(), fits);
+      // The answers rebuild the whole Week (product owner, 2026-11-20); an approved Week keeps its groceries until Save changes.
+      const result = proposeCookingPlan({ ...readPlan(), batches: [] }, planner, saved, currentWeek(), { fits });
       writePlan(result.plan);
       updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [] } }));
       setLocation("/meals?plan");

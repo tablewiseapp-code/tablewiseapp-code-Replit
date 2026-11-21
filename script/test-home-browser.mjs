@@ -45,9 +45,11 @@ try {
   await go("/", `Boolean(${q("home-meals")})`);
   eq(await text("text-page-title"), "Home", "title");
   eq(await text("text-home-date"), await ev(`new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })`), "local date");
+  eq(await ev(`[...${q("home-today")}.querySelectorAll("summary")].map(h => h.textContent)`), ["Breakfast", "Lunch", "Dinner"], "Today separates Breakfast, Lunch and Dinner");
+  eq(await text("home-add-dinner"), "", "an empty meal is collapsed to its name");
+  await ev(`${q("home-slot-dinner")}.querySelector("summary").click()`);
   eq(await ev(`${q("home-add-dinner")}.tagName`), "BUTTON", "+ Add dinner opens the generator, not the Week");
   eq(await text("home-add-dinner"), "+ Add dinner", "add copy");
-  eq(await ev(`[...${q("home-today")}.querySelectorAll("h3")].map(h => h.textContent)`), ["Breakfast", "Lunch", "Dinner"], "Today separates Breakfast, Lunch and Dinner");
   eq(await current('[data-testid="app-nav-header"]'), "/", "Home active");
   ok(await ev(`!${q("home-groceries")}`), "no grocery card on Home");
 
@@ -136,12 +138,15 @@ try {
     ok((await text("meal-generator-none")).includes("zzqx unicorn"), "says what did not match");
     await ev(`${q("meal-generator-edit-filters")}.click()`);
     await ev(`(() => { const i = ${q("meal-generator-query")}; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(i, ""); i.dispatchEvent(new Event("input", { bubbles: true })); })()`);
-    await ev(`${q("meal-generator-time-any")}.click(); ${q("meal-generator-generate")}.click()`);
+    // One click per call: React applies a click's state after the event, so a Generate in the same call would use the old time.
+    await ev(`${q("meal-generator-time-any")}.click()`);
+    await ev(`${q("meal-generator-generate")}.click()`);
     await until(`Boolean(${q("meal-generator-recipe")})`, "suggestion");
     const first = await ev(`${q("meal-generator-recipe")}.dataset.recipeId`);
     await ev(`${q("meal-generator-another")}.click()`);
+    await until(`${q("meal-generator-recipe")}?.dataset.recipeId !== ${JSON.stringify(first)}`, "another suggestion");
     const pick = await ev(`${q("meal-generator-recipe")}?.dataset.recipeId ?? null`);
-    ok(pick && pick !== first, "Try another shows a different recipe");
+    ok(pick && pick !== first, `Try another shows a different recipe (shown: ${await text("meal-generator-none")})`);
     eq(await text("meal-generator-add"), "Add to today", "add label");
     await ev(`${q("meal-generator-add")}.click(); ${q("meal-generator-add")}?.click()`); // double tap
     await until(`!${q("meal-generator")} && Boolean(${q(`home-meal-${pick}`)})`, "added dish shows on Home");
@@ -168,7 +173,9 @@ try {
     // A dish cooked yesterday and eaten today shows as "Cooked <day>".
     const yesterday = await ev(`(d => { d.setDate(d.getDate() - 1); return \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, "0")}-\${String(d.getDate()).padStart(2, "0")}\`; })(new Date())`);
     if (yesterday >= thisWeek) {
-      await ev(`(() => { const p = JSON.parse(localStorage.getItem("weeklyMealsState")); p.batches.push(${JSON.stringify(dish("y1", recipe.id, "", []))}); const b = p.batches.at(-1); b.cookDate = ${JSON.stringify(yesterday)}; b.serves = [{ date: ${JSON.stringify(yesterday)} }, { date: ${JSON.stringify(todayDate)} }]; localStorage.setItem("weeklyMealsState", JSON.stringify(p)); })()`);
+      await ev(`(() => { const p = JSON.parse(localStorage.getItem("weeklyMealsState")); p.batches.push(${JSON.stringify(dish("y1", recipe.id, "", []))}); const b = p.batches.at(-1); b.cookDate = ${JSON.stringify(yesterday)}; b.serves = [{ date: ${JSON.stringify(yesterday)} }, { date: ${JSON.stringify(todayDate)} }]; localStorage.setItem("weeklyMealsState", JSON.stringify(p));
+        // The server copy wins on load (meal-plan.ts syncWeekPlan), so it gets the dish too.
+        return fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ weekStart: ${JSON.stringify(thisWeek)}, proposed: p.proposed === true, selectedIds: p.selectedIds, batches: p.batches, approved: p.approved }) }).then(r => r.status); })()`);
       await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
       ok((await text(`home-meal-meta-${recipe.id}`)).startsWith("Cooked "), "leftovers say when they were cooked");
     }

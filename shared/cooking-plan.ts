@@ -7,6 +7,8 @@
 export type Serve = { date: string; adults?: number; kids?: number; servings?: number };
 export const mealSlots = ["Breakfast", "Lunch", "Dinner"] as const;
 export type MealSlot = typeof mealSlots[number];
+/** The meal of this time of day (Home's Today): Breakfast before 11:00, Lunch before 16:00, Dinner after. */
+export const currentMeal = (at: Date): MealSlot => at.getHours() < 11 ? "Breakfast" : at.getHours() < 16 ? "Lunch" : "Dinner";
 /** One planned dish: cooked once on `cookDate` for `meal`. `yield` is asked for when the recipe states none. */
 export type Batch = { id: string; recipeId: string; cookDate: string; serves: Serve[]; yield?: number; meal?: MealSlot };
 /** Dishes saved before meals (2026-11-20) and the draft's dishes are dinners. */
@@ -73,4 +75,14 @@ export function fromLegacy(weekStart: string, items: LegacyAssignment[]): Batch[
     return { id: `legacy-${index}`, recipeId: a.recipeId, cookDate, ...(meal ? { meal } : {}),
       serves: Array.from({ length: span }, (_, i) => ({ date: shiftDate(cookDate, i), ...(each ? { servings: each } : {}) })) };
   });
+}
+
+/** Serving dates as runs of consecutive days ("For Mon–Wed & Fri"): sorted, each run in date order. */
+export function dateRuns(dates: readonly string[]): string[][] {
+  const runs: string[][] = [];
+  for (const date of [...dates].sort()) {
+    const last = runs.at(-1);
+    if (last && shiftDate(last.at(-1)!, 1) === date) last.push(date); else runs.push([date]);
+  }
+  return runs;
 }

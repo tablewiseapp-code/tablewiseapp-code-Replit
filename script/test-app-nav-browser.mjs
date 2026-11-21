@@ -66,8 +66,9 @@ try {
   await ev(`${q("link-add-recipe")}.click()`); await until(`location.pathname === "/import"`, "import");
   eq(await current('[data-testid="app-nav-header"]'), "/recipes", "Recipes active on import");
   await ev("history.back()"); await until(`document.querySelectorAll('[data-testid^="card-recipe-"]').length > 0`, "back to recipes");
-  const cardHref = await ev(`document.querySelector('[data-testid^="card-recipe-"]').getAttribute("href")`);
-  await ev(`document.querySelector('[data-testid^="card-recipe-"]').click()`);
+  // The card is an <article>; its title link opens the recipe.
+  const cardHref = await ev(`document.querySelector('[data-testid^="card-recipe-"] a').getAttribute("href")`);
+  await ev(`document.querySelector('[data-testid^="card-recipe-"] a').click()`);
   await until(`location.pathname === ${JSON.stringify(cardHref)} && Boolean(${q("text-recipe-title")})`, "saved recipe opens");
   eq(await current('[data-testid="app-nav-header"]'), "/recipes", "Recipes active on detail");
   await go(`${cardHref}?week=2026-11-09`, `Boolean(${q("text-recipe-title")})`);
@@ -114,8 +115,7 @@ try {
   await ev(`${q("app-nav-menu-link-meals")}.click()`); // Week opens the calendar
   await until(`Boolean(${q("week-status")})`, "Week calendar");
   eq(await current('[data-testid="app-nav-bottom"]'), null, "Week has no bottom tab");
-  const bar = `${q("button-approve-week")}.parentElement`;
-  ok(await ev(`${bar}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top + 0.5`), "sticky plan actions above bottom nav");
+  ok(await ev(`${q("week-header")}.contains(${q("button-approve-week")}) && ${q("button-approve-week")}.getBoundingClientRect().bottom <= ${q("app-nav-bottom")}.getBoundingClientRect().top + 0.5`), "plan approval in the header, clear of the bottom nav");
 
   // Cooking Mode hides navigation; leaving restores it.
   await go(cardHref, `Boolean(${q("button-start-cooking")})`);
@@ -125,7 +125,7 @@ try {
   ok(await ev(`getComputedStyle(${q("app-nav-bottom")}).display !== "none"`), "nav back after Cooking Mode");
 
   eq(errors, [], "no page errors");
-  console.log(`PASS app navigation browser: ${checks} checks — order/labels desktop+mobile, destinations, active states (nested/planner/import/detail), Add recipe, /recipe-view, back/forward, keyboard + focus ring, 44px targets, non-color selected state, no overlap incl. sticky plan bar, Cooking Mode hides nav`);
+  console.log(`PASS app navigation browser: ${checks} checks — order/labels desktop+mobile, destinations, active states (nested/planner/import/detail), Add recipe, /recipe-view, back/forward, keyboard + focus ring, 44px targets, non-color selected state, no overlap incl. plan approval, Cooking Mode hides nav`);
   ws.close();
 } finally {
   chrome.kill();

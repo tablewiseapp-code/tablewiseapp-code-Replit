@@ -12,34 +12,35 @@ The screen answers two questions at a glance: **what am I cooking each day, and 
 
 ## Layout
 
-- **Header:** "Weekly meals", Previous week / Next week, the date range, and a status pill: Draft, Approved or Changes not saved.
-- **Weekly deals · N offers:** a collapsed row under the header. It is shown only when an offer applies to the shown week (see Deals).
-- **Days:**
-  - Seven groups, Monday to Sunday, each headed by weekday and date. Today is highlighted in the current week.
-  - Each day is split into **Breakfast, Lunch and Dinner** (product owner, 2026-11-20), in that order. Each meal lists its dishes' cards, then its own "+ Add breakfast", "+ Add lunch" or "+ Add dinner".
-  - A day with dishes ends with "Move cooking day" (once per day).
-- **Width:**
-  - Desktop: the date sits beside the day's cards, which form a grid.
-  - Phone: everything stacks.
-- **Below the days:** "Browse recipes" and "Change household".
-- **Sticky footer:**
-  - Draft: "Approve cooking plan".
+Redesigned by the product owner on 2026-11-20 (the weekly cooking plan): the week is read by cooking day, and approval sits in the header.
+
+- **Header:** "Weekly cooking plan", Previous week / Next week, the date range, and a status pill: Draft, Approved or Changes not saved. Beside them (below the date range on a phone, before any dish):
+  - Draft: "Approve plan", with "Approval builds your grocery list."
   - Approved: "View groceries".
-  - Changes not saved: "Save changes".
+  - Changes not saved: "Save changes", with "Save changes to update your groceries."
+  - A second tap on an approved plan does nothing.
+- **Weekly deals · N offers:** a collapsed row under the header. It is shown only when an offer applies to the shown week (see Deals). Each offer has "Find recipes": it opens Browse recipes (`/meals?browse&deal=<id>`) with that deal's filter, the same as its "Show recipes" there.
+- **Days:** Monday to Sunday, each headed by weekday and date. Today is highlighted in the current week.
+  - A **cooking day** (one with dishes) has "Move day" beside the date, its dishes in Breakfast, Lunch, Dinner order (two dinners in the order they were added), then one "+ Add dish".
+  - A day without cooking is one line: the date and "+ Add dish". A day a dish only covers shows nothing more; the dish's card names it.
+  - Weeks with dishes on all seven days (including weeks saved as Breakfast/Lunch/Dinner slots) show seven cooking days.
+- **Width:** cards form two columns on wide screens and stack on a phone, with no sideways scrolling at 375 px.
+- **Below the days:** "Browse recipes" and "Change household".
 
 Every action is a visible, labelled button that works by tap, click and keyboard. There is no drag and drop.
 
 ## Dish card
 
-Each planned dish (one batch) appears once, on the day it is cooked. Its card shows:
+Each planned dish (one batch) appears once, on the day it is cooked, as the shared recipe card's `compact` form (`client/src/components/recipe-card.tsx`): a small photo on the left and:
 
-- **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner) and shows under it. Swap, Edit servings and Move cooking day keep it. A dish saved without one (before 2026-11-20) and the draft's dishes are Dinner; Breakfast/Lunch/Dinner slots of older weeks keep their meal.
 - **Title.** It opens the recipe at this batch (`/recipe/:id?week=…&batch=…`), scaled to the batch total. Back returns to the week.
-- **Time**, per the recipe time setting.
-- **"Make X servings"**, the amount to prepare. Half servings are shown as written, e.g. 3.5.
-- **"For Sun, Nov 22 & Tue, Nov 24"**, the serving dates.
-- **Recipe View rows** (Settings).
-- **Buttons:** Edit servings, Swap dish, Remove dish.
+- **One line:** meal · total time · servings · days covered, e.g. "Dinner · 45 min · 7 servings · For Mon–Tue".
+  - **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner). Swap, Edit servings and Move day keep it. A dish saved without one (before 2026-11-20) and the draft's dishes are Dinner; Breakfast/Lunch/Dinner slots of older weeks keep their meal.
+  - **Time** is the total time, whatever the recipe time setting. Prep and cook times and the cooking tool stay on the recipe page.
+  - **"7 servings"** is the amount to prepare (the batch total, with any edits; half servings as written, e.g. 3.5). It is a button named "Edit servings for {recipe}" that opens Edit servings.
+  - **Days covered** come from the serving dates: left out when the dish is eaten only on its cooking day; "For Mon–Wed" for consecutive days, "For Mon & Wed" for separate ones, mixed as "For Mon–Tue & Thu". Dates more than a week after cooking are written in full.
+- **Recipe View** nutrition and Dietary tags (Settings).
+- **Buttons:** two icon buttons: Swap (arrows, named "Swap {recipe}") and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu.
 
 ## Servings
 
@@ -64,13 +65,13 @@ Ingredient scale      = Make X servings / the recipe's original yield
 
 | Button | What it does |
 |---|---|
-| + Add breakfast / lunch / dinner | Opens the recipe picker for that date and meal and adds the pick to that meal, beside the dishes already there. |
-| Swap dish | Replaces only that dish's recipe. The cooking date, serving dates and portions stay; quantities use the new recipe's yield. |
-| Edit servings | Changes the dish's dates and amounts, as above. |
-| Move cooking day | Moves every dish of that day, together, to another day of the shown week; dishes already there stay. See below for portions that would land before the new day. |
-| Remove dish | Removes only that dish (another batch of the same recipe stays). Undo puts it back. |
+| + Add dish | Asks Breakfast, Lunch or Dinner, then opens the recipe picker for that date and meal; the pick is added beside the dishes already there. |
+| Swap | Replaces only that dish's recipe. The cooking date, serving dates and portions stay; quantities use the new recipe's yield. |
+| Servings label (Edit servings) | Changes the dish's dates and amounts, as above. |
+| Move day | Moves every dish of that day, together, to another day of the shown week; dishes already there stay. See below for portions that would land before the new day. |
+| Remove dish (bin icon) | Removes only that dish (another batch of the same recipe stays). Undo puts it back. |
 
-**Move cooking day, portions before the new day:**
+**Move day, portions before the new day:**
 
 - They are listed by dish, date and amount.
 - Each one is either moved to the new day (added to that day's amount) or removed.
@@ -97,7 +98,7 @@ Made once per week (`proposed`), the first time an unapproved week is opened. Sa
 
 ## Approval and Groceries
 
-- **Approve cooking plan** and **Save changes** copy the dishes to the approved copy (`approved`). Groceries use only that copy.
+- **Approve plan** and **Save changes** copy the dishes to the approved copy (`approved`). Groceries use only that copy.
 - **Draft edits** update the cards and the recipe page at once. Groceries wait for Save changes.
 - **Counting:** each dish counts once, in the week it is cooked, even when it is eaten next week. Repeated approval, retries and refreshes give the same amounts, because the list is computed from the approved dishes.
 - **Changing or removing a dish** changes only its share. Other dishes, hand-added items, checked items and purchases are untouched.

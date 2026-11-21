@@ -138,7 +138,9 @@ try {
   // Plan it: the planner's normal flow; the added-to-plan signal fires (not 'cooked').
   await click("button-back-to-week");
   await until(`Boolean(document.querySelector('[data-testid^="add-dish-"]'))`, "week");
-  await ev(`document.querySelector('[data-testid^="add-dish-"]').click()`); await until(el("pick-ai-test-1"), "picker offers the accepted recipe");
+  await ev(`document.querySelector('[data-testid^="add-dish-"]').dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }))`); // Radix menus open on pointerdown
+  await until(`Boolean(document.querySelector('[data-testid^="add-dish-"][data-testid$="-dinner"]'))`, "meal menu");
+  await ev(`document.querySelector('[data-testid^="add-dish-"][data-testid$="-dinner"]').click()`); await until(el("pick-ai-test-1"), "picker offers the accepted recipe");
   await click("pick-ai-test-1");
   await until(`JSON.parse(localStorage.getItem('weeklyMealsState')).batches.some(b => b.recipeId === 'ai-test-1')`, "dish saved");
   for (let i = 0; i < 20 && !events.includes("generated_recipe_added_to_plan"); i++) await sleep(100);
