@@ -38,7 +38,8 @@ export function GroceryAddItem({ onAdd }: { onAdd: (text: string, image?: string
   const photoVersion = useRef(0);
   const { data: products = [], isError } = useQuery<Product[]>({ queryKey: ["/api/household-products"], staleTime: 3600000 });
   const query = text.trim().toLocaleLowerCase();
-  const matches = products.filter(product => [...Object.values(product.names), ...product.aliases]
+  // Suggestions only once the person types: an empty field opens no list.
+  const matches = !query ? [] : products.filter(product => [...Object.values(product.names), ...product.aliases]
     .some(name => name.toLocaleLowerCase().includes(query)))
     .sort((a, b) => Number(!a.names[lang]?.toLocaleLowerCase().startsWith(query)) - Number(!b.names[lang]?.toLocaleLowerCase().startsWith(query)))
     .slice(0, 12);
