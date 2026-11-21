@@ -82,7 +82,7 @@ export function MyCookingExperience({ recipeId }: { recipeId: string }) {
   const { count, lastCookedAt } = cookingSummary(sessions);
   const [latest, ...earlier] = sessions;
   return (
-    <section className="mt-4 scroll-mt-4 rounded-lg border hairline bg-white p-4" aria-labelledby="cooking-heading" data-testid="my-cooking-experience">
+    <section className="mt-4 rounded-lg border hairline bg-white p-4" aria-labelledby="cooking-heading" data-testid="my-cooking-experience">
       <h2 id="cooking-heading" className="sr-only">{t("cookingHeading")}</h2>
       {query.isPending ? (
         <div className="h-24 animate-pulse rounded-md bg-foreground/5" aria-hidden="true" />
