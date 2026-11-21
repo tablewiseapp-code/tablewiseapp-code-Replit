@@ -55,7 +55,7 @@ export type RecipeDetail = typeof recipeDetails[number];
 export type RecipeView = { showNutrition: boolean; nutrients: RecipeNutrient[]; details: RecipeDetail[] };
 /** The Week's earlier browser-only "Show nutrition" switch; read once for settings saved before Recipe View existed. */
 export const legacyNutritionKey = "tablewise:nutrition-details:v1";
-export const defaultRecipeView = (): RecipeView => ({ showNutrition: false, nutrients: ["protein", "carbs"], details: [] });
+export const defaultRecipeView = (): RecipeView => ({ showNutrition: true, nutrients: ["calories", "protein", "fat", "fiber"], details: ["prepTime", "cookTime", "mainTool"] });
 
 export type CookingPrefs = { quick: boolean; minimalCleanup: boolean; onePot: boolean; batch: boolean };
 export const cookingPrefKeys = ["quick", "minimalCleanup", "onePot", "batch"] as const;
@@ -132,9 +132,9 @@ function setup(raw: unknown): HouseholdSetup {
 
 function recipeView(raw: unknown): RecipeView {
   if (raw === undefined) {
-    let legacy = false;
-    try { legacy = globalThis.localStorage?.getItem(legacyNutritionKey) === "true"; } catch { /* no browser storage */ }
-    return { ...defaultRecipeView(), showNutrition: legacy };
+    let legacy: string | null | undefined = null;
+    try { legacy = globalThis.localStorage?.getItem(legacyNutritionKey); } catch { /* no browser storage */ }
+    return { ...defaultRecipeView(), showNutrition: legacy !== "false" };
   }
   const r = obj(raw);
   // Nutrient choices are kept while nutrition is off; an empty choice is a choice.
