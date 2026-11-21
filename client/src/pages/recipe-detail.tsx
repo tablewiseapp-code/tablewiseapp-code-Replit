@@ -124,8 +124,15 @@ export default function RecipeDetail() {
     <button type="button" onClick={toggle} aria-expanded={open} aria-controls={controls}
       className={`flex min-h-11 w-full items-center justify-between gap-2 text-start ${focus}`}>
       <span className="text-lg font-semibold text-foreground" data-testid={testId}>{label}</span>
-      <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground ${open ? "" : "-rotate-90 rtl:rotate-90"}`} aria-hidden="true" />
+      <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-700 motion-reduce:transition-none ${open ? "" : "-rotate-90 rtl:rotate-90"}`} aria-hidden="true" />
     </button>
+  );
+  // Folding slides open and closed over 0.7 s (product owner, 2026-11-21); instant with reduced motion. Folded content
+  // stays mounted, so ticked ingredients survive, and is inert, so it cannot be focused.
+  const fold = (open: boolean, id: string, children: React.ReactNode) => (
+    <div id={id} inert={!open} className={`grid transition-[grid-template-rows] duration-700 ease-in-out motion-reduce:transition-none ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+      <div className="min-h-0 overflow-hidden">{children}</div>
+    </div>
   );
   // ?cook (Home → Suggest a recipe → Start cooking) opens Zen mode straight away.
   const [cooking, setCooking] = useState(() => new URLSearchParams(search).has("cook"));
@@ -308,19 +315,18 @@ export default function RecipeDetail() {
           <h2 id="ingredients-heading" className="mb-2">
             {sectionToggle(ingredientsOpen, () => setIngredientsOpen(open => !open), "ingredients-body", view("ingredients"), "text-ingredients-heading")}
           </h2>
-          {/* Hidden, not removed, so ticked ingredients survive folding. */}
-          <div id="ingredients-body" hidden={!ingredientsOpen}>
+          {fold(ingredientsOpen, "ingredients-body", <>
             {base !== null && selectedServings !== null && selectedServings !== base &&
               <p className="mb-2 text-xs text-muted-foreground" data-testid="servings-note">{view("servingsNote", { base })}</p>}
             <IngredientChecklist key={recipe.id} recipe={recipe} scaled={scaledIngredients} />
-          </div>
+          </>)}
         </section>
 
         <section className="card mt-4 p-4 sm:p-5" aria-labelledby="instructions-heading">
           <h2 id="instructions-heading" className="mb-3">
             {sectionToggle(stepsOpen, () => setStepsOpen(open => !open), "instructions-body", view("instructions"), "text-steps-heading")}
           </h2>
-          <div id="instructions-body" hidden={!stepsOpen}>
+          {fold(stepsOpen, "instructions-body", <>
           <ol className="space-y-4">
             {text.steps.map((step, i) => {
               const duration = stepDuration(recipe.steps[i], analysis?.steps[i]);
@@ -336,7 +342,7 @@ export default function RecipeDetail() {
             })}
           </ol>
           {analysis && <div className="mt-4"><AnalysisWarnings analysis={analysis} /></div>}
-          </div>
+          </>)}
         </section>
 
         <MyCookingExperience key={recipe.id} recipeId={recipe.id} />
@@ -375,10 +381,12 @@ export default function RecipeDetail() {
           // After the last step, Ingredients and Instructions fold and "Made it?" is centred on the screen, ready to tap.
           setIngredientsOpen(false);
           setStepsOpen(false);
-          requestAnimationFrame(() => {
+          // Centre it once the 0.7 s fold has finished, when the page has its final height.
+          const wait = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700;
+          setTimeout(() => {
             document.querySelector("[data-testid=my-cooking-experience]")?.scrollIntoView({ block: "center" });
             document.querySelector<HTMLButtonElement>("[data-testid=button-made-it]")?.focus({ preventScroll: true });
-          });
+          }, wait);
         }} />}
 
       <AddToMealPlanDialog open={planOpen} onOpenChange={setPlanOpen} recipe={recipe} plannerHref="/meals?plan" />
