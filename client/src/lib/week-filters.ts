@@ -33,6 +33,8 @@ const readState = (): Record<string, unknown> => {
   try { const parsed = JSON.parse(localStorage.getItem(planStorageKey) ?? "null"); return parsed && typeof parsed === "object" ? parsed : {}; } catch { return {}; }
 };
 export const loadWeekFilters = () => sanitizeWeekFilters(readState().filters);
+/** The filters for planKey(): null while they are the defaults, so a Week planned before filters counted is not asked about. */
+export const planFilters = () => { const f = loadWeekFilters(); return JSON.stringify(f) === JSON.stringify(defaultWeekFilters) ? null : f; };
 /** Changes only the filters; the plan in the same browser copy is kept. */
 export function saveWeekFilters(filters: WeekFilters) {
   try { localStorage.setItem(planStorageKey, JSON.stringify({ selectedIds: [], batches: [], approved: null, ...readState(), filters })); } catch { /* filters are a convenience */ }

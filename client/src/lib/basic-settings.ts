@@ -310,10 +310,11 @@ export const emptyMember = (kind: Member["kind"], name: string): Member =>
 
 /** A short key of every setting that changes which dishes are planned (not name, stores, Recipe View or the draft
  * bookkeeping). The Week asks to update when it differs from setup.plannedWith. */
-export function planKey(s: BasicSettings): string {
+/** `filters`: the Week → Plan filters when they differ from the defaults (planFilters() in week-filters.ts); they live in browser storage. */
+export function planKey(s: BasicSettings, filters: unknown = null): string {
   const { status: _status, suggested: _suggested, declined: _declined, plannedWith: _plannedWith, ...setup } = s.setup;
   const { stores: _stores, ...shopping } = s.shopping;
-  const text = JSON.stringify([{ ...s.household, members: s.household.members.map(({ name: _name, ...m }) => m) }, s.dietary, s.kitchen, s.cooking, s.planning, shopping, setup]);
+  const text = JSON.stringify([{ ...s.household, members: s.household.members.map(({ name: _name, ...m }) => m) }, s.dietary, s.kitchen, s.cooking, s.planning, shopping, setup, ...(filters ? [filters] : [])]);
   let h = 2166136261;
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
   return (h >>> 0).toString(36);

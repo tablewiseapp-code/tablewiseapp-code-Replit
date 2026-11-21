@@ -17,7 +17,7 @@ import { mealSlots, readPlan, writePlan } from "@/lib/meal-plan";
 import { matchesPlannerFilters, WEEK_DEFAULT_MAX_MINUTES } from "@/lib/planner-filters";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import { checkEligibility } from "@/lib/preference-engine";
-import { loadWeekFilters, saveWeekFilters, type WeekFilters } from "@/lib/week-filters";
+import { loadWeekFilters, planFilters, saveWeekFilters, type WeekFilters } from "@/lib/week-filters";
 import { cookingEvenings, proposeCookingPlan, weekOrder } from "@/lib/week-suggestions";
 import { currentWeek } from "@/lib/week-plan";
 import { allergens, type Allergen, type DietPattern } from "@shared/food-rules";
@@ -154,12 +154,12 @@ export default function Household() {
     try {
       // Stores are saved by the picker as they are tapped: keep the latest, not the draft's copy.
       const saved = updateSettings(x => ({ ...draft, rev: x.rev, shopping: { ...draft.shopping, stores: x.shopping.stores },
-        setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined, plannedWith: x.setup.plannedWith ?? planKey(x) } }));
+        setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined, plannedWith: x.setup.plannedWith ?? planKey(x, planFilters()) } }));
       // A Week with dishes is never changed here: the Week asks "update the week?" when the answers changed (2026-11-20).
       if (!readPlan().batches.length) {
         const result = proposeCookingPlan(readPlan(), planner, saved, currentWeek(), { fits });
         writePlan(result.plan);
-        updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [], plannedWith: planKey(x) } }));
+        updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [], plannedWith: planKey(x, planFilters()) } }));
       }
       setLocation("/meals?plan");
     } catch { setError("save"); setBusy(false); }

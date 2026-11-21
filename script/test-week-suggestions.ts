@@ -193,5 +193,7 @@ console.log("week suggestions: ok");
   assert.notEqual(planKey({ ...base, setup: { ...base.setup, evenings: 3 } }), planKey(base), "evenings change the key");
   assert.equal(planKey({ ...base, setup: { ...base.setup, suggested: ["x"], plannedWith: "abc" } }), planKey(base), "bookkeeping does not");
   assert.equal(planKey({ ...base, shopping: { ...base.shopping, stores: [{ id: "walmart", methods: ["delivery"] }] as never } }), planKey(base), "stores do not");
+  assert.notEqual(planKey(base, { maxMinutes: 15 }), planKey(base), "changed recipe filters change the key");
+  assert.equal(planKey(base, null), planKey(base), "default filters do not");
   console.log("plan key: ok");
 }

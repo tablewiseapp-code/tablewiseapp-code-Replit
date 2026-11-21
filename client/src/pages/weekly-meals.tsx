@@ -4,7 +4,7 @@ import { recordPilotEvent } from "@/lib/pilot-analytics";
 import { addDays, calendarDate, currentWeek, isWeek, plannerRecipeURL } from "@/lib/week-plan";
 import { dishOptions, proposeCookingPlan } from "@/lib/week-suggestions";
 import { useHouseholdCopy } from "@/lib/household-copy";
-import { loadWeekFilters } from "@/lib/week-filters";
+import { loadWeekFilters, planFilters } from "@/lib/week-filters";
 import { PlannerBoard } from "@/components/planner-board";
 import { Check, ChevronLeft, ChevronRight, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -755,10 +755,10 @@ function WeekCalendar() {
         // Once per week: cooking days that already have a dish keep it; the others get one.
         shown = proposeCookingPlan(plan, recipes, loadSettings(), week, { fits }).plan;
         try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
-        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s) } })); } catch { /* asks again later */ }
+        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks again later */ }
       } else if (loadSettings().setup.plannedWith === null && loadSettings().rev > 0) {
         // Settings saved before 2026-11-20 recorded nothing: take them as what this Week was planned with.
-        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s) } })); } catch { /* asks nothing */ }
+        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks nothing */ }
       }
       setLoaded({ week, plan: shown });
     }).catch(() => active && setFailed(true));
@@ -792,12 +792,12 @@ function WeekCalendar() {
   // Preferences that change dishes were saved after this Week was planned: ask once per change (product owner, 2026-11-20).
   // ponytail: one key for all weeks; a later week planned with the new settings also clears the question for this one.
   const [asked, setAsked] = useState<string | null>(null);
-  const key = planKey(settings);
+  const key = planKey(settings, planFilters());
   const prefsChanged = !!ready && week >= currentWeek() && ready.plan.batches.length > 0 && !!recipes
     && settings.setup.plannedWith !== null && settings.setup.plannedWith !== key && asked !== key;
   const acknowledge = (suggested?: string[]) => {
     setAsked(key);
-    try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s), ...(suggested ? { suggested, declined: [] } : {}) } })); } catch { /* asked again next visit */ }
+    try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()), ...(suggested ? { suggested, declined: [] } : {}) } })); } catch { /* asked again next visit */ }
   };
   const updateWeek = () => {
     const current = latest.current;
