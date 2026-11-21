@@ -182,8 +182,11 @@ export const groceryShoppingItems = pgTable("grocery_shopping_items", {
   skipped: boolean("skipped").notNull().default(false),
   priceCents: integer("price_cents"),
   priceText: text("price_text"),
+  /** The shopper's quantity and unit for this item ("500 g"); NULL = the item's own. */
+  quantity: text("quantity"),
 }, table => [
   primaryKey({ columns: [table.ownerId, table.itemKey] }),
+  check("grocery_shopping_items_quantity_check", sql`${table.quantity} IS NULL OR length(${table.quantity}) BETWEEN 1 AND 40`),
   check("grocery_shopping_items_price_check", sql`
     (${table.priceCents} IS NULL AND ${table.priceText} IS NULL) OR
     (${table.priceCents} IS NOT NULL AND ${table.priceCents} BETWEEN 0 AND 10000000 AND ${table.priceText} IS NOT NULL)

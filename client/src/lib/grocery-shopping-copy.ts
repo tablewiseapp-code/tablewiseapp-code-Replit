@@ -1,7 +1,6 @@
 import type { Language } from "./i18n";
 
 const copy = {
-  actions: ["Item actions", "Действия с товаром", "פעולות לפריט"],
   editNote: ["Edit note", "Изменить заметку", "עריכת הערה"],
   loadFailed: ["We couldn’t load your list.", "Не удалось загрузить список.", "לא הצלחנו לטעון את הרשימה."],
   paste: ["Paste a list", "Вставить список", "הדבקת רשימה"],
@@ -20,7 +19,6 @@ const copy = {
   notOnDay: ["Not on a day yet", "Ещё не на дне недели", "עדיין לא שובץ ליום"],
   left: ["Items left", "Осталось купить", "פריטים שנותרו"],
   checked: ["Checked items", "Купленные товары", "פריטים שסומנו"],
-  uncategorized: ["Manually Added", "Добавлено вручную", "נוספו ידנית"],
   emptyMine: ["Add groceries or household products to your list.", "Добавьте продукты или товары для дома.", "הוסיפו מצרכים או מוצרים לבית."],
   prices: ["Estimated cost", "Примерная стоимость", "עלות משוערת"],
   remove: ["Remove item", "Удалить товар", "הסרת פריט"],
@@ -35,9 +33,27 @@ const copy = {
   conflict: ["The week changed. Review your selection and try again.", "План изменился. Проверьте выбор и повторите попытку.", "השבוע השתנה. בדקו את הבחירה ונסו שוב."],
   undoConflict: ["An edited meal slot prevents Undo.", "Нельзя отменить: место в плане уже занято.", "לא ניתן לבטל כי אחד ממועדי הארוחות כבר תפוס."],
   done: ["All items checked", "Все товары куплены", "כל הפריטים סומנו"],
-  purchase: ["Mark quantity purchased", "Указать купленное количество", "סימון כמות שנקנתה"],
   quantity: ["Quantity", "Количество", "כמות"],
   save: ["Save", "Сохранить", "שמירה"],
+  search: ["Find an item…", "Найти товар…", "חיפוש פריט…"],
+  searchLabel: ["Find an item", "Найти товар", "חיפוש פריט"],
+  noMatches: ["No items match your search.", "Ничего не найдено.", "לא נמצאו פריטים תואמים."],
+  bought: ["Bought", "Куплено", "נקנה"],
+  editQuantity: ["Edit quantity", "Изменить количество", "עריכת כמות"],
+  quantityHelp: ["A number, with a unit if needed: 500 g, 2, 1/2 cup", "Число и, если нужно, единица: 500 g, 2, 1/2 cup", "מספר, ועם יחידה אם צריך: 500 g, 2, 1/2 cup"],
+  quantityInvalid: ["Enter a number, with a unit if needed.", "Введите число, при необходимости с единицей.", "הזינו מספר, עם יחידה אם צריך."],
+  addNote: ["Add note", "Добавить заметку", "הוספת הערה"],
+  note: ["Note", "Заметка", "הערה"],
+  noteHelp: ["Only for your shopping. An empty note is removed.", "Только для покупок. Пустая заметка удаляется.", "רק לקניות שלכם. הערה ריקה תוסר."],
+  details: ["Item details", "Подробнее о товаре", "פרטי הפריט"],
+  preparation: ["Preparation", "Подготовка", "הכנה"],
+  recipeWording: ["In the recipe", "В рецепте", "במתכון"],
+  itemRemoved: ["Item removed", "Товар удалён", "הפריט הוסר"],
+  walkIn: ["Walk-in estimate", "Оценка для покупки в магазине", "הערכה לקנייה בחנות"],
+  samplePrices: ["Sample prices, not from a store", "Примерные цены, не из магазина", "מחירים לדוגמה, לא מחנות"],
+  coverage: ["{priced} of {total} remaining items priced", "Цена известна для {priced} из {total} товаров", "יש מחיר ל-{priced} מתוך {total} הפריטים שנותרו"],
+  noPrice: ["Price unknown", "Цена неизвестна", "מחיר לא ידוע"],
+  unavailable: ["Estimate unavailable", "Оценки нет", "אין הערכה"],
 } as const;
 
 export function shoppingCopy(lang: Language, key: keyof typeof copy) {

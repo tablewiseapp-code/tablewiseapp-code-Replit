@@ -267,3 +267,49 @@
   .grocery-toggle { display: flex; width: 100%; }
   .grocery-toggle button { flex: 1; padding: 0 8px; }
 }
+
+/* Grocery row (redesign 2026-11-20): Bought | photo | name, note | quantity, price; the three actions under the photo. */
+.grocery-row {
+  display: grid; grid-template-columns: 36px 44px minmax(0, 1fr) auto; column-gap: 8px; row-gap: 2px;
+  padding-block: 8px; border-top: 1px solid var(--ml-line); align-items: start;
+}
+.grocery-row-check { grid-column: 1; grid-row: 1; position: relative; display: grid; place-items: center; min-height: 44px; cursor: pointer; }
+.grocery-row-check input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.grocery-row-check .grocery-checkmark { width: 22px; height: 22px; flex-basis: 22px; }
+.grocery-row-check input:checked + .grocery-checkmark { background: var(--ml-leaf); border-color: var(--ml-leaf); }
+.grocery-photo-button {
+  grid-column: 2; grid-row: 1; width: 44px; height: 44px; padding: 0; overflow: hidden; display: grid; place-items: center;
+  border: 1px solid var(--ml-line); border-radius: 8px; background: var(--card); color: var(--ml-muted); cursor: pointer;
+}
+.grocery-photo-button.is-empty { border-style: dashed; }
+.grocery-photo-button img { width: 100%; height: 100%; object-fit: cover; }
+.grocery-photo-button svg { width: 18px; height: 18px; }
+.grocery-photo-button:disabled { opacity: .5; cursor: wait; }
+.grocery-row-main { grid-column: 3; grid-row: 1; min-width: 0; padding-top: 10px; }
+.grocery-row-main .grocery-ingredient { display: block; font-weight: 550; overflow-wrap: anywhere; }
+.grocery-row .grocery-note { margin: 2px 0 0; padding: 0; }
+.grocery-pantry { display: inline-block; margin-top: 2px; border-radius: 4px; padding: 1px 6px; background: var(--accent); color: var(--primary); font-size: 12px; }
+.grocery-row-end { grid-column: 4; grid-row: 1; padding-top: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: end; }
+.grocery-row-quantity { font-size: var(--text-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grocery-row .grocery-item-price { position: static; width: auto; height: auto; display: block; color: var(--ml-muted); white-space: normal; max-width: 9em; }
+.grocery-row-actions { grid-column: 2 / -1; grid-row: 2; display: flex; margin-inline-start: -2px; }
+.grocery-row-actions .grocery-icon-button { width: 44px; height: 44px; }
+.grocery-icon-button.has-note { color: var(--ml-leaf); }
+.grocery-icon-button:disabled { opacity: .5; cursor: default; }
+.grocery-row > .grocery-picture-status { grid-column: 2 / -1; margin: 0; font-size: var(--text-support); }
+.grocery-row-details { grid-column: 2 / -1; font-size: var(--text-support); color: var(--ml-ink); }
+.grocery-row-details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--ml-muted); }
+.grocery-row-details p { margin: 0 0 6px; overflow-wrap: anywhere; }
+.grocery-search { position: relative; display: block; margin-top: 14px; }
+.grocery-search svg { position: absolute; inset-inline-start: 14px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--ml-muted); pointer-events: none; }
+.grocery-search input {
+  width: 100%; min-height: 44px; padding-inline: 40px 14px; border: 1px solid var(--ml-line); border-radius: 12px;
+  background: var(--card); color: var(--ml-ink); font: inherit; font-size: var(--text-body);
+}
+.grocery-search input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.grocery-aisle-estimate { margin: 0 0 8px; color: var(--ml-muted); font-size: var(--text-support); }
+.grocery-category-toggle:disabled { cursor: default; }
+@media (max-width: 520px) {
+  .grocery-shell { width: calc(100% - 32px); }
+  .grocery-category { padding: 0 12px; }
+}

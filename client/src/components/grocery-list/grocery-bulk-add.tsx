@@ -54,8 +54,7 @@ export function GroceryBulkAdd({ categories, existing, onSave }: {
       {invalid && <p role="alert">{copy("bulkLimit")}</p>}
       <button className="grocery-share-button disabled:opacity-50" disabled={!lines.length || invalid} onClick={() => {
         setDraft(normalized.map(line => {
-          const category = categorizeIngredient(line);
-          return { text: line, category: category === "Other" ? "Manually Added" : category };
+          return { text: line, category: categorizeIngredient(line) };
         }));
       }}>{copy("preview")}</button>
     </> : <form onSubmit={async event => {

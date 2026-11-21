@@ -699,7 +699,7 @@ Rules:
     if (!input.success) return res.status(400).json({ error: "Invalid item." });
     const owner = security.owner(req, res, true)!;
     try {
-      const extra = await groceryExtras.add(owner, input.data.text, input.data.image);
+      const extra = await groceryExtras.add(owner, input.data.text, input.data.image, { id: input.data.id, category: input.data.category });
       if (!extra) return res.status(409).json({ error: "Your list is full." });
       if (input.data.image) await groceryItemPhotos.remove(owner, extra.text.toLowerCase());
       res.status(201).json(extra);

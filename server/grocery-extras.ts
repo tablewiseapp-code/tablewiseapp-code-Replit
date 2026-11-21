@@ -9,7 +9,7 @@ export type GroceryExtra = { id: string; text: string; image?: string | null; ca
 export type GroceryExtraStore = {
   list(ownerId: string): Promise<GroceryExtra[]>;
   /** The same text again (any letter case) returns the existing item. Undefined when the owner's list is full. */
-  add(ownerId: string, text: string, image?: string): Promise<GroceryExtra | undefined>;
+  add(ownerId: string, text: string, image?: string, restore?: { id?: string; category?: string | null }): Promise<GroceryExtra | undefined>;
   addBatch?(ownerId: string, rows: { text: string; category: string; existingId?: string }[]): Promise<GroceryExtra[] | null>;
   remove(ownerId: string, id: string): Promise<boolean>;
 };
@@ -21,7 +21,7 @@ export function databaseGroceryExtraStore(connection?: Database): GroceryExtraSt
     async list(ownerId) {
       return (await database()).select(columns).from(groceryExtras).where(eq(groceryExtras.ownerId, ownerId)).orderBy(asc(groceryExtras.createdAt));
     },
-    async add(ownerId, text, image) {
+    async add(ownerId, text, image, restore) {
       const db = await database();
       return db.transaction(async tx => {
         await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${ownerId}), 33)`);
@@ -34,7 +34,12 @@ export function databaseGroceryExtraStore(connection?: Database): GroceryExtraSt
         }
         const [{ value }] = await tx.select({ value: count() }).from(groceryExtras).where(eq(groceryExtras.ownerId, ownerId));
         if (value >= MAX_GROCERY_EXTRAS) return undefined;
-        return (await tx.insert(groceryExtras).values({ ownerId, text, image }).returning(columns))[0];
+        if (restore?.id) {
+          const [restored] = await tx.insert(groceryExtras).values({ ownerId, text, image, id: restore.id, category: restore.category ?? null })
+            .onConflictDoNothing().returning(columns);
+          if (restored) return restored;
+        }
+        return (await tx.insert(groceryExtras).values({ ownerId, text, image, category: restore?.category ?? null }).returning(columns))[0];
       });
     },
     async addBatch(ownerId, rows) {

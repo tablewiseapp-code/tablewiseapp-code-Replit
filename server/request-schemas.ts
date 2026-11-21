@@ -78,6 +78,10 @@ export const groceryExtraCreate = z.object({
     .refine(value => { const data = value.slice(23); const bytes = Buffer.from(data, "base64");
       return bytes.length <= 210000 && bytes.toString("base64") === data && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
     }).optional(),
+  // Undo after Remove: the same item comes back with its id (so its quantity edit returns) and its aisle.
+  id: z.string().uuid().optional(),
+  category: z.enum(["Produce", "Meat & Poultry", "Seafood", "Dairy & Eggs", "Grains & Pasta",
+    "Canned & Jarred", "Spices & Seasonings", "Other", "Manually Added"]).nullable().optional(),
 }).strict();
 export const groceryItemPhotoInput = z.object({
   key: z.string().min(1).max(12000).refine(value => value === value.toLowerCase() && value.trim().length > 0),
@@ -154,7 +158,9 @@ export const groceryShoppingPatch = z.object({
   key: z.string().min(1).max(12000),
   skipped: z.boolean().optional(),
   price: z.object({ cents: z.number().int().min(0).max(10000000), text: z.string().min(1).max(12000) }).strict().optional(),
-}).strict().refine(input => (input.skipped === undefined) !== (input.price === undefined));
+  /** null puts back the item's own quantity. */
+  quantity: z.string().trim().min(1).max(40).nullable().optional(),
+}).strict().refine(input => [input.skipped, input.price, input.quantity].filter(value => value !== undefined).length === 1);
 
 export const bulkGroceryExtras = z.array(z.object({
   text: groceryExtraCreate.shape.text,
