@@ -16,6 +16,7 @@ import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
 import { RecipeCard } from "@/components/recipe-card";
+import { RecipeMeta } from "@/components/recipe-summary";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import type { Recipe } from "@/lib/storage";
@@ -106,7 +107,8 @@ export default function Home() {
                           const line = <span className="block text-xs text-muted-foreground" data-testid={`home-meal-meta-${recipe.id}`}>{meta(recipe, batch, cookedToday)}</span>;
                           return (
                             <li key={batch.id}>
-                              <RecipeCard recipe={{ ...recipe, servings: null }} href={href} row={!phone} testId={`home-meal-${recipe.id}`}
+                              {/* The recipe's own servings stay on the card for per-serving nutrition; the line shows time only ("Make X servings" is below). */}
+                              <RecipeCard recipe={recipe} meta={<RecipeMeta recipe={{ ...recipe, servings: null }} />} href={href} row={!phone} testId={`home-meal-${recipe.id}`}
                                 ids={{ view: `home-meal-view-${recipe.id}` }}>{line}</RecipeCard>
                             </li>
                           );
