@@ -543,7 +543,7 @@ test("food preference copy is translated in English, Russian and Hebrew", () => 
   assert.equal(settingsText("he", "likedByMany", { count: 2 }), "אהוב על 2 מבני הבית");
 });
 test("Recipe View: defaults, kept choices, legacy Week switch, per-serving nutrition", () => {
-  assert.deepEqual(defaultSettings().recipeView, { showNutrition: false, nutrients: ["protein", "carbs"], details: [] });
+  assert.deepEqual(defaultSettings().recipeView, { showNutrition: true, nutrients: ["calories", "protein", "fat", "fiber"], details: ["prepTime", "cookTime", "mainTool"] });
   // Nutrient choices survive nutrition off; unknown values are dropped; an empty choice stays empty.
   const kept = sanitizeSettings({ ...defaultSettings(), recipeView: { showNutrition: false, nutrients: ["sodium", "bogus", "fat"], details: ["mainTool", "x"] } });
   assert.deepEqual(kept.recipeView, { showNutrition: false, nutrients: ["fat", "sodium"], details: ["mainTool"] });
@@ -557,7 +557,9 @@ test("Recipe View: defaults, kept choices, legacy Week switch, per-serving nutri
     assert.equal(sanitizeSettings(null).recipeView.showNutrition, true);
     assert.equal(sanitizeSettings({ ...defaultSettings(), recipeView: { showNutrition: false } }).recipeView.showNutrition, false, "a saved choice wins");
   } finally { delete g.localStorage; }
-  assert.equal(sanitizeSettings(old).recipeView.showNutrition, false);
+  assert.equal(sanitizeSettings(old).recipeView.showNutrition, true, "no old switch: the default");
+  g.localStorage = memory({ "tablewise:nutrition-details:v1": "false" });
+  try { assert.equal(sanitizeSettings(old).recipeView.showNutrition, false, "old switch off is kept"); } finally { delete g.localStorage; }
 
   const totals = { caloriesKcal: 2000, proteinG: 128, carbsG: 0, fatG: 60, fiberG: 10, sugarG: 0 };
   const nutrition = { version: 1 as const, source: "ai-estimate" as const, model: "gpt", analyzedAt: new Date(0).toISOString(), inputHash: "a".repeat(64), assumptions: ["x"], totals };
