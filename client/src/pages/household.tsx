@@ -33,8 +33,8 @@ type GroupKey = "style" | "servings" | "restrictions" | "equipment" | "evenings"
 const collapsedFor = (style: CookingStyle): GroupKey[] => (style === "quick" ? ["weeknight", "filters"] : style === "everyday" ? ["filters"] : []);
 
 /** One collapsible group. The header shows its current answer in small text; choosing something inside collapses the groups above. */
-function Group({ id, title, summary, hint, open, onToggle, onPicked, children }: {
-  id: GroupKey; title: string; summary: string; hint?: ReactNode; open: boolean; onToggle: () => void; onPicked: () => void; children: ReactNode;
+function Group({ id, title, summary, hint, open, onToggle, onPicked, closedAction, children }: {
+  id: GroupKey; title: string; summary: string; hint?: ReactNode; open: boolean; onToggle: () => void; onPicked: () => void; closedAction?: string; children: ReactNode;
 }) {
   return (
     <section className="border-b hairline" data-testid={`q-${id}`}>
@@ -48,6 +48,11 @@ function Group({ id, title, summary, hint, open, onToggle, onPicked, children }:
           <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-700 motion-reduce:transition-none ${open ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
       </h2>
+      {/* A closed group can offer one shortcut that opens it (e.g. "None" chosen, but an allergy is easy to add). */}
+      {!open && closedAction && (
+        <button type="button" onClick={onToggle} data-testid={`q-${id}-reopen`}
+          className="-mt-2 mb-2 min-h-11 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">+ {closedAction}</button>
+      )}
       {/* Slow open/close: grid rows animate 0fr ↔ 1fr; inert + invisible keep a closed group out of focus and the accessibility tree. */}
       <div id={`q-${id}-body`} inert={!open}
         className={`grid transition-[grid-template-rows,visibility] duration-700 ease-in-out motion-reduce:transition-none ${open ? "visible grid-rows-[1fr]" : "invisible grid-rows-[0fr]"}`}>
@@ -78,7 +83,9 @@ export default function Household() {
   const [initial] = useState(loadSettings);
   // One draft for every answer: switching style only changes what is shown, never what was entered.
   const [draft, setDraft] = useState<BasicSettings>(() => ({ ...initial, household: { ...initial.household, servingsMode: "fixed", fixedServings: householdServings(initial) ?? 2 } }));
-  const [collapsed, setCollapsed] = useState<Set<GroupKey>>(() => new Set(collapsedFor(initial.setup.style)));
+  // A saved "None" answer starts folded away; the "+ Add an allergy or diet" link under it reopens it.
+  const [collapsed, setCollapsed] = useState<Set<GroupKey>>(() => new Set([...collapsedFor(initial.setup.style),
+    ...(initial.setup.noRestrictions && !initial.dietary.diets.some(d => offeredDiets.includes(d)) && !initial.dietary.allergies.some(a => offeredAllergies.includes(a)) ? ["restrictions" as const] : [])]));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<"catalog" | "save" | "equipment" | "restrictions" | null>(null);
   // The Week → Plan filters: the same value the Week page shows, saved as soon as it changes.
@@ -159,7 +166,8 @@ export default function Household() {
   };
 
   const group = (id: GroupKey, title: string, children: ReactNode, hint?: ReactNode) => (
-    <Group key={id} id={id} title={title} summary={summaries[id]} hint={hint} open={open(id)} onToggle={() => toggleGroup(id)} onPicked={() => collapseAbove(id)}>{children}</Group>
+    <Group key={id} id={id} title={title} summary={summaries[id]} hint={hint} open={open(id)} onToggle={() => toggleGroup(id)} onPicked={() => collapseAbove(id)}
+      closedAction={id === "restrictions" && noneChosen ? t("addRestriction") : undefined}>{children}</Group>
   );
   const overCount = setup.evenings !== null && setup.fixedDays.length > setup.evenings;
   const groups: Record<GroupKey, () => ReactNode> = {

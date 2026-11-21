@@ -72,6 +72,11 @@ try {
   await click("restriction-none");
   ok(await ev(`document.querySelector('[data-testid="q-restrictions-toggle"]').getAttribute("aria-expanded") === "false"`), "None collapses the restrictions group");
   eq(await ev(`${q("q-restrictions-summary")}.textContent`), "None", "None shown beside the title");
+  // A closed "None" still offers one tap to add an allergy; it reopens the group and the link goes away.
+  await click("q-restrictions-reopen");
+  ok(await ev(`document.querySelector('[data-testid="q-restrictions-toggle"]').getAttribute("aria-expanded") === "true"`), "add link reopens the group");
+  ok(await ev(`!${q("q-restrictions-reopen")}`), "add link hidden while open");
+  await click("restriction-none");
   // Switching style keeps entered values.
   await click("style-chef"); await click("style-quick");
   eq(await ev(`${q("servings-value")}.textContent`), "5 servings", "values survive a style switch");
