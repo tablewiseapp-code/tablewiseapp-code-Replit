@@ -110,6 +110,8 @@ export default function Household() {
   const planner = useMemo(() => toPlannerRecipes(catalog.data ?? []), [catalog.data]);
   const eligible = useMemo(() => planner.filter(r => checkEligibility(r, draft).eligible), [planner, draft]);
   const fits = (r: PlannerRecipe) => matchesPlannerFilters(r, filters, "total", getRecipeUserMeta(r.id));
+  // No recipe left with the Deal: keep the other filters (the time limit above all) before dropping them all.
+  const fallback = (r: PlannerRecipe) => matchesPlannerFilters(r, { ...filters, deal: null }, "total", getRecipeUserMeta(r.id));
 
   const order: GroupKey[] = ["style", "servings", "restrictions", "equipment", "evenings", "fixed", ...(setup.style === "chef" ? ["challenge" as const] : []), "weeknight", "filters"];
   const open = (key: GroupKey) => !collapsed.has(key);
@@ -157,7 +159,7 @@ export default function Household() {
         setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined, plannedWith: x.setup.plannedWith ?? planKey(x, planFilters()) } }));
       // A Week with dishes is never changed here: the Week asks "update the week?" when the answers changed (2026-11-20).
       if (!readPlan().batches.length) {
-        const result = proposeCookingPlan(readPlan(), planner, saved, currentWeek(), { fits });
+        const result = proposeCookingPlan(readPlan(), planner, saved, currentWeek(), { fits, fallback });
         writePlan(result.plan);
         updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [], plannedWith: planKey(x, planFilters()) } }));
       }

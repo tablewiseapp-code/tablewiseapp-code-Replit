@@ -744,6 +744,8 @@ function WeekCalendar() {
 
   // The Week → Plan filters narrow the draft and the picker.
   const fits = useCallback((r: Recipe) => matchesPlannerFilters(r, loadWeekFilters(), "total", getRecipeUserMeta(r.id)), []);
+  // No recipe left with the Deal: keep the other filters (the time limit above all) before dropping them all.
+  const fallback = useCallback((r: Recipe) => matchesPlannerFilters(r, { ...loadWeekFilters(), deal: null }, "total", getRecipeUserMeta(r.id)), []);
   useEffect(() => {
     if (!recipes) return;
     let active = true;
@@ -753,7 +755,7 @@ function WeekCalendar() {
       let shown = plan;
       if (!plan.proposed && plan.approved === null) {
         // Once per week: cooking days that already have a dish keep it; the others get one.
-        shown = proposeCookingPlan(plan, recipes, loadSettings(), week, { fits }).plan;
+        shown = proposeCookingPlan(plan, recipes, loadSettings(), week, { fits, fallback }).plan;
         try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
         try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks again later */ }
       } else if (loadSettings().setup.plannedWith === null && loadSettings().rev > 0) {
@@ -763,7 +765,7 @@ function WeekCalendar() {
       setLoaded({ week, plan: shown });
     }).catch(() => active && setFailed(true));
     return () => { active = false; };
-  }, [week, recipes, fits]);
+  }, [week, recipes, fits, fallback]);
 
   const byId = useMemo(() => new Map((recipes ?? []).map(r => [r.id, r])), [recipes]);
   // Edits apply to the latest plan, also from a toast's Undo rendered before later changes.
@@ -802,7 +804,7 @@ function WeekCalendar() {
   const updateWeek = () => {
     const current = latest.current;
     if (!current || !recipes) return;
-    const result = proposeCookingPlan({ ...current.plan, batches: [] }, recipes, loadSettings(), week, { fits });
+    const result = proposeCookingPlan({ ...current.plan, batches: [] }, recipes, loadSettings(), week, { fits, fallback });
     if (save(result.plan)) acknowledge(result.suggested);
   };
   const approve = () => {
@@ -867,7 +869,7 @@ function WeekCalendar() {
                 // Learning signal: an AI recipe was put on the plan (not that it was cooked).
                 if (byId.get(id) && isGeneratedRecipe(byId.get(id)!)) reportGenerationEvent("generated_recipe_added_to_plan");
               }}
-              options={(day, meal) => dishOptions(recipes ?? [], settings, day, { seed: week, fits, chosen: planned, meal })} />
+              options={(day, meal) => dishOptions(recipes ?? [], settings, day, { seed: week, fits, fallback, chosen: planned, meal })} />
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/meals?browse" className="btn btn-text -ms-2" data-testid="link-browse-recipes">{t("browse")}</Link>
               <Link href="/household" className="btn btn-text" data-testid="link-household">{household("changeHousehold")}</Link>

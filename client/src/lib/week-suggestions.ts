@@ -68,17 +68,19 @@ const dedupe = <T extends { id: string }>(list: T[]) => { const seen = new Set<s
 const isChallenge = (settings: BasicSettings, day: number) => challengeDays(settings, cookingEvenings(settings)).includes(day);
 
 /** + Add a dish / Swap dish / the draft: eligible recipes for that weekday, best first: dinners, then lunches, then
- * breakfasts. The Week filters narrow them; when no recipe passes the filters, every recipe that passes the restrictions
- * is offered instead. Restrictions are never relaxed. */
+ * breakfasts. The Week filters narrow them; when no recipe passes the filters, `fallback` (the filters without the Deal)
+ * is tried, then every recipe that passes the restrictions. Restrictions are never relaxed. */
 export function dishOptions<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, day: number,
-  { exclude, chosen, seed = "", fits = any, meal: first }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; seed?: string; fits?: Fits<T>; meal?: MealSlot } = {}): T[] {
+  { exclude, chosen, seed = "", fits = any, fallback, meal: first }: { exclude?: Set<string>; chosen?: readonly EngineRecipe[]; seed?: string; fits?: Fits<T>; fallback?: Fits<T>; meal?: MealSlot } = {}): T[] {
   const challenge = isChallenge(settings, day);
   // That meal's recipes first (+ Add breakfast), then dinners, lunches, breakfasts.
   const order = [...mealSlots].reverse().sort((a, b) => Number(b === first) - Number(a === first));
   const ranked = (f: Fits<T>) => dedupe(order.flatMap(meal =>
     rankedForDay(catalog, settings, day, { meal, exclude, chosen, challenge: challenge && meal === DINNER, seed, fits: f })));
   const filtered = ranked(fits);
-  return filtered.length ? filtered : ranked(any);
+  if (filtered.length) return filtered;
+  const loose = fallback ? ranked(fallback) : [];
+  return loose.length ? loose : ranked(any);
 }
 export type { Slot };
 
@@ -86,7 +88,7 @@ export type { Slot };
  * added until the weekly count is met (cookingEvenings). A cooking day that already has a dish keeps it; an empty one
  * gets one dish not yet in the week (a recipe repeats only when the eligible ones run out). Deterministic for a seed. */
 export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, weekStart: string,
-  { fits = any, newId }: { fits?: Fits<T>; newId?: () => string } = {}) {
+  { fits = any, fallback, newId }: { fits?: Fits<T>; fallback?: Fits<T>; newId?: () => string } = {}) {
   const household = householdCounts(settings);
   const days = cookingEvenings(settings);
   const challenges = challengeDays(settings, days);
@@ -97,8 +99,8 @@ export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, cata
     const date = dateInWeek(weekStart, day);
     if (cookedOn(next, date).length) continue;
     const chosen = catalog.filter(r => used.has(r.id));
-    const pick = dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits })[0]
-      ?? dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits })[0];
+    const pick = dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits, fallback })[0]
+      ?? dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits, fallback })[0];
     if (!pick) continue;
     next = addBatch(next, pick.id, date, household, newId?.());
     used.add(pick.id); suggested.push(pick.id);

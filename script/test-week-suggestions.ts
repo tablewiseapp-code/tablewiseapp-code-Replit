@@ -47,6 +47,7 @@ const quick = settingsWith(s => { s.setup.style = "quick"; s.setup.evenings = 3;
   s.household.members = [{ kind: "adult" }, { kind: "adult" }, { kind: "child" }, { kind: "child" }, { kind: "child" }].map((m, i) =>
     ({ id: `m${i}`, name: "", diets: [], allergies: [], customAllergies: [], dislikes: [], favorites: [], portion: null, ...m }) as never); });
 assert.deepEqual(householdCounts(quick), { adults: 2, kids: 3 });
+assert.deepEqual(householdCounts({ ...quick, household: { ...quick.household, servingsMode: "fixed", fixedServings: 5 } }), { adults: 5, kids: 0 }, "a fixed number wins over members");
 const q = proposeCookingPlan(empty(), catalog, quick, WEEK, { newId: ids() });
 assert.equal(q.plan.batches.length, 3);
 assert.ok(cookDays(q.plan).includes(5), "Friday is scheduled");
@@ -78,6 +79,7 @@ assert.equal(proposeCookingPlan(empty(), catalog, vegan, WEEK).plan.batches.leng
 // Filters narrow the picker; when nothing passes them, the restrictions alone decide.
 assert.deepEqual(dishOptions(catalog, quick, 2, { fits: r => r.title === "Carrot soup" }).map(r => r.title), ["Carrot soup"]);
 assert.ok(dishOptions(catalog, quick, 2, { fits: () => false }).length > 1);
+assert.deepEqual(dishOptions(catalog, quick, 2, { fits: () => false, fallback: r => r.title === "Carrot soup" }).map(r => r.title), ["Carrot soup"], "the Deal-free fallback before every recipe");
 
 // ---- Acceptance 3: two dishes on a day; swapping one leaves the other; moving onto a day with one dish → three.
 let plan = addBatch(addBatch(addBatch(empty(), "r1", "2026-11-18", null, "w1"), "r2", "2026-11-18", null, "w2"), "r3", "2026-11-17", null, "t1");
