@@ -198,13 +198,12 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
               </button>
             )}
           </div>
-          {step > 0 && (
-            <button type="button" data-testid="cooking-restart"
-              onClick={() => { if (confirmRestart) { go(0); } else setConfirmRestart(true); }}
-              className={`min-h-11 self-center rounded px-3 text-xs underline underline-offset-2 text-muted-foreground ${focus}`}>
-              {confirmRestart ? t("confirmRestart") : t("restart")}
-            </button>
-          )}
+          {/* Always in place, hidden on step 1, so Previous and Next never move between steps. */}
+          <button type="button" data-testid="cooking-restart" disabled={step === 0}
+            onClick={() => { if (confirmRestart) { go(0); } else setConfirmRestart(true); }}
+            className={`min-h-11 self-center whitespace-nowrap rounded px-3 text-xs underline underline-offset-2 text-muted-foreground ${focus} ${step === 0 ? "invisible" : ""}`}>
+            {confirmRestart ? t("confirmRestart") : t("restart")}
+          </button>
         </div>
       </footer>
     </div>
