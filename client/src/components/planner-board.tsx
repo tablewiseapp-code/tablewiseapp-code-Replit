@@ -1,8 +1,8 @@
 // The Week's cooking days (docs/cooking-plan.md): one group per date, Monday to Sunday. A dish appears once, on the day it
 // is cooked; its card shows how much to make and the dates it serves. Every action is a visible, labelled button.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeftRight, Minus, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Minus, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToastAction } from "@/components/ui/toast";
@@ -75,6 +75,8 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
   const { recipeView } = useRecipeDisplay();
   const { plan, recipes, lang, commit } = props;
   const dates = useDateText(lang);
+  // Recipes "Try another" already showed on this dish, so repeated taps move on instead of going back and forth.
+  const tried = useRef(new Set<string>());
   const recipe = recipes.get(batch.recipeId);
   if (!recipe) return null;
   const recipeYield = yieldOf(batch, recipe);
@@ -86,6 +88,20 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
     if (!commit(p => removeBatch(p, batch.id))) return;
     toastApi.toast({ title: t("removed", { title: recipe.title }), action: <ToastAction altText={t("undo")} data-testid="undo-remove-dish"
       onClick={() => commit(p => restoreBatch(p, batch, index))}>{t("undo")}</ToastAction> });
+  };
+  // One tap: the next eligible recipe for that weekday and meal not already in the Week; dates and portions stay (as Swap).
+  const tryAnother = () => {
+    tried.current.add(recipe.id);
+    const inPlan = new Set(plan.batches.map(b => b.recipeId));
+    const options = props.options(weekdayOf(batch.cookDate), mealOf(batch)).filter(r => r.id !== recipe.id && !inPlan.has(r.id));
+    let next = options.find(r => !tried.current.has(r.id));
+    if (!next && options.length) { tried.current = new Set([recipe.id]); next = options[0]; } // all shown: start again
+    if (!next) { toastApi.toast({ title: t("noOther") }); return; }
+    const pick = next;
+    if (!commit(p => swapBatch(p, batch.id, pick.id))) return;
+    props.onPicked?.(pick.id);
+    toastApi.toast({ title: t("swapped", { title: pick.title }), action: <ToastAction altText={t("undo")} data-testid="undo-try-another"
+      onClick={() => commit(p => swapBatch(p, batch.id, recipe.id))}>{t("undo")}</ToastAction> });
   };
   // Each later part carries its "·", so a wrapped line never starts or ends with one.
   const part = "inline-flex items-center gap-1.5 before:content-['·'] before:text-muted-foreground";
@@ -114,6 +130,10 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
           <button type="button" className={`${icon} hover:text-foreground`} onClick={() => onOpen({ kind: "swap", batch })}
             aria-label={t("swapFor", { title: recipe.title })} title={t("swap")} data-testid={`swap-${batch.id}`}>
             <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button type="button" className={`${icon} hover:text-foreground`} onClick={tryAnother}
+            aria-label={t("tryAnotherFor", { title: recipe.title })} title={t("tryAnother")} data-testid={`try-another-${batch.id}`}>
+            <RefreshCw className="h-5 w-5" aria-hidden="true" />
           </button>
           <button type="button" className={`${icon} hover:text-destructive`} onClick={remove}
             aria-label={t("removeDishFor", { title: recipe.title })} title={t("removeDish")} data-testid={`remove-${batch.id}`}>

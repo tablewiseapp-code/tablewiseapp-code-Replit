@@ -40,7 +40,7 @@ Each planned dish (one batch) appears once, on the day it is cooked, as the shar
   - **"7 servings"** is the amount to prepare (the batch total, with any edits; half servings as written, e.g. 3.5). It is a button named "Edit servings for {recipe}" that opens Edit servings.
   - **Days covered** come from the serving dates: left out when the dish is eaten only on its cooking day; "For Mon–Wed" for consecutive days, "For Mon & Wed" for separate ones, mixed as "For Mon–Tue & Thu". Dates more than a week after cooking are written in full.
 - **Recipe View** nutrition, prep time, cook time and Dietary tags, as chosen in Settings.
-- **Buttons:** two icon buttons: Swap (arrows, named "Swap {recipe}") and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu.
+- **Buttons:** three icon buttons: Swap (arrows, named "Swap {recipe}"), Try another (circular arrows, named "Try another instead of {recipe}", 2026-11-21) and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu.
 
 ## Servings
 
@@ -67,6 +67,7 @@ Ingredient scale      = Make X servings / the recipe's original yield
 |---|---|
 | + Add dish | Asks Breakfast, Lunch or Dinner, then opens the recipe picker for that date and meal; the pick is added beside the dishes already there. |
 | Swap | Replaces only that dish's recipe. The cooking date, serving dates and portions stay; quantities use the new recipe's yield. |
+| Try another | One tap, no picker: the first picker option for that weekday and meal that is not already in the Week and not yet tried on this dish (since the page opened); after the last one it starts again. Like Swap, dates and portions stay. The toast offers Undo. |
 | Servings label (Edit servings) | Changes the dish's dates and amounts, as above. |
 | Move day | Moves every dish of that day, together, to another day of the shown week; dishes already there stay. See below for portions that would land before the new day. |
 | Remove dish (bin icon) | Removes only that dish (another batch of the same recipe stays). Undo puts it back. |

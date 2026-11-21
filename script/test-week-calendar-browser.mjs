@@ -87,7 +87,7 @@ try {
   const first = plan[cooking[0]][0].id;
   ok(await ev(`${q(`dish-meta-${first}`)}.textContent.startsWith("Dinner")`), "small meal label");
   ok(await ev(`!${q(`dish-dates-${first}`)}`), "a dish eaten only on its cooking day shows no dates");
-  ok(await ev(`!${q(`dish-view-${first}-details`)} || !/Prep|Cook/.test(${q(`dish-view-${first}-details`)}.textContent)`), "prep/cook stay in the recipe");
+  ok(await ev(`!${q(`dish-view-${first}-mainTool`)}`), "the cooking tool stays on the recipe page (prep and cook show, 2026-11-21)");
   eq(await ev(`${q(`swap-${first}`)}.getAttribute("aria-label")`), `Swap ${await ev(`${q(`dish-link-${first}`)}.textContent`)}`);
   ok((await serverWeek(thisWeek))?.proposed === true, "the draft is saved once");
   // Weekly deals: the sample offers apply to every week; always open.
@@ -117,6 +117,13 @@ try {
   await click(`pick-${replacement}`);
   await until(`${q(`dish-${change.id}`)}.dataset.recipe === ${JSON.stringify(replacement)}`, "swapped");
   eq((await days())[late][0], keep, "the other dish is untouched");
+  // Try another: one tap puts a different recipe on the same dish; Undo brings the previous one back.
+  await click(`try-another-${change.id}`);
+  await until(`${q(`dish-${change.id}`)}.dataset.recipe !== ${JSON.stringify(replacement)}`, "tried another");
+  const another = await ev(`${q(`dish-${change.id}`)}.dataset.recipe`);
+  ok(another !== keep.recipe, "Try another skips recipes already in the Week");
+  await click("undo-try-another");
+  await until(`${q(`dish-${change.id}`)}.dataset.recipe === ${JSON.stringify(replacement)}`, "Undo restores the recipe");
   ok(await ev(`[...document.querySelectorAll('[data-testid^="move-day-"]')].length === 3`), "Move cooking day once per populated day");
   await click(`move-day-${late}`);
   await click(`move-to-${early}`);
@@ -211,7 +218,7 @@ try {
   const xs = await ev(`[...document.querySelectorAll('[data-testid="day-${nextDay}"] [data-recipe]')].map(a => Math.round(a.getBoundingClientRect().x))`);
   eq(new Set(xs).size, 1, "dishes stack");
   ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");
-  ok(await ev(`[...document.querySelectorAll('[data-testid^="swap-"], [data-testid^="edit-servings-"], [data-testid^="remove-"]')].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44; })`), "Swap, servings and Remove fit and are 44px tall");
+  ok(await ev(`[...document.querySelectorAll('[data-testid^="swap-"], [data-testid^="try-another-"], [data-testid^="edit-servings-"], [data-testid^="remove-"]')].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44; })`), "Swap, servings and Remove fit and are 44px tall");
   ok(await ev(`${q("week-actions")}.getBoundingClientRect().top > ${q("week-range")}.getBoundingClientRect().bottom - 1 && ${q("week-actions")}.querySelector("button").getBoundingClientRect().bottom < innerHeight`), "the plan action wraps below the dates, above the fold");
   await shot("week-phone");
   await desktop();
