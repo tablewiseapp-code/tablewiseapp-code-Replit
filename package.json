@@ -24,7 +24,6 @@
     "test:recipe-view": "tsx script/test-recipe-view.ts",
     "test:home": "tsx script/test-home.ts",
     "test:grocery-progress": "tsx script/test-grocery-progress.ts",
-    "test:grocery-list": "tsx script/test-grocery-list.ts",
     "test:grocery-share": "tsx script/test-grocery-share.ts",
     "test:grocery-extras": "tsx script/test-grocery-extras.ts",
     "test:grocery-meal-removal": "tsx script/test-grocery-meal-removal.ts",

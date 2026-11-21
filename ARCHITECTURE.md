@@ -77,7 +77,7 @@ Tables are defined in `shared/schema.ts`.
 | `household_products` | seeded household product suggestions, translated names and aliases | global |
 | `grocery_extras` | products a person added by hand, with an optional category and resized JPEG reference photo | per owner |
 | `grocery_item_photos` | reference pictures on any grocery row, including recipe ingredients; a null image hides a legacy extra picture | per owner |
-| `grocery_shopping_items` | a shopper's removal (`skipped`) and quantity (`quantity`, migration 0023) for one grocery item; recipe items are keyed `<week Monday>\|<item identity>` so they apply to that week's list only (rows over eight weeks old are dropped on the next save), manual items `extra:<id>`; legacy quantity-specific CAD prices | per owner |
+| `grocery_shopping_items` | grocery item exclusions and quantity-specific CAD price estimates | per owner |
 | `grocery_notes` | a note on an item of the owner's own grocery list | per owner |
 | `shared_grocery_lists` | a share link: a saved copy of a grocery list, its token and role; deleted after 30 days | per owner, readable by link |
 | `shared_grocery_items` | the items of a shared copy (text, ticked, note) | per shared list |
