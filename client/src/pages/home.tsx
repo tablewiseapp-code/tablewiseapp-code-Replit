@@ -140,9 +140,11 @@ export default function Home() {
                   const name = t(`meals.${meal.toLowerCase()}`);
                   const add = <button type="button" onClick={() => openGenerator({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
                     data-testid={`home-add-${meal.toLowerCase()}`} className="btn btn-text -ms-2">{text(`add${meal}`)}</button>;
-                  // The meal of this time of day is the big card, later meals the smaller row card; an earlier meal, or one with
-                  // nothing today, is collapsed to its name and opens to its dishes and + Add.
-                  const order = mealSlots.indexOf(meal) - mealSlots.indexOf(currentMeal(now));
+                  // Only the meal of this time of day is open (6–11 Breakfast, 11–16 Lunch, 16–23 Dinner; `currentMeal`); every other
+                  // meal is collapsed to its name and each dish's nutrition, and opens to its dishes and + Add (2026-11-22).
+                  // From 23:00 to 6:00 every meal is collapsed.
+                  const night = now.getHours() < 6 || now.getHours() >= 23;
+                  const order = night ? -1 : mealSlots.indexOf(meal) - mealSlots.indexOf(currentMeal(now));
                   const dishes = list.length > 0 && <ul className={`mt-1 grid gap-3 ${order === 0 ? "max-w-xl" : ""}`}>
                     {list.map(([batch, cookedToday]) => {
                       const recipe = recipes.get(batch.recipeId)!;
@@ -151,7 +153,7 @@ export default function Home() {
                       return (
                         <li key={batch.id}>
                           {/* The recipe's own servings stay on the card for per-serving nutrition; the line shows time only ("Make X servings" is below). */}
-                          <RecipeCard recipe={recipe} meta={<RecipeMeta recipe={{ ...recipe, servings: null }} />} href={href} row={order > 0} compact={order < 0}
+                          <RecipeCard recipe={recipe} meta={<RecipeMeta recipe={{ ...recipe, servings: null }} />} href={href} compact={order !== 0}
                             testId={`home-meal-${recipe.id}`} ids={{ view: `home-meal-view-${recipe.id}` }}>
                             {line}
                             <button type="button" onClick={() => remove(batch, recipe.title)} className="btn btn-text -ms-2 self-start"
@@ -161,7 +163,7 @@ export default function Home() {
                       );
                     })}
                   </ul>;
-                  if (!list.length || order < 0) return (
+                  if (!list.length || order !== 0) return (
                     <details key={meal} className="group" data-testid={`home-slot-${meal.toLowerCase()}`}>
                       <summary className="flex min-h-11 cursor-pointer flex-col justify-center">
                         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{name}</span>
