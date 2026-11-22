@@ -4,13 +4,14 @@
 // only (fetchWeek, saveWeek). The same key also holds the recipe browser's filters, which these writes keep.
 import { defaultServe, fromLegacy, isLegacyPlan, planStatus, shiftDate, type Batch, type HouseholdCounts, type MealSlot, type Serve } from "@shared/cooking-plan";
 import { currentWeek } from "./week-plan";
+import type { OnHand } from "./on-hand";
 
 export type { Batch, Serve } from "@shared/cooking-plan";
 /** A recipe's meal type (catalog data, Settings meal rules). The plan itself has no meal slots. */
 export { mealSlots, type MealSlot } from "@shared/cooking-plan";
 /** selectedIds: the recipe browser's picks. approved: the dishes as last approved (Groceries use them); null = never.
  * proposed: the week's draft was made once, so it is not made again. */
-export type PlanState = { selectedIds: string[]; batches: Batch[]; approved: Batch[] | null; weekStart?: string; proposed?: boolean } & Record<string, unknown>;
+export type PlanState = { selectedIds: string[]; batches: Batch[]; approved: Batch[] | null; weekStart?: string; proposed?: boolean; onHand?: OnHand | null } & Record<string, unknown>;
 export const planStorageKey = "weeklyMealsState";
 /** Before cooking days the approval was a separate browser flag; read once for conversion, cleared on sign-out. */
 export const lockStorageKey = "week_locked_v1";
@@ -42,9 +43,9 @@ export function readPlan(): PlanState {
 export function writePlan(plan: PlanState) { localStorage.setItem(planStorageKey, JSON.stringify(plan)); pushWeekPlan(); }
 
 // ---- Server copy ----
-type ServerWeek = { weekStart: string; proposed: boolean; selectedIds: string[]; batches: Batch[]; approved: Batch[] | null };
+type ServerWeek = { weekStart: string; proposed: boolean; selectedIds: string[]; batches: Batch[]; approved: Batch[] | null; onHand?: OnHand | null };
 const body = (week: string, plan: PlanState) =>
-  JSON.stringify({ weekStart: week, proposed: plan.proposed === true, selectedIds: plan.selectedIds, batches: plan.batches, approved: plan.approved } satisfies ServerWeek);
+  JSON.stringify({ weekStart: week, proposed: plan.proposed === true, selectedIds: plan.selectedIds, batches: plan.batches, approved: plan.approved, onHand: plan.onHand ?? null } satisfies ServerWeek);
 const copyWeek = () => readPlan().weekStart ?? currentWeek(); // a tab left open past Sunday still saves the week it shows
 const synced = () => body(copyWeek(), readPlan());
 const lastQueued = new Map<string, string>();
@@ -74,7 +75,7 @@ export async function syncWeekPlan() {
     if (readPlan().selectedIds.length || readPlan().batches.length) pushWeekPlan();
     return;
   }
-  localStorage.setItem(planStorageKey, JSON.stringify({ ...local, weekStart: week, proposed: server.proposed, selectedIds: server.selectedIds, batches: server.batches, approved: server.approved }));
+  localStorage.setItem(planStorageKey, JSON.stringify({ ...local, weekStart: week, proposed: server.proposed, selectedIds: server.selectedIds, batches: server.batches, approved: server.approved, onHand: server.onHand ?? null }));
   lastQueued.set(week, synced());
 }
 
@@ -86,7 +87,7 @@ export async function fetchWeek(week: string): Promise<PlanState> {
   const server: ServerWeek | null = await response.json();
   if (!server) return emptyPlan(week);
   lastQueued.set(week, body(week, { ...emptyPlan(), ...server }));
-  return { selectedIds: server.selectedIds, batches: server.batches, approved: server.approved, weekStart: week, proposed: server.proposed };
+  return { selectedIds: server.selectedIds, batches: server.batches, approved: server.approved, weekStart: week, proposed: server.proposed, onHand: server.onHand ?? null };
 }
 /** Saves any week. The current week goes through the browser copy (Home and Groceries read it); throws when the browser refuses. */
 export function saveWeek(week: string, plan: PlanState) {

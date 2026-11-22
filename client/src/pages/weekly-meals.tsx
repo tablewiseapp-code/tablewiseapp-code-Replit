@@ -3,6 +3,9 @@ import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recordPilotEvent } from "@/lib/pilot-analytics";
 import { addDays, calendarDate, currentWeek, isWeek, plannerRecipeURL } from "@/lib/week-plan";
 import { cookingEvenings, dishOptions, proposeCookingPlan } from "@/lib/week-suggestions";
+import { OnHandPicker, entriesReady, suggestedEntries, toOnHand, useGroceryExtras, type Entry } from "@/components/on-hand-picker";
+import { onHandText } from "@/lib/on-hand-copy";
+import { preferOnHand, typesOf } from "@/lib/on-hand";
 import { useHouseholdCopy } from "@/lib/household-copy";
 import { loadWeekFilters, planFilters } from "@/lib/week-filters";
 import { PlannerBoard } from "@/components/planner-board";
@@ -758,9 +761,16 @@ function WeekCalendar() {
   // Cooking days: asked on first use, before the first draft (2026-11-21); "Cooking days" below the days reopens it.
   const [schedule, setSchedule] = useState<HouseholdSetup | null>(null);
   const [firstSchedule, setFirstSchedule] = useState(false);
+  // Cook with what I have: before an empty week's draft, "Which proteins do you still have?" (skippable).
+  const extras = useGroceryExtras();
+  const [onHandStep, setOnHandStep] = useState<{ entries: Entry[]; minimize: boolean } | null>(null);
+  const extrasRef = useRef(extras.data); extrasRef.current = extras.data;
+  const askOnHand = () => setOnHandStep({ entries: suggestedEntries(extrasRef.current ?? []), minimize: false });
+  /** The proteins on hand confirmed for this week order each day's options (preferOnHand). */
+  const preferFor = (plan: PlanState) => plan.onHand ? preferOnHand<Recipe>(plan.onHand, typesOf((extrasRef.current ?? []).map(e => e.text))) : undefined;
   /** Once per week: cooking days that already have a dish keep it; the others get one. */
   const draftWeek = (plan: PlanState) => {
-    const shown = proposeCookingPlan(plan, recipes ?? [], loadSettings(), week, { fits, fallback }).plan;
+    const shown = proposeCookingPlan(plan, recipes ?? [], loadSettings(), week, { fits, fallback, prefer: preferFor(plan) }).plan;
     try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
     try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks again later */ }
     return shown;
@@ -769,12 +779,14 @@ function WeekCalendar() {
     if (!recipes) return;
     let active = true;
     setLoaded(null);
+    setOnHandStep(null);
     fetchWeek(week).then(plan => {
       if (!active) return;
       let shown = plan;
       if (!plan.proposed && plan.approved === null) {
         // Never asked for cooking days and nothing planned: ask first, draft on Plan my week. A saved schedule is reused.
         if (!loadSettings().setup.scheduled && !plan.batches.length) { setSchedule(loadSettings().setup); setFirstSchedule(true); }
+        else if (!plan.batches.length) askOnHand();
         else shown = draftWeek(plan);
       } else if (loadSettings().setup.plannedWith === null && loadSettings().rev > 0) {
         // Settings saved before 2026-11-20 recorded nothing: take them as what this Week was planned with.
@@ -822,7 +834,7 @@ function WeekCalendar() {
   const updateWeek = () => {
     const current = latest.current;
     if (!current || !recipes) return;
-    const result = proposeCookingPlan({ ...current.plan, batches: [] }, recipes, loadSettings(), week, { fits, fallback });
+    const result = proposeCookingPlan({ ...current.plan, batches: [] }, recipes, loadSettings(), week, { fits, fallback, prefer: preferFor(current.plan) });
     if (save(result.plan)) acknowledge(result.suggested);
   };
   const approve = () => {
@@ -839,9 +851,18 @@ function WeekCalendar() {
     try { updateSettings(s => ({ ...s, setup: { ...s.setup, evenings, fixedDays, challenge, scheduled: true } })); }
     catch { toast({ title: t("saveFailed"), variant: "destructive" }); return; }
     setSchedule(null); setFirstSchedule(false);
-    // An empty week is drafted now; a week with dishes asks "Your preferences have been changed" (prefsChanged).
+    // An empty week asks for proteins on hand, then is drafted; a week with dishes asks "Your preferences have been changed" (prefsChanged).
     const current = latest.current;
-    if (current && !current.plan.batches.length) { latest.current = { ...current, plan: draftWeek(current.plan) }; setLoaded(latest.current); }
+    if (current && !current.plan.batches.length) askOnHand();
+  };
+  /** Use selected proteins (stored on the Week; Groceries subtract them) or Skip: the ordinary draft. */
+  const finishOnHand = (use: boolean) => {
+    const current = latest.current;
+    if (!current || !onHandStep) return;
+    const plan = use ? { ...current.plan, onHand: toOnHand(onHandStep.entries, onHandStep.minimize) } : current.plan;
+    latest.current = { ...current, plan: draftWeek(plan) };
+    setLoaded(latest.current);
+    setOnHandStep(null);
   };
   const planned = ready ? ready.plan.batches.flatMap(b => byId.get(b.recipeId) ?? []) : [];
   const deals = weekDeals(foodDeals, week, planned, settings.shopping.stores.map(storeName));
@@ -896,6 +917,17 @@ function WeekCalendar() {
               <button type="button" onClick={saveSchedule} disabled={overCount(schedule)} className="btn btn-primary" data-testid="button-save-schedule">
                 {firstSchedule ? household("planWeek") : household("save")}</button>
               {!firstSchedule && <button type="button" onClick={() => setSchedule(null)} className="btn btn-secondary" data-testid="button-cancel-schedule">{household("cancel")}</button>}
+            </div>
+          </section>
+        ) : onHandStep ? (
+          <section className="card max-w-xl p-4 sm:p-5" aria-labelledby="on-hand-title" data-testid="on-hand-step">
+            <h2 id="on-hand-title" className="text-base font-semibold">{onHandText(lang, "weekTitle")}</h2>
+            <p className="mb-3 text-sm text-muted-foreground">{onHandText(lang, onHandStep.entries.length ? "weekIntro" : "weekNoHistory")}</p>
+            <OnHandPicker entries={onHandStep.entries} onChange={entries => setOnHandStep(s => s && { ...s, entries })}
+              minimize={onHandStep.minimize} onMinimize={minimize => setOnHandStep(s => s && { ...s, minimize })} addLabel="addAnother" />
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" className="btn btn-primary" disabled={!entriesReady(onHandStep.entries)} onClick={() => finishOnHand(true)} data-testid="button-use-on-hand">{onHandText(lang, "useSelected")}</button>
+              <button type="button" className="btn btn-secondary" onClick={() => finishOnHand(false)} data-testid="button-skip-on-hand">{onHandText(lang, "skip")}</button>
             </div>
           </section>
         ) : (

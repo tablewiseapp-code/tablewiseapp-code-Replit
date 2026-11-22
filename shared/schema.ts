@@ -303,6 +303,8 @@ export const weekPlans = pgTable("week_plans", {
   locked: boolean("locked").default(false).notNull(),
   /** The full-week proposal was made; empty slots are not filled again. */
   proposed: boolean("proposed").default(false).notNull(),
+  /** Cook with what I have: the proteins on hand confirmed for this week (client/src/lib/on-hand.ts OnHand); null = none. */
+  onHand: jsonb("on_hand"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, table => [primaryKey({ columns: [table.ownerId, table.weekStart] })]);
 

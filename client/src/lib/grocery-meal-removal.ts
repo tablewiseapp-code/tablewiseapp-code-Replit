@@ -6,7 +6,7 @@ import { batchFactor } from "@shared/cooking-plan";
 import type { PlannerRecipe } from "./planner-recipes";
 
 export type GroceryRecipe = Pick<PlannerRecipe, "id" | "title" | "ingredients" | "servings">;
-const optional = /\b(optional|to serve|for serving|to garnish|for garnish|if desired)\b/i;
+export const optional = /\b(optional|to serve|for serving|to garnish|for garnish|if desired)\b/i;
 const quantityFormatter = new Intl.NumberFormat("en", { useGrouping: false, maximumFractionDigits: 6 });
 
 export function groceryMeasure(text: string) {

@@ -47,7 +47,10 @@ try {
   const click = async id => { await until(`Boolean(${q(id)})`, id); await ev(`${q(id)}.click()`); };
   // Radix menus open on pointerdown, not click.
   const openMenu = async id => { await until(`Boolean(${q(id)})`, id); await ev(`${q(id)}.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }))`); };
-  const go = async (path, ready) => { await call("Page.navigate", { url: BASE + path }); await until(ready, path); };
+  // An empty week first asks "Which proteins do you still have?" (Cook with what I have); Skip plans as usual.
+  const go = async (path, ready) => { await call("Page.navigate", { url: BASE + path });
+    await until(`${ready} || Boolean(document.querySelector('[data-testid="on-hand-step"]'))`, path);
+    if (await ev(`Boolean(document.querySelector('[data-testid="button-skip-on-hand"]'))`)) { await ev(`document.querySelector('[data-testid="button-skip-on-hand"]').click()`); await until(ready, path); } };
   const shot = async name => { if (!SHOTS) return; const { result } = await call("Page.captureScreenshot", { format: "png" }); if (result?.data) (await import("node:fs")).writeFileSync(join(SHOTS, `${name}.png`), Buffer.from(result.data, "base64")); };
   const week = () => ev(`${q("week-range")}?.dataset.week`);
   const status = () => ev(`${q("week-status")}?.dataset.state`);
@@ -245,7 +248,10 @@ try {
 
   // ---- Other weeks and legacy plans: next week gets its own draft; a slot plan saved before cooking days is shown by date.
   await click("button-next-week");
-  await until(`${q("week-range")}?.dataset.week === ${JSON.stringify(monday(1))} && Boolean(${q("week-status")})`, "next week");
+  await until(`${q("week-range")}?.dataset.week === ${JSON.stringify(monday(1))} && Boolean(${q("on-hand-step")})`, "next week asks for proteins on hand");
+  await click("button-skip-on-hand");
+  await until(`!${q("on-hand-step")}`, "next week drafted");
+  await sleep(300);
   eq((await serverWeek(monday(1))).batches.length, 3, "its own draft");
   const put = body => ev(`fetch("/api/week-plan", { method: "PUT", headers: { "Content-Type": "application/json" }, body: ${JSON.stringify(JSON.stringify(body))} }).then(r => r.status)`);
   eq(await put({ weekStart: monday(3), proposed: false, selectedIds: [], planAssignments: [], locked: false }), 400, "the old shape is refused");

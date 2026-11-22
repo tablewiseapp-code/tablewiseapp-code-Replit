@@ -30,6 +30,8 @@ import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { amountText, applyOnHand, parseAmount, type OnHandItem } from "@/lib/on-hand";
+import { onHandText } from "@/lib/on-hand-copy";
 import "./grocery-list.css";
 
 type Recipe = PlannerRecipe;
@@ -149,7 +151,17 @@ export default function GroceryListScreen() {
   }, []);
 
   const recipeRows = useMemo(() => buildRecipeGroceryRows(plan.approved ?? [], recipes), [plan, recipes]);
-  const { activeRows, manualRows, purchasedRows, recipePurchases } = buildShoppingList(recipeRows, extras, checkedItems, skipped);
+  // Cook with what I have: the Week's proteins on hand are subtracted, or asked about ("Do you have enough?").
+  const onHand = useMemo(() => applyOnHand(recipeRows, plan.onHand), [recipeRows, plan.onHand]);
+  const { activeRows, manualRows, purchasedRows, recipePurchases } = buildShoppingList(onHand.rows, extras, checkedItems, skipped);
+  const [haveFor, setHaveFor] = useState<number | null>(null);
+  const [haveAmount, setHaveAmount] = useState("");
+  const editOnHand = (index: number, change: (item: OnHandItem) => OnHandItem) => {
+    const current = latestPlan();
+    if (!current.onHand?.items[index]) return;
+    const next = { ...current, onHand: { ...current.onHand, items: current.onHand.items.map((item, i) => (i === index ? change(item) : item)) } };
+    try { storePlan(next); setPlan(next); } catch { toast({ title: t("grocery.changeFailed"), variant: "destructive" }); }
+  };
   const categoryOf = (row: ShoppingRow) => {
     if (row.category && categories.includes(row.category)) return row.category;
     const category = categorizeIngredient(row.ingredient);
@@ -396,8 +408,10 @@ export default function GroceryListScreen() {
     const price = shownPrices.has(categoryOf(row)) ? priceOf(row) : null;
     const parsed = parseIngredientLine(row.ingredient);
     const quantity = parsed.quantity === null || !parsed.ingredient ? "" : parsed.display.slice(0, parsed.display.length - parsed.ingredient.length).trim();
+    const review = row.extraId ? undefined : onHand.reviews.get(row.key);
+    const reviewed = review && plan.onHand?.items[review.item];
     return (
-      <li className="grocery-item" key={row.key} data-testid={`grocery-item-${metadataKey}`}>
+      <li className={`grocery-item${review ? " flex-wrap" : ""}`} key={row.key} data-testid={`grocery-item-${metadataKey}`}>
         <label className="grocery-item-label">
           <input type="checkbox" checked={false} onChange={() => markPurchased(row)}
             aria-label={row.ingredient} />
@@ -433,6 +447,16 @@ export default function GroceryListScreen() {
         <span className="grocery-item-price" data-testid="grocery-item-price">{price === null ? "" : money(price)}</span>
         <GroceryNote item={row.ingredient} value={notes[metadataKey]} canEdit onSave={note => saveNote(metadataKey, note)}
           editing={editingNote === metadataKey} onEditingChange={open => setEditingNote(open ? metadataKey : null)} />
+        {review && reviewed && <div className="basis-full ps-7 pb-2 text-sm" data-testid="on-hand-review" data-kind={review.kind}>
+          <p>{onHandText(lang, "youHave", { name: reviewed.name })} · {review.kind === "units" && reviewed.amount ? onHandText(lang, "units", { amount: amountText(reviewed.amount) })
+            : onHandText(lang, review.kind === "more" ? "more" : "unknown")}</p>
+          <div className="flex flex-wrap gap-x-3">
+            <button type="button" className="btn btn-text -ms-2" data-testid="on-hand-enough"
+              onClick={() => editOnHand(review.item, item => ({ ...item, covered: { ...item.covered, [row.key]: review.demand } }))}>{onHandText(lang, "enough")}</button>
+            <button type="button" className="btn btn-text" data-testid="on-hand-enter"
+              onClick={() => { setHaveAmount(""); setHaveFor(review.item); }}>{onHandText(lang, "enterAmount")}</button>
+          </div>
+        </div>}
       </li>
     );
   };
@@ -582,6 +606,26 @@ export default function GroceryListScreen() {
               onClick={() => void confirmRemoval(true)}>{copy("meals")}</button>}
             <button className="grocery-share-button" disabled={busy} onClick={() => setPendingRemoval(null)}>{t("cancel")}</button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={haveFor !== null} onOpenChange={open => { if (!open) setHaveFor(null); }}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg" data-testid="on-hand-amount-dialog">
+          <DialogTitle>{onHandText(lang, "howMuch")}</DialogTitle>
+          <DialogDescription>{haveFor !== null && plan.onHand?.items[haveFor]?.name}</DialogDescription>
+          <form onSubmit={event => {
+            event.preventDefault();
+            const amount = parseAmount(haveAmount);
+            if (haveFor !== null && amount) { editOnHand(haveFor, item => ({ ...item, amount })); setHaveFor(null); }
+          }}>
+            <input className="my-2 block min-h-11 w-full rounded border bg-background px-3" value={haveAmount} maxLength={30}
+              placeholder={onHandText(lang, "amountHint")} aria-label={onHandText(lang, "howMuch")} onChange={event => setHaveAmount(event.target.value)} data-testid="on-hand-amount-input" />
+            {haveAmount.trim() && !parseAmount(haveAmount) && <p className="text-sm text-destructive" role="alert">{onHandText(lang, "amountInvalid")}</p>}
+            <div className="flex gap-2">
+              <button className="grocery-primary disabled:opacity-50" disabled={!parseAmount(haveAmount)}>{onHandText(lang, "save")}</button>
+              <button type="button" className="grocery-share-button" onClick={() => setHaveFor(null)}>{onHandText(lang, "cancel")}</button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
