@@ -108,6 +108,16 @@ export function addBatch(plan: PlanState, recipeId: string, cookDate: string, ho
   if (plan.batches.length >= maxDishes) return plan;
   return { ...plan, batches: [...plan.batches, { id, recipeId, cookDate, serves: [defaultServe(cookDate, household)], ...(meal ? { meal } : {}) }] };
 }
+/** The meal a single suggestion goes under: Dinner if planned, then Lunch, then Breakfast (Basic Settings → Meals to plan). */
+export const draftMeal = (planned: readonly MealSlot[]): MealSlot => (["Dinner", "Lunch", "Breakfast"] as const).find(m => planned.includes(m)) ?? "Dinner";
+/** Move to lunch / Move to dinner: the dish changes meal on the same cooking day, after the dishes already there. Recipe,
+ * dates and portions stay. The approved copy follows (meal and order do not change Groceries), so the status stays. */
+export function moveToMeal(plan: PlanState, id: string, meal: MealSlot): PlanState {
+  const found = plan.batches.find(b => b.id === id);
+  if (!found || (found.meal ?? "Dinner") === meal) return plan;
+  const move = (list: Batch[]) => { const b = list.find(x => x.id === id); return b ? [...list.filter(x => x !== b), { ...b, meal }] : list; };
+  return { ...plan, batches: move(plan.batches), approved: plan.approved && move(plan.approved) };
+}
 /** Swap dish: another recipe in the same place; dates and portions stay, the yield comes from the new recipe. */
 export function swapBatch(plan: PlanState, id: string, recipeId: string): PlanState {
   const found = plan.batches.find(b => b.id === id);

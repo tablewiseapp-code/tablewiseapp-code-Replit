@@ -2,7 +2,7 @@
 // Hard restrictions come from checkEligibility (preference-engine.ts), the one rule every suggestion uses; this file only
 // picks evenings and ranks the eligible recipes. Plan days: 0 = Sunday … 6 = Saturday, as in meal-plan.ts.
 import { householdCounts, type BasicSettings } from "./basic-settings";
-import { addBatch, cookedOn, mealSlots, type MealSlot, type PlanState } from "./meal-plan";
+import { addBatch, cookedOn, draftMeal, mealSlots, type MealSlot, type PlanState } from "./meal-plan";
 import { currentMeal, dateInWeek } from "@shared/cooking-plan";
 import { checkEligibility, personalize, rankRecipe, total, weeknightLimit, type EngineRecipe, type Eligibility } from "./preference-engine";
 
@@ -86,7 +86,8 @@ export type { Slot };
 
 /** The draft cooking plan (made once per week; docs/cooking-plan.md). Every preferred weekday is a cooking day, more are
  * added until the weekly count is met (cookingEvenings). A cooking day that already has a dish keeps it; an empty one
- * gets one dish not yet in the week (a recipe repeats only when the eligible ones run out). Deterministic for a seed. */
+ * gets one dish not yet in the week (a recipe repeats only when the eligible ones run out), under draftMeal (Dinner, else
+ * Lunch, else Breakfast, as planned in Basic Settings). Deterministic for a seed. */
 export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, weekStart: string,
   { fits = any, fallback, newId }: { fits?: Fits<T>; fallback?: Fits<T>; newId?: () => string } = {}) {
   const household = householdCounts(settings);
@@ -95,14 +96,15 @@ export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, cata
   let next: PlanState = plan;
   const used = new Set(plan.batches.map(b => b.recipeId));
   const suggested: string[] = [];
+  const meal = draftMeal(settings.planning.meals);
   for (const day of [...challenges, ...days.filter(d => !challenges.includes(d))]) { // the challenge evening picks first
     const date = dateInWeek(weekStart, day);
     if (cookedOn(next, date).length) continue;
     const chosen = catalog.filter(r => used.has(r.id));
-    const pick = dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits, fallback })[0]
-      ?? dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits, fallback })[0];
+    const pick = dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits, fallback, meal })[0]
+      ?? dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits, fallback, meal })[0];
     if (!pick) continue;
-    next = addBatch(next, pick.id, date, household, newId?.());
+    next = addBatch(next, pick.id, date, household, newId?.(), meal === "Dinner" ? undefined : meal);
     used.add(pick.id); suggested.push(pick.id);
   }
   return { plan: { ...next, proposed: true }, suggested, days };

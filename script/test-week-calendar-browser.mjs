@@ -100,7 +100,7 @@ try {
   eq(await ev(`document.getElementById("approve-hint").textContent`), "Approval builds your grocery list.");
   ok(await ev(`${q("week-header")}.contains(${q("button-approve-week")})`), "approval sits in the header, before the days");
   const first = plan[cooking[0]][0].id;
-  eq(await ev(`${q(`dish-meal-${first}`)}.textContent`), "Dinner", "the meal is a label above the card");
+  eq(await ev(`${q(`meal-${cooking[0]}-dinner`)}.querySelector("h3").textContent`), "Dinner", "the meal is a heading above its dishes");
   ok(await ev(`!${q(`dish-meta-${first}`)}.textContent.includes("Dinner")`), "and not repeated in the info line");
   ok(await ev(`!${q(`dish-dates-${first}`)}`), "a dish eaten only on its cooking day shows no dates");
   ok(await ev(`!${q(`dish-view-${first}-mainTool`)}`), "the cooking tool stays on the recipe page (prep and cook show, 2026-11-21)");
@@ -276,6 +276,69 @@ try {
   await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
   await until(`document.querySelectorAll('[data-testid="day-${wk[4]}"] [data-recipe]').length === 2`, "added");
   eq(await ev(`[...${q(`day-${wk[4]}`)}.querySelectorAll("[data-meal]")].map(d => d.dataset.meal)`), ["Breakfast", "Dinner"], "sorted by meal");
+
+  // ---- Meal rows and Move to lunch / Move to dinner (2026-11-21). Chicken: today's lunch covering today and tomorrow;
+  // potatoes: today's dinner; approved. Move chicken to dinner, reload, move it back; Home and groceries follow.
+  const today = await ev(`(() => { const d = new Date(); return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-"); })()`);
+  const tomorrow = await ev(`(() => { const d = new Date(${JSON.stringify(today)} + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })()`);
+  const meals = [{ id: "ch", recipeId: ids[0], cookDate: today, meal: "Lunch", serves: [{ date: today, servings: 2 }, { date: tomorrow, servings: 2 }] },
+    { id: "po", recipeId: ids[1 % ids.length], cookDate: today, serves: [{ date: today, servings: 3 }] }];
+  eq(await put({ weekStart: thisWeek, proposed: true, selectedIds: [], batches: meals, approved: meals }), 204);
+  const inMeal = (date, meal) => ev(`[...(${q(`meal-${date}-${meal}`)}?.querySelectorAll("[data-recipe]") ?? [])].map(d => d.dataset.testid.slice(5))`);
+  await go("/meals?plan", calendarReady);
+  eq(await inMeal(today, "lunch"), ["ch"]);
+  eq(await inMeal(today, "dinner"), ["po"]);
+  const chMeta = await text("dish-meta-ch");
+  eq(await ev(`${q("move-meal-ch")}.getAttribute("aria-label")`), `Move ${await text("dish-link-ch")} to dinner`);
+  eq(await ev(`${q("move-meal-po")}.getAttribute("aria-label")`), `Move ${await text("dish-link-po")} to lunch`);
+  await click("move-meal-ch");
+  await until(`${q(`meal-${today}-dinner`)}.querySelectorAll("[data-recipe]").length === 2`, "chicken at dinner");
+  eq(await inMeal(today, "dinner"), ["po", "ch"], "appended after potatoes, one Dinner heading");
+  eq(await text("dish-meta-ch"), chMeta, "same servings and coverage");
+  ok(await ev(`Boolean(${q(`add-meal-${today}-lunch`)})`), "the empty lunch row offers + Add lunch");
+  eq(await status(), "approved", "a meal move keeps the status");
+  if (tomorrow < monday(1)) ok(await ev(`!${q(`day-${tomorrow}`)}.querySelector("[data-recipe]")`), "the dish shows once, on its cooking day");
+  await until(`fetch("/api/week-plan?week=${thisWeek}").then(r => r.json()).then(w => w.batches.find(b => b.id === "ch").meal === "Dinner")`, "saved");
+  await go("/meals?plan", calendarReady);
+  eq(await inMeal(today, "dinner"), ["po", "ch"], "the grouping survives a reload");
+  await click("move-meal-ch");
+  await until(`Boolean(${q(`meal-${today}-lunch`)}?.querySelector("[data-recipe]"))`, "chicken back at lunch");
+  eq(await inMeal(today, "dinner"), ["po"], "potatoes stay at dinner");
+  await until(`fetch("/api/week-plan?week=${thisWeek}").then(r => r.json()).then(w => w.batches.find(b => b.id === "ch").meal === "Lunch")`, "saved");
+  const back = await serverWeek(thisWeek);
+  eq(back.batches.map(b => [b.id, b.serves]), [["po", meals[1].serves], ["ch", meals[0].serves]], "dates and portions unchanged");
+  eq(JSON.stringify(back.approved), JSON.stringify(back.batches), "groceries use the same dishes");
+  await go("/", `Boolean(${q("home-today")})`);
+  ok(await ev(`Boolean(${q("home-slot-lunch")}.querySelector('[data-testid="home-remove-ch"]')) && Boolean(${q("home-slot-dinner")}.querySelector('[data-testid="home-remove-po"]'))`), "Home shows chicken at lunch, potatoes at dinner");
+
+  // ---- Only Lunch planned: the draft is lunches; an empty scheduled day offers + Add lunch, which opens the lunch picker.
+  const setMeals = list => ev(`(() => { const s = JSON.parse(localStorage.getItem("tablewise_basic_settings")); s.planning.meals = ${JSON.stringify(list)}; s.rev += 1;
+    return fetch("/api/household-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) }).then(r => r.status); })()`);
+  eq(await setMeals(["Lunch"]), 204);
+  await go(`/meals?week=${monday(6)}`, calendarReady);
+  const lunchWeek = await serverWeek(monday(6));
+  ok(lunchWeek.batches.length > 0 && lunchWeek.batches.every(b => b.meal === "Lunch"), "every suggestion is a lunch");
+  const lunchDay = lunchWeek.batches[0].cookDate;
+  ok(await ev(`!${q(`meal-${lunchDay}-dinner`)} && !${q(`meal-${lunchDay}-breakfast`)}`), "only the planned meal has a row");
+  await click(`remove-${lunchWeek.batches[0].id}`);
+  await until(`Boolean(${q(`add-meal-${lunchDay}-lunch`)})`, "+ Add lunch on the empty scheduled day");
+  eq(await text(`add-meal-${lunchDay}-lunch`), "+ Add lunch");
+  await click(`add-meal-${lunchDay}-lunch`);
+  await until(`Boolean(document.querySelector('[data-testid="pick-list"] button'))`, "picker");
+  ok(await ev(`${q("planner-dialog")}.textContent.startsWith("Lunch")`), "straight to lunch recipes");
+  await ev(`document.querySelector('[data-testid="pick-list"] button').click()`);
+  await until(`Boolean(${q(`meal-${lunchDay}-lunch`)}?.querySelector("[data-recipe]"))`, "added under Lunch");
+
+  // ---- Only Dinner planned: a dinner moved to lunch stays there after a reload; the next draft is still dinners.
+  eq(await setMeals(["Dinner"]), 204);
+  await go(`/meals?week=${monday(7)}`, calendarReady);
+  const dinner = (await serverWeek(monday(7))).batches[0];
+  await click(`move-meal-${dinner.id}`);
+  await until(`fetch("/api/week-plan?week=${monday(7)}").then(r => r.json()).then(w => w.batches.find(b => b.id === ${JSON.stringify(dinner.id)}).meal === "Lunch")`, "saved");
+  await go(`/meals?week=${monday(7)}`, calendarReady);
+  ok(await ev(`Boolean(${q(`meal-${dinner.cookDate}-lunch`)}?.querySelector('[data-testid="dish-${dinner.id}"]'))`), "the dish shows under Lunch, though Lunch is not planned");
+  await go(`/meals?week=${monday(8)}`, calendarReady);
+  ok((await serverWeek(monday(8))).batches.every(b => (b.meal ?? "Dinner") === "Dinner"), "future drafts follow the Dinner preference");
 
   ok(errors.length === 0, `no page errors: ${errors.join(" | ")}`);
   console.log(`week calendar browser: ${checks} checks passed`);

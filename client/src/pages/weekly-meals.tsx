@@ -2,7 +2,7 @@
 import { usePilotPage } from "@/hooks/use-pilot-page";
 import { recordPilotEvent } from "@/lib/pilot-analytics";
 import { addDays, calendarDate, currentWeek, isWeek, plannerRecipeURL } from "@/lib/week-plan";
-import { dishOptions, proposeCookingPlan } from "@/lib/week-suggestions";
+import { cookingEvenings, dishOptions, proposeCookingPlan } from "@/lib/week-suggestions";
 import { useHouseholdCopy } from "@/lib/household-copy";
 import { loadWeekFilters, planFilters } from "@/lib/week-filters";
 import { PlannerBoard } from "@/components/planner-board";
@@ -49,7 +49,7 @@ import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTim
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePlannerCopy } from "@/lib/planner-copy";
-import { approvePlan, fetchWeek, mealSlots, pushWeekPlan, saveWeek, statusOf, type Batch, type MealSlot, type PlanState } from "@/lib/meal-plan";
+import { approvePlan, draftMeal, fetchWeek, mealSlots, pushWeekPlan, saveWeek, statusOf, type Batch, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
@@ -902,6 +902,7 @@ function WeekCalendar() {
             <WeekDeals offers={deals} lang={lang} />
             <PlannerBoard plan={ready.plan} week={week} today={week === currentWeek() ? calendarDate(new Date()) : null} lang={lang} recipes={byId}
               commit={commit} recipeHref={b => plannerRecipeURL(b.recipeId, week, b.id)} household={householdCounts(settings)}
+              cookingDays={cookingEvenings(settings)} meals={settings.planning.meals.length ? settings.planning.meals : [draftMeal([])]}
               onPicked={id => {
                 recordPilotEvent("meal_selected", week, id);
                 // Learning signal: an AI recipe was put on the plan (not that it was cooked).

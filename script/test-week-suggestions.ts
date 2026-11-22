@@ -2,7 +2,7 @@
 // Pure logic; optional real-catalog pass with CATALOG_URL=http://localhost:5000.
 import assert from "node:assert/strict";
 import { defaultSettings, householdCounts, type BasicSettings } from "../client/src/lib/basic-settings";
-import { addBatch, approvePlan, cookedOn, emptyPlan, moveConflicts, moveCookingDay, removeBatch, restoreBatch, setServes, statusOf, swapBatch, type PlanState } from "../client/src/lib/meal-plan";
+import { addBatch, approvePlan, cookedOn, draftMeal, emptyPlan, moveToMeal, moveConflicts, moveCookingDay, removeBatch, restoreBatch, setServes, statusOf, swapBatch, type PlanState } from "../client/src/lib/meal-plan";
 import { checkEligibility, total } from "../client/src/lib/preference-engine";
 import { buildRecipeGroceryRows } from "../client/src/lib/grocery-meal-removal";
 import { toPlannerRecipes, type PlannerRecipe } from "../client/src/lib/planner-recipes";
@@ -197,6 +197,41 @@ assert.equal(dishOptions(withBreakfast, settingsWith(() => {}), 2, { meal: "Brea
 assert.notEqual(dishOptions(withBreakfast, settingsWith(() => {}), 2)[0].title, "Oat porridge", "+ Add a dish still starts with dinners");
 const body = (meal: unknown) => ({ weekStart: WEEK, proposed: true, selectedIds: [], batches: [{ id: "x", recipeId: "r1", cookDate: WEEK, serves: [{ date: WEEK }], meal }], approved: null });
 assert.ok(weekPlanInput.safeParse(body("Lunch")).success && !weekPlanInput.safeParse(body("Snack")).success, "the server accepts only the three meals");
+// ---- Meals to plan: a single suggestion goes under Dinner, else Lunch, else Breakfast; Move to lunch/dinner (2026-11-21).
+assert.equal(draftMeal(["Breakfast", "Lunch", "Dinner"]), "Dinner");
+assert.equal(draftMeal(["Breakfast", "Lunch"]), "Lunch");
+assert.equal(draftMeal(["Breakfast"]), "Breakfast");
+assert.equal(draftMeal([]), "Dinner");
+{
+  const lunchOnly = settingsWith(s => { s.planning.meals = ["Lunch"]; s.setup.evenings = 1; });
+  const draft = proposeCookingPlan(empty(), catalog, lunchOnly, WEEK, { newId: ids() }).plan;
+  assert.equal(draft.batches.length, 1, "one dish for one cooking day");
+  assert.equal(mealOf(draft.batches[0]), "Lunch", "Lunch is the only planned meal: the suggestion is a lunch");
+  // Chicken Monday lunch covering Mon–Tue, potatoes Monday dinner; approved. Move chicken to dinner and back.
+  const mon = "2026-11-16";
+  let p = addBatch(empty(), teriyaki.id, mon, { adults: 2, kids: 0 }, "chicken", "Lunch");
+  p = setServes(p, "chicken", [{ date: mon, adults: 2, kids: 0 }, { date: "2026-11-17", adults: 2, kids: 0 }]);
+  p = approvePlan(addBatch(p, "r1", mon, { adults: 2, kids: 0 }, "potatoes"));
+  const amounts = (q: PlanState) => Object.fromEntries([...buildRecipeGroceryRows(q.approved!, catalog)].map(([k, r]) => [k, r.ingredient]));
+  const rows = amounts(p);
+  const moved = moveToMeal(p, "chicken", "Dinner");
+  const chickenOf = (q: PlanState) => q.batches.find(b => b.id === "chicken")!;
+  assert.deepEqual(moved.batches.map(b => [b.id, mealOf(b)]), [["potatoes", "Dinner"], ["chicken", "Dinner"]], "appended after the dinner already there");
+  assert.deepEqual({ ...chickenOf(moved), meal: "Lunch" }, chickenOf(p), "recipe, cooking day, servings and dates stay");
+  assert.equal(statusOf(moved), "approved", "the status stays");
+  assert.deepEqual(amounts(moved), rows, "grocery quantities stay");
+  const back = moveToMeal(moved, "chicken", "Lunch");
+  assert.equal(mealOf(chickenOf(back)), "Lunch");
+  assert.equal(mealOf(back.batches.find(b => b.id === "potatoes")!), "Dinner", "potatoes stay at dinner");
+  assert.equal(moveToMeal(back, "chicken", "Lunch"), back, "already there: nothing changes");
+  // Only Dinner planned: a manual move to Lunch stays on the plan; the next draft still suggests a dinner.
+  const dinnerOnly = settingsWith(s => { s.planning.meals = ["Dinner"]; s.setup.evenings = 1; });
+  const d = proposeCookingPlan(empty(), catalog, dinnerOnly, WEEK, { newId: ids() }).plan;
+  const manual = moveToMeal(d, d.batches[0].id, "Lunch");
+  assert.equal(mealOf(manual.batches[0]), "Lunch");
+  assert.equal(mealOf(proposeCookingPlan(empty(), catalog, dinnerOnly, WEEK, { newId: ids() }).plan.batches[0]), "Dinner");
+}
+
 console.log("week suggestions: ok");
 
 // ---- planKey: changes with what plans dishes, not with names, stores or the draft bookkeeping.

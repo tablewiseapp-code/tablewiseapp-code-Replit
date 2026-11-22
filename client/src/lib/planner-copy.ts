@@ -24,6 +24,9 @@ const en = {
   moveUnresolved: "Choose what happens to each portion.", moveEmpty: "Each dish needs at least one serving date.", moveBtn: "Move",
   added: "{title} added to {date}.", swapped: "{title} is in the plan now.", moved: "Moved to {date}.", removed: "Removed {title}.", undo: "Undo",
   save: "Save", cancel: "Cancel",
+  addBreakfast: "+ Add breakfast", addLunch: "+ Add lunch", addDinner: "+ Add dinner", addMealOn: "Add a dish: {meal}, {date}",
+  moveToLunch: "Move to lunch", moveToDinner: "Move to dinner", moveToLunchFor: "Move {title} to lunch", moveToDinnerFor: "Move {title} to dinner",
+  movedToLunch: "{title} moved to lunch.", movedToDinner: "{title} moved to dinner.",
   saveFailed: "Couldn't save your plan. Nothing was changed.",
   deals: "Weekly deals · {count} offers", dealsOne: "Weekly deals · 1 offer", dealFor: "For {title}", dealUntil: "Until {date}", dealSample: "Sample deal", dealRecipes: "Find recipes",
 };
@@ -49,6 +52,9 @@ const ru: typeof en = {
   moveUnresolved: "Выберите, что сделать с каждой порцией.", moveEmpty: "У каждого блюда должен остаться хотя бы один день.", moveBtn: "Перенести",
   added: "«{title}» добавлено на {date}.", swapped: "Теперь в плане «{title}».", moved: "Перенесено на {date}.", removed: "«{title}» удалено.", undo: "Отменить",
   save: "Сохранить", cancel: "Отмена",
+  addBreakfast: "+ Добавить завтрак", addLunch: "+ Добавить обед", addDinner: "+ Добавить ужин", addMealOn: "Добавить блюдо: {meal}, {date}",
+  moveToLunch: "Перенести на обед", moveToDinner: "Перенести на ужин", moveToLunchFor: "Перенести «{title}» на обед", moveToDinnerFor: "Перенести «{title}» на ужин",
+  movedToLunch: "«{title}» перенесено на обед.", movedToDinner: "«{title}» перенесено на ужин.",
   saveFailed: "Не удалось сохранить план. Ничего не изменилось.",
   deals: "Скидки недели · предложений: {count}", dealsOne: "Скидки недели · 1 предложение", dealFor: "Для «{title}»", dealUntil: "До {date}", dealSample: "Пример скидки", dealRecipes: "Найти рецепты",
 };
@@ -74,6 +80,9 @@ const he: typeof en = {
   moveUnresolved: "בחרו מה לעשות בכל מנה.", moveEmpty: "לכל מנה צריך להישאר לפחות יום הגשה אחד.", moveBtn: "העברה",
   added: "„{title}” נוסף ל{date}.", swapped: "„{title}” בתוכנית עכשיו.", moved: "הועבר ל{date}.", removed: "„{title}” הוסר.", undo: "ביטול",
   save: "שמירה", cancel: "ביטול",
+  addBreakfast: "+ הוספת ארוחת בוקר", addLunch: "+ הוספת ארוחת צהריים", addDinner: "+ הוספת ארוחת ערב", addMealOn: "הוספת מנה: {meal}, {date}",
+  moveToLunch: "העברה לארוחת צהריים", moveToDinner: "העברה לארוחת ערב", moveToLunchFor: "העברת {title} לארוחת צהריים", moveToDinnerFor: "העברת {title} לארוחת ערב",
+  movedToLunch: "{title} הועבר לארוחת צהריים.", movedToDinner: "{title} הועבר לארוחת ערב.",
   saveFailed: "לא הצלחנו לשמור את התוכנית. שום דבר לא השתנה.",
   deals: "מבצעי השבוע · {count} הצעות", dealsOne: "מבצעי השבוע · הצעה אחת", dealFor: "עבור „{title}”", dealUntil: "עד {date}", dealSample: "מבצע לדוגמה", dealRecipes: "מציאת מתכונים",
 };

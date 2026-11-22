@@ -21,8 +21,10 @@ Redesigned by the product owner on 2026-11-20 (the weekly cooking plan): the wee
   - A second tap on an approved plan does nothing.
 - **Weekly deals · N offers:** an always-open box under the header, with a slowly pulsing dot beside its title (still when the device asks for reduced motion; product owner, 2026-11-20). It is shown only when an offer applies to the shown week (see Deals). Each offer has "Find recipes": it opens Browse recipes (`/meals?browse&deal=<id>`) with that deal's filter, the same as its "Show recipes" there.
 - **Days:** Monday to Sunday, each headed by weekday and date. Today is highlighted in the current week.
-  - A **cooking day** (one with dishes) has "Move day" beside the date, its dishes in Breakfast, Lunch, Dinner order (two dinners in the order they were added), then one "+ Add dish".
-  - A day without cooking is one line: the date and "+ Add dish". A day a dish only covers shows nothing more; the dish's card names it.
+  - A **scheduled cooking day** is a weekday the household cooks on (`cookingEvenings`: the preferred weekdays, then the spread days of the weekly count) or any day with a dish. It shows one row per meal enabled under Basic Settings → Meals to plan, in Breakfast, Lunch, Dinner order, even when the day has no dish yet (2026-11-21). A meal that has dishes always has its row, also when it is no longer enabled, so changing the setting never hides a dish.
+  - Each row is headed by its meal. A row with dishes lists them (two dinners in the order they were added, under one Dinner heading); an empty row is one direct action, "+ Add breakfast", "+ Add lunch" or "+ Add dinner", which opens the recipe picker for that date and meal.
+  - A cooking day with dishes has "Move day" beside the date and one "+ Add dish" below its rows (another dish for a meal, or a meal that is not enabled). An empty scheduled day shows "+ Add dish" only when some meal is not enabled.
+  - A day without cooking is one line: the date and "+ Add dish". Adding a dish makes it a cooking day. A day a dish only covers shows nothing more; the dish's card names it ("7 servings · For Mon–Tue").
   - Weeks with dishes on all seven days (including weeks saved as Breakfast/Lunch/Dinner slots) show seven cooking days.
 - **Width:** cards form two columns on wide screens and stack on a phone, with no sideways scrolling at 375 px.
 - **Below the days:** "Browse recipes", "Cooking days" (reopens the cooking days with Save and Cancel) and "Your household".
@@ -33,16 +35,16 @@ Every action is a visible, labelled button that works by tap, click and keyboard
 
 **Folding (2026-11-21).** A day with dishes folds under its date: the date is a button (`aria-expanded`) with a chevron; folded, it shows the day's dish names on one line, cut short when long, and hides the cards and "+ Add dish" ("Move day" stays). In the current week only today starts open; in other weeks every day starts open. Adding a dish to a day, or moving a day there, opens it. What is open is not saved; a reload starts again. A day without dishes is one line and does not fold.
 
-Each planned dish (one batch) appears once, on the day it is cooked, under a small label with its meal (Breakfast, Lunch or Dinner). A day with one or two dishes shows the shared recipe card's `compact` form (`client/src/components/recipe-card.tsx`, a small photo on the left, two per row on wide screens); a day with three or more shows the standard card with the photo on top, two per row on tablets and three on wide screens (product owner, 2026-11-21). Either card has:
+Each planned dish (one batch) appears once, on the day it is cooked, in its meal's row (Breakfast, Lunch or Dinner). A day with one or two dishes shows the shared recipe card's `compact` form (`client/src/components/recipe-card.tsx`, a small photo on the left, two per row on wide screens); a day with three or more shows the standard card with the photo on top, two per row on tablets and three on wide screens (product owner, 2026-11-21). Either card has:
 
 - **Title.** It opens the recipe at this batch (`/recipe/:id?week=…&batch=…`), scaled to the batch total. Back returns to the week.
-- **One line:** total time · servings · days covered, e.g. "45 min · 7 servings · For Mon–Tue". The meal is the label above the card (2026-11-21).
-  - **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner). Swap, Edit servings and Move day keep it. A dish saved without one (before 2026-11-20) and the draft's dishes are Dinner; Breakfast/Lunch/Dinner slots of older weeks keep their meal.
+- **One line:** total time · servings · days covered, e.g. "45 min · 7 servings · For Mon–Tue". The meal is the row heading above (2026-11-21).
+  - **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner). Swap, Edit servings and Move day keep it. A dish saved without one (before 2026-11-20) is Dinner; the draft's dishes take the draft meal (see The draft); Breakfast/Lunch/Dinner slots of older weeks keep their meal.
   - **Time** is the total time, whatever the recipe time setting. Prep and cook times show below with the Recipe View details when chosen there (2026-11-21); the cooking tool stays on the recipe page.
   - **"7 servings"** is the amount to prepare (the batch total, with any edits; half servings as written, e.g. 3.5). It is a button named "Edit servings for {recipe}" that opens Edit servings.
   - **Days covered** come from the serving dates: left out when the dish is eaten only on its cooking day; "For Mon–Wed" for consecutive days, "For Mon & Wed" for separate ones, mixed as "For Mon–Tue & Thu". Dates more than a week after cooking are written in full.
 - **Recipe View** nutrition, prep time, cook time and Dietary tags, as chosen in Settings.
-- **Buttons:** three icon buttons: Swap (arrows, named "Swap {recipe}"), Try another (circular arrows, named "Try another instead of {recipe}", 2026-11-21) and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu.
+- **Buttons:** icon buttons: Swap (arrows, named "Swap {recipe}"), Try another (circular arrows, named "Try another instead of {recipe}", 2026-11-21), on a lunch or dinner dish Move to dinner (arrow down, named "Move {recipe} to dinner") or Move to lunch (arrow up, "Move {recipe} to lunch"; 2026-11-21), and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu: the request asked for the move in "the existing dish actions menu", and the dish's actions are these buttons.
 
 ## Servings
 
@@ -68,6 +70,8 @@ Ingredient scale      = Make X servings / the recipe's original yield
 | Button | What it does |
 |---|---|
 | + Add dish | Asks Breakfast, Lunch or Dinner, then opens the recipe picker for that date and meal; the pick is added beside the dishes already there. |
+| + Add breakfast / lunch / dinner | On an empty meal row: opens the recipe picker for that date and meal directly. |
+| Move to dinner / Move to lunch | One tap: a lunch dish becomes a dinner on the same cooking day, or the reverse; it goes after the dishes already in that meal, the others stay in place. Recipe, cooking day, servings, serving dates and the plan status stay (the approved copy changes the same way, since a dish's meal does not change Groceries). Available even when the destination meal is not enabled in Settings; the move applies to this plan only, and drafts keep following Meals to plan. A breakfast has neither. If the save fails, nothing changes and the message offers Try again. |
 | Swap | Replaces only that dish's recipe. The cooking date, serving dates and portions stay; quantities use the new recipe's yield. |
 | Try another | One tap, no picker: the first picker option for that weekday and meal that is not already in the Week and not yet tried on this dish (since the page opened); after the last one it starts again. Like Swap, dates and portions stay. The toast offers Undo. |
 | Servings label (Edit servings) | Changes the dish's dates and amounts, as above. |
@@ -98,7 +102,7 @@ Made once per week (`proposed`), the first time an unapproved week is opened. Sa
   - The chef challenge day counts as a preferred weekday.
   - If the count is higher, days are added one at a time. Each added day is the one farthest from its nearest cooking day, with Sunday and Monday adjacent; ties go to the earlier day in Monday-first order.
   - With no preferred days, the days are spread the same way. "Not sure yet" means three.
-- **Dishes:** each cooking day without a dish gets one eligible recipe not yet in the week, dinners first, placed under Dinner. A recipe repeats only when the eligible ones run out.
+- **Dishes:** each cooking day without a dish gets one eligible recipe not yet in the week, placed under the **draft meal**: Dinner if enabled under Meals to plan, then Lunch, then Breakfast (`draftMeal` in `client/src/lib/meal-plan.ts`; 2026-11-21). That meal's recipes come first, then the others as in the picker. Showing three meal rows does not mean three dishes: the draft still makes one dish per cooking day. A recipe repeats only when the eligible ones run out.
 - **Changes are kept:** reopening the week keeps swaps, extra dishes, serving edits and moves. A moved cooking day changes that week only.
 - **Preferences changed** (2026-11-20): `setup.plannedWith` in Basic Settings holds `planKey` of the settings the Week was last planned or kept with (dish-affecting fields only). When it differs on this or a later week with dishes, a dialog "Your preferences have been changed" offers "Update the week" (all dishes of this week replaced by a new draft; status "Changes not saved" if it was approved) and "Keep my week". Either answer records the new key, so it asks once per change. Your household never builds a draft (2026-11-21); the Week does, after the cooking days.
 
@@ -130,3 +134,7 @@ Weeks run Monday to Sunday, so a Sunday dish eaten on Tuesday serves the next we
   - a locked week stays approved.
 - Browser copies are converted the same way.
 - The server refuses the old shape on save.
+
+## Backlog
+
+- **Morning-only or evening-only planning** (requested 2026-11-21, not built). Some households want to plan only mornings or only evenings. Before building, the product owner must decide whether the preference describes *when people cook* (someone can cook dinner in the morning) or *which meals they want planned*. Until then, the existing Basic Settings → Meals to plan setting is the answer: it decides the meal rows and the draft meal.

@@ -2,12 +2,12 @@
 // is cooked; its card shows how much to make and the dates it serves. Every action is a visible, labelled button.
 import { useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeftRight, ChevronDown, Minus, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, ChevronDown, Minus, MoveDown, MoveUp, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
-import { addBatch, cookedOn, moveConflicts, moveCookingDay, removeBatch, restoreBatch, servingDateChoices, setServes, swapBatch, type Batch, type PlanState, type Serve } from "@/lib/meal-plan";
+import { addBatch, cookedOn, moveConflicts, moveCookingDay, moveToMeal, removeBatch, restoreBatch, servingDateChoices, setServes, swapBatch, type Batch, type PlanState, type Serve } from "@/lib/meal-plan";
 import { batchTotal, batchYield, dateRuns, halfServings, mealOf, mealSlots, serveAmount, shiftDate, weekdayOf, type HouseholdCounts, type MealSlot } from "@shared/cooking-plan";
 import { baseServings } from "@/lib/ingredient-scale";
 import { recipeNameMatches } from "@/lib/planner-filters";
@@ -47,6 +47,9 @@ type Props = {
   options: (day: number, meal?: MealSlot) => PlannerRecipe[];
   onPicked?: (recipeId: string) => void;
   household: HouseholdCounts | null;
+  /** Weekdays (0 = Sunday) the household cooks on (cookingEvenings) and the meals it plans (Basic Settings → Meals to plan). */
+  cookingDays: number[];
+  meals: MealSlot[];
 };
 
 export function useDateText(lang: string) {
@@ -71,7 +74,6 @@ const yieldOf = (batch: Batch, recipe: PlannerRecipe | undefined) => batchYield(
 /** `stacked`: a day with three or more dishes shows them as cards with the photo on top (product owner, 2026-11-21). */
 function DishCard({ batch, props, onOpen, stacked }: { batch: Batch; props: Props; onOpen: (modal: Modal) => void; stacked: boolean }) {
   const t = usePlannerCopy();
-  const { t: ti, dir } = useI18n();
   const toastApi = useToast();
   const { recipeView } = useRecipeDisplay();
   const { plan, recipes, lang, commit } = props;
@@ -104,9 +106,21 @@ function DishCard({ batch, props, onOpen, stacked }: { batch: Batch; props: Prop
     toastApi.toast({ title: t("swapped", { title: pick.title }), action: <ToastAction altText={t("undo")} data-testid="undo-try-another"
       onClick={() => commit(p => swapBatch(p, batch.id, recipe.id))}>{t("undo")}</ToastAction> });
   };
+  // Move to lunch / Move to dinner: same cooking day, even when the other meal is not planned in Settings (this plan only).
+  const meal = mealOf(batch);
+  const target: MealSlot | null = meal === "Lunch" ? "Dinner" : meal === "Dinner" ? "Lunch" : null;
+  const moveMeal = () => {
+    if (!target) return;
+    if (!commit(p => moveToMeal(p, batch.id, target))) {
+      // The plan was not changed, so the dish stays where it was; Try again repeats the move.
+      toastApi.toast({ title: t("saveFailed"), variant: "destructive", action: <ToastAction altText={t("retry")} data-testid="retry-move-meal" onClick={moveMeal}>{t("retry")}</ToastAction> });
+      return;
+    }
+    toastApi.toast({ title: t(target === "Lunch" ? "movedToLunch" : "movedToDinner", { title: recipe.title }) });
+  };
   // Each later part carries its "·", so a wrapped line never starts or ends with one.
   const part = "inline-flex items-center gap-1.5 before:content-['·'] before:text-muted-foreground";
-  // One line: total time · servings (opens Edit servings) · the other days it covers. The meal is the label above the card.
+  // One line: total time · servings (opens Edit servings) · the other days it covers. The meal is the heading above.
   const meta = (
     <p className="relative z-10 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground" data-testid={`dish-meta-${batch.id}`}>
       {minutes !== null && <span>{t("minutes", { count: minutes })}</span>}
@@ -124,7 +138,6 @@ function DishCard({ batch, props, onOpen, stacked }: { batch: Batch; props: Prop
   return (
     <div className="flex h-full flex-col gap-1.5" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} data-meal={mealOf(batch)} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground" data-testid={`dish-meal-${batch.id}`}>{ti(`meals.${mealOf(batch).toLowerCase()}`)}</p>
       <div className="flex-1">
       <RecipeCard recipe={recipe} compact={!stacked} href={props.recipeHref(batch)} meta={meta} view={view}
         titleTestId={`dish-link-${batch.id}`} ids={{ view: `dish-view-${batch.id}` }}>
@@ -137,6 +150,11 @@ function DishCard({ batch, props, onOpen, stacked }: { batch: Batch; props: Prop
             aria-label={t("tryAnotherFor", { title: recipe.title })} title={t("tryAnother")} data-testid={`try-another-${batch.id}`}>
             <RefreshCw className="h-5 w-5" aria-hidden="true" />
           </button>
+          {target && <button type="button" className={`${icon} hover:text-foreground`} onClick={moveMeal}
+            aria-label={t(target === "Lunch" ? "moveToLunchFor" : "moveToDinnerFor", { title: recipe.title })} title={t(target === "Lunch" ? "moveToLunch" : "moveToDinner")}
+            data-testid={`move-meal-${batch.id}`}>
+            {target === "Lunch" ? <MoveUp className="h-5 w-5" aria-hidden="true" /> : <MoveDown className="h-5 w-5" aria-hidden="true" />}
+          </button>}
           <button type="button" className={`${icon} hover:text-destructive`} onClick={remove}
             aria-label={t("removeDishFor", { title: recipe.title })} title={t("removeDish")} data-testid={`remove-${batch.id}`}>
             <Trash2 className="h-5 w-5" aria-hidden="true" />
@@ -149,7 +167,7 @@ function DishCard({ batch, props, onOpen, stacked }: { batch: Batch; props: Prop
 }
 
 export function PlannerBoard(props: Props) {
-  const { plan, week, today, lang, recipes, commit, options, onPicked, household } = props;
+  const { plan, week, today, lang, recipes, commit, options, onPicked, household, cookingDays, meals } = props;
   const t = usePlannerCopy();
   const { t: ti, dir } = useI18n();
   const { toast } = useToast();
@@ -175,6 +193,10 @@ export function PlannerBoard(props: Props) {
             .sort((a, b) => mealSlots.indexOf(mealOf(a)) - mealSlots.indexOf(mealOf(b)));
           const isToday = date === today;
           const open = isOpen(date);
+          // A scheduled cooking day shows a row per planned meal, empty or not; a meal with dishes always shows.
+          const scheduled = dishes.length > 0 || cookingDays.includes(weekdayOf(date));
+          const rows = mealSlots.filter(m => (scheduled && meals.includes(m)) || dishes.some(b => mealOf(b) === m));
+          const stacked = dishes.length >= 3;
           const add = (
             <DropdownMenu dir={dir} modal={false}>
               <DropdownMenuTrigger asChild>
@@ -186,7 +208,7 @@ export function PlannerBoard(props: Props) {
               </DropdownMenuContent>
             </DropdownMenu>
           );
-          // A cooking day lists its dishes; a day without cooking is one line with + Add dish.
+          // A cooking day lists its meals; a day without cooking is one line with + Add dish.
           return (
             <section key={date} aria-labelledby={`day-${date}`} data-testid={`day-${date}`} data-today={isToday || undefined}
               className={`py-3 ${isToday ? "-mx-2 bg-accent/40 px-2" : ""}`}>
@@ -205,13 +227,28 @@ export function PlannerBoard(props: Props) {
                   ) : <>{dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}</>}
                 </h2>
                 {dishes.length > 0 ? <button type="button" className={text} onClick={() => setModal({ kind: "move", date })}
-                  aria-label={t("moveDayFor", { date: dates.long(date) })} data-testid={`move-day-${date}`}>{t("moveDay")}</button> : add}
+                  aria-label={t("moveDayFor", { date: dates.long(date) })} data-testid={`move-day-${date}`}>{t("moveDay")}</button> : !scheduled && add}
               </div>
-              {dishes.length > 0 && open && <div id={`day-body-${date}`}>
-                <div className={`mt-2 grid gap-3 ${dishes.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "lg:grid-cols-2"}`} data-layout={dishes.length >= 3 ? "stacked" : "row"}>
-                  {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} stacked={dishes.length >= 3} />)}
-                </div>
-                <div className="mt-1">{add}</div>
+              {scheduled && (open || !dishes.length) && <div id={`day-body-${date}`}>
+                {rows.map(meal => {
+                  const group = dishes.filter(b => mealOf(b) === meal);
+                  return (
+                    <div key={meal} className="mt-2" role="group" aria-labelledby={`meal-${date}-${meal}`} data-testid={`meal-${date}-${meal.toLowerCase()}`}>
+                      <h3 id={`meal-${date}-${meal}`} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{mealName(meal)}</h3>
+                      {group.length ? (
+                        <div className={`mt-1.5 grid gap-3 ${stacked ? "sm:grid-cols-2 lg:grid-cols-3" : "lg:grid-cols-2"}`} data-layout={stacked ? "stacked" : "row"}>
+                          {group.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} stacked={stacked} />)}
+                        </div>
+                      ) : (
+                        <button type="button" className={`${text} -ms-2`} onClick={() => setModal({ kind: "add", date, meal })}
+                          aria-label={t("addMealOn", { meal: mealName(meal), date: dates.long(date) })} data-testid={`add-meal-${date}-${meal.toLowerCase()}`}>
+                          {t(meal === "Breakfast" ? "addBreakfast" : meal === "Lunch" ? "addLunch" : "addDinner")}</button>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* + Add dish adds another dish to a meal, or a meal that is not planned. */}
+                {(dishes.length > 0 || rows.length < mealSlots.length) && <div className="mt-1">{add}</div>}
               </div>}
             </section>
           );
