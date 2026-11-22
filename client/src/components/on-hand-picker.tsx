@@ -46,7 +46,7 @@ export function OnHandPicker({ entries, onChange, minimize, onMinimize, mustIncl
           return (
             <li key={e.id} className="rounded-lg border p-2" data-testid="on-hand-entry">
               <div className="flex items-center gap-2">
-                <input type="checkbox" className="h-5 w-5 shrink-0" checked={e.selected} onChange={ev => edit(e.id, { selected: ev.target.checked })}
+                <input type="checkbox" className="h-5 w-5 shrink-0 accent-primary" checked={e.selected} onChange={ev => edit(e.id, { selected: ev.target.checked })}
                   aria-label={c("use", { name: e.name })} data-testid="on-hand-select" />
                 <input className="min-h-11 min-w-0 flex-1 rounded border bg-background px-2" value={e.name} maxLength={80}
                   aria-label={c("nameLabel")} onChange={ev => edit(e.id, { name: ev.target.value })} data-testid="on-hand-name" />
@@ -57,7 +57,7 @@ export function OnHandPicker({ entries, onChange, minimize, onMinimize, mustIncl
               <div className="flex flex-wrap items-center gap-x-3">
                 {!e.amountOpen && <button type="button" className="btn btn-text -ms-2" onClick={() => edit(e.id, { amountOpen: true })} data-testid="on-hand-add-amount">{c("addAmount")}</button>}
                 {mustInclude && <label className="flex min-h-11 items-center gap-2 text-sm">
-                  <input type="checkbox" className="h-5 w-5" checked={e.required} onChange={ev => edit(e.id, { required: ev.target.checked, selected: ev.target.checked || e.selected })}
+                  <input type="checkbox" className="h-5 w-5 accent-primary" checked={e.required} onChange={ev => edit(e.id, { required: ev.target.checked, selected: ev.target.checked || e.selected })}
                     data-testid="on-hand-required" />{c("mustInclude")}</label>}
               </div>
               {e.amountOpen && <label className="block text-sm">{c("howMuch")}
@@ -70,10 +70,10 @@ export function OnHandPicker({ entries, onChange, minimize, onMinimize, mustIncl
         })}
       </ul>}
       <form className="flex flex-wrap items-center gap-2" onSubmit={ev => { ev.preventDefault(); add(); }}>
-        <input className="min-h-11 min-w-0 flex-1 rounded border bg-background px-2" value={typed} maxLength={80} placeholder={c("placeholder")}
+        <input className="min-h-11 min-w-40 flex-1 rounded border bg-background px-2" value={typed} maxLength={80} placeholder={c("placeholder")}
           aria-label={c(addLabel)} onChange={ev => setTyped(ev.target.value)} data-testid="on-hand-input" />
         <button type="submit" className="btn btn-secondary" disabled={!typed.trim()} data-testid="on-hand-add">{c("add")}</button>
-        <button type="button" disabled className="btn btn-text gap-1 opacity-60" data-testid="on-hand-camera">
+        <button type="button" disabled className="btn btn-text -ms-2 gap-1 opacity-60" data-testid="on-hand-camera">
           <Camera className="h-4 w-4" aria-hidden="true" />{c("camera")}</button>
       </form>
       <label className="flex min-h-11 items-center justify-between gap-3">
