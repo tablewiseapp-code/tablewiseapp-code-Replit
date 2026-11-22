@@ -10,6 +10,7 @@ import { restrictionText, settingsText } from "../client/src/lib/settings-copy";
 import { evaluateMeat } from "../shared/food-rules";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
 import { cookNowOptions } from "../client/src/lib/week-suggestions";
+import { preferenceSummary } from "../client/src/lib/household-copy";
 import { matchesPlannerFilters } from "../client/src/lib/planner-filters";
 import { evaluateAllergen } from "../shared/food-rules";
 import { activePreferenceChips, limitingReasons, matchCounts } from "../client/src/lib/active-preferences";
@@ -644,5 +645,22 @@ test("Kid-friendly meals: lunch and dinner rank kid-friendly first, never as a r
   assert.equal(rankRecipe(kidBreakfast, on).score, rankRecipe(kidBreakfast, off).score, "breakfast is not affected");
   assert.deepEqual(personalize([plain], on).eligible.map(e => e.recipe.id), ["plain"], "no kid-friendly dish: others still appear");
   assert.equal(cookNowOptions([plain, kid], on, new Date(2026, 10, 19, 19))[0].id, "kid", "Cook now uses it too");
+});
+test("Favorite cuisines: broad Asian maps to the catalog's Asian cuisines, counts once, and ranks without hiding", () => {
+  const dish = (id: string, cuisine: string) => recipe({ id, steps: ["Simmer in a saucepan."], tags: ["Dinner", cuisine, "Gluten-free", "Dairy-free"] });
+  const thai = dish("thai", "Thai"), chinese = dish("chinese", "Chinese"), italian = dish("italian", "Italian");
+  const asian = withSettings(s => ({ ...s, dietary: { ...s.dietary, preferredCuisines: ["Asian"] } }));
+  assert.deepEqual(personalize([italian, thai], asian).eligible.map(e => e.recipe.id), ["thai", "italian"], "Asian first, others still shown");
+  const both = withSettings(s => ({ ...s, dietary: { ...s.dietary, preferredCuisines: ["Asian", "Chinese"] } }));
+  assert.equal(rankRecipe(chinese, both).score, rankRecipe(chinese, asian).score, "overlapping choices count once");
+  assert.deepEqual(sanitizeSettings({ ...defaultSettings(), dietary: { ...defaultSettings().dietary, preferredCuisines: ["Asian", "Thai", "Martian"] } }).dietary.preferredCuisines, ["Asian", "Thai"]);
+  assert.deepEqual(personalize([italian], asian).eligible.map(e => e.recipe.id), ["italian"], "no Asian match: another eligible recipe");
+});
+test("preference summary in plain words, in three languages", () => {
+  const s = withSettings(x => ({ ...x, dietary: { ...x.dietary, diets: ["vegetarian"], allergies: ["sesame"], preferredCuisines: ["Asian"] }, household: { ...x.household, kidFriendly: true } }));
+  const meal = (m: string) => m;
+  assert.equal(preferenceSummary(s, "en", meal), "Only Vegetarian recipes. No Sesame. Asian dishes first. Kid-friendly lunches and dinners first.");
+  assert.equal(preferenceSummary(withSettings(x => ({ ...x, setup: { ...x.setup, noRestrictions: true } })), "en", meal), "No food requirements.");
+  for (const lang of ["ru", "he"]) assert.ok(!/[A-Za-z]{4,}/.test(preferenceSummary(s, lang, () => "x").replace(/Asian|Vegetarian|Sesame/g, "")), `${lang} is translated`);
 });
 console.log(`All ${passed} My Basic Settings tests passed.`);

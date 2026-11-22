@@ -4,6 +4,7 @@ import { readPlan, syncWeekPlan } from "@/lib/meal-plan";
 import { loadSettings, syncSettings } from "@/lib/basic-settings";
 import { needsHouseholdSetup } from "@/lib/week-suggestions";
 import Household from "@/pages/household";
+import Personalize from "@/pages/personalize";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -49,6 +50,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/household" component={Household}/>
+      <Route path="/personalize" component={Personalize}/>
       <Route path="/" component={Home}/>
       <Route path="/home-tasks" component={HomeTasks}/>
       <Route path="/plan" component={PlanRedirect}/>

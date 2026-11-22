@@ -1,22 +1,19 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
-import { Chip, Counter, CookNowEmpty, toggle } from "@/components/household-controls";
+import { Chip, Counter, CookNowEmpty, KidFriendlySwitch, RequirementsEditor, toggle } from "@/components/household-controls";
 import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy, type HouseholdKey } from "@/lib/household-copy";
 import { settingsText } from "@/lib/settings-copy";
-import { useCookNow } from "@/hooks/use-cook-now";
+import { personalizeURL, useCookNow } from "@/hooks/use-cook-now";
 import type { DeviceId } from "@/lib/device-requirements";
 import { cookingStyles, emptyMember, hasRequirements, householdCounts, loadSettings, missingAnswers, pushSettings, setupSteps, updateSettings,
   type BasicSettings, type Member, type SetupStep } from "@/lib/basic-settings";
 import { serveAmount } from "@shared/cooking-plan";
-import { allergens, type DietPattern } from "@shared/food-rules";
 
 // Your household (/household): four questions, one at a time, then "What would you like to do?" (2026-11-21).
 // Every answer is saved as it is chosen (Basic Settings, Postgres per owner), so Back and refresh keep it and setup.step
 // resumes where the person left. ?ask=kitchen,…&then=… asks only those questions, then resumes the action that needed them.
-// Diets: only those the catalog marks with an explicit, verified tag (preference-engine.ts → dietTags).
-const offeredDiets: DietPattern[] = ["vegetarian", "vegan", "glutenFree", "dairyFree"];
 const kitchenDevices: DeviceId[] = ["Stovetop", "Oven", "Microwave", "Air fryer"];
 const MAX_PEOPLE = 12; // basic-settings.ts keeps at most 12 members
 type Screen = SetupStep | "done";
@@ -84,15 +81,6 @@ export default function Household() {
     return { ...x, household: { ...x.household, members, servingsMode: "auto" } };
   });
   const answered = settings.setup.noRestrictions || hasRequirements(settings);
-  const [dietOpen, setDietOpen] = useState(() => settings.dietary.diets.length > 0);
-  const [exclusionsOpen, setExclusionsOpen] = useState(() => settings.dietary.allergies.length + settings.dietary.customAllergies.length > 0);
-  const [term, setTerm] = useState("");
-  const require = (change: (d: BasicSettings["dietary"]) => Partial<BasicSettings["dietary"]>) =>
-    save(x => ({ ...x, setup: { ...x.setup, noRestrictions: false }, dietary: { ...x.dietary, ...change(x.dietary) } }));
-  const chooseNone = () => {
-    setDietOpen(false); setExclusionsOpen(false);
-    save(x => ({ ...x, setup: { ...x.setup, noRestrictions: true }, dietary: { ...x.dietary, diets: [], allergies: [], customAllergies: [] } }));
-  };
   const devices = settings.kitchen.devices;
 
   const finish = async () => {
@@ -136,17 +124,7 @@ export default function Household() {
         onChange={d => changeCount("child", d)} testid="count-kids" />
       {/* Kid-friendly meals: right below Children when there are any; the same saved preference as in Personalize my recipes. */}
       {counts.kids > 0 && (
-        <div className="flex items-center justify-between gap-3 py-2" data-testid="kid-friendly">
-          <span id="kid-friendly-label" className="min-w-0">
-            <span className="block text-base font-medium">{t("kidFriendly")}</span>
-            <span className="block text-sm text-muted-foreground" id="kid-friendly-hint">{t("kidFriendlyHint")}</span>
-          </span>
-          <button type="button" role="switch" aria-checked={settings.household.kidFriendly} aria-labelledby="kid-friendly-label" aria-describedby="kid-friendly-hint"
-            onClick={() => save(x => ({ ...x, household: { ...x.household, kidFriendly: !x.household.kidFriendly } }))} data-testid="switch-kid-friendly"
-            className={`relative inline-flex h-11 w-16 shrink-0 items-center rounded-full border-2 transition-colors motion-reduce:transition-none ${settings.household.kidFriendly ? "border-primary bg-primary" : "border-input bg-muted"}`}>
-            <span aria-hidden="true" className={`absolute h-7 w-7 rounded-full bg-background shadow transition-[inset-inline-start] motion-reduce:transition-none ${settings.household.kidFriendly ? "start-7" : "start-1"}`} />
-          </button>
-        </div>
+        <KidFriendlySwitch on={settings.household.kidFriendly} onToggle={() => save(x => ({ ...x, household: { ...x.household, kidFriendly: !x.household.kidFriendly } }))} />
       )}
       <p className="mt-2 text-sm" aria-live="polite" data-testid="servings-preview">{t("peoplePreview", { servings: half(serveAmount({ date: "", adults: counts.adults, kids: counts.kids }, null)) })}</p>
       {settings.household.servingsMode === "fixed" && <p className="mt-1 text-sm text-muted-foreground" data-testid="fixed-note">{t("fixedNote", { n: settings.household.fixedServings })}</p>}
@@ -159,32 +137,7 @@ export default function Household() {
       {required("peopleRequired")}
     </>,
     restrictions: () => <>
-      <p className="text-sm text-muted-foreground">{t("requirementsHint")} {t("restrictionsHint")}</p>
-      <div className="mt-3 grid gap-2">
-        <Chip on={settings.setup.noRestrictions && !settings.dietary.diets.length && !settings.dietary.allergies.length && !settings.dietary.customAllergies.length} onClick={chooseNone} testid="restriction-none">{t("noRequirements")}</Chip>
-        <Chip on={dietOpen} onClick={() => setDietOpen(o => !o)} testid="restriction-diet">{t("chooseDiet")}</Chip>
-        {dietOpen && <div className="flex flex-wrap gap-2 ps-3" data-testid="diet-options">{offeredDiets.map(d => (
-          <Chip key={d} on={settings.dietary.diets.includes(d)} onClick={() => require(x => ({ diets: toggle(x.diets, d) }))} testid={`diet-${d}`}>{s(`diet_${d}`)}</Chip>
-        ))}</div>}
-        <Chip on={exclusionsOpen} onClick={() => setExclusionsOpen(o => !o)} testid="restriction-exclusions">{t("addExclusions")}</Chip>
-        {exclusionsOpen && <div className="ps-3" data-testid="exclusion-options">
-          <div className="flex flex-wrap gap-2">{allergens.map(a => (
-            <Chip key={a} on={settings.dietary.allergies.includes(a)} onClick={() => require(x => ({ allergies: toggle(x.allergies, a) }))} testid={`allergy-${a}`}>{s(`allergen_${a}`)}</Chip>
-          ))}</div>
-          <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); if (term.trim()) { require(x => ({ customAllergies: [...x.customAllergies, term.trim()] })); setTerm(""); } }}>
-            <label className="grid gap-1 text-sm font-medium">{t("exclusionLabel")}
-              <input value={term} onChange={e => setTerm(e.target.value)} maxLength={40} className="min-h-11 rounded-lg border border-input bg-card px-3 text-base font-normal" data-testid="input-exclusion" />
-            </label>
-            <button type="submit" className="btn btn-secondary" data-testid="button-add-exclusion">{t("add")}</button>
-          </form>
-          {settings.dietary.customAllergies.length > 0 && <ul className="mt-2 flex flex-wrap gap-2">{settings.dietary.customAllergies.map(x => (
-            <li key={x}><button type="button" className="chip" aria-label={t("remove", { item: x })} onClick={() => require(d => ({ customAllergies: d.customAllergies.filter(y => y !== x) }))}>{x} <span aria-hidden="true">×</span></button></li>
-          ))}</ul>}
-        </div>}
-      </div>
-      {settings.dietary.diets.some(d => !offeredDiets.includes(d)) && <p className="mt-3 text-sm text-muted-foreground" data-testid="other-rules">
-        {t("alsoApplied", { list: settings.dietary.diets.filter(d => !offeredDiets.includes(d)).map(d => s(`diet_${d}`)).join(", ") })}</p>}
-      {settings.household.members.some(m => m.diets.length || m.allergies.length || m.customAllergies.length) && <p className="mt-1 text-sm text-muted-foreground">{t("membersApplied")}</p>}
+      <RequirementsEditor settings={settings} update={save} />
       {required("requirementsRequired")}
     </>,
     kitchen: () => <>
@@ -212,7 +165,7 @@ export default function Household() {
         </button>
       </div>
       {cookNow.empty && <CookNowEmpty from="/household?step=5" />}
-      <Link href="/settings?from=household" className="btn btn-text -ms-2 mt-4" data-testid="link-personalize">{t("personalize")}</Link>
+      <Link href={personalizeURL("/household?step=5")} className="btn btn-text -ms-2 mt-4" data-testid="link-personalize">{t("personalize")}</Link>
     </>,
   };
   const titles: Record<Screen, string> = { style: t("styleQ"), people: t("peopleQ"), restrictions: t("requirementsQ"), kitchen: t("kitchenQ"), done: t("doneQ") };

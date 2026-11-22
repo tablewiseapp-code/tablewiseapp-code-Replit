@@ -28,8 +28,9 @@ import { countWeekFilters, defaultWeekFilters, sanitizeWeekFilters, type WeekFil
 
 const SELECTED_PREVIEW = 5; // more selections collapse behind "Show all"
 import { availableDevices, householdCounts, householdServings, loadSettings, methodChoices, missingAnswers, planKey, updateSettings, useSavedSettings, type HouseholdSetup } from "@/lib/basic-settings";
-import { askURL } from "@/hooks/use-cook-now";
+import { askURL, personalizeURL } from "@/hooks/use-cook-now";
 import { CookingDays, overCount } from "@/components/household-controls";
+import { mealOf, weekdayOf } from "@shared/cooking-plan";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ActivePreferences } from "@/components/active-preferences";
 import { limitingReasons, matchCounts } from "@/lib/active-preferences";
@@ -49,7 +50,7 @@ import { MealRecipeFacts, RecipeTimeProvider, RecipeDisplayToolbar, useRecipeTim
 import { recipeStageMinutes } from "@/lib/recipe-time";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePlannerCopy } from "@/lib/planner-copy";
-import { approvePlan, draftMeal, fetchWeek, mealSlots, pushWeekPlan, saveWeek, statusOf, type Batch, type MealSlot, type PlanState } from "@/lib/meal-plan";
+import { approvePlan, fetchWeek, mealSlots, pushWeekPlan, saveWeek, statusOf, type Batch, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
@@ -834,8 +835,8 @@ function WeekCalendar() {
   };
   const saveSchedule = () => {
     if (!schedule || overCount(schedule)) return;
-    const { evenings, fixedDays, challenge, weeknightMax } = schedule;
-    try { updateSettings(s => ({ ...s, setup: { ...s.setup, evenings, fixedDays, challenge, weeknightMax, scheduled: true } })); }
+    const { evenings, fixedDays, challenge } = schedule;
+    try { updateSettings(s => ({ ...s, setup: { ...s.setup, evenings, fixedDays, challenge, scheduled: true } })); }
     catch { toast({ title: t("saveFailed"), variant: "destructive" }); return; }
     setSchedule(null); setFirstSchedule(false);
     // An empty week is drafted now; a week with dishes asks "Your preferences have been changed" (prefsChanged).
@@ -902,16 +903,23 @@ function WeekCalendar() {
             <WeekDeals offers={deals} lang={lang} />
             <PlannerBoard plan={ready.plan} week={week} today={week === currentWeek() ? calendarDate(new Date()) : null} lang={lang} recipes={byId}
               commit={commit} recipeHref={b => plannerRecipeURL(b.recipeId, week, b.id)} household={householdCounts(settings)}
-              cookingDays={cookingEvenings(settings)} meals={settings.planning.meals.length ? settings.planning.meals : [draftMeal([])]}
+              cookingDays={cookingEvenings(settings)} meals={settings.planning.meals.length ? settings.planning.meals : [...mealSlots]}
               onPicked={id => {
                 recordPilotEvent("meal_selected", week, id);
                 // Learning signal: an AI recipe was put on the plan (not that it was cooked).
                 if (byId.get(id) && isGeneratedRecipe(byId.get(id)!)) reportGenerationEvent("generated_recipe_added_to_plan");
               }}
-              options={(day, meal) => dishOptions(recipes ?? [], settings, day, { seed: week, fits, fallback, chosen: planned, meal })} />
+              options={(day, meal) => dishOptions(recipes ?? [], settings, day, { seed: week, fits, fallback, chosen: planned, meal })}
+              warning={batch => {
+                // The one rule, for this dish's meal and cooking day: a dish planned before the preferences changed is flagged, never removed.
+                const recipe = byId.get(batch.recipeId);
+                const fit = recipe && checkEligibility(recipe, settings, undefined, mealOf(batch), weekdayOf(batch.cookDate));
+                return fit && !fit.eligible ? household("noLongerFits", { why: fit.reasons.map(r => restrictionText(lang, r, id => settings.household.members.find(m => m.id === id)?.name ?? null)).join(", ") }) : null;
+              }} />
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/meals?browse" className="btn btn-text -ms-2" data-testid="link-browse-recipes">{t("browse")}</Link>
               <button type="button" onClick={() => setSchedule(loadSettings().setup)} className="btn btn-text" data-testid="button-cooking-days">{household("cookingDays")}</button>
+              <Link href={personalizeURL(week === currentWeek() ? "/meals?plan" : `/meals?week=${week}`)} className="btn btn-text" data-testid="link-personalize-week">{household("personalize")}</Link>
               <Link href="/household" className="btn btn-text" data-testid="link-household">{household("changeHousehold")}</Link>
             </div>
           </>

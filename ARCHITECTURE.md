@@ -53,7 +53,8 @@ docs/                  product definition and per-feature notes
 | `/home-tasks` | `pages/home-tasks.tsx` | Home Tasks |
 | `/meals` | `pages/weekly-meals.tsx` | the Week as a cooking plan ([docs/cooking-plan.md](docs/cooking-plan.md); `?week=Monday` for another week; the nav links to `?plan`, which is ignored); `?browse` is the recipe browser with filters and Food deals |
 | `/recipes` | `pages/recipe-list.tsx` | catalog grid |
-| `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history; `?suggest` (Cook now) adds "Show another", `?cook` opens Zen mode |
+| `/personalize` | `pages/personalize.tsx` | Personalize my recipes: requirements, favorite cuisines, cooking preferences on a draft; `?from=` is where Save and Cancel return |
+| `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history; `?suggest` (Cook now) adds "Show another", "Personalize" and a temporary `&max=15|30`, `?cook` opens Zen mode |
 | `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (signed-in accounts; guests see it with saving disabled) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
 | `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form; `?week=Monday` builds it from that week's plan (read and saved on the server); `?stores` opens My stores |

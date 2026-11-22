@@ -1,9 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Minus, Plus } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy } from "@/lib/household-copy";
-import { challengeWhen, weeknightTimeOptions, type HouseholdSetup } from "@/lib/basic-settings";
+import { challengeWhen, weeknightTimeOptions, type BasicSettings, type HouseholdSetup } from "@/lib/basic-settings";
+import { settingsText } from "@/lib/settings-copy";
+import { allergens, type DietPattern } from "@shared/food-rules";
 import { mealSlots } from "@/lib/meal-plan";
 import { cookingEvenings, weekOrder } from "@/lib/week-suggestions";
 import { askURL } from "@/hooks/use-cook-now";
@@ -75,20 +77,6 @@ export function CookingDays({ setup, onChange }: { setup: HouseholdSetup; onChan
         ))}</div>}
       </>}
 
-      {/* ponytail: the Mon–Fri limits sit here until the personalization editor (PR 2) takes them. */}
-      <details className="mt-4 rounded-xl border border-border px-3" data-testid="weeknight-limits">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">{t("weeknightQ")}</summary>
-        <p className="text-sm text-muted-foreground">{t("weeknightHint")}{setup.style === "chef" && setup.challenge.when === "day" ? ` ${t("weeknightChefHint")}` : ""}</p>
-        <div className="space-y-3 py-3">{mealSlots.map(meal => (
-          <div key={meal} role="radiogroup" aria-label={app(`meals.${meal.toLowerCase()}`)} data-testid={`weeknight-${meal}`}>
-            <p className="mb-1.5 text-sm font-medium">{app(`meals.${meal.toLowerCase()}`)}</p>
-            <div className="flex flex-wrap gap-2">
-              {[null, ...weeknightTimeOptions].map(n => <Radio key={n ?? "none"} on={setup.weeknightMax[meal] === n}
-                onClick={() => onChange({ weeknightMax: { ...setup.weeknightMax, [meal]: n } })} testid={`weeknight-${meal}-${n ?? "none"}`}>{n === null ? t("noLimit") : t("minutes", { n })}</Radio>)}
-            </div>
-          </div>
-        ))}</div>
-      </details>
     </div>
   );
 }
@@ -103,6 +91,93 @@ export function CookNowEmpty({ from }: { from: string }) {
         <Link href="/settings" className="btn btn-text -ms-2" data-testid="cook-now-review">{t("reviewPrefs")}</Link>
         <Link href={askURL(["kitchen"], from)} className="btn btn-text" data-testid="cook-now-kitchen">{t("reviewKitchen")}</Link>
       </div>
+    </div>
+  );
+}
+
+// Diets: only those the catalog marks with an explicit, verified tag (preference-engine.ts → dietTags).
+export const offeredDiets: DietPattern[] = ["vegetarian", "vegan", "glutenFree", "dairyFree"];
+
+/** Family food requirements: No requirements, diets, allergies and the person's own exclusions. Every one applies to everyone
+ * eating. No requirements clears the others; choosing one clears No requirements. Your household saves each change at once;
+ * Personalize my recipes edits a draft (`update` decides). */
+export function RequirementsEditor({ settings, update }: { settings: BasicSettings; update: (change: (s: BasicSettings) => BasicSettings) => unknown }) {
+  const { lang } = useI18n();
+  const t = useHouseholdCopy();
+  const s = (key: string) => settingsText(lang, key);
+  const d = settings.dietary;
+  const [dietOpen, setDietOpen] = useState(() => d.diets.length > 0);
+  const [exclusionsOpen, setExclusionsOpen] = useState(() => d.allergies.length + d.customAllergies.length > 0);
+  const [term, setTerm] = useState("");
+  const require = (change: (d: BasicSettings["dietary"]) => Partial<BasicSettings["dietary"]>) =>
+    update(x => ({ ...x, setup: { ...x.setup, noRestrictions: false }, dietary: { ...x.dietary, ...change(x.dietary) } }));
+  const chooseNone = () => {
+    setDietOpen(false); setExclusionsOpen(false);
+    update(x => ({ ...x, setup: { ...x.setup, noRestrictions: true }, dietary: { ...x.dietary, diets: [], allergies: [], customAllergies: [] } }));
+  };
+  return <>
+    <p className="text-sm text-muted-foreground">{t("requirementsHint")} {t("restrictionsHint")}</p>
+    <div className="mt-3 grid gap-2">
+      <Chip on={settings.setup.noRestrictions && !d.diets.length && !d.allergies.length && !d.customAllergies.length} onClick={chooseNone} testid="restriction-none">{t("noRequirements")}</Chip>
+      <Chip on={dietOpen} onClick={() => setDietOpen(o => !o)} testid="restriction-diet">{t("chooseDiet")}</Chip>
+      {dietOpen && <div className="flex flex-wrap gap-2 ps-3" data-testid="diet-options">{offeredDiets.map(diet => (
+        <Chip key={diet} on={d.diets.includes(diet)} onClick={() => require(x => ({ diets: toggle(x.diets, diet) }))} testid={`diet-${diet}`}>{s(`diet_${diet}`)}</Chip>
+      ))}</div>}
+      <Chip on={exclusionsOpen} onClick={() => setExclusionsOpen(o => !o)} testid="restriction-exclusions">{t("addExclusions")}</Chip>
+      {exclusionsOpen && <div className="ps-3" data-testid="exclusion-options">
+        <div className="flex flex-wrap gap-2">{allergens.map(a => (
+          <Chip key={a} on={d.allergies.includes(a)} onClick={() => require(x => ({ allergies: toggle(x.allergies, a) }))} testid={`allergy-${a}`}>{s(`allergen_${a}`)}</Chip>
+        ))}</div>
+        <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); if (term.trim()) { require(x => ({ customAllergies: [...x.customAllergies, term.trim()] })); setTerm(""); } }}>
+          <label className="grid gap-1 text-sm font-medium">{t("exclusionLabel")}
+            <input value={term} onChange={e => setTerm(e.target.value)} maxLength={40} className="min-h-11 rounded-lg border border-input bg-card px-3 text-base font-normal" data-testid="input-exclusion" />
+          </label>
+          <button type="submit" className="btn btn-secondary" data-testid="button-add-exclusion">{t("add")}</button>
+        </form>
+        {d.customAllergies.length > 0 && <ul className="mt-2 flex flex-wrap gap-2">{d.customAllergies.map(x => (
+          <li key={x}><button type="button" className="chip" aria-label={t("remove", { item: x })} onClick={() => require(y => ({ customAllergies: y.customAllergies.filter(z => z !== x) }))}>{x} <span aria-hidden="true">×</span></button></li>
+        ))}</ul>}
+      </div>}
+    </div>
+    {d.diets.some(x => !offeredDiets.includes(x)) && <p className="mt-3 text-sm text-muted-foreground" data-testid="other-rules">
+      {t("alsoApplied", { list: d.diets.filter(x => !offeredDiets.includes(x)).map(x => s(`diet_${x}`)).join(", ") })}</p>}
+    {settings.household.members.some(m => m.diets.length || m.allergies.length || m.customAllergies.length) && <p className="mt-1 text-sm text-muted-foreground">{t("membersApplied")}</p>}
+  </>;
+}
+
+/** Kid-friendly meals (one saved preference): lunch and dinner suggestions rank kid-friendly recipes first. */
+export function KidFriendlySwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  const t = useHouseholdCopy();
+  return (
+    <div className="flex items-center justify-between gap-3 py-2" data-testid="kid-friendly">
+      <span id="kid-friendly-label" className="min-w-0">
+        <span className="block text-base font-medium">{t("kidFriendly")}</span>
+        <span className="block text-sm text-muted-foreground" id="kid-friendly-hint">{t("kidFriendlyHint")}</span>
+      </span>
+      <button type="button" role="switch" aria-checked={on} aria-labelledby="kid-friendly-label" aria-describedby="kid-friendly-hint" onClick={onToggle} data-testid="switch-kid-friendly"
+        className={`relative inline-flex h-11 w-16 shrink-0 items-center rounded-full border-2 transition-colors motion-reduce:transition-none ${on ? "border-primary bg-primary" : "border-input bg-muted"}`}>
+        <span aria-hidden="true" className={`absolute h-7 w-7 rounded-full bg-background shadow transition-[inset-inline-start] motion-reduce:transition-none ${on ? "start-7" : "start-1"}`} />
+      </button>
+    </div>
+  );
+}
+
+/** Mon–Fri total-time limit for each meal (Personalize my recipes); the chef challenge evening's dinner is exempt. */
+export function WeekdayLimits({ setup, onChange }: { setup: HouseholdSetup; onChange: (weeknightMax: HouseholdSetup["weeknightMax"]) => void }) {
+  const { t: app } = useI18n();
+  const t = useHouseholdCopy();
+  return (
+    <div data-testid="weeknight-limits">
+      <p className="text-sm text-muted-foreground">{t("weeknightHint")}{setup.style === "chef" && setup.challenge.when === "day" ? ` ${t("weeknightChefHint")}` : ""}</p>
+      <div className="space-y-3 py-3">{mealSlots.map(meal => (
+        <div key={meal} role="radiogroup" aria-label={app(`meals.${meal.toLowerCase()}`)} data-testid={`weeknight-${meal}`}>
+          <p className="mb-1.5 text-sm font-medium">{app(`meals.${meal.toLowerCase()}`)}</p>
+          <div className="flex flex-wrap gap-2">
+            {[null, ...weeknightTimeOptions].map(n => <Radio key={n ?? "none"} on={setup.weeknightMax[meal] === n}
+              onClick={() => onChange({ ...setup.weeknightMax, [meal]: n })} testid={`weeknight-${meal}-${n ?? "none"}`}>{n === null ? t("noLimit") : t("minutes", { n })}</Radio>)}
+          </div>
+        </div>
+      ))}</div>
     </div>
   );
 }

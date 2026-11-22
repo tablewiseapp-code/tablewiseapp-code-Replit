@@ -21,13 +21,13 @@ Redesigned by the product owner on 2026-11-20 (the weekly cooking plan): the wee
   - A second tap on an approved plan does nothing.
 - **Weekly deals · N offers:** an always-open box under the header, with a slowly pulsing dot beside its title (still when the device asks for reduced motion; product owner, 2026-11-20). It is shown only when an offer applies to the shown week (see Deals). Each offer has "Find recipes": it opens Browse recipes (`/meals?browse&deal=<id>`) with that deal's filter, the same as its "Show recipes" there.
 - **Days:** Monday to Sunday, each headed by weekday and date. Today is highlighted in the current week.
-  - A **scheduled cooking day** is a weekday the household cooks on (`cookingEvenings`: the preferred weekdays, then the spread days of the weekly count) or any day with a dish. It shows one row per meal enabled under Basic Settings → Meals to plan, in Breakfast, Lunch, Dinner order, even when the day has no dish yet (2026-11-21). A meal that has dishes always has its row, also when it is no longer enabled, so changing the setting never hides a dish.
+  - A **scheduled cooking day** is a weekday the household cooks on (`cookingEvenings`: the preferred weekdays, then the spread days of the weekly count) or any day with a dish. It shows one row per meal enabled under Basic Settings → Meals to plan (none chosen counts as all three, as in ranking), in Breakfast, Lunch, Dinner order, even when the day has no dish yet (2026-11-21). A meal that has dishes always has its row, also when it is no longer enabled, so changing the setting never hides a dish.
   - Each row is headed by its meal. A row with dishes lists them (two dinners in the order they were added, under one Dinner heading); an empty row is one direct action, "+ Add breakfast", "+ Add lunch" or "+ Add dinner", which opens the recipe picker for that date and meal.
   - A cooking day with dishes has "Move day" beside the date and one "+ Add dish" below its rows (another dish for a meal, or a meal that is not enabled). An empty scheduled day shows "+ Add dish" only when some meal is not enabled.
   - A day without cooking is one line: the date and "+ Add dish". Adding a dish makes it a cooking day. A day a dish only covers shows nothing more; the dish's card names it ("7 servings · For Mon–Tue").
   - Weeks with dishes on all seven days (including weeks saved as Breakfast/Lunch/Dinner slots) show seven cooking days.
 - **Width:** cards form two columns on wide screens and stack on a phone, with no sideways scrolling at 375 px.
-- **Below the days:** "Browse recipes", "Cooking days" (reopens the cooking days with Save and Cancel) and "Your household".
+- **Below the days:** "Browse recipes", "Cooking days" (reopens the cooking days with Save and Cancel), "Personalize my recipes" and "Your household".
 
 Every action is a visible, labelled button that works by tap, click and keyboard. There is no drag and drop.
 
@@ -44,6 +44,7 @@ Each planned dish (one batch) appears once, on the day it is cooked, in its meal
   - **"7 servings"** is the amount to prepare (the batch total, with any edits; half servings as written, e.g. 3.5). It is a button named "Edit servings for {recipe}" that opens Edit servings.
   - **Days covered** come from the serving dates: left out when the dish is eaten only on its cooking day; "For Mon–Wed" for consecutive days, "For Mon & Wed" for separate ones, mixed as "For Mon–Tue & Thu". Dates more than a week after cooking are written in full.
 - **Recipe View** nutrition, prep time, cook time and Dietary tags, as chosen in Settings.
+- **No longer fits** (2026-11-21): a dish that fails `checkEligibility` for its meal and cooking day (preferences changed after it was planned) shows "No longer fits your preferences: <reasons>" on its card. It is never removed or replaced without the person.
 - **Buttons:** icon buttons: Swap (arrows, named "Swap {recipe}"), Try another (circular arrows, named "Try another instead of {recipe}", 2026-11-21), on a lunch or dinner dish Move to dinner (arrow down, named "Move {recipe} to dinner") or Move to lunch (arrow up, "Move {recipe} to lunch"; 2026-11-21), and Remove dish (bin, named "Remove {recipe}"). No "⋯" menu: the request asked for the move in "the existing dish actions menu", and the dish's actions are these buttons.
 
 ## Servings
@@ -96,7 +97,7 @@ The picker offers eligible catalog recipes for that weekday, best first: the cho
 Made once per week (`proposed`), the first time an unapproved week is opened. Saved at once.
 
 - **Missing answers first** (2026-11-21): a household without its household size, requirements or kitchen is sent to `/household?ask=…` for only those questions, then back to the Week (also for `?browse`).
-- **Cooking days asked once** (2026-11-21): if they were never set (`setup.scheduled`; settings saved earlier with a finished Your household count as set) and the week has no dish, the Week shows "Your cooking days" in place of the days: evenings per week (1–7, or "Not sure yet"), optional fixed evenings, the chef challenge day for Chef challenge, and the Mon–Fri time limits (folded). Fixed evenings beyond the count show "You picked N evenings but cook M a week" with "Cook N evenings"; "Plan my week" stays disabled until the count is raised or days are unselected. "Plan my week" saves them and makes the draft; later weeks reuse them. "Cooking days" under the days edits them; a week with dishes then asks "Your preferences have been changed".
+- **Cooking days asked once** (2026-11-21): if they were never set (`setup.scheduled`; settings saved earlier with a finished Your household count as set) and the week has no dish, the Week shows "Your cooking days" in place of the days: evenings per week (1–7, or "Not sure yet"), optional fixed evenings, and the chef challenge day for Chef challenge (the Mon–Fri time limits moved to Personalize my recipes, 2026-11-21). Fixed evenings beyond the count show "You picked N evenings but cook M a week" with "Cook N evenings"; "Plan my week" stays disabled until the count is raised or days are unselected. "Plan my week" saves them and makes the draft; later weeks reuse them. "Cooking days" under the days edits them; a week with dishes then asks "Your preferences have been changed".
 - **Cooking days** (`cookingEvenings`):
   - Every fixed evening is a cooking day, even beyond the weekly count.
   - The chef challenge day counts as a preferred weekday.
