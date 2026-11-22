@@ -52,7 +52,14 @@ try {
   const week = () => ev(`${q("week-range")}?.dataset.week`);
   const status = () => ev(`${q("week-status")}?.dataset.state`);
   // { "YYYY-MM-DD": [{ id, recipe }] } for every day of the shown week, in display order.
-  const days = () => ev(`Object.fromEntries([...document.querySelectorAll('section[data-testid^="day-"]')].map(d => [d.dataset.testid.slice(4),
+  // The current week folds days other than today: open them all before reading the dishes.
+  const folded = `'[data-testid^="day-toggle-"][aria-expanded="false"]'`;
+  const days = async () => {
+    await ev(`document.querySelectorAll(${folded}).forEach(b => b.click())`);
+    await until(`!document.querySelector(${folded})`, "days unfolded");
+    return readDays();
+  };
+  const readDays = () => ev(`Object.fromEntries([...document.querySelectorAll('section[data-testid^="day-"]')].map(d => [d.dataset.testid.slice(4),
     [...d.querySelectorAll('[data-testid^="dish-"][data-recipe]')].map(a => ({ id: a.dataset.testid.slice(5), recipe: a.dataset.recipe }))]))`);
   const text = id => ev(`${q(id)}?.textContent ?? null`);
   const press = (scope, label) => ev(`[...document.querySelectorAll('[data-testid="${scope}"] button')].find(b => b.getAttribute("aria-label") === ${JSON.stringify(label)}).click()`);
@@ -67,6 +74,15 @@ try {
   // ---- The Week opens as a draft of cooking days before any action.
   await go("/meals?plan", calendarReady);
   eq(await week(), thisWeek, "opens the current week");
+  // The current week folds every day with dishes except today; each folded day lists its dishes on one line.
+  const toggles = await ev(`[...document.querySelectorAll('[data-testid^="day-toggle-"]')].map(b => ({ date: b.dataset.testid.slice(11), open: b.getAttribute("aria-expanded") === "true" }))`);
+  const todayDate = await ev(`document.querySelector("[data-today]").dataset.testid.slice(4)`);
+  ok(toggles.length > 0 && toggles.every(d => d.open === (d.date === todayDate)), "only today is open");
+  for (const d of toggles.filter(d => !d.open)) {
+    ok(await ev(`${q(`day-summary-${d.date}`)}.textContent.length > 0 && !${q(`day-${d.date}`)}.querySelector("[data-recipe]")`), "a folded day shows dish names, no cards");
+    await click(`day-toggle-${d.date}`);
+  }
+  ok(await ev(`!document.querySelector(${folded})`), "a tap opens a folded day");
   let plan = await days();
   const dates = Object.keys(plan);
   eq(dates.length, 7, "seven days");
@@ -84,7 +100,8 @@ try {
   eq(await ev(`document.getElementById("approve-hint").textContent`), "Approval builds your grocery list.");
   ok(await ev(`${q("week-header")}.contains(${q("button-approve-week")})`), "approval sits in the header, before the days");
   const first = plan[cooking[0]][0].id;
-  ok(await ev(`${q(`dish-meta-${first}`)}.textContent.startsWith("Dinner")`), "small meal label");
+  eq(await ev(`${q(`dish-meal-${first}`)}.textContent`), "Dinner", "the meal is a label above the card");
+  ok(await ev(`!${q(`dish-meta-${first}`)}.textContent.includes("Dinner")`), "and not repeated in the info line");
   ok(await ev(`!${q(`dish-dates-${first}`)}`), "a dish eaten only on its cooking day shows no dates");
   ok(await ev(`!${q(`dish-view-${first}-mainTool`)}`), "the cooking tool stays on the recipe page (prep and cook show, 2026-11-21)");
   eq(await ev(`${q(`swap-${first}`)}.getAttribute("aria-label")`), `Swap ${await ev(`${q(`dish-link-${first}`)}.textContent`)}`);
@@ -105,6 +122,7 @@ try {
   plan = await days();
   const [keep, change] = plan[late];
   eq(await ev(`[...${q(`day-${late}`)}.querySelectorAll("[data-meal]")].map(d => d.dataset.meal)`), ["Dinner", "Dinner"], "a second dinner sits beside the first");
+  eq(await ev(`${q(`day-${late}`)}.querySelector("[data-layout]").dataset.layout`), "row", "two dishes keep the photo-left cards");
   await click(`swap-${change.id}`);
   await until(`Boolean(${q("pick-list")})`, "picker");
   ok(await ev(`!${q(`pick-${change.recipe}`)}`), "the current recipe is not offered");
@@ -129,6 +147,8 @@ try {
   ok(await ev(`!${q("move-conflicts")} && !${q("button-confirm-move")}.disabled`), "moving earlier keeps every serving date valid");
   await click("button-confirm-move");
   await until(`document.querySelectorAll('[data-testid="day-${early}"] [data-recipe]').length === 3`, "three dishes");
+  eq(await ev(`${q(`day-${early}`)}.querySelector("[data-layout]").dataset.layout`), "stacked", "three dishes: photo on top");
+  ok(await ev(`!${q(`day-${early}`)}.querySelector("article.flex-row")`), "no photo-left cards on that day");
   ok(await ev(`!${q(`day-${late}`)}.querySelector("[data-recipe]")`), "the old day is empty");
   // ---- Acceptance 2 (reload): a manual move survives a reload and is on the server.
   await go("/meals?plan", calendarReady);
@@ -214,6 +234,7 @@ try {
   // ---- Phone: stacked cards, no sideways scroll, labelled buttons.
   await phone();
   await go("/meals?plan", calendarReady);
+  await days();
   const xs = await ev(`[...document.querySelectorAll('[data-testid="day-${nextDay}"] [data-recipe]')].map(a => Math.round(a.getBoundingClientRect().x))`);
   eq(new Set(xs).size, 1, "dishes stack");
   ok(await ev(`document.documentElement.scrollWidth <= innerWidth`), "no horizontal scroll");

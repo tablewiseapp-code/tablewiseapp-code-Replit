@@ -2,7 +2,7 @@
 // is cooked; its card shows how much to make and the dates it serves. Every action is a visible, labelled button.
 import { useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeftRight, Minus, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, ChevronDown, Minus, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToastAction } from "@/components/ui/toast";
@@ -68,7 +68,8 @@ export function useDateText(lang: string) {
 }
 const yieldOf = (batch: Batch, recipe: PlannerRecipe | undefined) => batchYield(batch, baseServings(recipe?.servings));
 
-function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen: (modal: Modal) => void }) {
+/** `stacked`: a day with three or more dishes shows them as cards with the photo on top (product owner, 2026-11-21). */
+function DishCard({ batch, props, onOpen, stacked }: { batch: Batch; props: Props; onOpen: (modal: Modal) => void; stacked: boolean }) {
   const t = usePlannerCopy();
   const { t: ti, dir } = useI18n();
   const toastApi = useToast();
@@ -105,12 +106,11 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
   };
   // Each later part carries its "·", so a wrapped line never starts or ends with one.
   const part = "inline-flex items-center gap-1.5 before:content-['·'] before:text-muted-foreground";
-  // One line: meal · total time · servings (opens Edit servings) · the other days it covers.
+  // One line: total time · servings (opens Edit servings) · the other days it covers. The meal is the label above the card.
   const meta = (
     <p className="relative z-10 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground" data-testid={`dish-meta-${batch.id}`}>
-      <span className="font-medium text-foreground" data-testid={`dish-meal-${batch.id}`}>{ti(`meals.${mealOf(batch).toLowerCase()}`)}</span>
-      {minutes !== null && <span className={part}>{t("minutes", { count: minutes })}</span>}
-      <span className={part}><button type="button" onClick={() => onOpen({ kind: "servings", batch })} aria-label={t("editServingsFor", { title: recipe.title })}
+      {minutes !== null && <span>{t("minutes", { count: minutes })}</span>}
+      <span className={minutes !== null ? part : ""}><button type="button" onClick={() => onOpen({ kind: "servings", batch })} aria-label={t("editServingsFor", { title: recipe.title })}
         className={`-my-2 inline-flex min-h-11 items-center rounded px-1 font-medium text-primary underline decoration-dotted underline-offset-4 hover:bg-accent ${focus}`}
         data-testid={`edit-servings-${batch.id}`}>
         <span data-testid={`dish-make-${batch.id}`}>{recipeYield === null && total === 0 ? t("yieldNeeded") : t("servings", { count: dates.number(total) })}</span>
@@ -122,9 +122,11 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
   // Recipe View nutrition, prep and cook time and Dietary tags as chosen in Settings; the cooking tool stays on the recipe page.
   const view = { ...recipeView, details: recipeView.details.filter(d => d !== "mainTool") };
   return (
-    <div className="h-full" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} data-meal={mealOf(batch)} role="group"
+    <div className="flex h-full flex-col gap-1.5" data-testid={`dish-${batch.id}`} data-recipe={recipe.id} data-meal={mealOf(batch)} role="group"
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
-      <RecipeCard recipe={recipe} compact href={props.recipeHref(batch)} meta={meta} view={view}
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground" data-testid={`dish-meal-${batch.id}`}>{ti(`meals.${mealOf(batch).toLowerCase()}`)}</p>
+      <div className="flex-1">
+      <RecipeCard recipe={recipe} compact={!stacked} href={props.recipeHref(batch)} meta={meta} view={view}
         titleTestId={`dish-link-${batch.id}`} ids={{ view: `dish-view-${batch.id}` }}>
         <div className="-ms-2 -mt-2 flex items-center gap-1">
           <button type="button" className={`${icon} hover:text-foreground`} onClick={() => onOpen({ kind: "swap", batch })}
@@ -141,6 +143,7 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
           </button>
         </div>
       </RecipeCard>
+      </div>
     </div>
   );
 }
@@ -154,6 +157,13 @@ export function PlannerBoard(props: Props) {
   const mealName = (meal: MealSlot) => ti(`meals.${meal.toLowerCase()}`);
   const [modal, setModal] = useState<Modal | null>(null);
   const close = () => setModal(null);
+  // A day with dishes folds under its date. In the current week only today starts open; other weeks start open
+  // (product owner, 2026-11-21). Dates are unique across weeks, so the days a person flipped need no reset.
+  const [flipped, setFlipped] = useState<Set<string>>(() => new Set());
+  const isOpen = (date: string) => (today === null || date === today) !== flipped.has(date);
+  const flip = (date: string) => setFlipped(prev => { const next = new Set(prev); if (!next.delete(date)) next.add(date); return next; });
+  // Adding a dish or moving a day there opens that day, so the change stays in sight.
+  const show = (date: string) => { if (!isOpen(date)) flip(date); };
   const days = Array.from({ length: 7 }, (_, i) => shiftDate(week, i));
 
   return (
@@ -164,6 +174,7 @@ export function PlannerBoard(props: Props) {
           const dishes = cookedOn(plan, date).filter(b => recipes.has(b.recipeId))
             .sort((a, b) => mealSlots.indexOf(mealOf(a)) - mealSlots.indexOf(mealOf(b)));
           const isToday = date === today;
+          const open = isOpen(date);
           const add = (
             <DropdownMenu dir={dir} modal={false}>
               <DropdownMenuTrigger asChild>
@@ -180,18 +191,28 @@ export function PlannerBoard(props: Props) {
             <section key={date} aria-labelledby={`day-${date}`} data-testid={`day-${date}`} data-today={isToday || undefined}
               className={`py-3 ${isToday ? "-mx-2 bg-accent/40 px-2" : ""}`}>
               <div className="flex flex-wrap items-center justify-between gap-x-3">
-                <h2 id={`day-${date}`} className={`text-base font-semibold ${isToday ? "text-primary" : dishes.length ? "text-foreground" : "font-normal text-muted-foreground"}`}>
-                  {dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}
+                <h2 id={`day-${date}`} className={`min-w-0 flex-1 text-base font-semibold ${isToday ? "text-primary" : dishes.length ? "text-foreground" : "font-normal text-muted-foreground"}`}>
+                  {dishes.length > 0 ? (
+                    <button type="button" onClick={() => flip(date)} aria-expanded={open} aria-controls={`day-body-${date}`} data-testid={`day-toggle-${date}`}
+                      className={`-ms-2 flex min-h-11 w-full min-w-0 items-center gap-2 rounded-lg px-2 text-start hover:bg-accent ${focus}`}>
+                      <ChevronDown className={`h-4 w-4 shrink-0 ${open ? "" : "-rotate-90 rtl:rotate-90"}`} aria-hidden="true" />
+                      <span className="shrink-0">{dates.long(date)}</span>
+                      {isToday && <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}
+                      {/* Folded: the day's dishes on one line, cut short when long. */}
+                      {!open && <span className="min-w-0 truncate text-sm font-normal text-muted-foreground" data-testid={`day-summary-${date}`}>
+                        {dishes.map(b => recipes.get(b.recipeId)!.title).join(" · ")}</span>}
+                    </button>
+                  ) : <>{dates.long(date)}{isToday && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">{t("today")}</span>}</>}
                 </h2>
                 {dishes.length > 0 ? <button type="button" className={text} onClick={() => setModal({ kind: "move", date })}
                   aria-label={t("moveDayFor", { date: dates.long(date) })} data-testid={`move-day-${date}`}>{t("moveDay")}</button> : add}
               </div>
-              {dishes.length > 0 && <>
-                <div className="mt-2 grid gap-3 lg:grid-cols-2">
-                  {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} />)}
+              {dishes.length > 0 && open && <div id={`day-body-${date}`}>
+                <div className={`mt-2 grid gap-3 ${dishes.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "lg:grid-cols-2"}`} data-layout={dishes.length >= 3 ? "stacked" : "row"}>
+                  {dishes.map(batch => <DishCard key={batch.id} batch={batch} props={props} onOpen={setModal} stacked={dishes.length >= 3} />)}
                 </div>
                 <div className="mt-1">{add}</div>
-              </>}
+              </div>}
             </section>
           );
         })}
@@ -203,6 +224,7 @@ export function PlannerBoard(props: Props) {
             <PickForm title={t("addMealTitle", { meal: mealName(modal.meal), date: dates.long(modal.date) })} options={options(weekdayOf(modal.date), modal.meal)} currentId={null} onClose={close}
               onPick={recipe => {
                 if (!commit(p => addBatch(p, recipe.id, modal.date, household, undefined, modal.meal))) return;
+                show(modal.date);
                 onPicked?.(recipe.id);
                 toast({ title: t("added", { title: recipe.title, date: dates.short(modal.date) }) });
                 close();
@@ -224,7 +246,7 @@ export function PlannerBoard(props: Props) {
           )}
           {modal?.kind === "move" && (
             <MoveForm plan={plan} from={modal.date} days={days} recipes={recipes} lang={lang} onClose={close}
-              onSubmit={next => { if (commit(() => next)) { toast({ title: t("moved", { date: dates.short(next.batches.at(-1)!.cookDate) }) }); close(); } }} />
+              onSubmit={next => { if (commit(() => next)) { show(next.batches.at(-1)!.cookDate); toast({ title: t("moved", { date: dates.short(next.batches.at(-1)!.cookDate) }) }); close(); } }} />
           )}
         </DialogContent>
       </Dialog>

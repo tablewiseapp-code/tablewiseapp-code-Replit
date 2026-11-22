@@ -31,10 +31,12 @@ Every action is a visible, labelled button that works by tap, click and keyboard
 
 ## Dish card
 
-Each planned dish (one batch) appears once, on the day it is cooked, as the shared recipe card's `compact` form (`client/src/components/recipe-card.tsx`): a small photo on the left and:
+**Folding (2026-11-21).** A day with dishes folds under its date: the date is a button (`aria-expanded`) with a chevron; folded, it shows the day's dish names on one line, cut short when long, and hides the cards and "+ Add dish" ("Move day" stays). In the current week only today starts open; in other weeks every day starts open. Adding a dish to a day, or moving a day there, opens it. What is open is not saved; a reload starts again. A day without dishes is one line and does not fold.
+
+Each planned dish (one batch) appears once, on the day it is cooked, under a small label with its meal (Breakfast, Lunch or Dinner). A day with one or two dishes shows the shared recipe card's `compact` form (`client/src/components/recipe-card.tsx`, a small photo on the left, two per row on wide screens); a day with three or more shows the standard card with the photo on top, two per row on tablets and three on wide screens (product owner, 2026-11-21). Either card has:
 
 - **Title.** It opens the recipe at this batch (`/recipe/:id?week=…&batch=…`), scaled to the batch total. Back returns to the week.
-- **One line:** meal · total time · servings · days covered, e.g. "Dinner · 45 min · 7 servings · For Mon–Tue".
+- **One line:** total time · servings · days covered, e.g. "45 min · 7 servings · For Mon–Tue". The meal is the label above the card (2026-11-21).
   - **Meal.** A dish stores `meal` (Breakfast, Lunch or Dinner). Swap, Edit servings and Move day keep it. A dish saved without one (before 2026-11-20) and the draft's dishes are Dinner; Breakfast/Lunch/Dinner slots of older weeks keep their meal.
   - **Time** is the total time, whatever the recipe time setting. Prep and cook times show below with the Recipe View details when chosen there (2026-11-21); the cooking tool stays on the recipe page.
   - **"7 servings"** is the amount to prepare (the batch total, with any edits; half servings as written, e.g. 3.5). It is a button named "Edit servings for {recipe}" that opens Edit servings.

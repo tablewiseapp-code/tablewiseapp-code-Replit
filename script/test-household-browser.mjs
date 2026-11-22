@@ -134,6 +134,9 @@ try {
   await click("evenings-3");
   await click("button-save-schedule");
   await until(`Boolean(${q("week-status")}) && !${q("schedule-panel")}`, "drafted week");
+  // The current week folds days other than today: open them all.
+  await ev(`document.querySelectorAll('[data-testid^="day-toggle-"][aria-expanded="false"]').forEach(b => b.click())`);
+  await until(`!document.querySelector('[data-testid^="day-toggle-"][aria-expanded="false"]')`, "days unfolded");
   let week = await dishes();
   eq(week.map(b => weekday(b.cookDate)).sort(), [0, 3, 5], "Wednesday and Sunday, plus one more day");
   ok(week.every(b => b.serves[0].adults === 2 && b.serves[0].kids === 3), "2 adults and 3 children on each dish");
