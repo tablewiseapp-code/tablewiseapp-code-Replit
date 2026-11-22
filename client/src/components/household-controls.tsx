@@ -96,7 +96,7 @@ export function CookNowEmpty({ from }: { from: string }) {
 }
 
 // Diets: only those the catalog marks with an explicit, verified tag (preference-engine.ts → dietTags).
-export const offeredDiets: DietPattern[] = ["vegetarian", "vegan", "glutenFree", "dairyFree"];
+export const offeredDiets: DietPattern[] = ["vegetarian", "vegan", "glutenFree", "dairyFree", "paleo", "carnivore"];
 
 /** Family food requirements: No requirements, diets, allergies and the person's own exclusions. Every one applies to everyone
  * eating. No requirements clears the others; choosing one clears No requirements. Your household saves each change at once;

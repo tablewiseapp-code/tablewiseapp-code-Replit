@@ -9,7 +9,8 @@ import { checkEligibility, mealReasons, personalize, rankRecipe, suggestReplacem
 import { restrictionText, settingsText } from "../client/src/lib/settings-copy";
 import { evaluateMeat } from "../shared/food-rules";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
-import { cookNowOptions } from "../client/src/lib/week-suggestions";
+import { cookNowOptions, dishOptions, proposeCookingPlan } from "../client/src/lib/week-suggestions";
+import { emptyPlan } from "../client/src/lib/meal-plan";
 import { preferenceSummary } from "../client/src/lib/household-copy";
 import { matchesPlannerFilters } from "../client/src/lib/planner-filters";
 import { evaluateAllergen } from "../shared/food-rules";
@@ -662,5 +663,43 @@ test("preference summary in plain words, in three languages", () => {
   assert.equal(preferenceSummary(s, "en", meal), "Only Vegetarian recipes. No Sesame. Asian dishes first. Kid-friendly lunches and dinners first.");
   assert.equal(preferenceSummary(withSettings(x => ({ ...x, setup: { ...x.setup, noRestrictions: true } })), "en", meal), "No food requirements.");
   for (const lang of ["ru", "he"]) assert.ok(!/[A-Za-z]{4,}/.test(preferenceSummary(s, lang, () => "x").replace(/Asian|Vegetarian|Sesame/g, "")), `${lang} is translated`);
+});
+test("Paleo and Carnivore: ingredient rules plus the explicit tag; unknown never satisfies a strict diet", () => {
+  assert.equal(evaluateDiet("paleo", ["400 g chicken thighs", "2 tbsp olive oil"]).status, "ok");
+  for (const line of ["200 g basmati rice", "100 g cheddar cheese", "1 tbsp sugar", "400 g canned chickpeas", "2 slices bread"])
+    assert.equal(evaluateDiet("paleo", [line]).status, "violates", line);
+  assert.equal(evaluateDiet("paleo", ["300 ml chicken stock"]).status, "violates", "stock may hold gluten");
+  assert.equal(evaluateDiet("paleo", ["1 tbsp curry paste"]).status, "uncertain");
+  assert.equal(evaluateDiet("carnivore", ["2 ribeye steaks", "1 tsp salt", "40 g butter"]).status, "ok");
+  for (const line of ["1 tsp black pepper", "2 cloves garlic", "1 tbsp olive oil", "1 onion"]) assert.equal(evaluateDiet("carnivore", [line]).status, "violates", line);
+  const paleo = withSettings(s => ({ ...s, dietary: { ...s.dietary, diets: ["paleo"] } }));
+  const clean = recipe({ steps: ["Simmer in a saucepan."], ingredients: ["400 g chicken thighs"], tags: ["Dinner"] });
+  assert.equal(checkEligibility(clean, paleo).eligible, false, "clean wording without the Paleo tag is unknown, never Paleo");
+  assert.equal(checkEligibility({ ...clean, tags: ["Dinner", "Paleo"] }, paleo).eligible, true);
+});
+test("acceptance: Paleo + Asian gets an Asian dish first; Carnivore + Asian still gets a Carnivore dish; nothing fits → empty — Cook now, Show another, draft, swap", () => {
+  const hob = ["Fry in a frying pan over a high heat."];
+  const d = (id: string, diet: string, cuisine: string, ingredients: string[]) => recipe({ id, steps: hob, ingredients, tags: ["Dinner", diet, cuisine] });
+  const fixtures = [
+    d("paleo-british", "Paleo", "British", ["400 g chicken thighs", "1 tbsp olive oil"]), d("paleo-thai", "Paleo", "Thai", ["400 g minced chicken", "1 lime"]),
+    d("carni-american", "Carnivore", "American", ["2 ribeye steaks", "1 tsp salt"]), d("carni-french", "Carnivore", "French", ["8 lamb chops", "20 g butter"]),
+    d("pasta-thai", "Dinner", "Thai", ["200 g rice noodles", "1 tbsp soy sauce"]),
+  ];
+  const household = (diet: "paleo" | "carnivore") => withSettings(s => ({ ...s, kitchen: { devices: ["Stovetop"] }, household: { ...s.household, servingsMode: "fixed" as const, fixedServings: 2 },
+    dietary: { ...s.dietary, diets: [diet], preferredCuisines: ["Asian"] }, setup: { ...s.setup, evenings: 2 } }));
+  const evening = new Date(2026, 10, 18, 19);
+  // Cook now and Show another (the same list): Asian Paleo first, then the other Paleo dish; never the non-Paleo Thai dish.
+  assert.deepEqual(cookNowOptions(fixtures, household("paleo"), evening).map(r => r.id), ["paleo-thai", "paleo-british"]);
+  assert.deepEqual(cookNowOptions(fixtures, household("carnivore"), evening).map(r => r.id).sort(), ["carni-american", "carni-french"], "no Asian Carnivore: Carnivore dishes still come");
+  // Week draft and swap (dishOptions is the picker for + Add dish, Swap and Try another).
+  const paleoWeek = proposeCookingPlan(emptyPlan("2026-11-16"), fixtures, household("paleo"), "2026-11-16");
+  assert.ok(paleoWeek.plan.batches.length > 0 && paleoWeek.plan.batches.every(b => b.recipeId.startsWith("paleo-")), "draft: Paleo only");
+  assert.equal(dishOptions(fixtures, household("paleo"), 3)[0].id, "paleo-thai", "swap: Asian Paleo first");
+  assert.ok(dishOptions(fixtures, household("carnivore"), 3).every(r => r.id.startsWith("carni-")), "swap: Carnivore only");
+  // Both strict diets at once: no recipe satisfies both, so nothing is offered (never relaxed).
+  const both = { ...household("paleo"), dietary: { ...household("paleo").dietary, diets: ["paleo", "carnivore"] as ("paleo" | "carnivore")[] } };
+  assert.deepEqual(cookNowOptions(fixtures, both, evening), []);
+  assert.deepEqual(dishOptions(fixtures, both, 3), []);
+  assert.equal(proposeCookingPlan(emptyPlan("2026-11-16"), fixtures, both, "2026-11-16").plan.batches.length, 0);
 });
 console.log(`All ${passed} My Basic Settings tests passed.`);

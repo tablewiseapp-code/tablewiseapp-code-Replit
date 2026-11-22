@@ -38,9 +38,16 @@ function evaluate(rule: Rule, ingredients: readonly string[]): { status: RuleSta
 }
 
 // ---- Dietary patterns (hard restrictions) ----
-export const dietPatterns = ["vegetarian", "vegan", "pescatarian", "glutenFree", "dairyFree", "porkFree"] as const;
+export const dietPatterns = ["vegetarian", "vegan", "pescatarian", "glutenFree", "dairyFree", "porkFree", "paleo", "carnivore"] as const;
 export type DietPattern = typeof dietPatterns[number];
 const notExplicitlySafe = (safe: RegExp) => (re: RegExp) => (l: string) => re.test(l) && !safe.test(l);
+// Paleo and Carnivore (2026-11-21): conservative ingredient rules, and a recipe also needs the explicit catalog tag
+// (preference-engine.ts → dietTags), so an untagged or unclear recipe never satisfies them.
+// Paleo: no grains, legumes, dairy or refined sugar. Carnivore: only meat, fish, seafood, eggs, animal fats, plain dairy,
+// water and salt (every other line is a violation; processed items such as stock or seasoning are unclear).
+const PALEO_OUT = /\b(rice|corn|maize|polenta|quinoa|oats?|porridge|beans?|lentils?|chickpeas?|peas|peanuts?|soy|soya|tofu|tempeh|edamame|miso|hummus|houmous|sugar|icing sugar|golden syrup|corn syrup|glucose)\b/;
+const CARNIVORE_IN = /\b(beef|steaks?|ribeye|sirloin|mince|pork|lamb|chops?|chicken|turkey|duck|veal|venison|liver|bacon|fish|salmon|cod|tuna|trout|mackerel|haddock|sardines?|prawns?|shrimps?|scallops?|mussels|crab|lobster|eggs?|egg yolks?|butter|ghee|lard|tallow|dripping|bone broth|milk|cream|cheese|cheddar|parmesan|yogh?urt|water|salt|sea salt|flaky salt)\b/;
+const CARNIVORE_OUT = /\b(pepper|garlic|onions?|herbs?|thyme|rosemary|parsley|lemon|lime|oil|sauce|sugar|honey|flour|breadcrumbs|vegetables?|potato(es)?|spices?|paprika|mustard|vinegar|wine|stock|seasoning|marinade)\b/;
 const dietRules: Record<DietPattern, Rule> = {
   vegetarian: { contains: l => !DIET_CHECKS.Vegetarian(l), mayContain: /\b(stock|bouillon|curry paste|pesto|caesar|gravy|rennet)\b/ },
   vegan: { contains: l => !DIET_CHECKS.Vegan(l), mayContain: /\b(stock|bouillon|curry paste|pesto|bread|naan|brioche|pastry|biscuits|cake|sugar|wine|gravy|margarine|spread)\b/ },
@@ -48,6 +55,8 @@ const dietRules: Record<DietPattern, Rule> = {
   glutenFree: { contains: l => !DIET_CHECKS["Gluten-free"](l), mayContain: /\b(sausages?|curry paste|seasoning|chocolate|sauce mix|mustard|(fish|oyster|barbecue|bbq|brown|steak|sweet chill?i|chill?i|curry) sauce|or sauce|ketchup|stock cubes?)\b|\bsauce$/, safe: GLUTEN_OK },
   dairyFree: { contains: l => !DIET_CHECKS["Dairy-free"](l), mayContain: /\b(pesto|margarine|spread|\w*breads?|naans?|brioche|biscuits?|cookies?|pastry|cakes?|muffins?|buns?|rolls|croissants?|sausages?)\b/, safe: PLANT },
   porkFree: { contains: notExplicitlySafe(/vegetarian|plant-based|vegan|turkey|chicken|beef/)(PORK), mayContain: /\b(sausages?|gelatine|gelatin|mince|meatballs)\b/ },
+  paleo: { contains: l => !DIET_CHECKS["Gluten-free"](l) || !DIET_CHECKS["Dairy-free"](l) || PALEO_OUT.test(l), mayContain: /\b(stock|bouillon|sauce|seasoning|curry paste|sausages?|ketchup|spread)\b/ },
+  carnivore: { contains: l => !CARNIVORE_IN.test(l) || CARNIVORE_OUT.test(l), mayContain: /\b(sausages?|bone broth|cubes?)\b/ },
 };
 export const evaluateDiet = (diet: DietPattern, ingredients: readonly string[]) => evaluate(dietRules[diet], ingredients);
 

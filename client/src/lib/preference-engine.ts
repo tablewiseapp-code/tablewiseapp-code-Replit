@@ -66,7 +66,7 @@ export function mealReasons(recipe: EngineRecipe, settings: BasicSettings, meal:
 /** Larger than every other preference together, so a kid-friendly dish comes first whenever one is eligible. */
 const KID_FIRST = 50;
 const tagKey = (tag: string) => tag.toLowerCase().replace(/[\s_-]+/g, "");
-const dietTags: Partial<Record<DietPattern, string[]>> = { vegetarian: ["vegetarian", "vegan"], vegan: ["vegan"], glutenFree: ["glutenfree"], dairyFree: ["dairyfree", "vegan"] };
+const dietTags: Partial<Record<DietPattern, string[]>> = { vegetarian: ["vegetarian", "vegan"], vegan: ["vegan"], glutenFree: ["glutenfree"], dairyFree: ["dairyfree", "vegan"], paleo: ["paleo"], carnivore: ["carnivore"] };
 const allergenTags: Partial<Record<Allergen, string[]>> = { gluten: ["glutenfree"], milk: ["dairyfree", "vegan"] };
 const hasTag = (recipe: EngineRecipe, wanted: string[] | undefined) => !wanted || recipe.tags.some(tag => wanted.includes(tagKey(tag)));
 
