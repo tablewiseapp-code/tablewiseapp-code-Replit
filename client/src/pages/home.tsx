@@ -14,6 +14,8 @@ import { ToastAction } from "@/components/ui/toast";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { askURL, useCookNow } from "@/hooks/use-cook-now";
 import { CookNowEmpty } from "@/components/household-controls";
+import { CookWithWhatIHave } from "@/components/on-hand-picker";
+import { onHandText } from "@/lib/on-hand-copy";
 import { loadSettings, missingAnswers } from "@/lib/basic-settings";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
@@ -45,8 +47,14 @@ export default function Home() {
     const meal = mealSlots.find(m => m.toLowerCase() === new URLSearchParams(window.location.search).get("add"));
     return meal ? { meal, day: new Date().getDay(), date: calendarDate(new Date()) } : null;
   });
+  // ?have: Cook with what I have, resumed after its missing household answers were asked.
+  const [having, setHaving] = useState(() => new URLSearchParams(window.location.search).has("have"));
   const [, setLocation] = useLocation();
-  useEffect(() => { if (generating) setLocation("/", { replace: true }); }, []); // a reload must not reopen it
+  useEffect(() => { if (generating || having) setLocation("/", { replace: true }); }, []); // a reload must not reopen it
+  const openHaving = () => {
+    const missing = missingAnswers(loadSettings());
+    if (missing.length) setLocation(askURL(missing, "/?have")); else setHaving(true);
+  };
   const cookNow = useCookNow();
   const openGenerator = (target: MealTarget) => {
     const missing = missingAnswers(loadSettings());
@@ -192,7 +200,10 @@ export default function Home() {
               </div>
             )}
             {/* Available even when today is empty; the same action as Cook now: opens one eligible recipe, never changes the Week or groceries. */}
-            <button type="button" onClick={cookNow.start} disabled={!cookNow.ready} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
+            <div className="flex flex-wrap gap-x-4">
+              <button type="button" onClick={cookNow.start} disabled={!cookNow.ready} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
+              <button type="button" onClick={openHaving} disabled={!catalog.data} className="btn btn-text -ms-2" data-testid="home-cook-with-what-i-have">{onHandText(lang, "homeAction")}</button>
+            </div>
             {cookNow.empty && <CookNowEmpty from="/" />}
           </section>
 
@@ -209,6 +220,7 @@ export default function Home() {
         </div>
       </PageContainer>
       <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={meal => { setGenerating(null); focusAdd(meal); }} onAdded={added} />
+      <CookWithWhatIHave open={having && !!catalog.data} onClose={() => setHaving(false)} catalog={catalog.data ?? []} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
   );

@@ -22,13 +22,13 @@ export function databaseWeekPlanStore(connection?: Database): WeekPlanStore {
       // A week saved before cooking days: its slots become dated dishes; an approved (locked) one stays approved.
       if (isLegacyPlan(row.planAssignments)) {
         const batches = fromLegacy(row.weekStart, row.planAssignments);
-        return { weekStart: row.weekStart, proposed: row.proposed, selectedIds: row.selectedIds, batches, approved: row.locked ? batches : null };
+        return { weekStart: row.weekStart, proposed: row.proposed, selectedIds: row.selectedIds, batches, approved: row.locked ? batches : null, onHand: null };
       }
       return { weekStart: row.weekStart, proposed: row.proposed, selectedIds: row.selectedIds,
-        batches: row.planAssignments as Batch[], approved: (row.approvedBatches as Batch[] | null) ?? null };
+        batches: row.planAssignments as Batch[], approved: (row.approvedBatches as Batch[] | null) ?? null, onHand: (row.onHand as WeekPlan["onHand"]) ?? null };
     },
-    async save(ownerId, { batches, approved, ...plan }) {
-      const values = { ...plan, planAssignments: batches, approvedBatches: approved, locked: sameBatches(batches, approved) };
+    async save(ownerId, { batches, approved, onHand, ...plan }) {
+      const values = { ...plan, planAssignments: batches, approvedBatches: approved, onHand: onHand ?? null, locked: sameBatches(batches, approved) };
       await (await database()).insert(weekPlans).values({ ownerId, ...values })
         .onConflictDoUpdate({ target: [weekPlans.ownerId, weekPlans.weekStart], set: { ...values, updatedAt: new Date() } });
     },

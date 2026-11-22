@@ -89,7 +89,9 @@ export type { Slot };
  * gets one dish not yet in the week (a recipe repeats only when the eligible ones run out), under draftMeal (Dinner, else
  * Lunch, else Breakfast, as planned in Basic Settings). Deterministic for a seed. */
 export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, catalog: readonly T[], settings: BasicSettings, weekStart: string,
-  { fits = any, fallback, newId }: { fits?: Fits<T>; fallback?: Fits<T>; newId?: () => string } = {}) {
+  { fits = any, fallback, newId, prefer = list => list }: { fits?: Fits<T>; fallback?: Fits<T>; newId?: () => string;
+    /** Cook with what I have (on-hand.ts preferOnHand): reorders a day's options, given the dishes chosen so far. */
+    prefer?: (options: T[], chosen: readonly T[]) => T[] } = {}) {
   const household = householdCounts(settings);
   const days = cookingEvenings(settings);
   const challenges = challengeDays(settings, days);
@@ -101,8 +103,8 @@ export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, cata
     const date = dateInWeek(weekStart, day);
     if (cookedOn(next, date).length) continue;
     const chosen = catalog.filter(r => used.has(r.id));
-    const pick = dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits, fallback, meal })[0]
-      ?? dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits, fallback, meal })[0];
+    const pick = prefer(dishOptions(catalog, settings, day, { exclude: used, chosen, seed: weekStart, fits, fallback, meal }), chosen)[0]
+      ?? prefer(dishOptions(catalog, settings, day, { chosen, seed: weekStart, fits, fallback, meal }), chosen)[0];
     if (!pick) continue;
     next = addBatch(next, pick.id, date, household, newId?.(), meal === "Dinner" ? undefined : meal);
     used.add(pick.id); suggested.push(pick.id);

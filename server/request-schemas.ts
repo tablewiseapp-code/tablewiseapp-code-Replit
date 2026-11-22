@@ -104,12 +104,20 @@ const batch = z.object({
   yield: half.optional(), meal: z.enum(mealSlots).optional(),
 }).strict().refine(b => batchProblem(b) === null);
 const batches = z.array(batch).max(42).refine(list => new Set(list.map(b => b.id)).size === list.length);
+// Cook with what I have (client/src/lib/on-hand.ts): proteins on hand, each with an optional amount and the grocery rows
+// the person confirmed it covers.
+const amount = z.object({ quantity: z.number().positive().max(1_000_000), unit: z.string().max(10).nullable() }).strict();
+const onHand = z.object({ minimize: z.boolean(), items: z.array(z.object({
+  name: z.string().trim().min(1).max(80), amount: amount.nullable(),
+  covered: z.record(z.string().max(500), z.number().nonnegative().max(1_000_000).nullable()).optional(),
+}).strict()).max(20) }).strict();
 export const weekPlanInput = z.object({
   weekStart,
   proposed: z.boolean(),
   selectedIds: z.array(recipeId).max(12),
   batches,
   approved: batches.nullable(),
+  onHand: onHand.nullable().optional(),
 }).strict().refine(p => [...p.batches, ...(p.approved ?? [])].every(b => b.cookDate >= p.weekStart && b.cookDate <= shiftDate(p.weekStart, 6)));
 // My Basic Settings: an opaque document the client sanitizes field by field. The server only checks its shape and size.
 // ponytail: not field-validated here; it is read back only by its owner's own client, which sanitizes it.

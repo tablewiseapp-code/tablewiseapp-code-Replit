@@ -133,6 +133,9 @@ try {
   ok(await ev(`!${q("over-count")} && !${q("button-save-schedule")}.disabled`), "raising the count resolves it");
   await click("evenings-3");
   await click("button-save-schedule");
+  // Cook with what I have asks for proteins on hand before an empty week's draft; Skip plans as usual.
+  await until(`Boolean(${q("on-hand-step")})`, "proteins on hand");
+  await click("button-skip-on-hand");
   await until(`Boolean(${q("week-status")}) && !${q("schedule-panel")}`, "drafted week");
   // The current week folds days other than today: open them all.
   await ev(`document.querySelectorAll('[data-testid^="day-toggle-"][aria-expanded="false"]').forEach(b => b.click())`);
