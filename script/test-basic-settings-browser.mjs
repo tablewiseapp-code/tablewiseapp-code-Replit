@@ -23,7 +23,7 @@ try {
   let n = 0; const waiting = {}; const exceptions = [];
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Runtime.exceptionThrown") exceptions.push(d.params.exceptionDetails.exception?.description ?? d.params.exceptionDetails.text); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
-  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped', noRestrictions: true, scheduled: true }, household: { servingsMode: 'fixed', fixedServings: 4 }, kitchen: { devices: ['Oven', 'Air fryer', 'Stovetop', 'Microwave'] } }))" }); // skip the first-visit sign-in screen; an answered household (2026-11-21)
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r?.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r?.result?.value; };
   const until = async (e, what) => { for (let i = 0; i < 150; i++) { if (await ev(`Boolean(${e})`).catch(() => false)) return; await sleep(120); } throw new Error(`timeout: ${what}; page: ${String(await ev("document.body.innerText")).slice(0, 300).replace(/\n/g, " | ")}`); };
   const go = async path => { await call("Page.navigate", { url: BASE + path }); await sleep(400); };
@@ -68,12 +68,13 @@ try {
   await click("member-1-details"); await until(`${q("member-1-allergy-milk")}?.getAttribute("aria-pressed") === "true"`, "member allergy survives reload");
   ok(true, "persistence after reload");
 
-  // Weekly Meals: only no-cook recipes + explanation; method filter only No-cook. My Recipes keeps everything.
+  // Weekly Meals: only reviewed no-cook recipes + explanation; method filter only No-cook. My Recipes keeps everything.
+  // Steps that name no device are not no-cook (2026-11-21): the 20-recipe local catalog has none reviewed, so 0 here.
   await go("/meals?browse");
   await until(q("settings-banner"), "settings banner");
   ok((await ev(`${q("settings-banner")}.textContent`)).includes("only no-cook"), "no-cook explanation");
   const shown = await ev(`document.querySelectorAll('[data-testid^="recipe-card-"]').length`);
-  ok(shown > 0 && shown < 100, `only a few no-cook recipes shown (${shown})`);
+  ok(shown < 100, `only reviewed no-cook recipes shown (${shown})`);
   await ev(`${q("button-toggle-method")}?.click()`); await sleep(300);
   if (!(await ev(`!!document.querySelector('[data-testid^="filter-method-"]')`))) { await ev(`${q("button-toggle-method")}?.click()`); await sleep(300); }
   ok(JSON.stringify(await ev(`[...document.querySelectorAll('[data-testid^="filter-method-"]')].map(b => b.dataset.testid)`)) === JSON.stringify(["filter-method-no-cook"]), "method filter shows only No-cook");

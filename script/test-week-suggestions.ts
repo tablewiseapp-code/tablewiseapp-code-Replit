@@ -14,7 +14,8 @@ import { baseServings } from "../client/src/lib/ingredient-scale";
 
 const WEEK = "2026-11-16"; // Mon 16 … Sun 22
 const empty = (): PlanState => emptyPlan(WEEK);
-const settingsWith = (change: (s: BasicSettings) => void) => { const s = defaultSettings(); change(s); return s; };
+// A full kitchen: unanswered devices (null) are no device since 2026-11-21.
+const settingsWith = (change: (s: BasicSettings) => void) => { const s = defaultSettings(); s.kitchen.devices = ["Oven", "Air fryer", "Stovetop", "Microwave"]; change(s); return s; };
 let n = 0;
 const ids = () => { let i = 0; return () => `b${++i}`; };
 const recipe = (title: string, minutes: number, steps: number, tags: string[] = [], ingredients = ["2 carrots", "1 onion", "200 g rice"]) =>
@@ -166,6 +167,16 @@ assert.equal(planStatus(legacy, JSON.parse(JSON.stringify(legacy))), "approved")
 assert.equal(needsHouseholdSetup(defaultSettings(), empty()), true);
 assert.equal(needsHouseholdSetup({ ...defaultSettings(), rev: 3 }, empty()), false);
 assert.equal(needsHouseholdSetup(defaultSettings(), placed), false);
+// Guided setup (2026-11-21): a household that started the four questions returns to them; skipped, finished and partly
+// configured (settings saved outside the setup) households go Home.
+const at = (status: "new" | "skipped" | "done", step: number, rev = 4) => ({ ...defaultSettings(), rev, setup: { ...defaultSettings().setup, status, step } });
+assert.equal(needsHouseholdSetup(at("new", 2), empty()), true, "started, not finished: back to the setup");
+assert.equal(needsHouseholdSetup(at("new", 0), empty()), false, "partly configured in Basic Settings: Home");
+assert.equal(needsHouseholdSetup(at("skipped", 0), empty()), false, "skipped (before 2026-11-21): Home");
+assert.equal(needsHouseholdSetup(at("done", 5), empty()), false, "finished: Home");
+assert.equal(needsHouseholdSetup(at("new", 2), placed), false, "a Week with dishes: Home");
+// Three cooking days with Wednesday and Sunday fixed: both and one more (the farthest from them).
+assert.deepEqual(cookingEvenings(settingsWith(s => { s.setup.evenings = 3; s.setup.fixedDays = [0, 3]; })), [3, 5, 0]);
 
 if (process.env.CATALOG_URL) {
   const real = toPlannerRecipes(await (await fetch(`${process.env.CATALOG_URL}/api/recipes`)).json());
@@ -182,8 +193,8 @@ assert.equal(mealOf(swapBatch(lunch, "l1", "r2").batches[0]), "Lunch", "Swap kee
 assert.equal(mealOf(addBatch(empty(), "r1", "2026-11-17", null, "d1").batches[0]), "Dinner", "no meal = dinner");
 const breakfast = recipe("Oat porridge", 10, 2, ["Gluten-free"]) as { tags: string[] }; breakfast.tags = ["Breakfast", "Gluten-free"];
 const withBreakfast = [...catalog, ...toPlannerRecipes([breakfast] as never)];
-assert.equal(dishOptions(withBreakfast, defaultSettings(), 2, { meal: "Breakfast" })[0].title, "Oat porridge", "+ Add breakfast offers breakfasts first");
-assert.notEqual(dishOptions(withBreakfast, defaultSettings(), 2)[0].title, "Oat porridge", "+ Add a dish still starts with dinners");
+assert.equal(dishOptions(withBreakfast, settingsWith(() => {}), 2, { meal: "Breakfast" })[0].title, "Oat porridge", "+ Add breakfast offers breakfasts first");
+assert.notEqual(dishOptions(withBreakfast, settingsWith(() => {}), 2)[0].title, "Oat porridge", "+ Add a dish still starts with dinners");
 const body = (meal: unknown) => ({ weekStart: WEEK, proposed: true, selectedIds: [], batches: [{ id: "x", recipeId: "r1", cookDate: WEEK, serves: [{ date: WEEK }], meal }], approved: null });
 assert.ok(weekPlanInput.safeParse(body("Lunch")).success && !weekPlanInput.safeParse(body("Snack")).success, "the server accepts only the three meals");
 console.log("week suggestions: ok");
@@ -191,7 +202,7 @@ console.log("week suggestions: ok");
 // ---- planKey: changes with what plans dishes, not with names, stores or the draft bookkeeping.
 {
   const { planKey, defaultSettings } = await import("../client/src/lib/basic-settings");
-  const base = defaultSettings();
+  const base = settingsWith(() => {});
   assert.notEqual(planKey({ ...base, setup: { ...base.setup, evenings: 3 } }), planKey(base), "evenings change the key");
   assert.equal(planKey({ ...base, setup: { ...base.setup, suggested: ["x"], plannedWith: "abc" } }), planKey(base), "bookkeeping does not");
   assert.equal(planKey({ ...base, shopping: { ...base.shopping, stores: [{ id: "walmart", methods: ["delivery"] }] as never } }), planKey(base), "stores do not");

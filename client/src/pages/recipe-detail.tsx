@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, Clock3, MoreVertical, Minus, Plus, Users, Wrench } from "lucide-react";
+import { ChevronDown, ChevronLeft, Clock3, MoreVertical, Minus, Plus, RefreshCw, Users, Wrench } from "lucide-react";
 import { useRoute, useLocation, useSearch, Link } from "wouter";
 import { fetchRecipe, deleteRecipe, updateRecipe, type Recipe } from "@/lib/storage";
 import { useI18n } from "@/lib/i18n";
@@ -32,6 +32,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { householdServings, loadSettings } from "@/lib/basic-settings";
+import { useHouseholdCopy } from "@/lib/household-copy";
+import { useRecipeCatalog } from "@/hooks/use-week-workspace";
+import { toPlannerRecipes } from "@/lib/planner-recipes";
+import { cookNowOptions } from "@/lib/week-suggestions";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const stripArrow = (text: string) => text.replace(/^[←→]\s*/, "");
@@ -95,8 +99,25 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
   );
 }
 
+/** Opened by Cook now or Home → Suggest a recipe (?suggest): "Show another" takes the place of the "More actions" menu and
+ * opens the next recipe of the same list (cookNowOptions, the one eligibility rule), still without touching the Week. */
+function ShowAnother({ recipeId }: { recipeId: string }) {
+  const t = useHouseholdCopy();
+  const [, setLocation] = useLocation();
+  const catalog = useRecipeCatalog();
+  const options = useMemo(() => cookNowOptions(toPlannerRecipes(catalog.data ?? []), loadSettings(), new Date()), [catalog.data]);
+  const next = options.length > 1 ? options[(options.findIndex(r => r.id === recipeId) + 1) % options.length] : null;
+  if (!next) return null;
+  return (
+    <button type="button" className="btn btn-secondary gap-1.5" onClick={() => setLocation(`/recipe/${encodeURIComponent(next.id)}?suggest`)} data-testid="button-show-another">
+      <RefreshCw className="h-4 w-4" aria-hidden="true" />{t("showAnother")}
+    </button>
+  );
+}
+
 export default function RecipeDetail() {
   const { t, lang } = useI18n();
+  const household = useHouseholdCopy();
   const translations = useRecipeTranslations();
   const [showOriginal, setShowOriginal] = useState(false);
   const { recipeView } = useRecipeDisplay();
@@ -134,7 +155,7 @@ export default function RecipeDetail() {
       <div className="min-h-0 overflow-hidden">{children}</div>
     </div>
   );
-  // ?cook (Home → Suggest a recipe → Start cooking) opens Zen mode straight away.
+  // ?cook opens Zen mode straight away.
   const [cooking, setCooking] = useState(() => new URLSearchParams(search).has("cook"));
   const [timesOpen, setTimesOpen] = useState(false);
   const [creditOpen, setCreditOpen] = useState(false);
@@ -204,6 +225,7 @@ export default function RecipeDetail() {
   const tools = recipeToolKeys(recipe.steps, recipe.equipment).map(tool => timingCopy(tool)).join(", ");
   const canEditCredit = Boolean(recipe.creditEditable);
   const hasMenu = !readOnly || canEditCredit;
+  const suggesting = new URLSearchParams(search).has("suggest");
 
   const adjust = (delta: number) => setSelectedServings(value =>
     Math.min(servingLimits.max, Math.max(servingLimits.min, (value ?? base ?? 1) + delta)));
@@ -246,7 +268,7 @@ export default function RecipeDetail() {
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             {stripArrow(fromPlanner ? t("recipeDetail.backToPlanner") : view("back"))}
           </Link>
-          {hasMenu && (
+          {suggesting ? <ShowAnother recipeId={recipe.id} /> : hasMenu && (
             <DropdownMenu>
               <DropdownMenuTrigger aria-label={view("more")} data-testid="button-recipe-menu"
                 className={`inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5 ${focus}`}>
@@ -294,6 +316,7 @@ export default function RecipeDetail() {
           {recipe.metadataEstimated && <p className="mt-2 text-sm text-muted-foreground" data-testid="text-development-estimates">{timingCopy("developmentEstimates")}</p>}
         </header>
 
+        {suggesting && <p className="mt-4 inline-flex rounded-full bg-accent px-3 py-1 text-sm font-medium" data-testid="suggestion-bar">{household("suggested")}</p>}
         <div className="mt-5 flex flex-wrap items-center gap-3" data-testid="recipe-actions">
           {base !== null && selectedServings !== null && (
             <div role="group" aria-label={view("servingsLabel")} className="inline-flex items-center rounded-full border border-input bg-card" data-testid="servings-control">

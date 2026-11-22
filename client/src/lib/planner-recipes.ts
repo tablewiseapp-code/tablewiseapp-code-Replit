@@ -1,6 +1,7 @@
 import type { Recipe as StoredRecipe } from "@/lib/storage";
 import { recipeToolKeys, type RecipeToolKey } from "./recipe-tools";
 import { deviceRequirementsOf, type DeviceRequirements } from "./device-requirements";
+import { verifiedNoCookIds } from "./verified-no-cook";
 import type { RecipeCredit } from "@shared/recipe-credit";
 import type { NutritionFields } from "@shared/recipe-nutrition";
 
@@ -16,6 +17,8 @@ export type PlannerRecipe = RecipeCredit & NutritionFields & {
   tools: string[];
   /** Structured AND-of-OR device needs (device-requirements.ts); computed once per load. */
   deviceRequirements: DeviceRequirements;
+  /** Reviewed as needing no cooking appliance (verified-no-cook.ts); inferred "no device" never counts. */
+  verifiedNoCook: boolean;
   equipment?: RecipeToolKey[];
   metadataEstimated?: boolean;
   sourceType: string;
@@ -122,6 +125,7 @@ export function toPlannerRecipe(recipe: StoredRecipe): PlannerRecipe {
     tags: (recipe.tags ?? []).map(normalizeTag),
     tools: inferTools(recipe.steps),
     deviceRequirements: deviceRequirementsOf(recipe as typeof recipe & { deviceRequirements?: DeviceRequirements | null }),
+    verifiedNoCook: verifiedNoCookIds.has(recipe.id),
     equipment: recipeToolKeys(recipe.steps, recipe.equipment),
     metadataEstimated: recipe.metadataEstimated,
     nutrition: recipe.nutrition,

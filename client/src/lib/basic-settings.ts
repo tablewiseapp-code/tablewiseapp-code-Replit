@@ -30,8 +30,12 @@ export type CookingStyle = typeof cookingStyles[number];
 export const challengeWhen = ["day", "any", "every"] as const;
 export const weeknightTimeOptions = [10, 15, 20, 30, 45, 60] as const;
 export type HouseholdSetup = {
-  /** new = never answered; skipped = "Skip for now"; done = "Suggest my week" was used at least once. */
+  /** new = the four setup questions are not finished; skipped = "Skip for now" (before 2026-11-21); done = finished. */
   status: "new" | "skipped" | "done";
+  /** The guided setup's last reached step (1–5, 0 = not started), so Back and refresh resume there. */
+  step: number;
+  /** The Week asked for cooking days (evenings, fixed days) at least once. Settings saved earlier with status done answered it. */
+  scheduled: boolean;
   style: CookingStyle;
   /** Cooking evenings per week; null = "Not sure yet" (three, or the number of fixed days if more). */
   evenings: number | null;
@@ -48,7 +52,7 @@ export type HouseholdSetup = {
   /** planKey() of the settings the Week was last planned with (or kept with); null = not recorded yet. */
   plannedWith: string | null;
 };
-export const defaultSetup = (): HouseholdSetup => ({ status: "new", style: "everyday", evenings: null, fixedDays: [], noRestrictions: false, weeknightMax: { Breakfast: null, Lunch: null, Dinner: null },
+export const defaultSetup = (): HouseholdSetup => ({ status: "new", step: 0, scheduled: false, style: "everyday", evenings: null, fixedDays: [], noRestrictions: false, weeknightMax: { Breakfast: null, Lunch: null, Dinner: null },
   challenge: { when: "day", day: null }, suggested: [], declined: [], plannedWith: null });
 
 /** Settings → Recipe View: what every recipe card shows besides name, time and servings. */
@@ -69,30 +73,32 @@ export type Member = {
 };
 export type BasicSettings = {
   version: 2; rev: number;
-  household: { members: Member[]; portion: PortionSize; servingsMode: "auto" | "fixed"; fixedServings: number };
+  /** kidFriendly: Kid-friendly meals (2026-11-21): lunch and dinner suggestions rank "Kid friendly" recipes first. Off by default. */
+  household: { members: Member[]; portion: PortionSize; servingsMode: "auto" | "fixed"; fixedServings: number; kidFriendly: boolean };
   dietary: { diets: DietPattern[]; allergies: Allergen[]; customAllergies: string[]; dislikes: IngredientChoice[]; favorites: IngredientChoice[];
     preferredCuisines: Cuisine[]; avoidCuisines: Cuisine[] };
-  /** null = never configured (every device available). [] = explicitly none. */
+  /** null = never answered (asked before the next suggestion; never taken as every device). [] = explicitly none. */
   kitchen: { devices: DeviceId[] | null };
   /** Weekday and weekend each have their own soft preferences; hardMax is one shared rule. */
   cooking: { weekdayMax: number | null; weekendMax: number | null; hardMax: boolean; weekday: CookingPrefs; weekend: CookingPrefs };
   planning: { meals: MealSlot[]; cookingDays: number; leftovers: typeof leftoverOptions[number]; repeatFavorites: boolean;
     variety: typeof varietyOptions[number]; novelty: typeof noveltyOptions[number]; mealRules: Record<MealSlot, MealRule> };
   /** stores: where the person buys groceries and how (delivery, walk-in); see grocery-stores.ts. */
-  shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[]; stores: StoreChoice[] };
+  /** storesAsked: Groceries offered the store picker once ("Maybe later" or Done). */
+  shopping: { budgetFriendly: boolean; reuseIngredients: boolean; pantry: string[]; stores: StoreChoice[]; storesAsked: boolean };
   setup: HouseholdSetup;
   recipeView: RecipeView;
 };
 
 export const defaultSettings = (): BasicSettings => ({
   version: 2, rev: 0,
-  household: { members: [], portion: "regular", servingsMode: "auto", fixedServings: 4 },
+  household: { members: [], portion: "regular", servingsMode: "auto", fixedServings: 4, kidFriendly: false },
   dietary: { diets: [], allergies: [], customAllergies: [], dislikes: [], favorites: [], preferredCuisines: [], avoidCuisines: [] },
   kitchen: { devices: null },
   cooking: { weekdayMax: null, weekendMax: null, hardMax: false, weekday: noPrefs(), weekend: noPrefs() },
   planning: { meals: ["Breakfast", "Lunch", "Dinner"], cookingDays: 7, leftovers: "none", repeatFavorites: false, variety: "balanced", novelty: "balanced",
     mealRules: { Breakfast: noRule(), Lunch: noRule(), Dinner: noRule() } },
-  shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [], stores: [] },
+  shopping: { budgetFriendly: false, reuseIngredients: false, pantry: [], stores: [], storesAsked: false },
   setup: defaultSetup(), recipeView: defaultRecipeView(),
 });
 
@@ -119,7 +125,8 @@ const ids = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((x): x is s
 function setup(raw: unknown): HouseholdSetup {
   const r = obj(raw), c = obj(r.challenge);
   return {
-    status: r.status === "skipped" || r.status === "done" ? r.status : "new", style: oneOf(cookingStyles, r.style, "everyday"),
+    status: r.status === "skipped" || r.status === "done" ? r.status : "new", step: int(r.step, 0, 5, 0),
+    scheduled: typeof r.scheduled === "boolean" ? r.scheduled : r.status === "done", style: oneOf(cookingStyles, r.style, "everyday"),
     evenings: r.evenings === null || r.evenings === undefined ? null : int(r.evenings, 1, 7, 3), fixedDays: days(r.fixedDays),
     noRestrictions: bool(r.noRestrictions),
     // An earlier single limit applied to the suggested dinners, so it becomes the dinner limit.
@@ -176,7 +183,7 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
     version: 2, rev: int(r.rev, 0, Number.MAX_SAFE_INTEGER, 0),
     household: { members: members.filter((m, i) => members.findIndex(x => x.id === m.id) === i).slice(0, 12),
       portion: oneOf(portionSizes, h.portion, "regular"), servingsMode: h.servingsMode === "fixed" ? "fixed" : "auto",
-      fixedServings: int(h.fixedServings, servingLimits.min, servingLimits.max, 4) },
+      fixedServings: int(h.fixedServings, servingLimits.min, servingLimits.max, 4), kidFriendly: bool(h.kidFriendly) },
     dietary: { diets: subset(dietPatterns, di.diets), allergies: subset(allergens, di.allergies), customAllergies: terms(di.customAllergies),
       dislikes: choices(di.dislikes), favorites: choices(di.favorites),
       preferredCuisines: subset(cuisines, di.preferredCuisines), avoidCuisines: subset(cuisines, di.avoidCuisines) },
@@ -186,7 +193,7 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
     planning: { meals: subset(mealSlots, p.meals), cookingDays: int(p.cookingDays, 1, 7, 7), leftovers: oneOf(leftoverOptions, p.leftovers, "none"),
       repeatFavorites: bool(p.repeatFavorites), variety: oneOf(varietyOptions, p.variety, "balanced"), novelty: oneOf(noveltyOptions, p.novelty, "balanced"),
       mealRules: Object.fromEntries(mealSlots.map(m => [m, mealRule(obj(p.mealRules)[m])])) as Record<MealSlot, MealRule> },
-    shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry), stores: sanitizeStores(s.stores) },
+    shopping: { budgetFriendly: bool(s.budgetFriendly), reuseIngredients: bool(s.reuseIngredients), pantry: terms(s.pantry), stores: sanitizeStores(s.stores), storesAsked: bool(s.storesAsked) },
     setup: setup(r.setup), recipeView: recipeView(r.recipeView),
   };
 }
@@ -215,14 +222,18 @@ const changed = () => { try { window.dispatchEvent(new Event(settingsChangedEven
 
 // ---- Server copy (same pattern as the Week in meal-plan.ts) ----
 let lastQueued = "", queue = Promise.resolve();
-/** Sends the browser copy to the server when it changed. Requests go one at a time, in order; a failure retries on the next change. */
-export function pushSettings() {
+/** Sends the browser copy to the server when it changed. Requests go one at a time, in order; a failure retries on the next
+ * change (or the next call). Resolves true once the server has this copy, false when saving it failed. */
+export function pushSettings(): Promise<boolean> {
   const body = JSON.stringify(loadSettings());
-  if (body === lastQueued || typeof fetch !== "function") return;
-  lastQueued = body;
-  queue = queue.then(() => fetch("/api/household-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: true }))
-    .then(r => { if (!r.ok) throw new Error(); })
-    .catch(() => { if (lastQueued === body) lastQueued = ""; });
+  if (typeof fetch !== "function") return Promise.resolve(false);
+  if (body !== lastQueued) {
+    lastQueued = body;
+    queue = queue.then(() => fetch("/api/household-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: true }))
+      .then(r => { if (!r.ok) throw new Error(); })
+      .catch(() => { if (lastQueued === body) lastQueued = ""; });
+  }
+  return queue.then(() => lastQueued === body);
 }
 /** Run once before pages read settings. The server copy wins; browser settings with no server copy are uploaded once. */
 export async function syncSettings() {
@@ -231,7 +242,10 @@ export async function syncSettings() {
   const server: unknown = await response.json();
   const store = browser();
   if (server === null) { if (loadSettings().rev > 0) pushSettings(); return; }
-  store?.setItem(settingsKey, JSON.stringify(sanitizeSettings(server)));
+  const remote = sanitizeSettings(server);
+  // A newer browser copy: changes made just before a reload that had not reached the server yet. Send them, keep them.
+  if (loadSettings().rev > remote.rev) { pushSettings(); return; }
+  store?.setItem(settingsKey, JSON.stringify(remote));
   lastQueued = JSON.stringify(loadSettings());
   changed();
 }
@@ -285,7 +299,8 @@ export function useSavedSettings() {
 }
 
 // ---- Derived values used across pages ----
-export const availableDevices = (s: BasicSettings): DeviceId[] => s.kitchen.devices ?? [...selectableDevices];
+/** Never answered (null) is no device, not every device: suggestions ask for My kitchen first (missingAnswers). */
+export const availableDevices = (s: BasicSettings): DeviceId[] => s.kitchen.devices ?? [];
 /** Cooking-method filter choices: the person's devices plus No-cook. */
 export const methodChoices = (devices: readonly string[]) =>
   plannerCookingMethods.filter(method => method === "No-cook" || devices.includes(method));
@@ -306,6 +321,21 @@ export function householdCounts(s: BasicSettings): { adults: number; kids: numbe
   if (members.length) return { adults: members.filter(m => m.kind === "adult").length, kids: members.filter(m => m.kind === "child").length };
   return null;
 }
+/** The guided setup's questions (/household). Style has a default (Everyday cooking), so it is never missing. */
+export const setupSteps = ["style", "people", "restrictions", "kitchen"] as const;
+export type SetupStep = typeof setupSteps[number];
+/** Every requirement the household holds: its own diets, allergies and exclusions, or a member's. */
+export const hasRequirements = (s: BasicSettings) => s.dietary.diets.length > 0 || s.dietary.allergies.length > 0 || s.dietary.customAllergies.length > 0
+  || s.household.members.some(m => m.diets.length || m.allergies.length || m.customAllergies.length);
+/** Required answers a personalized suggestion needs and this household has not given. Asked before Cook now, the Week and
+ * + Add, then the action resumes. Legacy settings keep what they have: only what is really missing is asked. */
+export function missingAnswers(s: BasicSettings): SetupStep[] {
+  return [
+    ...(householdCounts(s) ? [] : ["people" as const]),
+    ...(s.setup.noRestrictions || hasRequirements(s) ? [] : ["restrictions" as const]),
+    ...(s.kitchen.devices === null ? ["kitchen" as const] : []),
+  ];
+}
 export const newMemberId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`).replace(/[^A-Za-z0-9_-]/g, "");
 export const emptyMember = (kind: Member["kind"], name: string): Member =>
   ({ id: newMemberId(), name, kind, diets: [], allergies: [], customAllergies: [], dislikes: [], favorites: [], portion: null });
@@ -314,8 +344,8 @@ export const emptyMember = (kind: Member["kind"], name: string): Member =>
  * bookkeeping). The Week asks to update when it differs from setup.plannedWith. */
 /** `filters`: the Week → Plan filters when they differ from the defaults (planFilters() in week-filters.ts); they live in browser storage. */
 export function planKey(s: BasicSettings, filters: unknown = null): string {
-  const { status: _status, suggested: _suggested, declined: _declined, plannedWith: _plannedWith, ...setup } = s.setup;
-  const { stores: _stores, ...shopping } = s.shopping;
+  const { status: _status, step: _step, scheduled: _scheduled, suggested: _suggested, declined: _declined, plannedWith: _plannedWith, ...setup } = s.setup;
+  const { stores: _stores, storesAsked: _storesAsked, ...shopping } = s.shopping;
   const text = JSON.stringify([{ ...s.household, members: s.household.members.map(({ name: _name, ...m }) => m) }, s.dietary, s.kitchen, s.cooking, s.planning, shopping, setup, ...(filters ? [filters] : [])]);
   let h = 2166136261;
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);

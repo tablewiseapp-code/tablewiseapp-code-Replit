@@ -52,10 +52,16 @@ try {
   await go("/", onSignIn);
   await ev(`${q("button-guest")}.click()`);
   await until(`${onApp} && location.pathname === "/household"`, "first visit: Your household");
-  await ev(`${q("button-skip-household")}.click()`);
-  await until(`location.pathname === "/" && ${onApp}`, "Skip for now goes Home");
+  await ev(`document.querySelector('[data-testid="app-nav-header"] a[href="/"]').click()`);
+  await until(`location.pathname === "/" && ${onApp}`, "Home stays reachable from the setup");
   await go("/", onApp);
-  ok(await ev(`location.pathname === "/"`), "guest choice and skip remembered after reload");
+  // No "Skip for now" since 2026-11-21: a guest who hasn't answered the setup returns to it; the guest choice is remembered.
+  await until(`${onApp} && location.pathname === "/household"`, "guest choice remembered; the setup again");
+  // Finish the four questions; the account created below keeps these answers.
+  for (const id of ["style-default", "count-adults-increase", "button-next", "restriction-none", "button-next", "device-Stovetop", "button-next"]) {
+    await until(`Boolean(${q(id)})`, id); await ev(`${q(id)}.click()`);
+  }
+  await until(`Boolean(${q("step-done")})`, "setup finished");
 
   // ---- Settings → Sign in → new email creates the account and opens Home.
   await go("/settings", `Boolean(${q("button-sign-in")})`);

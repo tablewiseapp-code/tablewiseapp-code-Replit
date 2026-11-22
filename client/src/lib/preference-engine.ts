@@ -2,7 +2,7 @@
 // Eligibility (hard restrictions) is separate from ranking (soft preferences).
 import { evaluateAllergen, evaluateDiet, evaluateMeat, matchesFoodPref, mentionsTerm, recipeCuisine,
   type Allergen, type DietPattern, type RuleStatus } from "@shared/food-rules";
-import { satisfiesDevices, unmetGroups, type DeviceId, type DeviceRequirements } from "./device-requirements";
+import { selectableDevices, satisfiesDevices, unmetGroups, type DeviceId, type DeviceRequirements } from "./device-requirements";
 import { availableDevices, type BasicSettings, type Member } from "./basic-settings";
 import { mealSlots, type MealSlot } from "./meal-plan";
 import type { RecipeToolKey } from "./recipe-tools";
@@ -11,9 +11,12 @@ export type EngineRecipe = {
   id: string; title: string; ingredients: string[]; tags: string[]; mealType: string;
   prepTime?: number | null; cookTime?: number | null; minutes?: number;
   deviceRequirements: DeviceRequirements; equipment?: RecipeToolKey[]; proteinType?: string; stepCount?: number;
+  /** Reviewed as needing no cooking device (verified-no-cook.ts). Steps that name no device are not proof of that. */
+  verifiedNoCook?: boolean;
 };
 export type Restriction =
-  | { kind: "device"; missing: DeviceId[][] }
+  /** unknown: the steps name no device and the recipe is not a verified no-cook dish (it could need any of them). */
+  | { kind: "device"; missing: DeviceId[][]; unknown?: true }
   | { kind: "diet"; diet: DietPattern; status: Exclude<RuleStatus, "ok">; members: string[]; lines: string[] }
   | { kind: "allergy"; allergen: Allergen; status: Exclude<RuleStatus, "ok">; members: string[]; lines: string[] }
   | { kind: "customAllergy"; term: string; members: string[] }
@@ -60,6 +63,8 @@ export function mealReasons(recipe: EngineRecipe, settings: BasicSettings, meal:
 
 // Restrictions the catalog marks with an explicit, build-verified tag. These need that tag as well as clean ingredient
 // wording: a recipe without the tag (an import, an AI recipe, missing data) is never treated as suitable.
+/** Larger than every other preference together, so a kid-friendly dish comes first whenever one is eligible. */
+const KID_FIRST = 50;
 const tagKey = (tag: string) => tag.toLowerCase().replace(/[\s_-]+/g, "");
 const dietTags: Partial<Record<DietPattern, string[]>> = { vegetarian: ["vegetarian", "vegan"], vegan: ["vegan"], glutenFree: ["glutenfree"], dairyFree: ["dairyfree", "vegan"] };
 const allergenTags: Partial<Record<Allergen, string[]>> = { gluten: ["glutenfree"], milk: ["dairyfree", "vegan"] };
@@ -79,8 +84,12 @@ export function weeknightLimit(settings: BasicSettings, day: number, meal: MealS
 export function checkEligibility(recipe: EngineRecipe, settings: BasicSettings, memberIds?: readonly string[], meal?: MealSlot, day?: number): Eligibility {
   const reasons: Restriction[] = [];
   const people = diners(settings, memberIds);
-  const missing = unmetGroups(recipe.deviceRequirements, availableDevices(settings));
+  const devices = availableDevices(settings);
+  const missing = unmetGroups(recipe.deviceRequirements, devices);
   if (missing.length) reasons.push({ kind: "device", missing });
+  // No device found in the steps is missing data, not "no-cook": only a kitchen with every device can be sure to cook it.
+  else if (!recipe.deviceRequirements.length && !recipe.verifiedNoCook && !selectableDevices.every(d => devices.includes(d)))
+    reasons.push({ kind: "device", missing: [], unknown: true });
 
   // Who holds each restriction: household-wide rules apply to everyone.
   const holders = <T extends string>(household: T[], own: (m: Member) => T[]) => {
@@ -142,6 +151,10 @@ export function rankRecipe(recipe: EngineRecipe, settings: BasicSettings, ctx: R
   }
   const dislikedBy = [settings.dietary.dislikes, ...people.map(m => m.dislikes)].filter(list => list.some(c => matchesFoodPref(c, recipe))).length;
   if (dislikedBy) { score -= 3 * dislikedBy; concerns.push(`disliked:${dislikedBy}`); }
+  // Kid-friendly meals: lunch and dinner put "Kid friendly" recipes first (a ranking, never a restriction; 2026-11-21).
+  if (settings.household.kidFriendly && (recipe.mealType === "Lunch" || recipe.mealType === "Dinner") && recipe.tags.some(tag => tagKey(tag) === "kidfriendly")) {
+    score += KID_FIRST; matches.push("kidFriendly");
+  }
   const cuisine = recipeCuisine(recipe.tags);
   if (cuisine && settings.dietary.preferredCuisines.includes(cuisine)) { score += 2; matches.push(`cuisine:${cuisine}`); }
   if (cuisine && settings.dietary.avoidCuisines.includes(cuisine)) { score -= 3; concerns.push(`avoidCuisine:${cuisine}`); }

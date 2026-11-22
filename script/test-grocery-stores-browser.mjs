@@ -26,7 +26,8 @@ try {
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Runtime.exceptionThrown") errors.push(d.params.exceptionDetails.text); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
   await call("Page.enable"); await call("Runtime.enable");
-  await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1')" });
+  // A guest past the guided setup (2026-11-21: the store picker moved from Your household to Groceries → My stores).
+  await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); if (!sessionStorage.getItem('fresh')) localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'done', noRestrictions: true, scheduled: true }, household: { servingsMode: 'fixed', fixedServings: 4 }, kitchen: { devices: ['Oven', 'Air fryer', 'Stovetop', 'Microwave'] } }))" });
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r.exceptionDetails) throw new Error(`${r.exceptionDetails.text}: ${e}`); return r.result.value; };
   const q = id => `document.querySelector('[data-testid="${id}"]')`;
   const until = async (expr, what) => { for (let i = 0; i < 80; i++) { if (await ev(expr).catch(() => false)) return; await sleep(150); } throw new Error(`timeout: ${what} at ${await ev("location.href")}`); };
@@ -47,25 +48,19 @@ try {
     ok(res.ok && (res.headers.get("content-type") ?? "").startsWith("image/"), `logo ${id}`);
   }
 
-  // ---- 1. English onboarding: Walmart walk-in, Safeway both, then Continue.
-  await go("/", `location.pathname === "/household" && Boolean(${q("store-picker")})`);
+  // ---- 1. English, Groceries → My stores: Walmart walk-in, Safeway both.
+  await openStores();
   eq(await rows(), canada, "five English suggestions");
   await until(`[...document.querySelectorAll('[data-testid="store-picker"] img')].every(i => i.complete && i.naturalWidth > 0)`, "logos load");
   ok(await ev(`[...document.querySelectorAll('[data-testid="store-picker"] img')].every(i => i.alt === "" && getComputedStyle(i).objectFit === "contain" && i.offsetWidth === 48 && i.offsetHeight === 36)`), "48×36, contain, alt=\"\"");
   ok(await fits(), "long names and controls fit at 360px");
+  await sleep(400); // the dialog opens with a short zoom; measure once it has settled
   ok(await big(), "44px targets");
   await click("store-walmart-walkIn");
   ok(await pressed("store-walmart-walkIn") && !(await pressed("store-walmart-delivery")), "Walmart walk-in on alone");
   eq(await ev(`${q("store-walmart-walkIn")}.getAttribute("aria-label")`), "Walmart: Walk-in", "toggle names store and method");
   await click("store-safeway-delivery"); await click("store-safeway-walkIn");
   eq(await saved(), [{ id: "walmart", methods: ["walkIn"] }, { id: "safeway", methods: ["delivery", "walkIn"] }], "saved at once");
-  await click("restriction-none");
-  await ev(`document.querySelector('[data-testid^="device-"]').click()`);
-  await until(`!${q("button-suggest-week")}.disabled`, "catalog loaded");
-  await click("button-suggest-week");
-  await sleep(300); { const why = await ev(`location.pathname + " " + (${q("household-error")}?.textContent ?? "")`); if (!why.startsWith("/meals")) console.log("still:", why); }
-  await until(`location.pathname === "/meals"`, "Continue opens the Week");
-  eq(await saved(), [{ id: "walmart", methods: ["walkIn"] }, { id: "safeway", methods: ["delivery", "walkIn"] }], "Continue keeps the stores");
   await sleep(500);
   eq(await ev(`fetch("/api/household-settings").then(r => r.json()).then(s => s.shopping.stores)`), await saved(), "server copy");
   await openStores(); // a fresh page load = refresh
@@ -112,17 +107,12 @@ try {
   await openStores();
   ok(!(await rows()).includes("custom:butcher"), "removal persists");
 
-  // ---- 4. A new person continues with no store.
+  // ---- 4. A new person: the guided setup asks no store question; nothing is saved for stores.
   await call("Network.enable"); await call("Network.clearBrowserCookies");
-  await ev(`localStorage.clear(); localStorage.setItem("tablewise_guest_v1", "1")`);
-  await go("/", `location.pathname === "/household" && Boolean(${q("store-picker")})`);
-  await click("restriction-none");
-  await ev(`document.querySelector('[data-testid^="device-"]').click()`);
-  await until(`!${q("button-suggest-week")}.disabled`, "catalog loaded");
-  await click("button-suggest-week");
-  await sleep(300); { const why = await ev(`location.pathname + " " + (${q("household-error")}?.textContent ?? "")`); if (!why.startsWith("/meals")) console.log("still:", why); }
-  await until(`location.pathname === "/meals"`, "Continue with no store");
-  eq(await saved(), [], "no stores saved");
+  await ev(`localStorage.clear(); localStorage.setItem("tablewise_guest_v1", "1"); sessionStorage.setItem("fresh", "1")`);
+  await go("/", `location.pathname === "/household" && Boolean(${q("step-style")})`);
+  ok(await ev(`!${q("store-picker")}`), "no store picker in the setup");
+  eq(await ev(`JSON.parse(localStorage.getItem("tablewise_basic_settings") ?? "null")?.shopping?.stores ?? []`), [], "no stores saved");
 
   eq(errors, [], "no page errors");
   console.log(`All ${checks} store picker browser checks passed.`);

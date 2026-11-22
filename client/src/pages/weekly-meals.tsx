@@ -27,7 +27,9 @@ import { useFilterLabels, useWeekFilterChips, WeekFilterPanel } from "@/componen
 import { countWeekFilters, defaultWeekFilters, sanitizeWeekFilters, type WeekFilters } from "@/lib/week-filters";
 
 const SELECTED_PREVIEW = 5; // more selections collapse behind "Show all"
-import { availableDevices, householdCounts, householdServings, loadSettings, methodChoices, planKey, updateSettings, useSavedSettings } from "@/lib/basic-settings";
+import { availableDevices, householdCounts, householdServings, loadSettings, methodChoices, missingAnswers, planKey, updateSettings, useSavedSettings, type HouseholdSetup } from "@/lib/basic-settings";
+import { askURL } from "@/hooks/use-cook-now";
+import { CookingDays, overCount } from "@/components/household-controls";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ActivePreferences } from "@/components/active-preferences";
 import { limitingReasons, matchCounts } from "@/lib/active-preferences";
@@ -109,7 +111,13 @@ function saveState(state: WeeklyMealsState) {
 
 /** /meals is the Week calendar; /meals?browse is the recipe browser (search, filters, Food deals, picks). */
 export default function WeeklyMeals() {
-  const browsing = new URLSearchParams(useSearch()).has("browse");
+  const search = useSearch();
+  const browsing = new URLSearchParams(search).has("browse");
+  const [, setLocation] = useLocation();
+  // Suggestions need the household's required answers (My kitchen above all): ask only what is missing, then come back.
+  const missing = missingAnswers(loadSettings());
+  useEffect(() => { if (missing.length) setLocation(askURL(missing, `/meals${search ? `?${search}` : ""}`), { replace: true }); }, [missing.length]);
+  if (missing.length) return null;
   return <RecipeTimeProvider>{browsing ? <WeeklyMealsContent /> : <WeekCalendar />}</RecipeTimeProvider>;
 }
 
@@ -746,6 +754,16 @@ function WeekCalendar() {
   const fits = useCallback((r: Recipe) => matchesPlannerFilters(r, loadWeekFilters(), "total", getRecipeUserMeta(r.id)), []);
   // No recipe left with the Deal: keep the other filters (the time limit above all) before dropping them all.
   const fallback = useCallback((r: Recipe) => matchesPlannerFilters(r, { ...loadWeekFilters(), deal: null }, "total", getRecipeUserMeta(r.id)), []);
+  // Cooking days: asked on first use, before the first draft (2026-11-21); "Cooking days" below the days reopens it.
+  const [schedule, setSchedule] = useState<HouseholdSetup | null>(null);
+  const [firstSchedule, setFirstSchedule] = useState(false);
+  /** Once per week: cooking days that already have a dish keep it; the others get one. */
+  const draftWeek = (plan: PlanState) => {
+    const shown = proposeCookingPlan(plan, recipes ?? [], loadSettings(), week, { fits, fallback }).plan;
+    try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
+    try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks again later */ }
+    return shown;
+  };
   useEffect(() => {
     if (!recipes) return;
     let active = true;
@@ -754,10 +772,9 @@ function WeekCalendar() {
       if (!active) return;
       let shown = plan;
       if (!plan.proposed && plan.approved === null) {
-        // Once per week: cooking days that already have a dish keep it; the others get one.
-        shown = proposeCookingPlan(plan, recipes, loadSettings(), week, { fits, fallback }).plan;
-        try { saveWeek(week, shown); } catch { /* shown anyway; saved with the next change */ }
-        try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks again later */ }
+        // Never asked for cooking days and nothing planned: ask first, draft on Plan my week. A saved schedule is reused.
+        if (!loadSettings().setup.scheduled && !plan.batches.length) { setSchedule(loadSettings().setup); setFirstSchedule(true); }
+        else shown = draftWeek(plan);
       } else if (loadSettings().setup.plannedWith === null && loadSettings().rev > 0) {
         // Settings saved before 2026-11-20 recorded nothing: take them as what this Week was planned with.
         try { updateSettings(s => ({ ...s, setup: { ...s.setup, plannedWith: planKey(s, planFilters()) } })); } catch { /* asks nothing */ }
@@ -795,7 +812,7 @@ function WeekCalendar() {
   // ponytail: one key for all weeks; a later week planned with the new settings also clears the question for this one.
   const [asked, setAsked] = useState<string | null>(null);
   const key = planKey(settings, planFilters());
-  const prefsChanged = !!ready && week >= currentWeek() && ready.plan.batches.length > 0 && !!recipes
+  const prefsChanged = !!ready && !schedule && week >= currentWeek() && ready.plan.batches.length > 0 && !!recipes
     && settings.setup.plannedWith !== null && settings.setup.plannedWith !== key && asked !== key;
   const acknowledge = (suggested?: string[]) => {
     setAsked(key);
@@ -814,6 +831,16 @@ function WeekCalendar() {
     recordPilotEvent("plan_completed", week);
     // The suggested-dinner draft bookkeeping (Your household) ends with approval.
     try { updateSettings(s => ({ ...s, setup: { ...s.setup, suggested: [], declined: [] } })); } catch { /* the approval is what matters */ }
+  };
+  const saveSchedule = () => {
+    if (!schedule || overCount(schedule)) return;
+    const { evenings, fixedDays, challenge, weeknightMax } = schedule;
+    try { updateSettings(s => ({ ...s, setup: { ...s.setup, evenings, fixedDays, challenge, weeknightMax, scheduled: true } })); }
+    catch { toast({ title: t("saveFailed"), variant: "destructive" }); return; }
+    setSchedule(null); setFirstSchedule(false);
+    // An empty week is drafted now; a week with dishes asks "Your preferences have been changed" (prefsChanged).
+    const current = latest.current;
+    if (current && !current.plan.batches.length) { latest.current = { ...current, plan: draftWeek(current.plan) }; setLoaded(latest.current); }
   };
   const planned = ready ? ready.plan.batches.flatMap(b => byId.get(b.recipeId) ?? []) : [];
   const deals = weekDeals(foodDeals, week, planned, settings.shopping.stores.map(storeName));
@@ -859,6 +886,17 @@ function WeekCalendar() {
           </div>
         ) : !ready ? (
           <p className="text-sm text-muted-foreground" role="status">{t("loading")}</p>
+        ) : schedule ? (
+          <section className="card max-w-xl p-4 sm:p-5" aria-labelledby="schedule-title" data-testid="schedule-panel">
+            <h2 id="schedule-title" className="text-base font-semibold">{household("scheduleTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{household("scheduleIntro")}</p>
+            <CookingDays setup={schedule} onChange={patch => setSchedule(s => s && { ...s, ...patch })} />
+            <div className="mt-5 flex flex-wrap gap-2">
+              <button type="button" onClick={saveSchedule} disabled={overCount(schedule)} className="btn btn-primary" data-testid="button-save-schedule">
+                {firstSchedule ? household("planWeek") : household("save")}</button>
+              {!firstSchedule && <button type="button" onClick={() => setSchedule(null)} className="btn btn-secondary" data-testid="button-cancel-schedule">{household("cancel")}</button>}
+            </div>
+          </section>
         ) : (
           <>
             <WeekDeals offers={deals} lang={lang} />
@@ -872,6 +910,7 @@ function WeekCalendar() {
               options={(day, meal) => dishOptions(recipes ?? [], settings, day, { seed: week, fits, fallback, chosen: planned, meal })} />
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/meals?browse" className="btn btn-text -ms-2" data-testid="link-browse-recipes">{t("browse")}</Link>
+              <button type="button" onClick={() => setSchedule(loadSettings().setup)} className="btn btn-text" data-testid="button-cooking-days">{household("cookingDays")}</button>
               <Link href="/household" className="btn btn-text" data-testid="link-household">{household("changeHousehold")}</Link>
             </div>
           </>

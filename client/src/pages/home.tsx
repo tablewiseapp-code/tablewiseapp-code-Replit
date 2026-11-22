@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
 import { homeText } from "@/lib/home-copy";
@@ -12,7 +12,9 @@ import { MealGenerator, type MealAdded, type MealTarget } from "@/components/mea
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
-import { MealSuggestion } from "@/components/meal-suggestion";
+import { askURL, useCookNow } from "@/hooks/use-cook-now";
+import { CookNowEmpty } from "@/components/household-controls";
+import { loadSettings, missingAnswers } from "@/lib/basic-settings";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
 import { householdText } from "@/lib/household-copy";
@@ -38,8 +40,18 @@ export default function Home() {
   const [now] = useState(() => new Date());
   const today = calendarDate(now);
   const [plan, setPlan] = useState(readPlan);
-  const [generating, setGenerating] = useState<MealTarget | null>(null);
-  const [suggesting, setSuggesting] = useState(false);
+  // ?add=dinner: + Add dinner after its missing household answers were asked (askURL), resumed here.
+  const [generating, setGenerating] = useState<MealTarget | null>(() => {
+    const meal = mealSlots.find(m => m.toLowerCase() === new URLSearchParams(window.location.search).get("add"));
+    return meal ? { meal, day: new Date().getDay(), date: calendarDate(new Date()) } : null;
+  });
+  const [, setLocation] = useLocation();
+  useEffect(() => { if (generating) setLocation("/", { replace: true }); }, []); // a reload must not reopen it
+  const cookNow = useCookNow();
+  const openGenerator = (target: MealTarget) => {
+    const missing = missingAnswers(loadSettings());
+    if (missing.length) setLocation(askURL(missing, `/?add=${target.meal.toLowerCase()}`)); else setGenerating(target);
+  };
   const catalog = useRecipeCatalog();
   const translations = useRecipeTranslations();
   const { recipeView } = useRecipeDisplay();
@@ -118,7 +130,7 @@ export default function Home() {
                 {mealSlots.map(meal => {
                   const list = todays.filter(([batch]) => mealOf(batch) === meal);
                   const name = t(`meals.${meal.toLowerCase()}`);
-                  const add = <button type="button" onClick={() => setGenerating({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
+                  const add = <button type="button" onClick={() => openGenerator({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
                     data-testid={`home-add-${meal.toLowerCase()}`} className="btn btn-text -ms-2">{text(`add${meal}`)}</button>;
                   // The meal of this time of day is the big card, later meals the smaller row card; an earlier meal, or one with
                   // nothing today, is collapsed to its name and opens to its dishes and + Add.
@@ -179,8 +191,9 @@ export default function Home() {
                 })}
               </div>
             )}
-            {/* Available even when today is empty; never changes the Week or groceries. */}
-            <button type="button" onClick={() => setSuggesting(true)} disabled={!catalog.data} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
+            {/* Available even when today is empty; the same action as Cook now: opens one eligible recipe, never changes the Week or groceries. */}
+            <button type="button" onClick={cookNow.start} disabled={!cookNow.ready} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
+            {cookNow.empty && <CookNowEmpty from="/" />}
           </section>
 
           <details className="card p-3 sm:p-5" data-testid="home-task-preview">
@@ -196,7 +209,6 @@ export default function Home() {
         </div>
       </PageContainer>
       <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={meal => { setGenerating(null); focusAdd(meal); }} onAdded={added} />
-      <MealSuggestion meal={suggesting ? "Dinner" : null} day={now.getDay()} catalog={catalog.data ?? []} onClose={() => setSuggesting(false)} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
   );

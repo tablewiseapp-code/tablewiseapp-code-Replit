@@ -2,13 +2,14 @@
 // Pure checks, no browser or database. Run: npx tsx script/test-basic-settings.ts   (UI: script/test-basic-settings-browser.mjs)
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { defaultSettings, emptyMember, householdServings, loadSettings, methodChoices, availableDevices, sanitizeSettings, settingsKey, updateSettings,
+import { defaultSettings, emptyMember, householdServings, loadSettings, methodChoices, availableDevices, missingAnswers, planKey, sanitizeSettings, settingsKey, updateSettings,
   type BasicSettings } from "../client/src/lib/basic-settings";
 import { inferDeviceRequirements, satisfiesDevices, deviceRequirementsOf } from "../client/src/lib/device-requirements";
 import { checkEligibility, mealReasons, personalize, rankRecipe, suggestReplacement, type EngineRecipe } from "../client/src/lib/preference-engine";
 import { restrictionText, settingsText } from "../client/src/lib/settings-copy";
 import { evaluateMeat } from "../shared/food-rules";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
+import { cookNowOptions } from "../client/src/lib/week-suggestions";
 import { matchesPlannerFilters } from "../client/src/lib/planner-filters";
 import { evaluateAllergen } from "../shared/food-rules";
 import { activePreferenceChips, limitingReasons, matchCounts } from "../client/src/lib/active-preferences";
@@ -26,15 +27,17 @@ const memory = (initial: Record<string, string> = {}) => {
 const recipe = (patch: Partial<EngineRecipe> & { steps?: string[] }): EngineRecipe => ({
   id: patch.id ?? "r", title: patch.title ?? "Recipe", ingredients: patch.ingredients ?? ["400 g potatoes"], tags: patch.tags ?? ["Dinner", "Gluten-free", "Dairy-free"],
   mealType: patch.mealType ?? "Dinner", prepTime: patch.prepTime ?? 10, cookTime: patch.cookTime ?? 20,
-  deviceRequirements: patch.deviceRequirements ?? inferDeviceRequirements(patch.steps ?? []), equipment: patch.equipment, proteinType: patch.proteinType,
+  deviceRequirements: patch.deviceRequirements ?? inferDeviceRequirements(patch.steps ?? []), equipment: patch.equipment, proteinType: patch.proteinType, verifiedNoCook: patch.verifiedNoCook,
 });
-const withSettings = (patch: (s: BasicSettings) => BasicSettings) => patch(defaultSettings());
+/** A full kitchen unless the test says otherwise: unanswered devices are no device since 2026-11-21. */
+const full = (): BasicSettings => ({ ...defaultSettings(), kitchen: { devices: ["Oven", "Air fryer", "Stovetop", "Microwave"] } });
+const withSettings = (patch: (s: BasicSettings) => BasicSettings) => patch(full());
 
 // ---------- Persistence ----------
-test("unconfigured devices default to every device; an explicit empty selection is preserved", () => {
+test("unconfigured devices are no device (asked before suggesting), never every device; an explicit empty selection is preserved", () => {
   const store = memory();
   assert.equal(loadSettings(store).kitchen.devices, null);
-  assert.deepEqual(availableDevices(loadSettings(store)), ["Oven", "Air fryer", "Stovetop", "Microwave"]);
+  assert.deepEqual(availableDevices(loadSettings(store)), []);
   updateSettings(s => ({ ...s, kitchen: { devices: [] } }), store);
   assert.deepEqual(loadSettings(store).kitchen.devices, []);
   assert.deepEqual(availableDevices(loadSettings(store)), []);
@@ -195,16 +198,22 @@ const planner = toPlannerRecipes(catalog.map(r => ({ ...r, createdAt: "", update
 test("incompatible recipes are excluded from Weekly Meals (list and name search); My Recipes data is untouched", () => {
   const microwaveOnly = withSettings(s => ({ ...s, kitchen: { devices: ["Microwave"] } }));
   const { eligible, excluded } = personalize(planner, microwaveOnly);
+  // The catalog has no microwave recipe yet (a real gap): a microwave-only kitchen gets the verified no-cook dishes only.
   assert.ok(eligible.length > 0 && excluded.length > 0);
-  assert.ok(eligible.every(e => satisfiesDevices(e.recipe.deviceRequirements, ["Microwave"])));
+  assert.ok(eligible.every(e => e.recipe.verifiedNoCook || (e.recipe.deviceRequirements.length && satisfiesDevices(e.recipe.deviceRequirements, ["Microwave"]))));
   const search = eligible.map(e => e.recipe).filter(r => /pancake/i.test(r.title));
   assert.ok(search.every(r => satisfiesDevices(r.deviceRequirements, ["Microwave"])));
   const none = personalize(planner, withSettings(s => ({ ...s, kitchen: { devices: [] } })));
-  assert.ok(none.eligible.length > 0 && none.eligible.every(e => e.recipe.deviceRequirements.length === 0), "only no-cook recipes remain");
+  assert.equal(none.eligible.length, 11, "No cooking appliances: the 11 reviewed no-cook recipes");
+  assert.ok(none.eligible.every(e => e.recipe.verifiedNoCook && e.recipe.deviceRequirements.length === 0));
+  assert.ok(planner.every(r => !r.verifiedNoCook || r.deviceRequirements.length === 0), "a verified no-cook recipe names no device");
+  const pulledPork = planner.find(r => /slow-cooker-pulled-pork/.test(r.id))!;
+  assert.deepEqual(pulledPork.deviceRequirements, [], "steps name no selectable device…");
+  assert.ok(!none.eligible.some(e => e.recipe.id === pulledPork.id), "…but missing metadata is not no-cook");
   // My Recipes reads the API list directly and never imports the engine.
   assert.ok(!/preference-engine|basic-settings/.test(readFileSync("client/src/pages/recipe-list.tsx", "utf8")));
   // Default settings hide nothing and keep the original order.
-  assert.deepEqual(personalize(planner, defaultSettings()).eligible.map(e => e.recipe.id), planner.map(r => r.id));
+  assert.deepEqual(personalize(planner, full()).eligible.map(e => e.recipe.id), planner.map(r => r.id));
 });
 test("meal-type and dietary filters still work on top of personalization", () => {
   const none = { maxMinutes: null, dietary: [], mealType: ["Breakfast"], cookingMethod: [], source: [], proteinType: [], withNotes: false,
@@ -518,7 +527,7 @@ test("dislikes lower a recipe but never hide it; an allergy always wins over a l
 test("breakfast on the real catalog: liked muffins come first, nothing is hidden, pagination comes after ranking", () => {
   const s = withKids(kid("Mia", ["muffins"]), kid("Sam", ["muffins"]));
   const breakfasts = planner.filter(r => r.mealType === "Breakfast");
-  const plain = personalize(breakfasts, defaultSettings(), { meals: ["Breakfast"] }).eligible.map(e => e.recipe.id);
+  const plain = personalize(breakfasts, full(), { meals: ["Breakfast"] }).eligible.map(e => e.recipe.id);
   const ranked = personalize(breakfasts, s, { meals: ["Breakfast"] }).eligible.map(e => e.recipe);
   assert.equal(ranked.length, plain.length, "same recipes, only the order changes");
   const muffins = breakfasts.filter(r => /muffin/i.test(r.title));
@@ -571,5 +580,69 @@ test("Recipe View: defaults, kept choices, legacy Week switch, per-serving nutri
   assert.deepEqual(servingNutrition({ nutrition, servings: "4", perServing: { sodium: 610, protein: Number.NaN } }), { estimated: false, values: { sodium: 610 } }, "stored per-serving wins");
   assert.equal(mainCookingTool({ steps: ["Chop on a cutting board with a knife.", "Roast in the oven."] }), "toolOven");
   assert.equal(mainCookingTool({ steps: ["Mix in a bowl."] }), null);
+});
+// ---------- Guided setup (2026-11-21): devices, missing answers, legacy households ----------
+test("microwave-only: oven-only and oven-plus-stovetop are out; an alternative the microwave can do and verified no-cook are in", () => {
+  const microwave = withSettings(s => ({ ...s, kitchen: { devices: ["Microwave"] } }));
+  const fits = (steps: string[], extra: Partial<EngineRecipe> = {}) => checkEligibility(recipe({ steps, ...extra }), microwave).eligible;
+  assert.equal(fits(["Bake in the oven for 30 minutes."]), false, "oven only");
+  assert.equal(fits(["Bake in the oven for 30 minutes.", "Meanwhile simmer the sauce in a saucepan."]), false, "oven and stovetop");
+  assert.equal(fits(["Heat in the microwave or a saucepan until hot."]), true, "Microwave OR Stovetop");
+  assert.equal(fits(["Mix in a bowl and serve."], { verifiedNoCook: true }), true, "verified no-cook");
+  const unknown = checkEligibility(recipe({ steps: ["Mix in a bowl and serve."] }), microwave);
+  assert.equal(unknown.eligible, false, "no device named and not verified: unknown, not no-cook");
+  assert.deepEqual(unknown.reasons, [{ kind: "device", missing: [], unknown: true }]);
+  assert.equal(restrictionText("en", unknown.reasons[0], () => null), "kitchen equipment not recorded");
+  assert.equal(checkEligibility(recipe({ steps: ["Mix in a bowl and serve."] }), withSettings(s => s)).eligible, true, "a full kitchen can cook it");
+});
+test("no cooking appliances admits verified no-cook only; unanswered devices are never every device", () => {
+  const none = withSettings(s => ({ ...s, kitchen: { devices: [] } }));
+  assert.equal(checkEligibility(recipe({ steps: ["Mix."], verifiedNoCook: true }), none).eligible, true);
+  assert.equal(checkEligibility(recipe({ steps: ["Mix."] }), none).eligible, false);
+  assert.equal(checkEligibility(recipe({ steps: ["Simmer in a saucepan."] }), none).eligible, false);
+  assert.equal(checkEligibility(recipe({ steps: ["Simmer in a saucepan."] }), defaultSettings()).eligible, false, "null devices: nothing assumed");
+});
+test("missing answers: only what a household has not given; legacy settings keep what they have", () => {
+  assert.deepEqual(missingAnswers(defaultSettings()), ["people", "restrictions", "kitchen"]);
+  const answered = withSettings(s => ({ ...s, household: { ...s.household, members: [emptyMember("adult", "A")] }, setup: { ...s.setup, noRestrictions: true } }));
+  assert.deepEqual(missingAnswers(answered), []);
+  assert.deepEqual(missingAnswers({ ...answered, kitchen: { devices: null } }), ["kitchen"], "a legacy household with devices: null is asked My kitchen only");
+  assert.deepEqual(missingAnswers({ ...answered, kitchen: { devices: [] } }), [], "no appliances is an answer");
+  assert.deepEqual(missingAnswers(withSettings(s => ({ ...s, household: { ...s.household, servingsMode: "fixed" }, dietary: { ...s.dietary, allergies: ["milk"] } }))), [], "a fixed number and an allergy answer both");
+  const memberRule = withSettings(s => ({ ...s, household: { ...s.household, members: [{ ...emptyMember("child", "Leo"), allergies: ["peanuts"] }] } }));
+  assert.deepEqual(missingAnswers(memberRule), [], "member requirements count as answered");
+});
+test("setup progress, schedule and the store offer are saved but never ask the Week to update", () => {
+  const s = defaultSettings();
+  assert.equal(planKey({ ...s, setup: { ...s.setup, step: 3, scheduled: true }, shopping: { ...s.shopping, storesAsked: true } }), planKey(s));
+  assert.notEqual(planKey({ ...s, setup: { ...s.setup, evenings: 4 } }), planKey(s), "the schedule itself changes dishes");
+  const kept = sanitizeSettings({ ...s, setup: { ...s.setup, step: 4, scheduled: true }, shopping: { ...s.shopping, storesAsked: true } });
+  assert.equal(kept.setup.step, 4); assert.equal(kept.setup.scheduled, true); assert.equal(kept.shopping.storesAsked, true);
+  // Saved before 2026-11-21: a finished Your household already answered the cooking days; a skipped one did not.
+  const legacy = (status: string) => { const raw = JSON.parse(JSON.stringify({ ...s, setup: { ...s.setup, status } })); delete raw.setup.scheduled; delete raw.setup.step; return sanitizeSettings(raw).setup; };
+  assert.equal(legacy("done").scheduled, true); assert.equal(legacy("skipped").scheduled, false); assert.equal(legacy("done").step, 0);
+});
+test("Cook now: this time of day's meal first, then dinners; restrictions are never relaxed", () => {
+  const list = [recipe({ id: "d", steps: ["Simmer in a saucepan."] }), recipe({ id: "b", mealType: "Breakfast", steps: ["Simmer in a saucepan."] }),
+    recipe({ id: "o", steps: ["Bake in the oven."] })];
+  const hob = withSettings(s => ({ ...s, kitchen: { devices: ["Stovetop"] } }));
+  assert.deepEqual(cookNowOptions(list, hob, new Date(2026, 10, 19, 8)).map(r => r.id), ["b", "d"], "morning: breakfast first");
+  assert.deepEqual(cookNowOptions(list, hob, new Date(2026, 10, 19, 19)).map(r => r.id), ["d", "b"], "evening: dinner first; the oven dish never");
+  assert.deepEqual(cookNowOptions(list, withSettings(s => ({ ...s, kitchen: { devices: [] } })), new Date(2026, 10, 19, 19)), [], "nothing fits: empty, never relaxed");
+});
+test("Kid-friendly meals: lunch and dinner rank kid-friendly first, never as a restriction; saved and off by default", () => {
+  assert.equal(defaultSettings().household.kidFriendly, false);
+  assert.equal(sanitizeSettings({ ...defaultSettings(), household: { ...defaultSettings().household, kidFriendly: true } }).household.kidFriendly, true);
+  const hob = ["Simmer in a saucepan."];
+  const plain = recipe({ id: "plain", steps: hob }), kid = recipe({ id: "kid", steps: hob, tags: ["Dinner", "Kid friendly", "Gluten-free", "Dairy-free"] });
+  const kidOven = recipe({ id: "kidOven", steps: ["Bake in the oven."], tags: ["Dinner", "Kid friendly"] });
+  const kidBreakfast = recipe({ id: "kb", mealType: "Breakfast", steps: hob, tags: ["Breakfast", "Kid friendly"] });
+  const off = withSettings(s => ({ ...s, kitchen: { devices: ["Stovetop"] } }));
+  const on = { ...off, household: { ...off.household, kidFriendly: true } };
+  assert.deepEqual(personalize([plain, kid], off).eligible.map(e => e.recipe.id), ["plain", "kid"], "off: unchanged order");
+  assert.deepEqual(personalize([plain, kid, kidOven], on).eligible.map(e => e.recipe.id), ["kid", "plain"], "on: kid-friendly first; an incompatible one never appears");
+  assert.equal(rankRecipe(kidBreakfast, on).score, rankRecipe(kidBreakfast, off).score, "breakfast is not affected");
+  assert.deepEqual(personalize([plain], on).eligible.map(e => e.recipe.id), ["plain"], "no kid-friendly dish: others still appear");
+  assert.equal(cookNowOptions([plain, kid], on, new Date(2026, 10, 19, 19))[0].id, "kid", "Cook now uses it too");
 });
 console.log(`All ${passed} My Basic Settings tests passed.`);

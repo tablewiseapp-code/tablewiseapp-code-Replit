@@ -42,14 +42,15 @@ const catalog = [
   r("stew", "Dinner", 15, ["potatoes", "eggs"], ["Gluten-free"]),
 ];
 const input: GeneratorInput = { meal: "Breakfast", day: 4, query: "", maxMinutes: null, style: "quick", servings: 5, diets: ["glutenFree"] };
-const ids = (patch: Partial<GeneratorInput>) => generateMeals(catalog, defaultSettings(), { ...input, ...patch });
+const kitchen = { ...defaultSettings(), kitchen: { devices: ["Oven", "Air fryer", "Stovetop", "Microwave"] as never } }; // steps name no device: only a full kitchen
+const ids = (patch: Partial<GeneratorInput>) => generateMeals(catalog, kitchen, { ...input, ...patch });
 assert.deepEqual(ids({}).recipes.map(x => x.id).sort(), ["congee", "frittata", "hash"], "breakfast only; gluten-free needs the tag");
 assert.deepEqual(ids({ query: "eggs and potatoes", maxMinutes: 15 }).recipes.map(x => x.id), ["hash"], "exactly 15 minutes passes; unknown time never does");
 assert.equal(ids({ query: "eggs and potatoes", style: "chef" }).recipes[0].id, "frittata", "Chef challenge favours the most involved");
 assert.equal(ids({ query: "pancakes" }).noMatch, "search");
 assert.equal(ids({ maxMinutes: 15, query: "rice" }).noMatch, "search");
 assert.equal(ids({ meal: "Lunch" }).noMatch, "restrictions");
-assert.equal(generateMeals([catalog[2]], defaultSettings(), { ...input, maxMinutes: 30 }).noMatch, "time");
+assert.equal(generateMeals([catalog[2]], kitchen, { ...input, maxMinutes: 30 }).noMatch, "time");
 { // Devices edited for this meal replace the household's, only here.
   const { generatorSettings } = await import("../client/src/lib/meal-generator");
   const s = { ...defaultSettings(), kitchen: { devices: ["Oven" as const] } };

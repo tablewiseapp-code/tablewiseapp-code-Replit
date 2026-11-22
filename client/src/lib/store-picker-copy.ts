@@ -7,6 +7,7 @@ const en = {
   addAnother: "+ Add another store", storeName: "Store name", add: "Add store", cancel: "Cancel",
   needMethod: "Choose Delivery, Walk-in or both.", saveError: "Couldn’t save. Try again.",
   myStores: "My stores", done: "Done",
+  offer: "Choose your stores to see their deals on your Week. Shopping works without one.", choose: "Choose stores", later: "Maybe later",
 };
 type Copy = typeof en;
 const ru: Copy = {
@@ -15,6 +16,7 @@ const ru: Copy = {
   addAnother: "+ Добавить другой магазин", storeName: "Название магазина", add: "Добавить магазин", cancel: "Отмена",
   needMethod: "Выберите доставку, покупку в магазине или оба варианта.", saveError: "Не удалось сохранить. Попробуйте ещё раз.",
   myStores: "Мои магазины", done: "Готово",
+  offer: "Выберите магазины, чтобы видеть их скидки на неделе. Покупки работают и без этого.", choose: "Выбрать магазины", later: "Может, позже",
 };
 const he: Copy = {
   heading: "איפה אתם קונים מצרכים?", helper: "בחרו איך אתם קונים בכל חנות.",
@@ -22,6 +24,7 @@ const he: Copy = {
   addAnother: "+ הוספת חנות אחרת", storeName: "שם החנות", add: "הוספת חנות", cancel: "ביטול",
   needMethod: "בחרו משלוח, קנייה בחנות או את שניהם.", saveError: "לא ניתן היה לשמור. נסו שוב.",
   myStores: "החנויות שלי", done: "סיום",
+  offer: "בחרו חנויות כדי לראות את המבצעים שלהן בשבוע. הקניות עובדות גם בלי זה.", choose: "בחירת חנויות", later: "אולי אחר כך",
 };
 const copies = { en, ru, he };
 

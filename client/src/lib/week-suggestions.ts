@@ -3,8 +3,8 @@
 // picks evenings and ranks the eligible recipes. Plan days: 0 = Sunday … 6 = Saturday, as in meal-plan.ts.
 import { householdCounts, type BasicSettings } from "./basic-settings";
 import { addBatch, cookedOn, mealSlots, type MealSlot, type PlanState } from "./meal-plan";
-import { dateInWeek } from "@shared/cooking-plan";
-import { checkEligibility, rankRecipe, total, weeknightLimit, type EngineRecipe, type Eligibility } from "./preference-engine";
+import { currentMeal, dateInWeek } from "@shared/cooking-plan";
+import { checkEligibility, personalize, rankRecipe, total, weeknightLimit, type EngineRecipe, type Eligibility } from "./preference-engine";
 
 export const weekOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon … Sun
 const DINNER = "Dinner" as const;
@@ -12,7 +12,7 @@ const DINNER = "Dinner" as const;
 const hash = (text: string) => { let h = 2166136261; for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619); return h >>> 0; };
 
 /** Fixed evenings first (and a chosen chef challenge day), then the rest spread out across the week. */
-export function cookingEvenings(settings: BasicSettings): number[] {
+export function cookingEvenings(settings: Pick<BasicSettings, "setup">): number[] {
   const s = settings.setup;
   const fixed = new Set(s.fixedDays);
   if (s.style === "chef" && s.challenge.when === "day" && s.challenge.day !== null) fixed.add(s.challenge.day);
@@ -108,6 +108,17 @@ export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, cata
   return { plan: { ...next, proposed: true }, suggested, days };
 }
 
-/** First visit: no household answers, no saved settings and an empty Week. Returning people and anyone with a plan skip it. */
+/** Launch lands on the guided setup: a fresh household (nothing saved) or one that started it and hasn't finished, with an
+ * empty Week. Returning, skipped and partly configured households (settings saved outside the setup) go Home. */
 export const needsHouseholdSetup = (settings: BasicSettings, plan: PlanState) =>
-  settings.setup.status === "new" && settings.rev === 0 && plan.selectedIds.length === 0 && plan.batches.length === 0;
+  settings.setup.status === "new" && (settings.rev === 0 || settings.setup.step > 0) && plan.selectedIds.length === 0 && plan.batches.length === 0;
+
+/** Cook now / Suggest a recipe / Show another: eligible recipes for now, best first: this time of day's meal, then dinners,
+ * lunches, breakfasts (one rule, checkEligibility, with today's weekday limit; then the household's ranking). The Week
+ * filters are not applied. Changes nothing. */
+export function cookNowOptions<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, now: Date): T[] {
+  const day = now.getDay(), first = currentMeal(now);
+  const order = [...mealSlots].reverse().sort((a, b) => Number(b === first) - Number(a === first));
+  return order.flatMap(meal => personalize(catalog.filter(r => r.mealType === meal && checkEligibility(r, settings, undefined, meal, day).eligible),
+    settings, { meals: [meal], day: day === 0 || day === 6 ? "weekend" : "weekday" }).eligible.map(e => e.recipe));
+}

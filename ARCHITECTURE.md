@@ -1,7 +1,7 @@
 # TableWise — Architecture
 
 > Source of truth for how the system is built. Product meaning and vocabulary live in [docs/PRODUCT.md](docs/PRODUCT.md).
-> Last reviewed: 2026-11-20. Feature-level detail lives in the other files under `docs/`.
+> Last reviewed: 2026-11-21. Feature-level detail lives in the other files under `docs/`.
 
 ## System in one paragraph
 
@@ -53,13 +53,13 @@ docs/                  product definition and per-feature notes
 | `/home-tasks` | `pages/home-tasks.tsx` | Home Tasks |
 | `/meals` | `pages/weekly-meals.tsx` | the Week as a cooking plan ([docs/cooking-plan.md](docs/cooking-plan.md); `?week=Monday` for another week; the nav links to `?plan`, which is ignored); `?browse` is the recipe browser with filters and Food deals |
 | `/recipes` | `pages/recipe-list.tsx` | catalog grid |
-| `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history |
+| `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history; `?suggest` (Cook now) adds "Show another", `?cook` opens Zen mode |
 | `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (signed-in accounts; guests see it with saving disabled) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
 | `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form; `?week=Monday` builds it from that week's plan (read and saved on the server); `?stores` opens My stores |
 | `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
 | `/settings` | `pages/basic-settings.tsx` | Basic Settings |
-| `/household` | `pages/household.tsx` | Your household; first visit lands here (`FirstVisit` in `App.tsx`) when settings are unsaved and the Week is empty |
+| `/household` | `pages/household.tsx` | Your household, the guided setup (four questions, then screen 5, `?step=5`); launch lands here (`FirstVisit` in `App.tsx`, `needsHouseholdSetup`) for a new or unfinished setup with an empty Week; `?ask=people,restrictions,kitchen&then=<path or cook>` asks only missing answers (`missingAnswers` in `basic-settings.ts`, `askURL` in `hooks/use-cook-now.ts`) and resumes |
 | `/operator` | server-rendered in `server/security.ts` | operator sign-in |
 
 ## Data
@@ -92,7 +92,7 @@ Tables are defined in `shared/schema.ts`.
 | `pilot_events` | funnel events | per anonymous pilot ID |
 | `users` | unused leftover | — |
 
-The Week is stored in `week_plans`, one row per calendar week. The browser keeps a synchronous copy of the current week only in `localStorage` (`weeklyMealsState` with its `weekStart`; the older `week_locked_v1` flag is read once to convert a slot plan, then removed): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once if it is this week's or predates dated weeks; an earlier week's copy is cleared), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Other weeks are read and written on the server only (`fetchWeek`, `saveWeek`). The draft is `proposeCookingPlan` in `client/src/lib/week-suggestions.ts`, run once per week by the Week page; dish edits are the pure helpers in `meal-plan.ts`, and the servings math (`batchTotal`, `batchFactor`) is in `shared/cooking-plan.ts`, used by the Week, Home, the recipe page and Groceries. Basic Settings follow the same pattern: `household_settings`, a synchronous copy in `localStorage` (`tablewise_basic_settings`), loaded by `syncSettings` before pages render and written through by `pushSettings`. Browser `localStorage` alone still holds grocery progress (including recorded purchase quantities), My Ideas and planner filter state. This is legacy, not a pattern to copy.
+The Week is stored in `week_plans`, one row per calendar week. The browser keeps a synchronous copy of the current week only in `localStorage` (`weeklyMealsState` with its `weekStart`; the older `week_locked_v1` flag is read once to convert a slot plan, then removed): `App.tsx` loads the server copy before rendering pages (a browser plan with no server copy is uploaded once if it is this week's or predates dated weeks; an earlier week's copy is cleared), and every change is written through by `pushWeekPlan` in `client/src/lib/meal-plan.ts`. Other weeks are read and written on the server only (`fetchWeek`, `saveWeek`). The draft is `proposeCookingPlan` in `client/src/lib/week-suggestions.ts`, run once per week by the Week page; dish edits are the pure helpers in `meal-plan.ts`, and the servings math (`batchTotal`, `batchFactor`) is in `shared/cooking-plan.ts`, used by the Week, Home, the recipe page and Groceries. Basic Settings follow the same pattern: `household_settings`, a synchronous copy in `localStorage` (`tablewise_basic_settings`), loaded by `syncSettings` before pages render (the server copy wins unless the browser copy has a higher `rev`: changes made just before a reload) and written through by `pushSettings` (which resolves once the server has that copy). Browser `localStorage` alone still holds grocery progress (including recorded purchase quantities), My Ideas and planner filter state. This is legacy, not a pattern to copy.
 
 ## Identity and access
 

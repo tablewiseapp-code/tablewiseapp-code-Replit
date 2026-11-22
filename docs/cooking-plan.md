@@ -25,7 +25,7 @@ Redesigned by the product owner on 2026-11-20 (the weekly cooking plan): the wee
   - A day without cooking is one line: the date and "+ Add dish". A day a dish only covers shows nothing more; the dish's card names it.
   - Weeks with dishes on all seven days (including weeks saved as Breakfast/Lunch/Dinner slots) show seven cooking days.
 - **Width:** cards form two columns on wide screens and stack on a phone, with no sideways scrolling at 375 px.
-- **Below the days:** "Browse recipes" and "Change household".
+- **Below the days:** "Browse recipes", "Cooking days" (reopens the cooking days with Save and Cancel) and "Your household".
 
 Every action is a visible, labelled button that works by tap, click and keyboard. There is no drag and drop.
 
@@ -50,7 +50,7 @@ Make X servings       = the sum across the selected dates (a skipped date adds 0
 Ingredient scale      = Make X servings / the recipe's original yield
 ```
 
-- **Household counts:** adults and kids come from the household members (Basic Settings). A fixed number of servings from Your household counts as adults.
+- **Household counts:** adults and kids come from the household members (Basic Settings). A fixed number of servings from Basic Settings counts as adults and wins over the members. Your household's Adults and Children counters set the members (2026-11-21).
   - With neither, a new dish makes the recipe's own yield.
 - **Original yield:** the leading number of the recipe's servings ("4", "4–6" → 4, "12 muffins" → 12).
   - With no yield, Edit servings asks for one; it is kept on the dish only.
@@ -89,14 +89,16 @@ The picker offers eligible catalog recipes for that weekday, best first: the cho
 
 Made once per week (`proposed`), the first time an unapproved week is opened. Saved at once.
 
+- **Missing answers first** (2026-11-21): a household without its household size, requirements or kitchen is sent to `/household?ask=…` for only those questions, then back to the Week (also for `?browse`).
+- **Cooking days asked once** (2026-11-21): if they were never set (`setup.scheduled`; settings saved earlier with a finished Your household count as set) and the week has no dish, the Week shows "Your cooking days" in place of the days: evenings per week (1–7, or "Not sure yet"), optional fixed evenings, the chef challenge day for Chef challenge, and the Mon–Fri time limits (folded). Fixed evenings beyond the count show "You picked N evenings but cook M a week" with "Cook N evenings"; "Plan my week" stays disabled until the count is raised or days are unselected. "Plan my week" saves them and makes the draft; later weeks reuse them. "Cooking days" under the days edits them; a week with dishes then asks "Your preferences have been changed".
 - **Cooking days** (`cookingEvenings`):
-  - Every preferred weekday from Your household is a cooking day, even beyond the weekly count.
+  - Every fixed evening is a cooking day, even beyond the weekly count.
   - The chef challenge day counts as a preferred weekday.
   - If the count is higher, days are added one at a time. Each added day is the one farthest from its nearest cooking day, with Sunday and Monday adjacent; ties go to the earlier day in Monday-first order.
   - With no preferred days, the days are spread the same way. "Not sure yet" means three.
 - **Dishes:** each cooking day without a dish gets one eligible recipe not yet in the week, dinners first, placed under Dinner. A recipe repeats only when the eligible ones run out.
 - **Changes are kept:** reopening the week keeps swaps, extra dishes, serving edits and moves. A moved cooking day changes that week only.
-- **Preferences changed** (2026-11-20): `setup.plannedWith` in Basic Settings holds `planKey` of the settings the Week was last planned or kept with (dish-affecting fields only). When it differs on this or a later week with dishes, a dialog "Your preferences have been changed" offers "Update the week" (all dishes of this week replaced by a new draft; status "Changes not saved" if it was approved) and "Keep my week". Either answer records the new key, so it asks once per change. Your household's "Suggest my week" builds the draft only when the Week is empty.
+- **Preferences changed** (2026-11-20): `setup.plannedWith` in Basic Settings holds `planKey` of the settings the Week was last planned or kept with (dish-affecting fields only). When it differs on this or a later week with dishes, a dialog "Your preferences have been changed" offers "Update the week" (all dishes of this week replaced by a new draft; status "Changes not saved" if it was approved) and "Keep my week". Either answer records the new key, so it asks once per change. Your household never builds a draft (2026-11-21); the Week does, after the cooking days.
 
 ## Approval and Groceries
 

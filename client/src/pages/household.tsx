@@ -1,289 +1,241 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { useLocation } from "wouter";
-import { ChevronDown, Minus, Plus } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, useLocation, useSearch } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
-import { StorePicker } from "@/components/store-picker";
-import { WeekFilterPanel, useWeekFilterChips } from "@/components/week-filter-panel";
+import { Chip, Counter, CookNowEmpty, toggle } from "@/components/household-controls";
 import { useI18n } from "@/lib/i18n";
-import { useHouseholdCopy } from "@/lib/household-copy";
+import { useHouseholdCopy, type HouseholdKey } from "@/lib/household-copy";
 import { settingsText } from "@/lib/settings-copy";
-import { useWeekFilterCopy } from "@/lib/week-filter-copy";
-import { useRecipeCatalog } from "@/hooks/use-week-workspace";
-import { getRecipeUserMeta } from "@/hooks/use-recipe-user-meta";
-import { selectableDevices } from "@/lib/device-requirements";
-import { challengeWhen, cookingStyles, householdServings, loadSettings, servingLimits, updateSettings,
-  planKey, weeknightTimeOptions, type BasicSettings, type CookingStyle } from "@/lib/basic-settings";
-import { mealSlots, readPlan, writePlan } from "@/lib/meal-plan";
-import { matchesPlannerFilters, WEEK_DEFAULT_MAX_MINUTES } from "@/lib/planner-filters";
-import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
-import { checkEligibility } from "@/lib/preference-engine";
-import { loadWeekFilters, planFilters, saveWeekFilters, type WeekFilters } from "@/lib/week-filters";
-import { cookingEvenings, proposeCookingPlan, weekOrder } from "@/lib/week-suggestions";
-import { currentWeek } from "@/lib/week-plan";
-import { allergens, type Allergen, type DietPattern } from "@shared/food-rules";
+import { useCookNow } from "@/hooks/use-cook-now";
+import type { DeviceId } from "@/lib/device-requirements";
+import { cookingStyles, emptyMember, hasRequirements, householdCounts, loadSettings, missingAnswers, pushSettings, setupSteps, updateSettings,
+  type BasicSettings, type Member, type SetupStep } from "@/lib/basic-settings";
+import { serveAmount } from "@shared/cooking-plan";
+import { allergens, type DietPattern } from "@shared/food-rules";
 
-// Diets: only those the catalog marks with an explicit, verified tag (preference-engine.ts → dietTags). Allergies: all of
-// Basic Settings' list; gluten and milk also need the tag, the others are checked by ingredient wording (unclear = unsafe).
+// Your household (/household): four questions, one at a time, then "What would you like to do?" (2026-11-21).
+// Every answer is saved as it is chosen (Basic Settings, Postgres per owner), so Back and refresh keep it and setup.step
+// resumes where the person left. ?ask=kitchen,…&then=… asks only those questions, then resumes the action that needed them.
+// Diets: only those the catalog marks with an explicit, verified tag (preference-engine.ts → dietTags).
 const offeredDiets: DietPattern[] = ["vegetarian", "vegan", "glutenFree", "dairyFree"];
-const offeredAllergies: readonly Allergen[] = allergens;
-const toggle = <T,>(list: readonly T[], value: T) => (list.includes(value) ? list.filter(x => x !== value) : [...list, value]);
+const kitchenDevices: DeviceId[] = ["Stovetop", "Oven", "Microwave", "Air fryer"];
+const MAX_PEOPLE = 12; // basic-settings.ts keeps at most 12 members
+type Screen = SetupStep | "done";
 
-type GroupKey = "style" | "servings" | "restrictions" | "equipment" | "evenings" | "fixed" | "challenge" | "weeknight" | "filters";
-/** Groups that start collapsed for each cooking style (Quick & easy: only the essentials open). */
-const collapsedFor = (style: CookingStyle): GroupKey[] => (style === "quick" ? ["weeknight", "filters"] : style === "everyday" ? ["filters"] : []);
-
-/** One collapsible group. The header shows its current answer in small text; choosing something inside collapses the groups above. */
-function Group({ id, title, summary, hint, open, onToggle, onPicked, closedAction, children }: {
-  id: GroupKey; title: string; summary: string; hint?: ReactNode; open: boolean; onToggle: () => void; onPicked: () => void; closedAction?: string; children: ReactNode;
-}) {
-  return (
-    <section className="border-b hairline" data-testid={`q-${id}`}>
-      <h2>
-        <button type="button" aria-expanded={open} aria-controls={`q-${id}-body`} onClick={onToggle} data-testid={`q-${id}-toggle`}
-          className="flex min-h-11 w-full items-center gap-2 py-3 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
-          <span className="min-w-0 flex-1">
-            <span className="text-base font-semibold text-foreground">{title}</span>
-            {summary && <span className="ms-2 text-sm font-normal text-muted-foreground" data-testid={`q-${id}-summary`}>{summary}</span>}
-          </span>
-          <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-700 motion-reduce:transition-none ${open ? "rotate-180" : ""}`} aria-hidden="true" />
-        </button>
-      </h2>
-      {/* A closed group can offer one shortcut that opens it (e.g. "None" chosen, but an allergy is easy to add). */}
-      {!open && closedAction && (
-        <button type="button" onClick={onToggle} data-testid={`q-${id}-reopen`}
-          className="-mt-2 mb-2 min-h-11 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">+ {closedAction}</button>
-      )}
-      {/* Slow open/close: grid rows animate 0fr ↔ 1fr; inert + invisible keep a closed group out of focus and the accessibility tree. */}
-      <div id={`q-${id}-body`} inert={!open}
-        className={`grid transition-[grid-template-rows,visibility] duration-700 ease-in-out motion-reduce:transition-none ${open ? "visible grid-rows-[1fr]" : "invisible grid-rows-[0fr]"}`}>
-        <div className="min-h-0 overflow-hidden">
-          <div className="pb-4" onClickCapture={e => { if ((e.target as HTMLElement).closest("button")) onPicked(); }}>
-            {hint && <p className="mb-3 text-sm text-muted-foreground">{hint}</p>}
-            {children}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-const Chip = ({ on, onClick, children, testid }: { on: boolean; onClick: () => void; children: ReactNode; testid: string }) =>
-  <button type="button" aria-pressed={on} onClick={onClick} className="chip" data-testid={testid}>{children}</button>;
-/** One choice of several. .chip only styles aria-pressed, so the selected look (border, fill, weight, ✓) is set here. */
-const Radio = ({ on, onClick, children, testid, className = "" }: { on: boolean; onClick: () => void; children: ReactNode; testid: string; className?: string }) =>
-  <button type="button" role="radio" aria-checked={on} onClick={onClick} data-testid={testid}
-    className={`chip ${on ? "!border-primary !bg-accent font-semibold" : ""} ${className}`}>{on && <span aria-hidden="true" className="text-xs">✓</span>}{children}</button>;
+/** A member the counters may remove: no food details of their own (a name alone is not one; product owner, 2026-11-21).
+ * Diets, allergies, exclusions, likes, dislikes and portion are never deleted from here. */
+const blank = (m: Member) => !m.diets.length && !m.allergies.length && !m.customAllergies.length && !m.dislikes.length && !m.favorites.length
+  && m.portion === null;
+/** The counters: household members by kind, or a fixed number (Basic Settings) as adults before any member exists. */
+const countsOf = (s: BasicSettings) => s.household.members.length
+  ? { adults: s.household.members.filter(m => m.kind === "adult").length, kids: s.household.members.filter(m => m.kind === "child").length }
+  : s.household.servingsMode === "fixed" ? { adults: Math.min(MAX_PEOPLE, s.household.fixedServings), kids: 0 } : { adults: 0, kids: 0 };
+const half = (n: number) => `${Math.floor(n)}${n % 1 ? "½" : ""}`.replace(/^0½$/, "½");
 
 export default function Household() {
-  const { t: app, lang, dir } = useI18n();
+  const { lang, dir } = useI18n();
   const t = useHouseholdCopy();
-  const c = useWeekFilterCopy();
   const s = (key: string) => settingsText(lang, key);
   const [, setLocation] = useLocation();
-  const catalog = useRecipeCatalog();
-  const [initial] = useState(loadSettings);
-  // One draft for every answer: switching style only changes what is shown, never what was entered.
-  const [draft, setDraft] = useState<BasicSettings>(() => ({ ...initial, household: { ...initial.household, servingsMode: "fixed", fixedServings: householdServings(initial) ?? 2 } }));
-  // A saved "None" answer starts folded away; the "+ Add an allergy or diet" link under it reopens it.
-  const [collapsed, setCollapsed] = useState<Set<GroupKey>>(() => new Set([...collapsedFor(initial.setup.style),
-    ...(initial.setup.noRestrictions && !initial.dietary.diets.some(d => offeredDiets.includes(d)) && !initial.dietary.allergies.some(a => offeredAllergies.includes(a)) ? ["restrictions" as const] : [])]));
+  const query = new URLSearchParams(useSearch());
+  const asked = (query.get("ask") ?? "").split(",").filter((x): x is SetupStep => (setupSteps as readonly string[]).includes(x));
+  const then = query.get("then");
+  const screens: Screen[] = asked.length ? asked : [...setupSteps, "done"];
+  const [settings, setSettings] = useState(loadSettings);
+  const [index, setIndex] = useState(() => {
+    if (asked.length) return 0;
+    if (query.get("step") === "5") return 4;
+    return settings.setup.status === "new" && settings.setup.step > 0 ? Math.min(4, settings.setup.step - 1) : 0;
+  });
+  const screen = screens[index];
+  const [error, setError] = useState<"required" | "save" | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<"catalog" | "save" | "equipment" | "restrictions" | null>(null);
-  // The Week → Plan filters: the same value the Week page shows, saved as soon as it changes.
-  const [filters, setFiltersState] = useState(loadWeekFilters);
-  const setFilters = (next: WeekFilters) => { setFiltersState(next); saveWeekFilters(next); };
-  const filterChips = useWeekFilterChips(filters, setFilters).all;
-  const setup = draft.setup;
-  const patch = (change: (d: BasicSettings) => BasicSettings) => setDraft(change);
-  const setSetup = (values: Partial<BasicSettings["setup"]>) => patch(d => ({ ...d, setup: { ...d.setup, ...values } }));
-  const dayName = (day: number) => app(`meals.${["sun", "mon", "tue", "wed", "thu", "fri", "sat"][day]}`);
+  const cookNow = useCookNow();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const first = useRef(true);
+  useEffect(() => {
+    // Focus follows the question (not on first load, where the page itself is announced).
+    if (first.current) first.current = false; else heading.current?.focus();
+    setError(null);
+    // Progress is recorded once the person moves past the first question (only looking at it records nothing).
+    if (!asked.length && settings.setup.status === "new" && settings.setup.step !== index + 1 && (index > 0 || settings.setup.step > 0)) save(x => ({ ...x, setup: { ...x.setup, step: index + 1 } }));
+  }, [index]);
 
-  const evenings = cookingEvenings(draft);
-  const restricted = [...offeredDiets.filter(d => draft.dietary.diets.includes(d)), ...offeredAllergies.filter(a => draft.dietary.allergies.includes(a))];
-  const otherRules = [...draft.dietary.diets.filter(d => !offeredDiets.includes(d)).map(d => s(`diet_${d}`)),
-    ...draft.dietary.allergies.filter(a => !offeredAllergies.includes(a)).map(a => s(`allergen_${a}`)), ...draft.dietary.customAllergies];
-  const memberRules = draft.household.members.some(m => m.diets.length || m.allergies.length || m.customAllergies.length);
-  // Required: nothing is pre-selected. The person picks a diet or allergy, or says "None" explicitly.
-  const noneChosen = setup.noRestrictions && restricted.length === 0;
-  const restrictionsAnswered = noneChosen || restricted.length > 0 || otherRules.length > 0;
-  // Required: a new person starts with nothing selected (null = never answered), so the suggestions never assume a device.
-  const devices = draft.kitchen.devices ?? [];
-  const planner = useMemo(() => toPlannerRecipes(catalog.data ?? []), [catalog.data]);
-  const eligible = useMemo(() => planner.filter(r => checkEligibility(r, draft).eligible), [planner, draft]);
-  const fits = (r: PlannerRecipe) => matchesPlannerFilters(r, filters, "total", getRecipeUserMeta(r.id));
-  // No recipe left with the Deal: keep the other filters (the time limit above all) before dropping them all.
-  const fallback = (r: PlannerRecipe) => matchesPlannerFilters(r, { ...filters, deal: null }, "total", getRecipeUserMeta(r.id));
+  /** Saved at once; a refused write keeps the screen as it was and says so. */
+  const save = (change: (current: BasicSettings) => BasicSettings) => {
+    try { setSettings(updateSettings(change)); setError(null); return true; } catch { setError("save"); return false; }
+  };
+  const go = (to: number) => setIndex(Math.max(0, Math.min(screens.length - 1, to)));
 
-  const order: GroupKey[] = ["style", "servings", "restrictions", "equipment", "evenings", "fixed", ...(setup.style === "chef" ? ["challenge" as const] : []), "weeknight", "filters"];
-  const open = (key: GroupKey) => !collapsed.has(key);
-  const toggleGroup = (key: GroupKey) => setCollapsed(prev => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
-  const collapseAbove = (key: GroupKey) => setCollapsed(prev => new Set([...prev, ...order.slice(0, order.indexOf(key))]));
-  const chooseStyle = (style: CookingStyle) => {
-    setSetup({ style });
-    // Quick & easy folds the optional groups away; Chef challenge opens them. Answers are never cleared.
-    setCollapsed(prev => new Set([...[...prev].filter(k => !["challenge", "weeknight", "filters"].includes(k)), ...collapsedFor(style)]));
+  // ---- Answers ----
+  const counts = countsOf(settings);
+  const people = counts.adults + counts.kids;
+  const removable = (kind: Member["kind"]) => settings.household.members.some(m => m.kind === kind && blank(m));
+  const changeCount = (kind: Member["kind"], delta: number) => save(x => {
+    // The first change turns a fixed number into that many adults; then members are added, or a blank one removed.
+    let members = x.household.members.length || x.household.servingsMode !== "fixed" ? x.household.members
+      : Array.from({ length: countsOf(x).adults }, (_, i) => emptyMember("adult", settingsText(lang, "adultN", { n: i + 1 })));
+    const same = members.filter(m => m.kind === kind).length;
+    if (delta > 0) members = [...members, emptyMember(kind, settingsText(lang, kind === "adult" ? "adultN" : "childN", { n: same + 1 }))];
+    else {
+      const at = members.findLastIndex(m => m.kind === kind && blank(m));
+      if (at < 0) return x;
+      members = members.filter((_, i) => i !== at);
+    }
+    return { ...x, household: { ...x.household, members, servingsMode: "auto" } };
+  });
+  const answered = settings.setup.noRestrictions || hasRequirements(settings);
+  const [dietOpen, setDietOpen] = useState(() => settings.dietary.diets.length > 0);
+  const [exclusionsOpen, setExclusionsOpen] = useState(() => settings.dietary.allergies.length + settings.dietary.customAllergies.length > 0);
+  const [term, setTerm] = useState("");
+  const require = (change: (d: BasicSettings["dietary"]) => Partial<BasicSettings["dietary"]>) =>
+    save(x => ({ ...x, setup: { ...x.setup, noRestrictions: false }, dietary: { ...x.dietary, ...change(x.dietary) } }));
+  const chooseNone = () => {
+    setDietOpen(false); setExclusionsOpen(false);
+    save(x => ({ ...x, setup: { ...x.setup, noRestrictions: true }, dietary: { ...x.dietary, diets: [], allergies: [], customAllergies: [] } }));
   };
+  const devices = settings.kitchen.devices;
 
-  const challengeText = setup.challenge.when === "day" && setup.challenge.day !== null ? dayName(setup.challenge.day) : t(`challenge_${setup.challenge.when}`);
-  const summaries: Record<GroupKey, string> = {
-    style: t(`style_${setup.style}`),
-    servings: t("servingsN", { n: draft.household.fixedServings }),
-    restrictions: restricted.length ? restricted.map(r => offeredDiets.includes(r as DietPattern) ? s(`diet_${r}`) : s(`allergen_${r}`)).join(", ") : noneChosen ? t("none") : "",
-    equipment: devices.map(d => s(`device_${d}`)).join(", "),
-    evenings: setup.evenings === null ? `${t("notSure")} (${evenings.length})` : String(setup.evenings),
-    fixed: setup.fixedDays.map(dayName).join(", "),
-    challenge: challengeText,
-    weeknight: mealSlots.some(m => setup.weeknightMax[m] !== null)
-      ? mealSlots.filter(m => setup.weeknightMax[m] !== null).map(m => `${app(`meals.${m.toLowerCase()}`)} ${t("upTo", { n: setup.weeknightMax[m]! }).toLocaleLowerCase(lang)}`).join(", ")
-      : t("noLimit"),
-    filters: [filters.maxMinutes === null ? app("meals.any") : c("upTo", { count: filters.maxMinutes }), ...filterChips.map(chip => chip.label)].join(", "),
-  };
-
-  const skip = () => {
-    try { updateSettings(x => ({ ...x, setup: { ...x.setup, status: x.setup.status === "new" ? "skipped" : x.setup.status } })); } catch { /* still leave */ }
-    setLocation("/");
-  };
-  // A required answer is missing: open its group and bring it into view.
-  const ask = (key: "restrictions" | "equipment") => {
-    setError(key);
-    setCollapsed(prev => { const next = new Set(prev); next.delete(key); return next; });
-    setTimeout(() => document.querySelector(`[data-testid="q-${key}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
-  };
-  const suggest = () => {
-    if (!restrictionsAnswered) return ask("restrictions");
-    if (!devices.length) return ask("equipment");
-    if (!catalog.data) { setError("catalog"); return; }
+  const finish = async () => {
     setBusy(true); setError(null);
-    try {
-      // Stores are saved by the picker as they are tapped: keep the latest, not the draft's copy.
-      const saved = updateSettings(x => ({ ...draft, rev: x.rev, shopping: { ...draft.shopping, stores: x.shopping.stores },
-        setup: { ...draft.setup, status: "done", suggested: x.setup.suggested, declined: x.setup.declined, plannedWith: x.setup.plannedWith ?? planKey(x, planFilters()) } }));
-      // A Week with dishes is never changed here: the Week asks "update the week?" when the answers changed (2026-11-20).
-      if (!readPlan().batches.length) {
-        const result = proposeCookingPlan(readPlan(), planner, saved, currentWeek(), { fits, fallback });
-        writePlan(result.plan);
-        updateSettings(x => ({ ...x, setup: { ...x.setup, suggested: result.suggested, declined: [], plannedWith: planKey(x, planFilters()) } }));
-      }
-      setLocation("/meals?plan");
-    } catch { setError("save"); setBusy(false); }
+    const done = missingAnswers(loadSettings()).length === 0;
+    if (!save(x => ({ ...x, setup: { ...x.setup, status: done ? "done" : x.setup.status, step: asked.length ? x.setup.step : 5 } }))) { setBusy(false); return; }
+    // Setup counts as finished only once the server has it; the answers stay on screen if it fails.
+    if (!(await pushSettings())) { setError("save"); setBusy(false); return; }
+    setBusy(false);
+    if (!asked.length) return go(index + 1);
+    if (then === "cook") cookNow.start();
+    else setLocation(then && then.startsWith("/") && !then.startsWith("//") ? then : "/");
+  };
+  const next = () => {
+    const ok = screen === "people" ? people > 0 : screen === "restrictions" ? answered : screen === "kitchen" ? devices !== null : true;
+    if (!ok) { setError("required"); return; }
+    if (screen === screens[screens.length - (asked.length ? 1 : 2)]) void finish(); else go(index + 1);
   };
 
-  const group = (id: GroupKey, title: string, children: ReactNode, hint?: ReactNode) => (
-    <Group key={id} id={id} title={title} summary={summaries[id]} hint={hint} open={open(id)} onToggle={() => toggleGroup(id)} onPicked={() => collapseAbove(id)}
-      closedAction={id === "restrictions" && noneChosen ? t("addRestriction") : undefined}>{children}</Group>
-  );
-  const overCount = setup.evenings !== null && setup.fixedDays.length > setup.evenings;
-  const groups: Record<GroupKey, () => ReactNode> = {
-    style: () => group("style", t("styleQ"),
-      <div role="radiogroup" className="grid gap-2 sm:grid-cols-3">
+  // ---- Screens ----
+  const required = (key: HouseholdKey) => error === "required" && <p role="alert" className="mt-3 text-sm text-destructive" data-testid="step-required">{t(key)}</p>;
+  const body: Record<Screen, () => ReactNode> = {
+    style: () => <>
+      <div role="radiogroup" aria-labelledby="step-title" className="grid gap-2">
         {cookingStyles.map(style => (
-          <button key={style} type="button" role="radio" aria-checked={setup.style === style} data-testid={`style-${style}`} onClick={() => chooseStyle(style)}
-            className={`min-h-11 rounded-lg border p-3 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${setup.style === style ? "border-primary bg-accent" : "border-border bg-card"}`}>
-            <span className="block text-sm font-semibold">{setup.style === style ? "✓ " : ""}{t(`style_${style}`)}</span>
+          <button key={style} type="button" role="radio" aria-checked={settings.setup.style === style} data-testid={`style-${style}`}
+            onClick={() => save(x => ({ ...x, setup: { ...x.setup, style } })) && go(index + 1)}
+            className={`min-h-11 rounded-lg border p-3 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${settings.setup.style === style ? "border-primary bg-accent" : "border-border bg-card"}`}>
+            <span className="block text-sm font-semibold">{settings.setup.style === style ? "✓ " : ""}{t(`style_${style}`)}</span>
             <span className="block text-sm text-muted-foreground">{t(`style_${style}Hint`)}</span>
           </button>
         ))}
-      </div>),
-    servings: () => group("servings", t("servingsQ"),
-      <div role="group" aria-label={t("servingsQ")} className="inline-flex items-center rounded-full border border-input bg-card">
-        <button type="button" aria-label={t("fewer")} disabled={draft.household.fixedServings <= servingLimits.min} data-testid="servings-decrease"
-          onClick={() => patch(x => ({ ...x, household: { ...x.household, fixedServings: x.household.fixedServings - 1 } }))} className="flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40"><Minus className="h-4 w-4" aria-hidden="true" /></button>
-        <span className="min-w-24 text-center text-base font-medium" aria-live="polite" data-testid="servings-value">{t("servingsN", { n: draft.household.fixedServings })}</span>
-        <button type="button" aria-label={t("more")} disabled={draft.household.fixedServings >= servingLimits.max} data-testid="servings-increase"
-          onClick={() => patch(x => ({ ...x, household: { ...x.household, fixedServings: x.household.fixedServings + 1 } }))} className="flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-40"><Plus className="h-4 w-4" aria-hidden="true" /></button>
-      </div>),
-    restrictions: () => group("restrictions", t("restrictionsQ"), <>
-      <div className="flex flex-wrap gap-2">
-        <Chip on={noneChosen} testid="restriction-none"
-          onClick={() => {
-            patch(x => ({ ...x, setup: { ...x.setup, noRestrictions: true },
-              dietary: { ...x.dietary, diets: x.dietary.diets.filter(d => !offeredDiets.includes(d)), allergies: x.dietary.allergies.filter(a => !offeredAllergies.includes(a)) } }));
-            if (error === "restrictions") setError(null);
-            setCollapsed(prev => new Set([...prev, "restrictions"])); // "None" answers the question: fold it away
-          }}>{t("none")}</Chip>
       </div>
-      <p className="mt-3 text-sm font-medium">{t("dietLabel")}</p>
-      <div className="mt-1 flex flex-wrap gap-2">{offeredDiets.map(d => (
-        <Chip key={d} on={draft.dietary.diets.includes(d)} onClick={() => { patch(x => ({ ...x, setup: { ...x.setup, noRestrictions: false }, dietary: { ...x.dietary, diets: toggle(x.dietary.diets, d) } })); if (error === "restrictions") setError(null); }} testid={`diet-${d}`}>{s(`diet_${d}`)}</Chip>
-      ))}</div>
-      <p className="mt-3 text-sm font-medium">{t("allergyLabel")}</p>
-      <div className="mt-1 flex flex-wrap gap-2">{offeredAllergies.map(a => (
-        <Chip key={a} on={draft.dietary.allergies.includes(a)} onClick={() => { patch(x => ({ ...x, setup: { ...x.setup, noRestrictions: false }, dietary: { ...x.dietary, allergies: toggle(x.dietary.allergies, a) } })); if (error === "restrictions") setError(null); }} testid={`allergy-${a}`}>{s(`allergen_${a}`)}</Chip>
-      ))}</div>
-      {otherRules.length > 0 && <p className="mt-3 text-sm text-muted-foreground" data-testid="other-rules">{t("alsoApplied", { list: otherRules.join(", ") })}</p>}
-      {memberRules && <p className="mt-1 text-sm text-muted-foreground">{t("membersApplied")}</p>}
-      {error === "restrictions" && <p role="alert" className="mt-2 text-sm text-destructive" data-testid="restrictions-required">{t("restrictionsRequired")}</p>}
-    </>, t("restrictionsHint")),
-    equipment: () => group("equipment", t("equipmentQ"), <>
-      <div className="flex flex-wrap gap-2">{selectableDevices.map(d => (
-        <Chip key={d} on={devices.includes(d)} testid={`device-${d}`}
-          onClick={() => { patch(x => ({ ...x, kitchen: { devices: toggle(x.kitchen.devices ?? [], d) } })); if (error === "equipment") setError(null); }}>{s(`device_${d}`)}</Chip>
-      ))}</div>
-      {error === "equipment" && <p role="alert" className="mt-2 text-sm text-destructive" data-testid="equipment-required">{t("equipmentRequired")}</p>}
-    </>, t("equipmentHint")),
-    evenings: () => group("evenings", t("eveningsQ"),
-      <div role="radiogroup" className="flex flex-wrap gap-2">
-        {[1, 2, 3, 4, 5, 6, 7].map(n => <Radio key={n} on={setup.evenings === n} className="min-w-11 justify-center"
-          onClick={() => setSetup({ evenings: n })} testid={`evenings-${n}`}>{n}</Radio>)}
-        <Radio on={setup.evenings === null} onClick={() => setSetup({ evenings: null })} testid="evenings-unsure">{t("notSure")}</Radio>
-      </div>, setup.evenings === null ? t("notSureHint", { n: evenings.length }) : undefined),
-    fixed: () => group("fixed", `${t("fixedQ")} (${t("optional")})`, <>
-      <div className="flex flex-wrap gap-2">{weekOrder.map(day => (
-        <Chip key={day} on={setup.fixedDays.includes(day)} onClick={() => setSetup({ fixedDays: toggle(setup.fixedDays, day).sort((a, b) => a - b) })} testid={`fixed-${day}`}>{dayName(day)}</Chip>
-      ))}</div>
-      {overCount && (
-        <p role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-accent p-3 text-sm" data-testid="over-count">
-          {t("tooManyDays", { days: setup.fixedDays.length, count: setup.evenings! })}
-          <button type="button" className="btn btn-secondary" onClick={() => setSetup({ evenings: setup.fixedDays.length })} data-testid="raise-count">{t("raiseCount", { days: setup.fixedDays.length })}</button>
-        </p>
-      )}
-    </>, t("fixedHint")),
-    challenge: () => group("challenge", t("challengeQ"), <>
-      <div role="radiogroup" className="flex flex-wrap gap-2">
-        {challengeWhen.map(when => <Radio key={when} on={setup.challenge.when === when}
-          onClick={() => setSetup({ challenge: { ...setup.challenge, when } })} testid={`challenge-${when}`}>{t(`challenge_${when}`)}</Radio>)}
-      </div>
-      {setup.challenge.when === "day" && <div className="mt-2 flex flex-wrap gap-2">{weekOrder.map(day => (
-        <Chip key={day} on={setup.challenge.day === day} onClick={() => setSetup({ challenge: { when: "day", day: setup.challenge.day === day ? null : day } })} testid={`challenge-day-${day}`}>{dayName(day)}</Chip>
-      ))}</div>}
-    </>),
-    weeknight: () => group("weeknight", t("weeknightQ"),
-      <div className="space-y-3">{mealSlots.map(meal => (
-        <div key={meal} role="radiogroup" aria-label={app(`meals.${meal.toLowerCase()}`)} data-testid={`weeknight-${meal}`}>
-          <p className="mb-1.5 text-sm font-medium">{app(`meals.${meal.toLowerCase()}`)}</p>
-          <div className="flex flex-wrap gap-2">
-            {[null, ...weeknightTimeOptions].map(n => <Radio key={n ?? "none"} on={setup.weeknightMax[meal] === n}
-              onClick={() => patch(d => ({ ...d, setup: { ...d.setup, weeknightMax: { ...d.setup.weeknightMax, [meal]: n } } }))} testid={`weeknight-${meal}-${n ?? "none"}`}>{n === null ? t("noLimit") : t("minutes", { n })}</Radio>)}
-          </div>
+      <button type="button" className="btn btn-text -ms-2 mt-2" data-testid="style-default"
+        onClick={() => save(x => ({ ...x, setup: { ...x.setup, style: "everyday" } })) && go(index + 1)}>{t("useEveryday")}</button>
+    </>,
+    people: () => <>
+      <Counter label={t("adults")} value={counts.adults} canLess={counts.adults > 0 && (removable("adult") || !settings.household.members.length)} canMore={people < MAX_PEOPLE}
+        onChange={d => changeCount("adult", d)} testid="count-adults" />
+      <Counter label={t("children")} value={counts.kids} canLess={counts.kids > 0 && removable("child")} canMore={people < MAX_PEOPLE}
+        onChange={d => changeCount("child", d)} testid="count-kids" />
+      {/* Kid-friendly meals: right below Children when there are any; the same saved preference as in Personalize my recipes. */}
+      {counts.kids > 0 && (
+        <div className="flex items-center justify-between gap-3 py-2" data-testid="kid-friendly">
+          <span id="kid-friendly-label" className="min-w-0">
+            <span className="block text-base font-medium">{t("kidFriendly")}</span>
+            <span className="block text-sm text-muted-foreground" id="kid-friendly-hint">{t("kidFriendlyHint")}</span>
+          </span>
+          <button type="button" role="switch" aria-checked={settings.household.kidFriendly} aria-labelledby="kid-friendly-label" aria-describedby="kid-friendly-hint"
+            onClick={() => save(x => ({ ...x, household: { ...x.household, kidFriendly: !x.household.kidFriendly } }))} data-testid="switch-kid-friendly"
+            className={`relative inline-flex h-11 w-16 shrink-0 items-center rounded-full border-2 transition-colors motion-reduce:transition-none ${settings.household.kidFriendly ? "border-primary bg-primary" : "border-input bg-muted"}`}>
+            <span aria-hidden="true" className={`absolute h-7 w-7 rounded-full bg-background shadow transition-[inset-inline-start] motion-reduce:transition-none ${settings.household.kidFriendly ? "start-7" : "start-1"}`} />
+          </button>
         </div>
-      ))}</div>, <>{t("weeknightHint")}{setup.style === "chef" && setup.challenge.when === "day" ? ` ${t("weeknightChefHint")}` : ""}</>),
-    filters: () => group("filters", t("filtersQ"),
-      <div data-testid="household-filters">
-        <WeekFilterPanel variant="onboarding" filters={filters} onChange={setFilters} devices={devices} eligible={eligible} matchingCount={eligible.filter(fits).length} />
-      </div>, filters.maxMinutes === WEEK_DEFAULT_MAX_MINUTES ? t("filtersHint") : undefined),
+      )}
+      <p className="mt-2 text-sm" aria-live="polite" data-testid="servings-preview">{t("peoplePreview", { servings: half(serveAmount({ date: "", adults: counts.adults, kids: counts.kids }, null)) })}</p>
+      {settings.household.servingsMode === "fixed" && <p className="mt-1 text-sm text-muted-foreground" data-testid="fixed-note">{t("fixedNote", { n: settings.household.fixedServings })}</p>}
+      {/* − never deletes a named person or their details: say who, and where to remove them. */}
+      {(["adult", "child"] as const).some(kind => (kind === "adult" ? counts.adults : counts.kids) > 0 && !removable(kind)) && settings.household.members.some(m => !blank(m)) && (
+        <p className="mt-3 rounded-lg bg-accent p-3 text-sm" data-testid="member-details">
+          {t("removeInSettings", { names: settings.household.members.filter(m => !blank(m)).map(m => m.name).join(", ") })}{" "}
+          <Link href="/settings?from=household" className="font-medium text-primary underline underline-offset-4" data-testid="link-members-settings">{t("openSettings")}</Link>
+        </p>)}
+      {required("peopleRequired")}
+    </>,
+    restrictions: () => <>
+      <p className="text-sm text-muted-foreground">{t("requirementsHint")} {t("restrictionsHint")}</p>
+      <div className="mt-3 grid gap-2">
+        <Chip on={settings.setup.noRestrictions && !settings.dietary.diets.length && !settings.dietary.allergies.length && !settings.dietary.customAllergies.length} onClick={chooseNone} testid="restriction-none">{t("noRequirements")}</Chip>
+        <Chip on={dietOpen} onClick={() => setDietOpen(o => !o)} testid="restriction-diet">{t("chooseDiet")}</Chip>
+        {dietOpen && <div className="flex flex-wrap gap-2 ps-3" data-testid="diet-options">{offeredDiets.map(d => (
+          <Chip key={d} on={settings.dietary.diets.includes(d)} onClick={() => require(x => ({ diets: toggle(x.diets, d) }))} testid={`diet-${d}`}>{s(`diet_${d}`)}</Chip>
+        ))}</div>}
+        <Chip on={exclusionsOpen} onClick={() => setExclusionsOpen(o => !o)} testid="restriction-exclusions">{t("addExclusions")}</Chip>
+        {exclusionsOpen && <div className="ps-3" data-testid="exclusion-options">
+          <div className="flex flex-wrap gap-2">{allergens.map(a => (
+            <Chip key={a} on={settings.dietary.allergies.includes(a)} onClick={() => require(x => ({ allergies: toggle(x.allergies, a) }))} testid={`allergy-${a}`}>{s(`allergen_${a}`)}</Chip>
+          ))}</div>
+          <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); if (term.trim()) { require(x => ({ customAllergies: [...x.customAllergies, term.trim()] })); setTerm(""); } }}>
+            <label className="grid gap-1 text-sm font-medium">{t("exclusionLabel")}
+              <input value={term} onChange={e => setTerm(e.target.value)} maxLength={40} className="min-h-11 rounded-lg border border-input bg-card px-3 text-base font-normal" data-testid="input-exclusion" />
+            </label>
+            <button type="submit" className="btn btn-secondary" data-testid="button-add-exclusion">{t("add")}</button>
+          </form>
+          {settings.dietary.customAllergies.length > 0 && <ul className="mt-2 flex flex-wrap gap-2">{settings.dietary.customAllergies.map(x => (
+            <li key={x}><button type="button" className="chip" aria-label={t("remove", { item: x })} onClick={() => require(d => ({ customAllergies: d.customAllergies.filter(y => y !== x) }))}>{x} <span aria-hidden="true">×</span></button></li>
+          ))}</ul>}
+        </div>}
+      </div>
+      {settings.dietary.diets.some(d => !offeredDiets.includes(d)) && <p className="mt-3 text-sm text-muted-foreground" data-testid="other-rules">
+        {t("alsoApplied", { list: settings.dietary.diets.filter(d => !offeredDiets.includes(d)).map(d => s(`diet_${d}`)).join(", ") })}</p>}
+      {settings.household.members.some(m => m.diets.length || m.allergies.length || m.customAllergies.length) && <p className="mt-1 text-sm text-muted-foreground">{t("membersApplied")}</p>}
+      {required("requirementsRequired")}
+    </>,
+    kitchen: () => <>
+      <p className="text-sm text-muted-foreground">{t("kitchenHint")}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {kitchenDevices.map(d => (
+          // Unselecting the last appliance means "not answered", never "no appliances": that has its own choice.
+          <Chip key={d} on={!!devices?.includes(d)} testid={`device-${d}`}
+            onClick={() => save(x => { const list = toggle(x.kitchen.devices ?? [], d); return { ...x, kitchen: { devices: list.length ? list : null } }; })}>{s(`device_${d}`)}</Chip>
+        ))}
+        <Chip on={devices?.length === 0} onClick={() => save(x => ({ ...x, kitchen: { devices: [] } }))} testid="device-none">{t("noAppliances")}</Chip>
+      </div>
+      {devices?.length === 0 && <p className="mt-3 text-sm text-muted-foreground" data-testid="no-appliances-hint">{t("noAppliancesHint")}</p>}
+      {required("kitchenRequired")}
+    </>,
+    done: () => <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button type="button" onClick={cookNow.start} disabled={!cookNow.ready} className="card min-h-11 p-4 text-start disabled:opacity-60" data-testid="button-cook-now">
+          <span className="block text-base font-semibold">{t("cookNow")}</span>
+          <span className="block text-sm text-muted-foreground">{t("cookNowHint")}</span>
+        </button>
+        <button type="button" onClick={() => setLocation("/meals?plan")} className="card min-h-11 p-4 text-start" data-testid="button-plan-week">
+          <span className="block text-base font-semibold">{t("planWeek")}</span>
+          <span className="block text-sm text-muted-foreground">{t("planWeekHint")}</span>
+        </button>
+      </div>
+      {cookNow.empty && <CookNowEmpty from="/household?step=5" />}
+      <Link href="/settings?from=household" className="btn btn-text -ms-2 mt-4" data-testid="link-personalize">{t("personalize")}</Link>
+    </>,
   };
+  const titles: Record<Screen, string> = { style: t("styleQ"), people: t("peopleQ"), restrictions: t("requirementsQ"), kitchen: t("kitchenQ"), done: t("doneQ") };
+  const numbered = screens.filter(x => x !== "done");
 
   return (
     <div className="pb-28 sm:pb-10" dir={dir}>
-      <PageContainer size="md" className="max-w-2xl py-4 sm:py-10">
-        <header className="page-header mb-2">
-          <h1 className="page-title" data-testid="text-page-title">{t("title")}</h1>
-          <p className="page-subtitle">{t("intro")}</p>
+      <PageContainer size="md" className="max-w-xl py-4 sm:py-10">
+        <header className="page-header mb-4">
+          <p className="text-sm text-muted-foreground" data-testid="step-of">
+            {t("title")}{screen !== "done" && ` · ${t("stepOf", { n: index + 1, total: numbered.length })}`}
+          </p>
+          <h1 id="step-title" ref={heading} tabIndex={-1} className="page-title focus:outline-none" data-testid="text-page-title" data-step={screen}>{titles[screen]}</h1>
         </header>
-
-        {order.map(key => groups[key]())}
-
-        {/* Optional: Continue works with no store chosen. */}
-        <div className="border-b hairline py-4"><StorePicker /></div>
-
-        <div className="sticky bottom-[var(--app-bottom-nav)] z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
-          <p className="text-xs font-medium text-muted-foreground">{t("summary")}</p>
-          <p className="mt-1 text-sm" data-testid="household-summary">{order.filter(k => k !== "weeknight" || mealSlots.some(m => setup.weeknightMax[m] !== null)).map(k => summaries[k]).filter(Boolean).join(" · ")}</p>
-          {error && <p role="alert" className="mt-2 text-sm text-destructive" data-testid="household-error">{t(error === "catalog" ? "catalogError" : error === "equipment" ? "equipmentRequired" : error === "restrictions" ? "restrictionsRequired" : "saveError")}
-            {error === "catalog" && <button type="button" className="btn btn-text" onClick={() => catalog.refetch()}>{t("retry")}</button>}</p>}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={suggest} disabled={busy || catalog.isPending} className="btn btn-primary" data-testid="button-suggest-week">{busy ? t("working") : t("suggest")}</button>
-            <button type="button" onClick={skip} className="btn btn-text" data-testid="button-skip-household">{t("skip")}</button>
-          </div>
+        <section aria-labelledby="step-title" data-testid={`step-${screen}`}>{body[screen]()}</section>
+        {/* Asked before Cook now: an empty result is shown here, where the person is. */}
+        {screen !== "done" && cookNow.empty && <CookNowEmpty from="/" />}
+        {error === "save" && <p role="alert" className="mt-4 text-sm text-destructive" data-testid="household-error">{t("saveFailed")}{" "}
+          <button type="button" className="btn btn-text" onClick={() => void finish()} data-testid="button-retry-save">{t("retry")}</button></p>}
+        {/* Style advances on choice; every other question confirms with Continue. */}
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          {index > 0 && <button type="button" onClick={() => go(index - 1)} className="btn btn-secondary" data-testid="button-back">{t("back")}</button>}
+          {screen !== "style" && screen !== "done" && <button type="button" onClick={next} disabled={busy || (then === "cook" && !cookNow.ready)} className="btn btn-primary" data-testid="button-next">{busy ? t("saving") : t("next")}</button>}
         </div>
       </PageContainer>
     </div>

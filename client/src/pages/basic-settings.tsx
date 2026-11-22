@@ -10,6 +10,8 @@ import { ChevronDown, Search } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion";
 import { useI18n } from "@/lib/i18n";
 import { useSettingsCopy } from "@/lib/settings-copy";
+import { useHouseholdCopy } from "@/lib/household-copy";
+import { Link, useSearch } from "wouter";
 import { setGuestChoice, switchPerson, useAccountCopy, type Me } from "@/lib/account-copy";
 import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
@@ -309,6 +311,9 @@ export default function BasicSettingsPage() {
   const { dir, t: app } = useI18n();
   const t = useSettingsCopy();
   const { settings: s, save, status, retry } = useBasicSettings();
+  const h = useHouseholdCopy();
+  // Opened from Your household → Personalize my recipes: changes save as they are made; this goes back to its last screen.
+  const fromSetup = new URLSearchParams(useSearch()).get("from") === "household";
   const edit = <K extends keyof BasicSettings>(section: K, patch: Partial<BasicSettings[K]>) =>
     save(current => ({ ...current, [section]: { ...(current[section] as object), ...patch } }));
   const members = s.household.members;
@@ -355,6 +360,7 @@ export default function BasicSettingsPage() {
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       <PageContainer size="md" className="py-8 sm:py-10">
+        {fromSetup && <Link href="/household?step=5" className="btn btn-text -ms-2 mb-2" data-testid="link-back-to-setup">{h("backToSetup")}</Link>}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="page-title" data-testid="text-page-title">{t("title")}</h1>
@@ -415,8 +421,8 @@ export default function BasicSettingsPage() {
           </>)}
 
           {section("kitchen", t("kitchen"), devices === null ? t("devicesNotSet") : devices.length ? devices.map(d => t(`device_${d}`)).join(" · ") : t("devicesNone"), <>
-            <Chips label={t("devices")} hint={t("devicesHint")} options={selectableDevices} selected={devices ?? selectableDevices} labelOf={d => t(`device_${d}`)}
-              onToggle={d => edit("kitchen", { devices: toggle(devices ?? [...selectableDevices], d) })} testid="setting-device" />
+            <Chips label={t("devices")} hint={t("devicesHint")} options={selectableDevices} selected={devices ?? []} labelOf={d => t(`device_${d}`)}
+              onToggle={d => edit("kitchen", { devices: toggle(devices ?? [], d) })} testid="setting-device" />
             {devices === null && <Note testid="devices-not-set">{t("devicesNotSet")}</Note>}
             {devices?.length === 0 && <p className="mt-3 text-sm font-medium text-warning" data-testid="text-no-devices">{t("devicesNone")}</p>}
             <p className="mt-2 text-sm"><Badge hard /></p>

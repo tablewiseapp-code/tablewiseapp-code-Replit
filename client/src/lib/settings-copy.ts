@@ -41,7 +41,7 @@ const en = {
   "cuisine_Middle Eastern": "Middle Eastern", "cuisine_North African": "North African", cuisine_Scandinavian: "Scandinavian", cuisine_Spanish: "Spanish", cuisine_Thai: "Thai",
   cuisine_Vietnamese: "Vietnamese", "cuisine_Eastern European": "Eastern European",
   devices: "Cooking devices I have", devicesHint: "Recipes that need a device you don't have are hidden from Weekly Meals. A recipe that says “oven or air fryer” needs only one of them. No-cook recipes are always shown. My Recipes always shows everything.",
-  devicesNotSet: "Not set yet: every device is assumed.", devicesNone: "No devices selected: Weekly Meals shows only no-cook recipes.",
+  devicesNotSet: "Not set yet: we’ll ask before the next suggestion.", devicesNone: "No cooking appliances: only recipes reviewed as no-cook are suggested.",
   "device_Oven": "Oven", "device_Air fryer": "Air fryer", "device_Stovetop": "Stovetop", "device_Microwave": "Microwave",
   weekdayMax: "Weekday cooking time", weekendMax: "Weekend cooking time", onWeekdays: "Weekdays (Mon–Fri)", onWeekends: "Weekend (Sat–Sun)", cookingTime: "Cooking time",
   dayTypeHint: "The Week uses each day's own preferences. The recipe list isn't tied to a day, so it uses your weekday preferences.", noLimit: "No limit", minutes: "{n} min",
@@ -61,7 +61,7 @@ const en = {
   hiddenBySettings: "{count} recipes hidden by My Basic Settings.", onlyNoCook: "No cooking devices are selected in My Basic Settings, so only no-cook recipes are shown.",
   changeSettings: "Change settings", personalized: "Sorted by your preferences",
   incompatible: "Doesn't fit My Basic Settings", replaceWith: "Replace with {title}", noReplacement: "No matching replacement",
-  reasonDevice: "needs {devices}", or: " or ", reasonDiet: "not {diet}", reasonDietUncertain: "may not be {diet}", reasonAllergy: "contains {allergen}",
+  reasonDevice: "needs {devices}", reasonDeviceUnknown: "kitchen equipment not recorded", or: " or ", reasonDiet: "not {diet}", reasonDietUncertain: "may not be {diet}", reasonAllergy: "contains {allergen}",
   reasonAllergyUncertain: "may contain {allergen}", reasonCustom: "contains {term}", reasonTime: "{minutes} min (limit {max})", forWhom: " ({names})",
   reasonWeeknight: "{minutes} min (weekdays: up to {max})", reasonWeeknightUnknown: "total time unknown (weekdays: up to {max})",
   fillWeek: "Fill my week", fillWeekHint: "Adds your selected recipes to empty slots using My Basic Settings ({days} cooking days). Nothing already planned changes.",
@@ -139,7 +139,7 @@ const ru: Copy = {
   "cuisine_Middle Eastern": "Ближневосточная", "cuisine_North African": "Североафриканская", cuisine_Scandinavian: "Скандинавская", cuisine_Spanish: "Испанская", cuisine_Thai: "Тайская",
   cuisine_Vietnamese: "Вьетнамская", "cuisine_Eastern European": "Восточноевропейская",
   devices: "Мои кухонные приборы", devicesHint: "Рецепты, для которых нужен прибор, которого у вас нет, скрыты в «Меню на неделю». Если в рецепте написано «духовка или аэрогриль», достаточно одного из них. Рецепты без готовки показываются всегда. «Мои рецепты» всегда показывают всё.",
-  devicesNotSet: "Ещё не настроено: считается, что есть все приборы.", devicesNone: "Приборы не выбраны: показываются только рецепты без готовки.",
+  devicesNotSet: "Ещё не настроено: спросим перед следующим предложением.", devicesNone: "Без кухонной техники: предлагаются только проверенные рецепты без готовки.",
   "device_Oven": "Духовка", "device_Air fryer": "Аэрогриль", "device_Stovetop": "Плита", "device_Microwave": "Микроволновка",
   weekdayMax: "Время готовки в будни", weekendMax: "Время готовки в выходные", onWeekdays: "Будни (пн–пт)", onWeekends: "Выходные (сб–вс)", cookingTime: "Время готовки",
   dayTypeHint: "Неделя учитывает предпочтения каждого дня. Список рецептов не привязан к дню, поэтому использует предпочтения для будней.", noLimit: "Без ограничения", minutes: "{n} мин",
@@ -158,7 +158,7 @@ const ru: Copy = {
   hiddenBySettings: "Скрыто рецептов по моим основным настройкам: {count}.", onlyNoCook: "В основных настройках не выбраны приборы, поэтому показаны только рецепты без готовки.",
   changeSettings: "Изменить настройки", personalized: "Отсортировано по вашим предпочтениям",
   incompatible: "Не подходит под основные настройки", replaceWith: "Заменить на «{title}»", noReplacement: "Нет подходящей замены",
-  reasonDevice: "нужно: {devices}", or: " или ", reasonDiet: "не {diet}", reasonDietUncertain: "возможно, не {diet}", reasonAllergy: "содержит: {allergen}",
+  reasonDevice: "нужно: {devices}", reasonDeviceUnknown: "не указано, какая нужна техника", or: " или ", reasonDiet: "не {diet}", reasonDietUncertain: "возможно, не {diet}", reasonAllergy: "содержит: {allergen}",
   reasonAllergyUncertain: "может содержать: {allergen}", reasonCustom: "содержит: {term}", reasonTime: "{minutes} мин (лимит {max})", forWhom: " ({names})",
   reasonWeeknight: "{minutes} мин (в будни: до {max})", reasonWeeknightUnknown: "общее время неизвестно (в будни: до {max})",
   fillWeek: "Заполнить неделю", fillWeekHint: "Добавляет выбранные рецепты в пустые ячейки по основным настройкам (дней готовки: {days}). Уже запланированное не меняется.",
@@ -235,7 +235,7 @@ const he: Copy = {
   "cuisine_Middle Eastern": "מזרח תיכוני", "cuisine_North African": "צפון אפריקאי", cuisine_Scandinavian: "סקנדינבי", cuisine_Spanish: "ספרדי", cuisine_Thai: "תאילנדי",
   cuisine_Vietnamese: "וייטנאמי", "cuisine_Eastern European": "מזרח אירופאי",
   devices: "מכשירי הבישול שיש לי", devicesHint: "מתכונים שדורשים מכשיר שאין לכם מוסתרים בארוחות השבוע. מתכון שכתוב בו „תנור או סיר אוויר” דורש רק אחד מהם. מתכונים ללא בישול מוצגים תמיד. „המתכונים שלי” מציג תמיד הכול.",
-  devicesNotSet: "עדיין לא הוגדר: מניחים שכל המכשירים קיימים.", devicesNone: "לא נבחרו מכשירים: ארוחות השבוע מציגות רק מתכונים ללא בישול.",
+  devicesNotSet: "עדיין לא הוגדר: נשאל לפני ההצעה הבאה.", devicesNone: "ללא מכשירי בישול: מוצעים רק מתכונים שנבדקו כללא בישול.",
   "device_Oven": "תנור", "device_Air fryer": "סיר אוויר", "device_Stovetop": "כיריים", "device_Microwave": "מיקרוגל",
   weekdayMax: "זמן בישול באמצע השבוע", weekendMax: "זמן בישול בסוף השבוע", onWeekdays: "אמצע השבוע (ב׳–ו׳)", onWeekends: "סוף השבוע (ש׳–א׳)", cookingTime: "זמן בישול",
   dayTypeHint: "השבוע משתמש בהעדפות של כל יום. רשימת המתכונים לא קשורה ליום מסוים, ולכן היא משתמשת בהעדפות של אמצע השבוע.", noLimit: "ללא הגבלה", minutes: "{n} דק׳",
@@ -254,7 +254,7 @@ const he: Copy = {
   hiddenBySettings: "{count} מתכונים הוסתרו לפי ההגדרות הבסיסיות שלי.", onlyNoCook: "לא נבחרו מכשירי בישול בהגדרות הבסיסיות, ולכן מוצגים רק מתכונים ללא בישול.",
   changeSettings: "שינוי ההגדרות", personalized: "ממוין לפי ההעדפות שלך",
   incompatible: "לא מתאים להגדרות הבסיסיות שלי", replaceWith: "להחליף ב„{title}”", noReplacement: "אין תחליף מתאים",
-  reasonDevice: "דורש {devices}", or: " או ", reasonDiet: "לא {diet}", reasonDietUncertain: "ייתכן שאינו {diet}", reasonAllergy: "מכיל {allergen}",
+  reasonDevice: "דורש {devices}", reasonDeviceUnknown: "ציוד המטבח הנדרש לא מתועד", or: " או ", reasonDiet: "לא {diet}", reasonDietUncertain: "ייתכן שאינו {diet}", reasonAllergy: "מכיל {allergen}",
   reasonAllergyUncertain: "עשוי להכיל {allergen}", reasonCustom: "מכיל {term}", reasonTime: "{minutes} דק׳ (מגבלה {max})", forWhom: " ({names})",
   reasonWeeknight: "{minutes} דק׳ (בימי חול: עד {max})", reasonWeeknightUnknown: "זמן כולל לא ידוע (בימי חול: עד {max})",
   fillWeek: "מלא את השבוע שלי", fillWeekHint: "מוסיף את המתכונים שבחרתם למשבצות ריקות לפי ההגדרות הבסיסיות ({days} ימי בישול). מה שכבר מתוכנן לא משתנה.",
@@ -309,7 +309,7 @@ export function restrictionText(lang: string, r: Restriction, nameOf: (memberId:
   const who = "members" in r ? r.members.map(nameOf).filter((n): n is string => !!n) : [];
   const suffix = who.length ? t("forWhom", { names: who.join(", ") }) : "";
   switch (r.kind) {
-    case "device": return t("reasonDevice", { devices: r.missing.map(g => g.map(d => t(`device_${d}`)).join(t("or"))).join(", ") });
+    case "device": return r.unknown ? t("reasonDeviceUnknown") : t("reasonDevice", { devices: r.missing.map(g => g.map(d => t(`device_${d}`)).join(t("or"))).join(", ") });
     case "diet": return t(r.status === "uncertain" ? "reasonDietUncertain" : "reasonDiet", { diet: t(`diet_${r.diet}`).toLowerCase() }) + suffix;
     case "allergy": return t(r.status === "uncertain" ? "reasonAllergyUncertain" : "reasonAllergy", { allergen: t(`allergen_${r.allergen}`).toLowerCase() }) + suffix;
     case "customAllergy": return t("reasonCustom", { term: r.term }) + suffix;

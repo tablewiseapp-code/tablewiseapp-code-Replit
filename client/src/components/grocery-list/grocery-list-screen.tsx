@@ -25,7 +25,7 @@ import { GroceryShareDialog } from "./grocery-share-dialog";
 import { Plus, Search, Share2, Store } from "lucide-react";
 import { StorePicker } from "@/components/store-picker";
 import { useStorePickerCopy } from "@/lib/store-picker-copy";
-import { loadSettings } from "@/lib/basic-settings";
+import { loadSettings, updateSettings } from "@/lib/basic-settings";
 import { settingsText } from "@/lib/settings-copy";
 import { mentionsTerm } from "@shared/food-rules";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +49,9 @@ export default function GroceryListScreen() {
   const [expansion, setExpansion] = useState(initialPrefs.expansion);
   const [shareOpen, setShareOpen] = useState(false);
   const [storesOpen, setStoresOpen] = useState(() => new URLSearchParams(window.location.search).has("stores"));
+  // First use with items: offer the store picker once (2026-11-21). Done or "Maybe later" ends the offer; shopping works with no store.
+  const [offerStores, setOfferStores] = useState(() => { const s = loadSettings().shopping; return !s.storesAsked && !s.stores.length; });
+  const storesOffered = () => { setOfferStores(false); try { updateSettings(s => ({ ...s, shopping: { ...s.shopping, storesAsked: true } })); } catch { /* offered again next visit */ } };
   const storeCopy = useStorePickerCopy();
   const [tab, setTab] = useState<"all" | "recipes" | "mine">("all");
   const [query, setQuery] = useState("");
@@ -474,6 +477,16 @@ export default function GroceryListScreen() {
               aria-label={copy("searchLabel")} data-testid="input-grocery-search" />
           </label>
         </header>
+        {offerStores && tabRows.length > 0 && (
+          <section className="card mt-3 p-4" aria-labelledby="stores-offer-title" data-testid="stores-offer">
+            <h2 id="stores-offer-title" className="text-base font-semibold">{storeCopy("heading")}</h2>
+            <p className="text-sm text-muted-foreground">{storeCopy("offer")}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" className="grocery-primary" onClick={() => { storesOffered(); setStoresOpen(true); }} data-testid="stores-offer-choose">{storeCopy("choose")}</button>
+              <button type="button" className="btn btn-text" onClick={storesOffered} data-testid="stores-offer-later">{storeCopy("later")}</button>
+            </div>
+          </section>
+        )}
         <Dialog open={storesOpen} onOpenChange={setStoresOpen}>
           <DialogContent className="max-h-[85dvh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-lg" data-testid="my-stores-dialog">
             <DialogTitle>{storeCopy("heading")}</DialogTitle>

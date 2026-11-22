@@ -34,7 +34,7 @@ try {
   let n = 0; const waiting = {}; const exceptions = [];
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.method === "Runtime.exceptionThrown") exceptions.push(d.params.exceptionDetails.exception?.description ?? d.params.exceptionDetails.text); waiting[d.id]?.(d); };
   const call = (method, params = {}) => new Promise(r => { const i = ++n; waiting[i] = r; ws.send(JSON.stringify({ id: i, method, params })); });
-  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped' } }))" }); // skip the first-visit sign-in screen
+  await call("Page.enable"); await call("Page.addScriptToEvaluateOnNewDocument", { source: "localStorage.setItem('tablewise_guest_v1','1'); localStorage.getItem('tablewise_basic_settings') || localStorage.setItem('tablewise_basic_settings', JSON.stringify({ version: 2, rev: 1, setup: { status: 'skipped', noRestrictions: true, scheduled: true }, household: { servingsMode: 'fixed', fixedServings: 4 }, kitchen: { devices: ['Oven', 'Air fryer', 'Stovetop', 'Microwave'] } }))" }); // skip the first-visit sign-in screen; an answered household (2026-11-21)
   const ev = async e => { const r = (await call("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true })).result; if (r?.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r?.result?.value; };
   const until = async (e, what) => { for (let i = 0; i < 150; i++) { if (await ev(`Boolean(${e})`).catch(() => false)) return; await sleep(120); } throw new Error(`timeout: ${what}; page: ${String(await ev("document.body.innerText")).slice(0, 300).replace(/\n/g, " | ")}`); };
   const go = async path => { await call("Page.navigate", { url: BASE + path }); await sleep(400); };
@@ -55,9 +55,9 @@ try {
   await call("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
   const total = (await fetch(`${BASE}/api/recipes`).then(r => r.json())).length;
 
-  // 1. No settings: bar says so, nothing hidden.
+  // 1. An answered household with no restrictions (every device, None): nothing hidden. (With nothing answered the Week
+  // asks for the missing answers first, 2026-11-21; script/test-household-browser.mjs covers that.)
   await go("/meals"); await ev("localStorage.clear()"); await resetPage(); await openMeals();
-  await until(q("preferences-none"), "no-preferences text");
   ok((await cards()).length === total, `all ${total} recipes without settings`);
   const num = id => ev(`Number(${q(id)}?.dataset.count ?? -1)`);
   ok(await num("count-matching") === total && await num("count-settings") === 0 && await num("count-filters") === -1, "counts without settings");
