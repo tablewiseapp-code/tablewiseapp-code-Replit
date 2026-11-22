@@ -22,6 +22,8 @@
     "test:ingredient-parse": "tsx script/test-ingredient-parse.ts",
     "test:recipe-nutrition": "tsx script/test-recipe-nutrition.ts",
     "test:recipe-view": "tsx script/test-recipe-view.ts",
+    "test:i18n": "tsx script/test-i18n.ts",
+    "test:i18n-browser": "node script/test-i18n-browser.mjs",
     "test:home": "tsx script/test-home.ts",
     "test:on-hand": "tsx script/test-on-hand.ts",
     "test:on-hand-browser": "node script/test-on-hand-browser.mjs",

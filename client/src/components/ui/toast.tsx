@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useI18n } from "@/lib/i18n"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
@@ -71,20 +72,23 @@ ToastAction.displayName = ToastPrimitives.Action.displayName
 const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref) => {
+  const { t } = useI18n()
+  return (
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-md text-foreground/60 opacity-100 transition-opacity hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "absolute end-1 top-1 flex h-11 w-11 items-center justify-center rounded-md text-foreground/60 opacity-100 transition-opacity hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
       className
     )}
     toast-close=""
-    aria-label="Close"
+    aria-label={t("common.close")}
     {...props}
   >
     <X className="h-4 w-4" />
   </ToastPrimitives.Close>
-))
+  )
+})
 ToastClose.displayName = ToastPrimitives.Close.displayName
 
 const ToastTitle = React.forwardRef<

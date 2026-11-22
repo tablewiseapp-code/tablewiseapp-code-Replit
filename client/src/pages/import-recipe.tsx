@@ -466,7 +466,7 @@ export default function ImportRecipe() {
               <div className="relative inline-block">
                 <img 
                   src={image} 
-                  alt="Recipe preview" 
+                  alt={t("import.recipePreview")} 
                   className="image-fade-in w-32 h-32 object-cover rounded-lg border hairline"
                   loading="lazy"
                   decoding="async"
@@ -476,7 +476,7 @@ export default function ImportRecipe() {
                 />
                 <button
                   onClick={removeImage}
-                  aria-label="Remove recipe photo"
+                  aria-label={t("recipe.removePhoto")}
                   className="absolute -top-2 -right-2 w-11 h-11 bg-foreground text-background rounded-full flex items-center justify-center text-xs hover:bg-foreground/80"
                   data-testid="button-remove-photo"
                 >
