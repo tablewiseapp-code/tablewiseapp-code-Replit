@@ -14,6 +14,7 @@ import { loadSettings } from "@/lib/basic-settings";
 import { cookNowOptions } from "@/lib/week-suggestions";
 import { toPlannerRecipes, type PlannerRecipe } from "@/lib/planner-recipes";
 import type { Extra } from "@/lib/grocery-items";
+import type { useCookNow } from "@/hooks/use-cook-now";
 import type { Recipe } from "@/lib/storage";
 
 /** One row of the picker. A suggestion (bought last week) starts unticked; a typed protein starts ticked. */
@@ -29,9 +30,10 @@ export const toOnHand = (entries: Entry[], minimize: boolean): OnHand =>
 export const useGroceryExtras = (enabled = true) => useQuery<Extra[]>({ queryKey: ["/api/grocery-extras"], enabled });
 
 /** The protein inputs shared by Home and the Week: tick, correct, add an amount, remove; Minimize groceries; the camera
- * placeholder (disabled: requests no device permission). `mustInclude` (Home) marks a protein as required. */
-export function OnHandPicker({ entries, onChange, minimize, onMinimize, mustInclude = false, addLabel }: {
-  entries: Entry[]; onChange: (next: Entry[]) => void; minimize: boolean; onMinimize: (on: boolean) => void; mustInclude?: boolean; addLabel: OnHandKey;
+ * placeholder (disabled: requests no device permission). `mustInclude` (Home, Cook now) marks a protein as required;
+ * without `onMinimize` (Cook now opens one recipe) there is no Minimize groceries switch. */
+export function OnHandPicker({ entries, onChange, minimize = false, onMinimize, mustInclude = false, addLabel }: {
+  entries: Entry[]; onChange: (next: Entry[]) => void; minimize?: boolean; onMinimize?: (on: boolean) => void; mustInclude?: boolean; addLabel: OnHandKey;
 }) {
   const { lang } = useI18n();
   const c = (key: OnHandKey, values?: Record<string, string | number>) => onHandText(lang, key, values);
@@ -76,13 +78,16 @@ export function OnHandPicker({ entries, onChange, minimize, onMinimize, mustIncl
         <button type="button" disabled className="btn btn-text -ms-2 gap-1 opacity-60" data-testid="on-hand-camera">
           <Camera className="h-4 w-4" aria-hidden="true" />{c("camera")}</button>
       </form>
-      <label className="flex min-h-11 items-center justify-between gap-3">
+      {onMinimize && <label className="flex min-h-11 items-center justify-between gap-3">
         <span><span className="block text-sm font-medium">{c("minimize")}</span><span className="block text-xs text-muted-foreground">{c("minimizeHint")}</span></span>
         <Switch checked={minimize} onCheckedChange={onMinimize} data-testid="on-hand-minimize" />
-      </label>
+      </label>}
     </div>
   );
 }
+
+/** A bottom sheet on a phone, a dialog on wider screens. */
+const sheet = "bottom-0 top-auto max-h-[92dvh] w-full max-w-none translate-y-0 gap-4 overflow-y-auto rounded-b-none rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-auto sm:top-[50%] sm:max-w-md sm:translate-y-[-50%] sm:rounded-2xl";
 
 /** Home → Cook with what I have: proteins → eligible recipes using at least one of them. Read-only: never changes the
  * Week or Groceries; a recipe opens on its page, where Servings scales it. */
@@ -107,8 +112,7 @@ export function CookWithWhatIHave({ open, onClose, catalog }: { open: boolean; o
   const names = chosen(shown).map(e => e.name.trim());
   return (
     <Dialog open={open} onOpenChange={o => { if (!o) close(); }}>
-      {open && <DialogContent data-testid="cook-with-what-i-have"
-        className="bottom-0 top-auto max-h-[92dvh] w-full max-w-none translate-y-0 gap-4 overflow-y-auto rounded-b-none rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-auto sm:top-[50%] sm:max-w-md sm:translate-y-[-50%] sm:rounded-2xl"
+      {open && <DialogContent data-testid="cook-with-what-i-have" className={sheet}
         onOpenAutoFocus={e => { e.preventDefault(); (e.currentTarget as HTMLElement).focus(); }}>
         <DialogHeader className="text-start sm:text-start">
           <DialogTitle>{result ? c("results") : c("homeTitle")}</DialogTitle>
@@ -129,6 +133,37 @@ export function CookWithWhatIHave({ open, onClose, catalog }: { open: boolean; o
             })}</ul>}
           <button type="button" className="btn btn-secondary" onClick={() => setResult(null)} data-testid="on-hand-edit">{c("editSearch")}</button>
         </>}
+      </DialogContent>}
+    </Dialog>
+  );
+}
+
+/** Cook now: "What protein do you have?" before the recipe opens. Find a recipe opens the first eligible recipe using a
+ * ticked protein (every Must include one among them); Skip opens Cook now's usual first recipe. */
+export function CookNowProteins({ cookNow }: { cookNow: ReturnType<typeof useCookNow> }) {
+  const { lang } = useI18n();
+  const c = (key: OnHandKey, values?: Record<string, string | number>) => onHandText(lang, key, values);
+  const extras = useGroceryExtras(cookNow.asking);
+  const [entries, setEntries] = useState<Entry[] | null>(null);
+  const [noMatch, setNoMatch] = useState<FindResult<PlannerRecipe>["noMatch"]>(null);
+  const suggested = useMemo(() => (extras.isFetched ? suggestedEntries(extras.data ?? []) : []), [extras.isFetched, extras.data]);
+  const shown = entries ?? suggested;
+  const close = () => { setNoMatch(null); cookNow.close(); };
+  const find = () => setNoMatch(cookNow.run(chosen(shown).map(e => ({ name: e.name.trim(), required: e.required }))).noMatch);
+  return (
+    <Dialog open={cookNow.asking} onOpenChange={o => { if (!o) close(); }}>
+      {cookNow.asking && <DialogContent data-testid="cook-now-proteins" className={sheet}
+        onOpenAutoFocus={e => { e.preventDefault(); (e.currentTarget as HTMLElement).focus(); }}>
+        <DialogHeader className="text-start sm:text-start">
+          <DialogTitle>{c("homeTitle")}</DialogTitle>
+          <DialogDescription>{c("cookNowIntro")}</DialogDescription>
+        </DialogHeader>
+        <OnHandPicker entries={shown} onChange={next => { setEntries(next); setNoMatch(null); }} mustInclude addLabel="homeTitle" />
+        {noMatch && <p role="status" className="text-sm" data-testid="on-hand-none">{c(`none_${noMatch}`)}</p>}
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn btn-primary" disabled={!entriesReady(shown)} onClick={find} data-testid="cook-now-find">{c("findOne")}</button>
+          <button type="button" className="btn btn-secondary" onClick={() => { setNoMatch(null); cookNow.run(); }} data-testid="cook-now-skip">{c("skip")}</button>
+        </div>
       </DialogContent>}
     </Dialog>
   );

@@ -14,7 +14,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { askURL, useCookNow } from "@/hooks/use-cook-now";
 import { CookNowEmpty } from "@/components/household-controls";
-import { CookWithWhatIHave } from "@/components/on-hand-picker";
+import { CookNowProteins, CookWithWhatIHave } from "@/components/on-hand-picker";
 import { onHandText } from "@/lib/on-hand-copy";
 import { loadSettings, missingAnswers } from "@/lib/basic-settings";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
@@ -222,6 +222,7 @@ export default function Home() {
         </div>
       </PageContainer>
       <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={meal => { setGenerating(null); focusAdd(meal); }} onAdded={added} />
+      <CookNowProteins cookNow={cookNow} />
       <CookWithWhatIHave open={having && !!catalog.data} onClose={() => setHaving(false)} catalog={catalog.data ?? []} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>

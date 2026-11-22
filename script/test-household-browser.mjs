@@ -114,6 +114,8 @@ try {
   // ---- Cook now: one eligible recipe on its own page; Show another; Start cooking opens Zen; the Week is untouched.
   await until(`!${q("button-cook-now")}.disabled`, "catalog loaded");
   await click("button-cook-now");
+  await until(`Boolean(${q("cook-now-skip")})`, "proteins sheet");
+  await click("cook-now-skip");
   await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("suggestion-bar")})`, "suggested recipe");
   const firstId = decodeURIComponent(await ev("location.pathname.slice(8)"));
   ok(await ev(`!${q("button-recipe-menu")} && Boolean(${q("button-show-another")})`), "Show another replaces the More actions menu");
@@ -174,7 +176,16 @@ try {
   await go("/", `Boolean(${q("home-suggest-recipe")}) && !${q("home-suggest-recipe")}.disabled`);
   ok(await noScroll(), "Home fits a phone");
   await click("home-suggest-recipe");
-  await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("suggestion-bar")})`, "Home suggestion opens the recipe");
+  // It asks what protein you have first; Must include narrows the pick and Show another keeps it.
+  await until(`Boolean(${q("cook-now-proteins")})`, "proteins sheet");
+  await ev(`(() => { const i = ${q("on-hand-input")}; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(i, "chicken"); i.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+  await click("on-hand-add");
+  await until(`Boolean(${q("on-hand-required")})`, "typed protein");
+  await click("on-hand-required");
+  await click("cook-now-find");
+  await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("suggest-proteins")})`, "Home suggestion opens the recipe");
+  ok(await ev(`location.search.includes("must=chicken")`), "Must include kept in the URL");
+  ok((await recipe(decodeURIComponent(await ev("location.pathname.slice(8)")))).ingredients.some(l => /chicken/i.test(l)), "the pick uses chicken");
   eq(await plan(), planBefore, "Home suggestion leaves the Week unchanged");
 
   // ---- Personalize my recipes: Cancel keeps everything; Save returns to where it was opened.
@@ -206,6 +217,8 @@ try {
   // From Cook now: Save picks a fresh suggestion under the new rules.
   await go("/", `Boolean(${q("home-suggest-recipe")}) && !${q("home-suggest-recipe")}.disabled`);
   await click("home-suggest-recipe");
+  await until(`Boolean(${q("cook-now-skip")})`, "proteins sheet");
+  await click("cook-now-skip");
   await until(`Boolean(${q("link-personalize-cook")})`, "suggestion");
   await click("link-personalize-cook");
   await until(`Boolean(${q("button-save-preferences")}) && !${q("button-save-preferences")}.disabled`, "editor from Cook now");
@@ -234,6 +247,8 @@ try {
   // Microwave only: the local catalog has no microwave or reviewed no-cook recipe, so Cook now says so and relaxes nothing.
   await go("/household?step=5", `${step("done")} && !${q("button-cook-now")}.disabled`);
   await click("button-cook-now");
+  await until(`Boolean(${q("cook-now-skip")})`, "proteins sheet");
+  await click("cook-now-skip");
   await until(`Boolean(${q("cook-now-none")})`, "empty state");
   ok(await ev(`location.pathname === "/household"`), "no recipe opened");
 

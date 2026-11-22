@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy, type HouseholdKey } from "@/lib/household-copy";
 import { settingsText } from "@/lib/settings-copy";
 import { personalizeURL, useCookNow } from "@/hooks/use-cook-now";
+import { CookNowProteins } from "@/components/on-hand-picker";
 import type { DeviceId } from "@/lib/device-requirements";
 import { cookingStyles, emptyMember, hasRequirements, householdCounts, loadSettings, missingAnswers, pushSettings, setupSteps, updateSettings,
   type BasicSettings, type Member, type SetupStep } from "@/lib/basic-settings";
@@ -191,6 +192,7 @@ export default function Household() {
           {screen !== "style" && screen !== "done" && <button type="button" onClick={next} disabled={busy || (then === "cook" && !cookNow.ready)} className="btn btn-primary" data-testid="button-next">{busy ? t("saving") : t("next")}</button>}
         </div>
       </PageContainer>
+      <CookNowProteins cookNow={cookNow} />
     </div>
   );
 }

@@ -6,7 +6,8 @@ import { useI18n } from "@/lib/i18n";
 import { preferenceSummary, useHouseholdCopy } from "@/lib/household-copy";
 import { settingsText } from "@/lib/settings-copy";
 import { loadSettings, updateSettings, type BasicSettings } from "@/lib/basic-settings";
-import { useCookNow } from "@/hooks/use-cook-now";
+import { useCookNow, readCookNow } from "@/hooks/use-cook-now";
+import { CookNowProteins } from "@/components/on-hand-picker";
 import { cuisineChoices } from "@shared/food-rules";
 
 /** Where Save and Cancel go: a path inside the app, else screen 5 of Your household. */
@@ -35,7 +36,10 @@ export default function Personalize() {
         household: { ...x.household, kidFriendly: draft.household.kidFriendly } }));
     } catch { setFailed(true); return; }
     // Suggestions refresh: Cook now picks again under the new rules; the Week asks "Your preferences have been changed".
-    if (fromCookNow) cookNow.start(); else setLocation(from);
+    // Same proteins as the suggestion it came from; asked again only when none fits the new rules.
+    if (!fromCookNow) { setLocation(from); return; }
+    const proteins = readCookNow(from.split("?")[1] ?? "").proteins;
+    if (cookNow.run(proteins).noMatch && proteins.length) cookNow.start();
   };
 
   const section = (id: string, title: string, children: React.ReactNode) => (
@@ -79,6 +83,7 @@ export default function Personalize() {
           <button type="button" onClick={() => setLocation(from)} className="btn btn-secondary" data-testid="button-cancel-preferences">{t("cancel")}</button>
         </div>
       </PageContainer>
+      <CookNowProteins cookNow={cookNow} />
     </div>
   );
 }
