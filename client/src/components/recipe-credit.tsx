@@ -4,16 +4,21 @@ import type { RecipeCredit } from "@shared/recipe-credit";
 import { useMvpCopy } from "@/lib/mvp-copy";
 import { updateRecipeCredit, type Recipe } from "@/lib/storage";
 
-export function RecipeCreditLine({ recipe }: { recipe: RecipeCredit & { id: string } }) {
+/** `href` (the recipe page passes its source link) makes a chef's name a link; cards never pass it, as the whole card is a link. */
+export function RecipeCreditLine({ recipe, href }: { recipe: RecipeCredit & { id: string }; href?: string | null }) {
   const { t } = useMvpCopy();
   const personal = recipe.creditKind === "mine";
   const name = recipe.creditName?.trim();
   const reference = recipe.chefReference?.trim();
   // No known author: show nothing rather than a "not specified" message.
   if (!personal && !name && !reference) return null;
+  const link = !personal && name && href && /^https?:\/\//i.test(href) ? href : null;
   return <span className="min-w-0 max-w-full basis-full break-words" data-testid={`recipe-credit-${recipe.id}`}>
     {personal ? `${t("creditMine")}${name ? ` — ${name}` : ""}` :
-      name ? `${t(reference ? "creditReference" : "creditChef")}: ${name}` : `${t("creditReference")}: ${reference}`}
+      name ? <>{t(reference ? "creditReference" : "creditChef")}: {link
+        ? <a href={link} target="_blank" rel="noopener noreferrer" data-testid="link-credit"
+          className="font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{name}</a>
+        : name}</> : `${t("creditReference")}: ${reference}`}
   </span>;
 }
 

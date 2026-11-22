@@ -1,0 +1,691 @@
+[
+  {
+    "section": "9.1", "slug": "classic-shakshuka", "prepTime": 10, "cookTime": 20, "servings": "2",
+    "tags": ["Breakfast", "Middle Eastern", "Eggs", "Vegetarian", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Classic shakshuka",
+      "ingredients": ["4 eggs", "4 ripe tomatoes", "1 onion", "1 red pepper", "2 cloves garlic", "2 tbsp olive oil", "2 tbsp tomato paste", "1 tsp sweet paprika", "½ tsp ground cumin", "½ tsp salt", "¼ tsp black pepper", "2 tbsp chopped parsley"],
+      "steps": [
+        "Chop the onion, red pepper, garlic and tomatoes.",
+        "Heat the oil in a large frying pan over medium heat. Fry the onion until soft, then add the red pepper and garlic and cook for 2–3 minutes.",
+        "Add the tomatoes, tomato paste, paprika, cumin, salt and pepper. Simmer for 10–15 minutes, stirring now and then, until the sauce thickens.",
+        "Make 4 hollows in the sauce and crack an egg into each.",
+        "Cover and cook over low heat for 5–8 minutes, until the whites are set. Scatter with parsley and serve straight away."
+      ]
+    },
+    "ru": {
+      "title": "Классическая шакшука",
+      "ingredients": ["4 яйца", "4 спелых помидора", "1 луковица", "1 красный сладкий перец", "2 зубчика чеснока", "2 ст. л. оливкового масла", "2 ст. л. томатной пасты", "1 ч. л. сладкой паприки", "½ ч. л. молотого кумина", "½ ч. л. соли", "¼ ч. л. чёрного перца", "2 ст. л. рубленой петрушки"],
+      "steps": [
+        "Нарежьте лук, красный перец, чеснок и помидоры.",
+        "Разогрейте масло в большой сковороде на среднем огне. Обжарьте лук до мягкости, затем добавьте перец и чеснок и готовьте 2–3 минуты.",
+        "Добавьте помидоры, томатную пасту, паприку, кумин, соль и перец. Тушите 10–15 минут, время от времени помешивая, пока соус не загустеет.",
+        "Сделайте в соусе 4 углубления и разбейте в каждое по яйцу.",
+        "Накройте крышкой и готовьте на слабом огне 5–8 минут, пока белки не схватятся. Посыпьте петрушкой и сразу подавайте."
+      ]
+    },
+    "he": {
+      "title": "שקשוקה קלאסית",
+      "ingredients": ["4 ביצים", "4 עגבניות בשלות", "1 בצל", "1 פלפל אדום", "2 שיני שום", "2 כפות שמן זית", "2 כפות רסק עגבניות", "1 כפית פפריקה מתוקה", "½ כפית כמון", "½ כפית מלח", "¼ כפית פלפל שחור", "2 כפות פטרוזיליה קצוצה"],
+      "steps": [
+        "קוצצים את הבצל, הפלפל האדום, השום והעגבניות.",
+        "מחממים את השמן במחבת גדולה על אש בינונית. מטגנים את הבצל עד שהוא מתרכך, מוסיפים את הפלפל והשום ומבשלים 2–3 דקות.",
+        "מוסיפים את העגבניות, רסק העגבניות, הפפריקה, הכמון, המלח והפלפל. מבשלים 10–15 דקות, מערבבים מדי פעם, עד שהרוטב מסמיך.",
+        "יוצרים 4 גומות ברוטב ושוברים ביצה לכל גומה.",
+        "מכסים ומבשלים על אש נמוכה 5–8 דקות, עד שהחלבונים מתייצבים. מפזרים פטרוזיליה ומגישים מיד."
+      ]
+    }
+  },
+  {
+    "section": "11.10", "slug": "spanish-omelette", "prepTime": 10, "cookTime": 25, "servings": "4",
+    "tags": ["Breakfast", "Spanish", "Eggs", "Potatoes", "Vegetarian", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Spanish omelette",
+      "ingredients": ["4 potatoes", "6 eggs", "1 onion", "3 tbsp oil", "½ tsp salt", "¼ tsp black pepper", "2 tbsp chopped parsley", "½ tsp paprika", "½ tsp garlic granules", "2 spring onions", "1 tbsp chopped dill", "1 pinch turmeric"],
+      "steps": [
+        "Peel the potatoes and slice them thinly. Slice the onion and the spring onions.",
+        "Heat 2 tbsp of the oil in a large frying pan over medium heat. Fry the potatoes and onion for 12–15 minutes, turning often, until the potatoes are soft.",
+        "Beat the eggs in a large bowl with the salt, pepper, paprika, garlic granules and turmeric. Stir in the potatoes, onion, spring onions, parsley and dill.",
+        "Heat the remaining oil in the pan, pour in the mixture and cook over low heat for 8–10 minutes, until the edges are set.",
+        "Carefully turn the omelette over with the help of a plate and cook for 3–4 minutes more, until set in the centre. Serve hot or cold."
+      ]
+    },
+    "ru": {
+      "title": "Испанский омлет",
+      "ingredients": ["4 картофелины", "6 яиц", "1 луковица", "3 ст. л. масла", "½ ч. л. соли", "¼ ч. л. чёрного перца", "2 ст. л. рубленой петрушки", "½ ч. л. паприки", "½ ч. л. сушёного чеснока", "2 стебля зелёного лука", "1 ст. л. рубленого укропа", "1 щепотка куркумы"],
+      "steps": [
+        "Очистите картофель и тонко нарежьте. Нарежьте репчатый и зелёный лук.",
+        "Разогрейте 2 ст. л. масла в большой сковороде на среднем огне. Обжаривайте картофель с луком 12–15 минут, часто переворачивая, пока картофель не станет мягким.",
+        "Взбейте яйца в большой миске с солью, перцем, паприкой, сушёным чесноком и куркумой. Вмешайте картофель, лук, зелёный лук, петрушку и укроп.",
+        "Разогрейте в сковороде оставшееся масло, вылейте смесь и готовьте на слабом огне 8–10 минут, пока края не схватятся.",
+        "Осторожно переверните омлет с помощью тарелки и готовьте ещё 3–4 минуты, пока он не схватится в центре. Подавайте горячим или холодным."
+      ]
+    },
+    "he": {
+      "title": "חביתה ספרדית",
+      "ingredients": ["4 תפוחי אדמה", "6 ביצים", "1 בצל", "3 כפות שמן", "½ כפית מלח", "¼ כפית פלפל שחור", "2 כפות פטרוזיליה קצוצה", "½ כפית פפריקה", "½ כפית שום גבישי", "2 גבעולי בצל ירוק", "1 כף שמיר קצוץ", "1 קורט כורכום"],
+      "steps": [
+        "קולפים את תפוחי האדמה ופורסים דק. פורסים את הבצל ואת הבצל הירוק.",
+        "מחממים 2 כפות מהשמן במחבת גדולה על אש בינונית. מטגנים את תפוחי האדמה עם הבצל 12–15 דקות, הופכים לעתים קרובות, עד שתפוחי האדמה רכים.",
+        "טורפים את הביצים בקערה גדולה עם המלח, הפלפל, הפפריקה, השום הגבישי והכורכום. מוסיפים את תפוחי האדמה, הבצל, הבצל הירוק, הפטרוזיליה והשמיר ומערבבים.",
+        "מחממים במחבת את יתרת השמן, יוצקים את התערובת ומבשלים על אש נמוכה 8–10 דקות, עד שהשוליים מתייצבים.",
+        "הופכים בזהירות בעזרת צלחת ומבשלים עוד 3–4 דקות, עד שהמרכז מתייצב. מגישים חם או קר."
+      ]
+    }
+  },
+  {
+    "section": "11.18", "slug": "savoury-pancakes", "prepTime": 5, "cookTime": 15, "servings": "2",
+    "tags": ["Breakfast", "International", "Eggs", "Vegetarian", "Gluten-free", "Kid friendly"],
+    "en": {
+      "title": "Savoury pancakes",
+      "ingredients": ["1 cup gluten-free flour", "1 egg", "¾ cup milk", "2 tbsp oil", "¼ tsp salt", "1 pinch black pepper"],
+      "steps": [
+        "Beat the egg in a bowl, then whisk in the milk and oil.",
+        "Add the gluten-free flour, salt and pepper and stir just until the batter is smooth; do not overmix. Stir in grated cheese, spring onion or herbs if you like.",
+        "Heat a lightly greased frying pan over medium heat and pour in a little batter for each pancake.",
+        "Cook until small bubbles appear on top, then turn and cook until golden on both sides. Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Несладкие оладьи",
+      "ingredients": ["1 стакан безглютеновой муки", "1 яйцо", "¾ стакана молока", "2 ст. л. масла", "¼ ч. л. соли", "1 щепотка чёрного перца"],
+      "steps": [
+        "Взбейте яйцо в миске, затем вмешайте молоко и масло.",
+        "Добавьте безглютеновую муку, соль и перец и перемешайте только до однородности, не перемешивайте слишком долго. По желанию добавьте тёртый сыр, зелёный лук или зелень.",
+        "Разогрейте слегка смазанную маслом сковороду на среднем огне и выливайте понемногу теста на каждую оладью.",
+        "Жарьте, пока сверху не появятся маленькие пузырьки, затем переверните и жарьте до золотистого цвета с обеих сторон. Подавайте горячими."
+      ]
+    },
+    "he": {
+      "title": "פנקייק מלוח",
+      "ingredients": ["1 כוס קמח ללא גלוטן", "1 ביצה", "¾ כוס חלב", "2 כפות שמן", "¼ כפית מלח", "1 קורט פלפל שחור"],
+      "steps": [
+        "טורפים את הביצה בקערה ומוסיפים חלב ושמן.",
+        "מוסיפים את הקמח ללא גלוטן, המלח והפלפל ומערבבים רק עד לבלילה אחידה, בלי לערבב יותר מדי. אפשר להוסיף גבינה מגוררת, בצל ירוק או עשבי תיבול.",
+        "מחממים מחבת משומנת קלות על אש בינונית ויוצקים מעט בלילה לכל פנקייק.",
+        "מטגנים עד שמופיעות בועות קטנות, הופכים וממשיכים עד הזהבה משני הצדדים. מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "2.1", "slug": "classic-chicken-soup", "prepTime": 20, "cookTime": 70, "servings": "6",
+    "tags": ["Lunch", "Soup", "Eastern European", "Chicken", "Potatoes", "Gluten-free", "Dairy-free", "Batch cooking"],
+    "en": {
+      "title": "Classic chicken soup",
+      "ingredients": ["4 chicken pieces", "2 carrots", "2 courgettes", "2 celery stalks", "1 onion", "1 potato", "1 handful parsley", "2 l water", "1 tsp salt", "½ tsp black pepper"],
+      "steps": [
+        "Rinse the chicken pieces well. Peel the vegetables and cut them into large pieces. Wash your hands and board after handling raw chicken.",
+        "Put the chicken, vegetables and parsley in a large pot and pour in the water. Bring to the boil and skim the foam from the top.",
+        "Add the salt and pepper, turn the heat to medium-low and simmer for about 1 hour, until the chicken is very tender and cooked through (74°C).",
+        "Taste and adjust the seasoning. Add cooked rice noodles if you like and serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Классический куриный суп",
+      "ingredients": ["4 куска курицы", "2 моркови", "2 кабачка", "2 стебля сельдерея", "1 луковица", "1 картофелина", "1 пучок петрушки", "2 л воды", "1 ч. л. соли", "½ ч. л. чёрного перца"],
+      "steps": [
+        "Хорошо промойте курицу. Очистите овощи и нарежьте крупными кусками. После сырой курицы вымойте руки и доску.",
+        "Положите курицу, овощи и петрушку в большую кастрюлю и залейте водой. Доведите до кипения и снимите пену.",
+        "Добавьте соль и перец, убавьте огонь до умеренного и варите около часа, пока курица не станет совсем мягкой и полностью проварится (74°C).",
+        "Попробуйте и досолите по вкусу. По желанию добавьте отварную рисовую лапшу и подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "מרק עוף קלאסי",
+      "ingredients": ["4 חלקי עוף", "2 גזרים", "2 קישואים", "2 גבעולי סלרי", "1 בצל", "1 תפוח אדמה", "1 חופן פטרוזיליה", "2 ליטר מים", "1 כפית מלח", "½ כפית פלפל שחור"],
+      "steps": [
+        "שוטפים היטב את חלקי העוף. קולפים את הירקות וחותכים לחתיכות גדולות. שוטפים ידיים וקרש אחרי מגע בעוף נא.",
+        "מניחים את העוף, הירקות והפטרוזיליה בסיר גדול ומוסיפים את המים. מביאים לרתיחה ומסירים את הקצף מלמעלה.",
+        "מוסיפים מלח ופלפל, מנמיכים לאש בינונית-נמוכה ומבשלים כשעה, עד שהעוף רך מאוד ומבושל לגמרי (74°C).",
+        "טועמים ומתקנים תיבול. מוסיפים אטריות אורז מבושלות אם רוצים ומגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "2.2", "slug": "garden-vegetable-soup", "prepTime": 15, "cookTime": 30, "servings": "6",
+    "tags": ["Lunch", "Soup", "International", "Potatoes", "Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Budget"],
+    "en": {
+      "title": "Garden vegetable soup",
+      "ingredients": ["2 carrots", "2 courgettes", "1 potato", "1 onion", "2 celery stalks", "1 tomato", "1 handful parsley", "2 l water", "1 tbsp oil", "1 tsp salt", "½ tsp black pepper"],
+      "steps": [
+        "Wash the vegetables, peel them as needed and cut into cubes. Chop the parsley.",
+        "Heat the oil in a large pot and fry the onion lightly. Add the remaining vegetables and stir for a few minutes.",
+        "Pour in the water, add the parsley, salt and pepper and bring to the boil. Simmer for 25–30 minutes, until the vegetables are soft.",
+        "Taste, adjust the seasoning and serve hot. For a thicker soup, blend part of it."
+      ]
+    },
+    "ru": {
+      "title": "Овощной суп",
+      "ingredients": ["2 моркови", "2 кабачка", "1 картофелина", "1 луковица", "2 стебля сельдерея", "1 помидор", "1 пучок петрушки", "2 л воды", "1 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца"],
+      "steps": [
+        "Вымойте овощи, при необходимости очистите и нарежьте кубиками. Порубите петрушку.",
+        "Разогрейте масло в большой кастрюле и слегка обжарьте лук. Добавьте остальные овощи и помешивайте несколько минут.",
+        "Влейте воду, добавьте петрушку, соль и перец и доведите до кипения. Варите 25–30 минут, пока овощи не станут мягкими.",
+        "Попробуйте, досолите по вкусу и подавайте горячим. Для более густого супа измельчите часть блендером."
+      ]
+    },
+    "he": {
+      "title": "מרק ירקות עשיר",
+      "ingredients": ["2 גזרים", "2 קישואים", "1 תפוח אדמה", "1 בצל", "2 גבעולי סלרי", "1 עגבנייה", "1 חופן פטרוזיליה", "2 ליטר מים", "1 כף שמן", "1 כפית מלח", "½ כפית פלפל שחור"],
+      "steps": [
+        "שוטפים היטב את הירקות, קולפים לפי הצורך וחותכים לקוביות. קוצצים את הפטרוזיליה.",
+        "מחממים את השמן בסיר גדול ומטגנים את הבצל קלות. מוסיפים את שאר הירקות ומערבבים כמה דקות.",
+        "מוסיפים את המים, הפטרוזיליה, המלח והפלפל ומביאים לרתיחה. מבשלים 25–30 דקות, עד שהירקות רכים.",
+        "טועמים, מתקנים תיבול ומגישים חם. למרק סמיך יותר טוחנים חלק ממנו."
+      ]
+    }
+  },
+  {
+    "section": "2.3", "slug": "red-lentil-soup", "prepTime": 10, "cookTime": 30, "servings": "4",
+    "tags": ["Lunch", "Soup", "Middle Eastern", "Potatoes", "Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Budget"],
+    "en": {
+      "title": "Red lentil soup",
+      "ingredients": ["1 cup red lentils", "1 onion", "2 carrots", "1 potato", "2 cloves garlic", "1 tsp turmeric", "6 cups water", "1 tbsp oil", "1 tsp salt", "½ tsp black pepper"],
+      "steps": [
+        "Rinse the lentils well. Chop the onion and garlic and cut the carrots and potato into cubes.",
+        "Heat the oil in a large pot and fry the onion and garlic until soft. Add the carrots, potato and lentils.",
+        "Pour in the water, add the turmeric, salt and pepper and bring to the boil. Simmer for 25–30 minutes, until everything is completely soft.",
+        "Blend as smooth as you like and serve hot, with a squeeze of lemon if you like."
+      ]
+    },
+    "ru": {
+      "title": "Суп из красной чечевицы",
+      "ingredients": ["1 стакан красной чечевицы", "1 луковица", "2 моркови", "1 картофелина", "2 зубчика чеснока", "1 ч. л. куркумы", "6 стаканов воды", "1 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца"],
+      "steps": [
+        "Хорошо промойте чечевицу. Порубите лук и чеснок, нарежьте морковь и картофель кубиками.",
+        "Разогрейте масло в большой кастрюле и обжарьте лук с чесноком до мягкости. Добавьте морковь, картофель и чечевицу.",
+        "Влейте воду, добавьте куркуму, соль и перец и доведите до кипения. Варите 25–30 минут, пока всё не станет совсем мягким.",
+        "Измельчите блендером до нужной консистенции и подавайте горячим, по желанию с лимонным соком."
+      ]
+    },
+    "he": {
+      "title": "מרק עדשים כתומות",
+      "ingredients": ["1 כוס עדשים כתומות", "1 בצל", "2 גזרים", "1 תפוח אדמה", "2 שיני שום", "1 כפית כורכום", "6 כוסות מים", "1 כף שמן", "1 כפית מלח", "½ כפית פלפל שחור"],
+      "steps": [
+        "שוטפים היטב את העדשים. קוצצים בצל ושום וחותכים את הגזר ותפוח האדמה לקוביות.",
+        "מחממים את השמן בסיר גדול ומטגנים את הבצל והשום עד ריכוך. מוסיפים גזר, תפוח אדמה ועדשים.",
+        "מוסיפים את המים, הכורכום, המלח והפלפל ומביאים לרתיחה. מבשלים 25–30 דקות, עד ריכוך מלא.",
+        "טוחנים לפי המרקם הרצוי ומגישים חם, אפשר עם מעט לימון."
+      ]
+    }
+  },
+  {
+    "section": "4.8", "slug": "chickpea-patties", "prepTime": 15, "cookTime": 10, "servings": "4",
+    "tags": ["Lunch", "Middle Eastern", "Vegetarian", "Gluten-free"],
+    "en": {
+      "title": "Chickpea patties",
+      "ingredients": ["2 cups cooked chickpeas", "1 small onion", "2 cloves garlic", "3 tbsp gluten-free breadcrumbs", "2 tbsp chopped parsley", "½ tsp salt", "¼ tsp black pepper", "4 tbsp oil for frying"],
+      "steps": [
+        "Chop the onion and parsley.",
+        "Put the chickpeas, onion and garlic in a food processor. Add the gluten-free breadcrumbs, parsley, salt and pepper and pulse to an even, slightly coarse mixture. If it is too dry, add a little water.",
+        "Taste, adjust the seasoning and shape into small patties.",
+        "Heat the oil in a frying pan over medium heat. Fry the patties until golden, turn them carefully and fry the other side. Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Котлеты из нута",
+      "ingredients": ["2 стакана варёного нута", "1 небольшая луковица", "2 зубчика чеснока", "3 ст. л. безглютеновых панировочных сухарей", "2 ст. л. рубленой петрушки", "½ ч. л. соли", "¼ ч. л. чёрного перца", "4 ст. л. масла для жарки"],
+      "steps": [
+        "Порубите лук и петрушку.",
+        "Положите нут, лук и чеснок в кухонный комбайн. Добавьте безглютеновые сухари, петрушку, соль и перец и измельчите до однородной, слегка зернистой массы. Если масса суховата, добавьте немного воды.",
+        "Попробуйте, досолите по вкусу и сформируйте небольшие котлеты.",
+        "Разогрейте масло в сковороде на среднем огне. Обжарьте котлеты до золотистого цвета, осторожно переверните и обжарьте с другой стороны. Подавайте горячими."
+      ]
+    },
+    "he": {
+      "title": "קציצות חומוס",
+      "ingredients": ["2 כוסות חומוס מבושל", "1 בצל קטן", "2 שיני שום", "3 כפות פירורי לחם ללא גלוטן", "2 כפות פטרוזיליה קצוצה", "½ כפית מלח", "¼ כפית פלפל שחור", "4 כפות שמן לטיגון"],
+      "steps": [
+        "קוצצים את הבצל והפטרוזיליה.",
+        "שמים את החומוס, הבצל והשום במעבד מזון. מוסיפים את פירורי הלחם ללא גלוטן, הפטרוזיליה, המלח והפלפל וטוחנים לתערובת אחידה, לא חלקה מדי. אם התערובת יבשה, מוסיפים מעט מים.",
+        "טועמים, מתקנים תיבול ויוצרים קציצות קטנות.",
+        "מחממים את השמן במחבת על אש בינונית. מטגנים את הקציצות עד הזהבה, הופכים בזהירות ומטגנים את הצד השני. מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "9.6", "slug": "vegetable-fritters", "prepTime": 15, "cookTime": 15, "servings": "4",
+    "tags": ["Lunch", "Middle Eastern", "Eggs", "Potatoes", "Vegetarian", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "en": {
+      "title": "Vegetable fritters",
+      "ingredients": ["2 carrots", "1 courgette", "1 potato", "2 eggs", "3 tbsp gluten-free flour", "½ tsp salt", "¼ tsp black pepper", "4 tbsp oil for frying"],
+      "steps": [
+        "Grate all the vegetables and squeeze out some of the liquid.",
+        "Put the vegetables in a large bowl, add the eggs, gluten-free flour, salt and pepper and mix well.",
+        "Heat the oil in a frying pan over medium heat. Drop in spoonfuls of the mixture and flatten them slightly; do not crowd the pan.",
+        "Fry until golden, turn and fry the other side until golden and cooked through. Drain on kitchen paper and serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Овощные оладьи",
+      "ingredients": ["2 моркови", "1 кабачок", "1 картофелина", "2 яйца", "3 ст. л. безглютеновой муки", "½ ч. л. соли", "¼ ч. л. чёрного перца", "4 ст. л. масла для жарки"],
+      "steps": [
+        "Натрите все овощи на тёрке и слегка отожмите сок.",
+        "Переложите овощи в большую миску, добавьте яйца, безглютеновую муку, соль и перец и хорошо перемешайте.",
+        "Разогрейте масло в сковороде на среднем огне. Выкладывайте массу ложкой и слегка приплющивайте, не кладите слишком тесно.",
+        "Жарьте до золотистого цвета, переверните и жарьте с другой стороны до золотистого цвета и готовности. Обсушите на бумажном полотенце и подавайте горячими."
+      ]
+    },
+    "he": {
+      "title": "לביבות ירק",
+      "ingredients": ["2 גזרים", "1 קישוא", "1 תפוח אדמה", "2 ביצים", "3 כפות קמח ללא גלוטן", "½ כפית מלח", "¼ כפית פלפל שחור", "4 כפות שמן לטיגון"],
+      "steps": [
+        "מגרדים את כל הירקות וסוחטים מעט נוזלים.",
+        "מעבירים את הירקות לקערה גדולה, מוסיפים ביצים, קמח ללא גלוטן, מלח ופלפל ומערבבים היטב.",
+        "מחממים את השמן במחבת על אש בינונית. יוצרים לביבות בעזרת כף ומשטחים מעט, בלי לצופף במחבת.",
+        "מטגנים עד הזהבה, הופכים ומטגנים את הצד השני עד הזהבה ועד שהלביבות מוכנות. מעבירים לנייר סופג ומגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "5.1", "slug": "roast-chicken-with-potatoes", "prepTime": 20, "cookTime": 70, "servings": "6",
+    "tags": ["Dinner", "Mediterranean", "Chicken", "Potatoes", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "en": {
+      "title": "Roast chicken with potatoes",
+      "ingredients": ["6 chicken pieces", "5 potatoes", "1 onion", "4 tbsp oil", "1 tsp salt", "½ tsp black pepper", "2 tsp paprika"],
+      "steps": [
+        "Heat the oven to 200°C. Peel the potatoes and cut them into chunks. Slice the onion.",
+        "Spread the potatoes and onion in a baking dish and lay the chicken pieces on top. Add the oil, salt, pepper and paprika and mix well to coat. Wash your hands after handling raw chicken.",
+        "Cover with baking paper or foil and roast for 45 minutes.",
+        "Uncover and roast for 20–25 minutes more, until the potatoes are soft, the chicken is browned and its thickest part reaches 74°C. Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Курица с картофелем в духовке",
+      "ingredients": ["6 кусков курицы", "5 картофелин", "1 луковица", "4 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца", "2 ч. л. паприки"],
+      "steps": [
+        "Разогрейте духовку до 200°C. Очистите картофель и нарежьте крупными кусками. Нарежьте лук.",
+        "Разложите картофель и лук в форме для запекания, сверху выложите курицу. Добавьте масло, соль, перец и паприку и хорошо перемешайте. После сырой курицы вымойте руки.",
+        "Накройте пергаментом или фольгой и запекайте 45 минут.",
+        "Снимите покрытие и запекайте ещё 20–25 минут, пока картофель не станет мягким, курица не подрумянится и в самой толстой части не достигнет 74°C. Подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "עוף בתנור עם תפוחי אדמה",
+      "ingredients": ["6 חלקי עוף", "5 תפוחי אדמה", "1 בצל", "4 כפות שמן", "1 כפית מלח", "½ כפית פלפל שחור", "2 כפיות פפריקה"],
+      "steps": [
+        "מחממים תנור ל-200 מעלות. קולפים את תפוחי האדמה וחותכים לחתיכות. פורסים את הבצל.",
+        "מסדרים את תפוחי האדמה והבצל בתבנית ומניחים מעל את חלקי העוף. מוסיפים שמן, מלח, פלפל ופפריקה ומערבבים היטב. שוטפים ידיים אחרי מגע בעוף נא.",
+        "מכסים בנייר אפייה או בנייר כסף ואופים 45 דקות.",
+        "מסירים את הכיסוי ואופים עוד 20–25 דקות, עד שתפוחי האדמה רכים, העוף משחים והחלק העבה שלו מגיע ל-74°C. מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "5.4", "slug": "one-pot-chicken-and-rice", "prepTime": 15, "cookTime": 45, "servings": "6",
+    "tags": ["Dinner", "Middle Eastern", "Chicken", "Rice", "Gluten-free", "Dairy-free", "Kid friendly"],
+    "en": {
+      "title": "One-pot chicken and rice",
+      "ingredients": ["6 chicken pieces", "2 cups rice", "1 onion", "1 carrot", "3 tbsp oil", "1 tsp salt", "½ tsp black pepper", "1 tsp turmeric", "3 cups water"],
+      "steps": [
+        "Rinse the rice. Chop the onion and carrot.",
+        "Heat the oil in a large pot and fry the onion until soft. Add the carrot, salt, pepper and turmeric.",
+        "Add the chicken pieces and brown them on all sides. Wash your hands after handling raw chicken.",
+        "Add the rice and the water and bring to the boil. Cover and cook over low heat for 35–40 minutes without lifting the lid, until the rice is tender and the chicken is cooked through (74°C). Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Курица с рисом в одной кастрюле",
+      "ingredients": ["6 кусков курицы", "2 стакана риса", "1 луковица", "1 морковь", "3 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца", "1 ч. л. куркумы", "3 стакана воды"],
+      "steps": [
+        "Промойте рис. Порубите лук и морковь.",
+        "Разогрейте масло в большой кастрюле и обжарьте лук до мягкости. Добавьте морковь, соль, перец и куркуму.",
+        "Добавьте курицу и обжарьте со всех сторон. После сырой курицы вымойте руки.",
+        "Добавьте рис и воду и доведите до кипения. Накройте крышкой и готовьте на слабом огне 35–40 минут, не открывая крышку, пока рис не станет мягким, а курица не приготовится полностью (74°C). Подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "עוף עם אורז בסיר אחד",
+      "ingredients": ["6 חלקי עוף", "2 כוסות אורז", "1 בצל", "1 גזר", "3 כפות שמן", "1 כפית מלח", "½ כפית פלפל שחור", "1 כפית כורכום", "3 כוסות מים"],
+      "steps": [
+        "שוטפים את האורז. קוצצים את הבצל והגזר.",
+        "מחממים את השמן בסיר גדול ומטגנים את הבצל עד ריכוך. מוסיפים גזר, מלח, פלפל וכורכום.",
+        "מוסיפים את חלקי העוף וצורבים מכל הצדדים. שוטפים ידיים אחרי מגע בעוף נא.",
+        "מוסיפים את האורז והמים ומביאים לרתיחה. מכסים ומבשלים על אש נמוכה 35–40 דקות בלי לפתוח את המכסה, עד שהאורז רך והעוף מבושל לגמרי (74°C). מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "5.6", "slug": "coconut-curry-chicken", "prepTime": 10, "cookTime": 40, "servings": "6",
+    "tags": ["Dinner", "International", "Chicken", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Coconut curry chicken",
+      "ingredients": ["6 chicken pieces", "1 onion", "400 ml canned coconut milk", "1 tbsp curry powder", "2 cloves garlic", "2 tbsp oil", "½ tsp salt", "¼ tsp black pepper"],
+      "steps": [
+        "Chop the onion and garlic.",
+        "Heat the oil in a wide pot and lightly brown the chicken pieces. Add the onion and garlic and stir until soft. Wash your hands after handling raw chicken.",
+        "Stir in the curry powder, then pour in the coconut milk and season with salt and pepper.",
+        "Bring to a gentle boil, turn the heat to low and simmer for 30–35 minutes, until the chicken is tender and cooked through (74°C). Do not let it boil hard. Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Курица карри с кокосовым молоком",
+      "ingredients": ["6 кусков курицы", "1 луковица", "400 мл консервированного кокосового молока", "1 ст. л. порошка карри", "2 зубчика чеснока", "2 ст. л. масла", "½ ч. л. соли", "¼ ч. л. чёрного перца"],
+      "steps": [
+        "Порубите лук и чеснок.",
+        "Разогрейте масло в широкой кастрюле и слегка обжарьте курицу. Добавьте лук и чеснок и помешивайте, пока они не станут мягкими. После сырой курицы вымойте руки.",
+        "Вмешайте карри, затем влейте кокосовое молоко, посолите и поперчите.",
+        "Доведите до лёгкого кипения, убавьте огонь и тушите 30–35 минут, пока курица не станет мягкой и не приготовится полностью (74°C). Не давайте сильно кипеть. Подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "עוף בקארי קוקוס",
+      "ingredients": ["6 חלקי עוף", "1 בצל", "400 מ\"ל חלב קוקוס (פחית)", "1 כף אבקת קארי", "2 שיני שום", "2 כפות שמן", "½ כפית מלח", "¼ כפית פלפל שחור"],
+      "steps": [
+        "קוצצים בצל ושום.",
+        "מחממים את השמן בסיר רחב ומשחימים מעט את חלקי העוף. מוסיפים בצל ושום ומערבבים עד ריכוך. שוטפים ידיים אחרי מגע בעוף נא.",
+        "מוסיפים את הקארי ומערבבים, יוצקים את חלב הקוקוס ומתבלים במלח ופלפל.",
+        "מביאים לרתיחה עדינה, מנמיכים לאש נמוכה ומבשלים 30–35 דקות, עד שהעוף רך ומבושל לגמרי (74°C). לא להרתיח חזק. מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "5.15", "slug": "lemon-garlic-chicken", "prepTime": 15, "cookTime": 45, "servings": "6",
+    "tags": ["Dinner", "Mediterranean", "Chicken", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Lemon garlic chicken",
+      "ingredients": ["6 chicken pieces", "4 cloves garlic", "2 lemons, juiced", "2 tbsp olive oil", "½ tsp salt", "¼ tsp black pepper", "1 onion", "½ cup water"],
+      "steps": [
+        "Chop the onion and garlic.",
+        "Heat the olive oil in a wide pot and lightly brown the chicken pieces. Add the onion and garlic and stir until slightly soft. Wash your hands after handling raw chicken.",
+        "Add the lemon juice, salt, pepper and the water.",
+        "Cover and cook over low heat for about 40 minutes, until the chicken is tender and cooked through (74°C). Taste, adjust the seasoning and serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Курица с лимоном и чесноком",
+      "ingredients": ["6 кусков курицы", "4 зубчика чеснока", "сок 2 лимонов", "2 ст. л. оливкового масла", "½ ч. л. соли", "¼ ч. л. чёрного перца", "1 луковица", "½ стакана воды"],
+      "steps": [
+        "Порубите лук и чеснок.",
+        "Разогрейте оливковое масло в широкой кастрюле и слегка обжарьте курицу. Добавьте лук и чеснок и помешивайте, пока они слегка не размякнут. После сырой курицы вымойте руки.",
+        "Добавьте лимонный сок, соль, перец и воду.",
+        "Накройте крышкой и тушите на слабом огне около 40 минут, пока курица не станет мягкой и не приготовится полностью (74°C). Попробуйте, досолите по вкусу и подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "עוף בלימון ושום",
+      "ingredients": ["6 חלקי עוף", "4 שיני שום", "מיץ מ-2 לימונים", "2 כפות שמן זית", "½ כפית מלח", "¼ כפית פלפל שחור", "1 בצל", "½ כוס מים"],
+      "steps": [
+        "קוצצים בצל ושום.",
+        "מחממים את שמן הזית בסיר רחב ומשחימים מעט את חלקי העוף. מוסיפים בצל ושום ומערבבים עד ריכוך קל. שוטפים ידיים אחרי מגע בעוף נא.",
+        "מוסיפים מיץ לימון, מלח, פלפל ואת המים.",
+        "מכסים ומבשלים על אש נמוכה כ-40 דקות, עד שהעוף רך ומבושל לגמרי (74°C). טועמים, מתקנים תיבול ומגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "4.1", "slug": "beef-meatballs-in-tomato-sauce", "prepTime": 20, "cookTime": 30, "servings": "4",
+    "tags": ["Dinner", "Middle Eastern", "Beef", "Eggs", "Gluten-free", "Kid friendly"],
+    "en": {
+      "title": "Beef meatballs in tomato sauce",
+      "ingredients": ["500 g minced beef", "1 onion", "1 egg", "3 tbsp gluten-free breadcrumbs", "4 tomatoes", "2 tbsp tomato paste", "3 tbsp oil", "1 tsp salt", "½ tsp black pepper", "1 cup water"],
+      "steps": [
+        "Finely chop the onion and chop the tomatoes.",
+        "Mix the beef, egg, gluten-free breadcrumbs and half the onion in a bowl, season with half the salt and pepper and shape into even meatballs. Wet hands make this easier. Wash your hands after handling raw meat.",
+        "Heat the oil in a wide pot and fry the rest of the onion. Add the tomatoes, tomato paste, the water and the remaining salt and pepper and bring to the boil.",
+        "Gently add the meatballs and simmer for about 25 minutes without stirring hard, until they are cooked through with no pink inside (71°C). Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Говяжьи тефтели в томатном соусе",
+      "ingredients": ["500 г говяжьего фарша", "1 луковица", "1 яйцо", "3 ст. л. безглютеновых панировочных сухарей", "4 помидора", "2 ст. л. томатной пасты", "3 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца", "1 стакан воды"],
+      "steps": [
+        "Мелко порубите лук и нарежьте помидоры.",
+        "Смешайте в миске фарш, яйцо, безглютеновые сухари и половину лука, приправьте половиной соли и перца и сформируйте одинаковые тефтели. Удобнее делать это мокрыми руками. После сырого мяса вымойте руки.",
+        "Разогрейте масло в широкой кастрюле и обжарьте оставшийся лук. Добавьте помидоры, томатную пасту, воду и оставшиеся соль и перец и доведите до кипения.",
+        "Осторожно опустите тефтели и тушите около 25 минут, не перемешивая сильно, пока они не приготовятся полностью и внутри не останется розового (71°C). Подавайте горячими."
+      ]
+    },
+    "he": {
+      "title": "קציצות בקר ברוטב עגבניות",
+      "ingredients": ["500 גרם בשר בקר טחון", "1 בצל", "1 ביצה", "3 כפות פירורי לחם ללא גלוטן", "4 עגבניות", "2 כפות רסק עגבניות", "3 כפות שמן", "1 כפית מלח", "½ כפית פלפל שחור", "1 כוס מים"],
+      "steps": [
+        "קוצצים דק את הבצל וחותכים את העגבניות.",
+        "מערבבים בקערה בשר, ביצה, פירורי לחם ללא גלוטן ומחצית מהבצל, מתבלים בחצי מהמלח והפלפל ויוצרים קציצות אחידות. ידיים רטובות מקלות על העבודה. שוטפים ידיים אחרי מגע בבשר נא.",
+        "מחממים את השמן בסיר רחב ומטגנים את יתרת הבצל. מוסיפים עגבניות, רסק, את המים ואת יתרת המלח והפלפל ומביאים לרתיחה.",
+        "מוסיפים את הקציצות בעדינות ומבשלים כ-25 דקות בלי לערבב חזק, עד שהן מבושלות לגמרי ואין בהן ורוד (71°C). מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "6.1", "slug": "hungarian-beef-goulash", "prepTime": 20, "cookTime": 120, "servings": "6",
+    "tags": ["Dinner", "Eastern European", "Beef", "Potatoes", "Gluten-free", "Dairy-free", "Batch cooking"],
+    "en": {
+      "title": "Hungarian beef goulash",
+      "ingredients": ["1 kg stewing beef", "2 large onions", "2 carrots", "2 potatoes", "3 tbsp sweet paprika", "3 tbsp oil", "2 cloves garlic", "1 tsp salt", "½ tsp black pepper", "1 l water"],
+      "steps": [
+        "Cut the beef into cubes and chop the onions. Cut the carrots and potatoes into chunks. Wash your hands after handling raw meat.",
+        "Heat the oil in a large pot and fry the onions until golden. Add the garlic and stir.",
+        "Add the beef and brown it on all sides. Stir in the paprika, salt and pepper, then add enough water to come partway up the meat.",
+        "Cover and simmer for about 1½ hours.",
+        "Add the carrots and potatoes and cook for about 30 minutes more, until the meat and vegetables are completely tender. It tastes even better the next day."
+      ]
+    },
+    "ru": {
+      "title": "Венгерский гуляш из говядины",
+      "ingredients": ["1 кг говядины для тушения", "2 крупные луковицы", "2 моркови", "2 картофелины", "3 ст. л. сладкой паприки", "3 ст. л. масла", "2 зубчика чеснока", "1 ч. л. соли", "½ ч. л. чёрного перца", "1 л воды"],
+      "steps": [
+        "Нарежьте говядину кубиками и порубите лук. Нарежьте морковь и картофель крупными кусками. После сырого мяса вымойте руки.",
+        "Разогрейте масло в большой кастрюле и обжарьте лук до золотистого цвета. Добавьте чеснок и перемешайте.",
+        "Добавьте говядину и обжарьте со всех сторон. Вмешайте паприку, соль и перец, затем влейте воду так, чтобы она частично покрывала мясо.",
+        "Накройте крышкой и тушите около 1½ часа.",
+        "Добавьте морковь и картофель и готовьте ещё около 30 минут, пока мясо и овощи не станут совсем мягкими. На следующий день гуляш ещё вкуснее."
+      ]
+    },
+    "he": {
+      "title": "גולאש בקר הונגרי",
+      "ingredients": ["1 ק\"ג בשר בקר לתבשיל", "2 בצלים גדולים", "2 גזרים", "2 תפוחי אדמה", "3 כפות פפריקה מתוקה", "3 כפות שמן", "2 שיני שום", "1 כפית מלח", "½ כפית פלפל שחור", "1 ליטר מים"],
+      "steps": [
+        "חותכים את הבשר לקוביות וקוצצים את הבצל. חותכים את הגזרים ותפוחי האדמה לחתיכות. שוטפים ידיים אחרי מגע בבשר נא.",
+        "מחממים את השמן בסיר גדול ומטגנים את הבצל עד הזהבה. מוסיפים שום ומערבבים.",
+        "מוסיפים את קוביות הבשר וצורבים מכל הצדדים. מוסיפים פפריקה, מלח ופלפל ומוסיפים מים לכיסוי חלקי של הבשר.",
+        "מכסים ומבשלים כשעה וחצי.",
+        "מוסיפים את הגזרים ותפוחי האדמה וממשיכים לבשל כ-30 דקות, עד שהבשר והירקות רכים לגמרי. למחרת זה טעים עוד יותר."
+      ]
+    }
+  },
+  {
+    "section": "7.1", "slug": "stuffed-peppers", "prepTime": 30, "cookTime": 60, "servings": "6",
+    "tags": ["Dinner", "Middle Eastern", "Beef", "Rice", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Stuffed peppers",
+      "ingredients": ["6 large peppers", "500 g minced beef", "1 cup rice", "1 onion", "4 tomatoes", "2 tbsp tomato paste", "3 tbsp oil", "1 tsp salt", "½ tsp black pepper", "1 cup water"],
+      "steps": [
+        "Wash the peppers, cut off the tops and carefully remove the seeds. Finely chop the onion.",
+        "Mix the beef, rice and onion in a bowl and season with half the salt and pepper. Fill the peppers, leaving some room for the rice to swell. Wash your hands after handling raw meat.",
+        "Stand the peppers in a wide pot. Grate or chop the tomatoes and mix them with the tomato paste, oil, the water and the remaining salt and pepper.",
+        "Pour the sauce over the peppers, cover and simmer over low heat for about 1 hour, until the rice is tender and the filling is cooked through (71°C). Serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Фаршированные перцы",
+      "ingredients": ["6 крупных сладких перцев", "500 г говяжьего фарша", "1 стакан риса", "1 луковица", "4 помидора", "2 ст. л. томатной пасты", "3 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца", "1 стакан воды"],
+      "steps": [
+        "Вымойте перцы, срежьте верхушки и аккуратно удалите семена. Мелко порубите лук.",
+        "Смешайте в миске фарш, рис и лук и приправьте половиной соли и перца. Наполните перцы, оставляя место, чтобы рис мог набухнуть. После сырого мяса вымойте руки.",
+        "Поставьте перцы в широкую кастрюлю. Натрите или нарежьте помидоры и смешайте с томатной пастой, маслом, водой и оставшимися солью и перцем.",
+        "Залейте перцы соусом, накройте крышкой и тушите на слабом огне около часа, пока рис не станет мягким, а начинка не приготовится полностью (71°C). Подавайте горячими."
+      ]
+    },
+    "he": {
+      "title": "פלפלים ממולאים",
+      "ingredients": ["6 פלפלים גדולים", "500 גרם בשר בקר טחון", "1 כוס אורז", "1 בצל", "4 עגבניות", "2 כפות רסק עגבניות", "3 כפות שמן", "1 כפית מלח", "½ כפית פלפל שחור", "1 כוס מים"],
+      "steps": [
+        "שוטפים את הפלפלים, מסירים את החלק העליון ומרוקנים בזהירות את הגרעינים. קוצצים דק את הבצל.",
+        "מערבבים בקערה בשר, אורז ובצל ומתבלים בחצי מהמלח והפלפל. ממלאים את הפלפלים, לא עד הסוף, כדי שהאורז יוכל לתפוח. שוטפים ידיים אחרי מגע בבשר נא.",
+        "מסדרים את הפלפלים בסיר רחב. מגררים או קוצצים את העגבניות ומערבבים עם הרסק, השמן, המים ויתרת המלח והפלפל.",
+        "יוצקים את הרוטב על הפלפלים, מכסים ומבשלים על אש נמוכה כשעה, עד שהאורז רך והמילוי מבושל לגמרי (71°C). מגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "10.1", "slug": "chraime-fish-stew", "prepTime": 15, "cookTime": 30, "servings": "4",
+    "tags": ["Dinner", "North African", "Fish", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Chraime fish stew",
+      "ingredients": ["800 g white fish fillets", "4 tomatoes, grated", "2 tbsp tomato paste", "6 cloves garlic", "3 tbsp olive oil", "1 tsp sweet paprika", "1 tsp hot paprika", "½ tsp ground cumin", "½ tsp salt", "¼ tsp black pepper", "2 tbsp chopped coriander", "1 cup water"],
+      "steps": [
+        "Heat the oil in a wide pot and fry the garlic lightly.",
+        "Add the grated tomatoes, tomato paste, both paprikas, cumin, salt, pepper and the water. Simmer for 10–15 minutes, until the sauce thickens.",
+        "Lay the fish in the sauce, cover and cook for about 15 minutes without stirring, until the fish is opaque and flakes easily.",
+        "Scatter with coriander and serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Хрейме — рыба в остром томатном соусе",
+      "ingredients": ["800 г филе белой рыбы", "4 помидора, натёртых на тёрке", "2 ст. л. томатной пасты", "6 зубчиков чеснока", "3 ст. л. оливкового масла", "1 ч. л. сладкой паприки", "1 ч. л. острой паприки", "½ ч. л. молотого кумина", "½ ч. л. соли", "¼ ч. л. чёрного перца", "2 ст. л. рубленой кинзы", "1 стакан воды"],
+      "steps": [
+        "Разогрейте масло в широкой кастрюле и слегка обжарьте чеснок.",
+        "Добавьте тёртые помидоры, томатную пасту, обе паприки, кумин, соль, перец и воду. Тушите 10–15 минут, пока соус не загустеет.",
+        "Выложите рыбу в соус, накройте крышкой и готовьте около 15 минут, не перемешивая, пока рыба не станет непрозрачной и не будет легко разделяться на волокна.",
+        "Посыпьте кинзой и подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "חריימה קלאסי",
+      "ingredients": ["800 גרם פילה דג לבן", "4 עגבניות מגוררות", "2 כפות רסק עגבניות", "6 שיני שום", "3 כפות שמן זית", "1 כפית פפריקה מתוקה", "1 כפית פפריקה חריפה", "½ כפית כמון", "½ כפית מלח", "¼ כפית פלפל שחור", "2 כפות כוסברה קצוצה", "1 כוס מים"],
+      "steps": [
+        "מחממים את השמן בסיר רחב ומטגנים את השום קלות.",
+        "מוסיפים את העגבניות המגוררות, רסק העגבניות, שני סוגי הפפריקה, הכמון, המלח, הפלפל והמים. מבשלים 10–15 דקות, עד שהרוטב מסמיך.",
+        "מסדרים את הדגים ברוטב, מכסים ומבשלים כ-15 דקות בלי לערבב, עד שהדג אטום ומתפרק בקלות.",
+        "מפזרים כוסברה ומגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "10.3", "slug": "oven-baked-salmon", "prepTime": 10, "cookTime": 15, "servings": "4",
+    "tags": ["Dinner", "Mediterranean", "Fish", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Oven-baked salmon",
+      "ingredients": ["4 salmon fillets", "2 tbsp olive oil", "1 lemon, juiced", "2 cloves garlic", "½ tsp salt", "¼ tsp black pepper", "2 tbsp chopped parsley", "1 tsp dried oregano"],
+      "steps": [
+        "Heat the oven to 200°C. Place the salmon in a baking dish.",
+        "Mix the oil and lemon juice with the crushed garlic, salt, pepper and oregano. Pour over the salmon and scatter with parsley.",
+        "Bake for about 15 minutes, until the salmon is opaque and flakes easily (63°C). Do not overbake.",
+        "Serve straight away."
+      ]
+    },
+    "ru": {
+      "title": "Лосось в духовке",
+      "ingredients": ["4 куска филе лосося", "2 ст. л. оливкового масла", "сок 1 лимона", "2 зубчика чеснока", "½ ч. л. соли", "¼ ч. л. чёрного перца", "2 ст. л. рубленой петрушки", "1 ч. л. сушёного орегано"],
+      "steps": [
+        "Разогрейте духовку до 200°C. Выложите лосось в форму для запекания.",
+        "Смешайте масло и лимонный сок с измельчённым чесноком, солью, перцем и орегано. Полейте лосося и посыпьте петрушкой.",
+        "Запекайте около 15 минут, пока лосось не станет непрозрачным и не будет легко разделяться на волокна (63°C). Не передерживайте.",
+        "Подавайте сразу."
+      ]
+    },
+    "he": {
+      "title": "סלמון בתנור",
+      "ingredients": ["4 נתחי סלמון", "2 כפות שמן זית", "מיץ מלימון אחד", "2 שיני שום", "½ כפית מלח", "¼ כפית פלפל שחור", "2 כפות פטרוזיליה קצוצה", "1 כפית אורגנו יבש"],
+      "steps": [
+        "מחממים תנור ל-200 מעלות. מניחים את הסלמון בתבנית.",
+        "מערבבים שמן ומיץ לימון עם שום כתוש, מלח, פלפל ואורגנו. יוצקים על הסלמון ומפזרים פטרוזיליה.",
+        "אופים כ-15 דקות, עד שהסלמון אטום ומתפרק בקלות (63°C). לא לאפות יתר על המידה.",
+        "מגישים מיד."
+      ]
+    }
+  },
+  {
+    "section": "11.8", "slug": "chicken-and-rice-stir-fry", "prepTime": 10, "cookTime": 15, "servings": "4",
+    "tags": ["Dinner", "Chinese", "Chicken", "Rice", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Chicken and rice stir-fry",
+      "ingredients": ["400 g chicken breast", "2 cups cooked rice", "1 carrot", "1 red pepper", "1 onion", "2 cloves garlic", "2 tbsp oil", "3 tbsp gluten-free soy sauce", "1 tsp grated ginger", "¼ tsp salt", "¼ tsp black pepper", "2 spring onions"],
+      "steps": [
+        "Cut the chicken into cubes. Cut the carrot, red pepper and onion into thin strips and chop the garlic and spring onions. Have everything ready before you start. Wash your hands and board after handling raw chicken.",
+        "Heat a large frying pan or wok over high heat, add the oil and stir-fry the chicken until golden and cooked through (74°C).",
+        "Add the onion, carrot and red pepper and stir-fry for 3–4 minutes, then add the garlic and ginger.",
+        "Add the rice and soy sauce, season with salt and pepper and stir until steaming hot. Cold rice cooked the day before works best. Scatter with spring onions and serve hot."
+      ]
+    },
+    "ru": {
+      "title": "Жареный рис с курицей",
+      "ingredients": ["400 г куриной грудки", "2 стакана варёного риса", "1 морковь", "1 красный сладкий перец", "1 луковица", "2 зубчика чеснока", "2 ст. л. масла", "3 ст. л. безглютенового соевого соуса", "1 ч. л. тёртого имбиря", "¼ ч. л. соли", "¼ ч. л. чёрного перца", "2 стебля зелёного лука"],
+      "steps": [
+        "Нарежьте курицу кубиками. Нарежьте морковь, перец и лук тонкой соломкой, порубите чеснок и зелёный лук. Подготовьте всё заранее. После сырой курицы вымойте руки и доску.",
+        "Сильно разогрейте большую сковороду или вок, добавьте масло и обжарьте курицу, помешивая, до золотистого цвета и полной готовности (74°C).",
+        "Добавьте лук, морковь и перец и жарьте 3–4 минуты, затем добавьте чеснок и имбирь.",
+        "Добавьте рис и соевый соус, посолите, поперчите и перемешивайте, пока всё не прогреется до горячего пара. Лучше всего подходит холодный рис, сваренный накануне. Посыпьте зелёным луком и подавайте горячим."
+      ]
+    },
+    "he": {
+      "title": "מוקפץ עוף ואורז",
+      "ingredients": ["400 גרם חזה עוף", "2 כוסות אורז מבושל", "1 גזר", "1 פלפל אדום", "1 בצל", "2 שיני שום", "2 כפות שמן", "3 כפות רוטב סויה ללא גלוטן", "1 כפית ג'ינג'ר מגורר", "¼ כפית מלח", "¼ כפית פלפל שחור", "2 גבעולי בצל ירוק"],
+      "steps": [
+        "חותכים את העוף לקוביות. חותכים את הגזר, הפלפל והבצל לרצועות דקות וקוצצים שום ובצל ירוק. מכינים הכול מראש. שוטפים ידיים וקרש אחרי מגע בעוף נא.",
+        "מחממים מחבת גדולה או ווק על אש גבוהה, מוסיפים שמן ומקפיצים את העוף עד הזהבה ובישול מלא (74°C).",
+        "מוסיפים בצל, גזר ופלפל ומקפיצים 3–4 דקות, ואז מוסיפים שום וג'ינג'ר.",
+        "מוסיפים את האורז ורוטב הסויה, מתבלים במלח ופלפל ומערבבים עד שהכול חם מאוד. אורז קר שבושל יום קודם מתאים במיוחד. מפזרים בצל ירוק ומגישים חם."
+      ]
+    }
+  },
+  {
+    "section": "8.4", "slug": "mujaddara", "prepTime": 10, "cookTime": 35, "servings": "4",
+    "tags": ["Dinner", "Middle Eastern", "Rice", "Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Budget"],
+    "en": {
+      "title": "Rice and lentil mujaddara",
+      "ingredients": ["1 cup green lentils", "1½ cups rice", "2 large onions", "3 tbsp oil", "1 tsp salt", "½ tsp black pepper", "3 cups water"],
+      "steps": [
+        "Rinse the lentils, cook them in boiling water for 10 minutes until partly soft, and drain.",
+        "Slice the onions and fry them in the oil in a pot until deep golden. Lift out about half of the onions and set them aside.",
+        "Rinse the rice and add it to the pot with the lentils, salt, pepper and the water. Bring to the boil.",
+        "Cover and cook over low heat for about 20 minutes, until the rice and lentils are tender. Scatter with the set-aside onions and serve."
+      ]
+    },
+    "ru": {
+      "title": "Маджадра — рис с чечевицей",
+      "ingredients": ["1 стакан зелёной чечевицы", "1½ стакана риса", "2 крупные луковицы", "3 ст. л. масла", "1 ч. л. соли", "½ ч. л. чёрного перца", "3 стакана воды"],
+      "steps": [
+        "Промойте чечевицу, отварите в кипящей воде 10 минут до полуготовности и слейте воду.",
+        "Нарежьте лук полукольцами и обжарьте в масле в кастрюле до тёмно-золотистого цвета. Отложите примерно половину лука.",
+        "Промойте рис и добавьте его в кастрюлю вместе с чечевицей, солью, перцем и водой. Доведите до кипения.",
+        "Накройте крышкой и готовьте на слабом огне около 20 минут, пока рис и чечевица не станут мягкими. Посыпьте отложенным луком и подавайте."
+      ]
+    },
+    "he": {
+      "title": "מג'דרה עדשים",
+      "ingredients": ["1 כוס עדשים ירוקות", "1½ כוסות אורז", "2 בצלים גדולים", "3 כפות שמן", "1 כפית מלח", "½ כפית פלפל שחור", "3 כוסות מים"],
+      "steps": [
+        "שוטפים את העדשים, מבשלים אותן במים רותחים 10 דקות עד שהן רכות חלקית, ומסננים.",
+        "פורסים את הבצלים ומטגנים אותם בשמן בסיר עד הזהבה עמוקה. מוציאים כמחצית מהבצל ושומרים בצד.",
+        "שוטפים את האורז ומוסיפים לסיר עם העדשים, המלח, הפלפל והמים. מביאים לרתיחה.",
+        "מכסים ומבשלים על אש נמוכה כ-20 דקות, עד שהאורז והעדשים רכים. מפזרים את הבצל ששמרנו ומגישים."
+      ]
+    }
+  },
+  {
+    "section": "9.5", "slug": "cauliflower-with-tahini-sauce", "prepTime": 10, "cookTime": 30, "servings": "4",
+    "tags": ["Dinner", "Middle Eastern", "Vegetarian", "Vegan", "Gluten-free", "Dairy-free"],
+    "en": {
+      "title": "Roasted cauliflower with tahini sauce",
+      "ingredients": ["1 large cauliflower", "3 tbsp olive oil", "½ tsp salt", "¼ tsp black pepper", "½ cup raw tahini", "¼ cup water", "½ lemon, juiced", "1 clove garlic", "2 tbsp chopped parsley"],
+      "steps": [
+        "Heat the oven to 200°C. Break the cauliflower into florets, toss with the oil, salt and pepper and spread on a baking tray.",
+        "Roast for 25–30 minutes, until golden.",
+        "Meanwhile, stir the water into the tahini a little at a time, then add the lemon juice and crushed garlic and whisk to a smooth sauce.",
+        "Arrange the cauliflower on a plate, pour the tahini sauce over it and scatter with parsley."
+      ]
+    },
+    "ru": {
+      "title": "Запечённая цветная капуста с соусом тахини",
+      "ingredients": ["1 крупный кочан цветной капусты", "3 ст. л. оливкового масла", "½ ч. л. соли", "¼ ч. л. чёрного перца", "½ стакана тахини", "¼ стакана воды", "сок ½ лимона", "1 зубчик чеснока", "2 ст. л. рубленой петрушки"],
+      "steps": [
+        "Разогрейте духовку до 200°C. Разберите капусту на соцветия, перемешайте с маслом, солью и перцем и разложите на противне.",
+        "Запекайте 25–30 минут до золотистого цвета.",
+        "Тем временем понемногу вмешивайте воду в тахини, затем добавьте лимонный сок и измельчённый чеснок и взбейте до гладкого соуса.",
+        "Выложите капусту на блюдо, полейте соусом тахини и посыпьте петрушкой."
+      ]
+    },
+    "he": {
+      "title": "כרובית ברוטב טחינה",
+      "ingredients": ["1 כרובית גדולה", "3 כפות שמן זית", "½ כפית מלח", "¼ כפית פלפל שחור", "½ כוס טחינה גולמית", "¼ כוס מים", "מיץ מחצי לימון", "1 שן שום", "2 כפות פטרוזיליה קצוצה"],
+      "steps": [
+        "מחממים תנור ל-200 מעלות. מפרקים את הכרובית לפרחים, מערבבים עם השמן, המלח והפלפל ומסדרים בתבנית.",
+        "אופים 25–30 דקות, עד הזהבה.",
+        "בינתיים מוסיפים את המים לטחינה בהדרגה, מוסיפים מיץ לימון ושום כתוש וטורפים לרוטב חלק.",
+        "מסדרים את הכרובית בצלחת, יוצקים מעל את רוטב הטחינה ומפזרים פטרוזיליה."
+      ]
+    }
+  }
+]

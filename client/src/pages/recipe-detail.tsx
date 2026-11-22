@@ -328,7 +328,7 @@ export default function RecipeDetail() {
             <h1 className="page-title break-words" data-testid="text-recipe-title">{text.title}</h1>
             <RecipeLikeButton recipeId={recipe.id} />
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} /><CookedBadge recipeId={recipe.id} /></div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"><RecipeCreditLine recipe={recipe} href={recipe.sourceUrl} /><CookedBadge recipeId={recipe.id} /></div>
           {translation.translatedBy && <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground" data-testid="text-translated">
             {t(translation.translatedBy === "ai" ? "recipe.translatedByAI" : "recipe.translated")} ·
             <button type="button" className="inline-flex min-h-11 items-center underline underline-offset-2" onClick={() => setShowOriginal(value => !value)}
