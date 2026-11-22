@@ -12,6 +12,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSettingsCopy } from "@/lib/settings-copy";
 import { useHouseholdCopy } from "@/lib/household-copy";
 import { Link, useSearch } from "wouter";
+import { personalizeURL } from "@/hooks/use-cook-now";
 import { setGuestChoice, switchPerson, useAccountCopy, type Me } from "@/lib/account-copy";
 import { allergens, cuisines, dietPatterns, foodPrefIds } from "@shared/food-rules";
 import { selectableDevices } from "@/lib/device-requirements";
@@ -361,6 +362,7 @@ export default function BasicSettingsPage() {
     <div className="min-h-screen bg-background" dir={dir}>
       <PageContainer size="md" className="py-8 sm:py-10">
         {fromSetup && <Link href="/household?step=5" className="btn btn-text -ms-2 mb-2" data-testid="link-back-to-setup">{h("backToSetup")}</Link>}
+        <Link href={personalizeURL("/settings")} className="btn btn-secondary mb-4" data-testid="link-personalize-settings">{h("personalize")}</Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="page-title" data-testid="text-page-title">{t("title")}</h1>

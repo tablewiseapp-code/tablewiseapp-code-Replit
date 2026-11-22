@@ -142,5 +142,12 @@ export function matchesFoodPref(choice: string, recipe: MatchableRecipe): boolea
 export const cuisines = ["American", "British", "Caribbean", "Chinese", "French", "Greek", "Indian", "Italian", "Japanese", "Korean",
   "Mediterranean", "Mexican", "Middle Eastern", "North African", "Scandinavian", "Spanish", "Thai", "Vietnamese", "Eastern European"] as const;
 export type Cuisine = typeof cuisines[number];
+/** Favorite cuisines: broad choices that stand for several catalog cuisine tags (2026-11-21). A specific choice stays its own. */
+export const cuisineGroups = { Asian: ["Chinese", "Indian", "Japanese", "Korean", "Thai", "Vietnamese"] } as const satisfies Record<string, readonly Cuisine[]>;
+export type CuisineChoice = Cuisine | keyof typeof cuisineGroups;
+export const cuisineChoices: readonly CuisineChoice[] = [...(Object.keys(cuisineGroups) as (keyof typeof cuisineGroups)[]), ...cuisines];
+/** True when a recipe's cuisine is one of the choices, directly or through a group; a match counts once however many choices overlap. */
+export const likesCuisine = (choices: readonly CuisineChoice[], cuisine: Cuisine) =>
+  choices.some(c => c === cuisine || (c in cuisineGroups && (cuisineGroups[c as keyof typeof cuisineGroups] as readonly Cuisine[]).includes(cuisine)));
 export const recipeCuisine = (tags: readonly string[] | null | undefined): Cuisine | null =>
   (tags ?? []).find((t): t is Cuisine => (cuisines as readonly string[]).includes(t)) ?? null;

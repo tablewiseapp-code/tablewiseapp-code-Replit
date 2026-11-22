@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { allergens, cuisines, dietPatterns, foodPrefIds, type Allergen, type Cuisine, type DietPattern } from "@shared/food-rules";
+import { allergens, cuisineChoices, cuisines, dietPatterns, foodPrefIds, type Allergen, type Cuisine, type CuisineChoice, type DietPattern } from "@shared/food-rules";
 import { recipeNutrients, type RecipeNutrient } from "@shared/recipe-nutrition";
 import { selectableDevices, type DeviceId } from "./device-requirements";
 import { plannerCookingMethods } from "./planner-filters";
@@ -76,7 +76,7 @@ export type BasicSettings = {
   /** kidFriendly: Kid-friendly meals (2026-11-21): lunch and dinner suggestions rank "Kid friendly" recipes first. Off by default. */
   household: { members: Member[]; portion: PortionSize; servingsMode: "auto" | "fixed"; fixedServings: number; kidFriendly: boolean };
   dietary: { diets: DietPattern[]; allergies: Allergen[]; customAllergies: string[]; dislikes: IngredientChoice[]; favorites: IngredientChoice[];
-    preferredCuisines: Cuisine[]; avoidCuisines: Cuisine[] };
+    preferredCuisines: CuisineChoice[]; avoidCuisines: Cuisine[] };
   /** null = never answered (asked before the next suggestion; never taken as every device). [] = explicitly none. */
   kitchen: { devices: DeviceId[] | null };
   /** Weekday and weekend each have their own soft preferences; hardMax is one shared rule. */
@@ -186,7 +186,7 @@ export function sanitizeSettings(raw: unknown): BasicSettings {
       fixedServings: int(h.fixedServings, servingLimits.min, servingLimits.max, 4), kidFriendly: bool(h.kidFriendly) },
     dietary: { diets: subset(dietPatterns, di.diets), allergies: subset(allergens, di.allergies), customAllergies: terms(di.customAllergies),
       dislikes: choices(di.dislikes), favorites: choices(di.favorites),
-      preferredCuisines: subset(cuisines, di.preferredCuisines), avoidCuisines: subset(cuisines, di.avoidCuisines) },
+      preferredCuisines: subset(cuisineChoices, di.preferredCuisines), avoidCuisines: subset(cuisines, di.avoidCuisines) },
     kitchen: { devices: k.devices === null || k.devices === undefined ? null : subset(selectableDevices, k.devices) },
     cooking: { weekdayMax: minutes(c.weekdayMax), weekendMax: minutes(c.weekendMax), hardMax: bool(c.hardMax),
       weekday: prefs(c.weekday, c), weekend: prefs(c.weekend, c) },

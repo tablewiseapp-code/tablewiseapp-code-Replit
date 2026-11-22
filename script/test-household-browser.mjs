@@ -105,10 +105,10 @@ try {
   eq((await settings()).setup.status, "done", "setup saved as finished without any week");
   eq((await plan())?.batches?.length ?? 0, 0, "finishing setup writes no week");
 
-  // ---- Personalize my recipes → Settings → back to screen 5.
+  // ---- Personalize my recipes opens the editor; Cancel returns to screen 5 (full checks further down).
   await click("link-personalize");
-  await until(`location.pathname === "/settings" && Boolean(${q("link-back-to-setup")})`, "Settings from setup");
-  await click("link-back-to-setup");
+  await until(`location.pathname === "/personalize" && Boolean(${q("button-cancel-preferences")})`, "editor from setup");
+  await click("button-cancel-preferences");
   await until(step("done"), "back to screen 5");
 
   // ---- Cook now: one eligible recipe on its own page; Show another; Start cooking opens Zen; the Week is untouched.
@@ -171,6 +171,53 @@ try {
   await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("suggestion-bar")})`, "Home suggestion opens the recipe");
   eq(await plan(), planBefore, "Home suggestion leaves the Week unchanged");
 
+  // ---- Personalize my recipes: Cancel keeps everything; Save returns to where it was opened.
+  const before = JSON.stringify(await settings());
+  await go("/household?step=5", step("done"));
+  await click("link-personalize");
+  await until(`location.pathname === "/personalize" && Boolean(${q("preference-summary")})`, "editor from screen 5");
+  ok(await noScroll(), "editor fits a phone");
+  await click("cuisine-Asian"); await click("switch-kid-friendly");
+  ok((await ev(`${q("preference-summary")}.textContent`)).includes("Asian dishes first."), "summary follows the draft");
+  await click("button-cancel-preferences");
+  await until(step("done"), "Cancel returns to screen 5");
+  eq(JSON.stringify(await settings()), before, "Cancel changes nothing");
+  await click("link-personalize");
+  await until(`Boolean(${q("cuisine-Asian")})`, "editor again");
+  await click("cuisine-Asian"); await click("button-save-preferences");
+  await until(step("done"), "Save returns to screen 5");
+  eq((await settings()).dietary.preferredCuisines, ["Asian"], "Asian saved as one broad choice");
+  // From the Week: a new requirement never replaces the approved week; the Week asks, and flags dishes that no longer fit.
+  await go("/meals?plan", `Boolean(${q("link-personalize-week")})`);
+  await click("link-personalize-week");
+  await until(`Boolean(${q("restriction-diet")})`, "editor from the Week");
+  await click("restriction-diet"); await click("diet-glutenFree"); await click("button-save-preferences");
+  await until(`location.pathname === "/meals" && Boolean(${q("prefs-changed")})`, "the Week asks before replacing");
+  eq(await ev(`${q("week-status")}.dataset.state`), "approved", "approved week untouched");
+  await click("button-keep-week");
+  await until(`!${q("prefs-changed")}`, "kept");
+  ok(await ev(`document.querySelectorAll('[data-testid^="dish-warning-"]').length > 0`), "dishes that no longer fit are flagged");
+  // From Cook now: Save picks a fresh suggestion under the new rules.
+  await go("/", `Boolean(${q("home-suggest-recipe")}) && !${q("home-suggest-recipe")}.disabled`);
+  await click("home-suggest-recipe");
+  await until(`Boolean(${q("link-personalize-cook")})`, "suggestion");
+  await click("link-personalize-cook");
+  await until(`Boolean(${q("button-save-preferences")}) && !${q("button-save-preferences")}.disabled`, "editor from Cook now");
+  await click("button-save-preferences");
+  await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("suggestion-bar")})`, "back on a suggestion");
+  ok((await recipe(decodeURIComponent(await ev("location.pathname.slice(8)")))).tags.includes("Gluten-free"), "the new pick follows the saved requirement");
+  // A temporary time limit narrows this Cook now only.
+  const saved = JSON.stringify(await settings());
+  await click("suggest-time-15");
+  await until(`location.search.includes("max=15") || Boolean(${q("suggest-time-none")})`, "time limit applied");
+  eq(JSON.stringify(await settings()), saved, "a temporary limit never changes saved preferences");
+  // From Settings: Cancel goes back to Settings.
+  await go("/settings", `Boolean(${q("link-personalize-settings")})`);
+  await click("link-personalize-settings");
+  await until(`Boolean(${q("button-cancel-preferences")})`, "editor from Settings");
+  await click("button-cancel-preferences");
+  await until(`location.pathname === "/settings"`, "Cancel returns to Settings");
+
   // ---- A household whose kitchen was never answered (devices: null) is asked only that, then resumes where it was going.
   await ev(`fetch("/api/household-settings", { method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...JSON.parse(localStorage.getItem('tablewise_basic_settings')), kitchen: { devices: null } }) }).then(r => r.ok)`);
@@ -190,6 +237,9 @@ try {
   eq(await ev("document.documentElement.dir"), "rtl", "rtl");
   ok((await ev(`${q("step-of")}.textContent`)).includes("שלב 1 מתוך 4"), "Hebrew step label");
   ok(await noScroll(), "Hebrew fits a phone");
+  await go("/personalize", `Boolean(${q("preference-summary")})`);
+  ok(await ev(`document.documentElement.dir === "rtl" && !/[A-Za-z]{5,}/.test(${q("text-page-title")}.textContent)`), "editor in Hebrew, right to left");
+  ok(await noScroll(), "Hebrew editor fits a phone");
   eq(errors, [], "no page errors");
   console.log(`PASS household browser: ${checks} checks`);
 } finally {

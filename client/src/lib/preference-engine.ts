@@ -1,6 +1,6 @@
 // Household preference engine. Pure and deterministic: no network, no AI, no storage.
 // Eligibility (hard restrictions) is separate from ranking (soft preferences).
-import { evaluateAllergen, evaluateDiet, evaluateMeat, matchesFoodPref, mentionsTerm, recipeCuisine,
+import { evaluateAllergen, evaluateDiet, evaluateMeat, likesCuisine, matchesFoodPref, mentionsTerm, recipeCuisine,
   type Allergen, type DietPattern, type RuleStatus } from "@shared/food-rules";
 import { selectableDevices, satisfiesDevices, unmetGroups, type DeviceId, type DeviceRequirements } from "./device-requirements";
 import { availableDevices, type BasicSettings, type Member } from "./basic-settings";
@@ -156,7 +156,7 @@ export function rankRecipe(recipe: EngineRecipe, settings: BasicSettings, ctx: R
     score += KID_FIRST; matches.push("kidFriendly");
   }
   const cuisine = recipeCuisine(recipe.tags);
-  if (cuisine && settings.dietary.preferredCuisines.includes(cuisine)) { score += 2; matches.push(`cuisine:${cuisine}`); }
+  if (cuisine && likesCuisine(settings.dietary.preferredCuisines, cuisine)) { score += 2; matches.push(`cuisine:${cuisine}`); }
   if (cuisine && settings.dietary.avoidCuisines.includes(cuisine)) { score -= 3; concerns.push(`avoidCuisine:${cuisine}`); }
 
   const minutes = total(recipe);

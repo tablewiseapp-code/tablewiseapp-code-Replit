@@ -46,6 +46,8 @@ type Props = {
   /** Eligible recipes for a weekday (0 = Sunday), best first, `meal`'s own first (+ Add breakfast, Swap dish). */
   options: (day: number, meal?: MealSlot) => PlannerRecipe[];
   onPicked?: (recipeId: string) => void;
+  /** A dish that no longer meets the household's requirements (after Personalize my recipes): why, else null. */
+  warning?: (batch: Batch) => string | null;
   household: HouseholdCounts | null;
 };
 
@@ -126,6 +128,7 @@ function DishCard({ batch, props, onOpen }: { batch: Batch; props: Props; onOpen
       aria-label={t("dishActions", { title: recipe.title, date: dates.long(batch.cookDate) })}>
       <RecipeCard recipe={recipe} compact href={props.recipeHref(batch)} meta={meta} view={view}
         titleTestId={`dish-link-${batch.id}`} ids={{ view: `dish-view-${batch.id}` }}>
+        {props.warning?.(batch) && <p className="text-sm font-medium text-warning" data-testid={`dish-warning-${batch.id}`}>{props.warning(batch)}</p>}
         <div className="-ms-2 -mt-2 flex items-center gap-1">
           <button type="button" className={`${icon} hover:text-foreground`} onClick={() => onOpen({ kind: "swap", batch })}
             aria-label={t("swapFor", { title: recipe.title })} title={t("swap")} data-testid={`swap-${batch.id}`}>

@@ -8,6 +8,9 @@ import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 /** /household asking only these questions, then going to `then` (a path, or "cook" to run Cook now again). */
 export const askURL = (steps: readonly SetupStep[], then: string) => `/household?ask=${steps.join(",")}&then=${encodeURIComponent(then)}`;
 
+/** Personalize my recipes, returning to `from` on Save or Cancel. */
+export const personalizeURL = (from: string) => `/personalize?from=${encodeURIComponent(from)}`;
+
 /** Cook now (Your household, screen 5) and Home → Suggest a recipe: one eligible recipe opened at /recipe/:id?suggest, where
  * "Show another" uses the same list. Missing required answers are asked first, then Cook now resumes. Never writes the Week. */
 export function useCookNow() {

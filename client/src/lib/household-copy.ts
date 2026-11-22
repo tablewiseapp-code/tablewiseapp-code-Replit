@@ -1,7 +1,17 @@
 import { useI18n } from "@/lib/i18n";
+import { settingsText } from "@/lib/settings-copy";
+import { mealSlots } from "@shared/cooking-plan";
+import type { BasicSettings } from "@/lib/basic-settings";
 
 // Your household (/household), its controls on the Week and Cook now. English, Russian, Hebrew.
 const en = {
+  // Personalize my recipes (2026-11-21)
+  personalizeIntro: "Saved changes apply to Cook now, the Week and every suggestion.", favoriteCuisines: "Favorite cuisines",
+  favoriteCuisinesHint: "Recipes from these cuisines come first. Other recipes still appear.", cookingPrefs: "Cooking preferences (optional)",
+  moreInSettings: "Favorites, dislikes, cooking times and weekday or weekend routines are in Settings.", personalizeShort: "Personalize",
+  sumOnly: "Only {list} recipes.", sumNo: "No {list}.", sumNone: "No food requirements.", sumNotSet: "Food requirements not set yet.",
+  sumCuisines: "{list} dishes first.", sumKid: "Kid-friendly lunches and dinners first.", sumWeeknight: "Mon–Fri: {list}.", sumMealUpTo: "{meal} up to {n} min",
+  noLongerFits: "No longer fits your preferences: {why}", timeLimit: "Time for this meal", anyTime: "Any time", upToMinutes: "≤ {n} min", noneInTime: "No suggestion fits in {n} min. Your saved preferences are unchanged.",
   // Guided setup (2026-11-21)
   stepOf: "Step {n} of {total}", back: "Back", next: "Continue", useEveryday: "Use everyday cooking",
   peopleQ: "Who are you cooking for?", kidFriendly: "Kid-friendly meals", kidFriendlyHint: "Lunch and dinner suggestions start with dishes marked kid-friendly.", adults: "Adults", children: "Children", fewerOf: "Fewer: {who}", moreOf: "More: {who}",
@@ -41,6 +51,12 @@ const en = {
 };
 type Copy = typeof en;
 const ru: Copy = {
+  personalizeIntro: "Сохранённые изменения действуют в «Приготовить сейчас», на неделе и во всех предложениях.", favoriteCuisines: "Любимые кухни",
+  favoriteCuisinesHint: "Рецепты этих кухонь предлагаются первыми. Остальные тоже появляются.", cookingPrefs: "Предпочтения в готовке (необязательно)",
+  moreInSettings: "Любимые и нелюбимые продукты, время готовки и распорядок будней и выходных — в «Настройках».", personalizeShort: "Настроить",
+  sumOnly: "Только рецепты: {list}.", sumNo: "Без: {list}.", sumNone: "Нет требований к питанию.", sumNotSet: "Требования к питанию ещё не указаны.",
+  sumCuisines: "Сначала кухни: {list}.", sumKid: "Сначала обеды и ужины для детей.", sumWeeknight: "Пн–пт: {list}.", sumMealUpTo: "{meal} — до {n} мин",
+  noLongerFits: "Больше не подходит под ваши предпочтения: {why}", timeLimit: "Время на это блюдо", anyTime: "Любое время", upToMinutes: "≤ {n} мин", noneInTime: "Нет предложений на {n} мин. Сохранённые предпочтения не изменились.",
   stepOf: "Шаг {n} из {total}", back: "Назад", next: "Продолжить", useEveryday: "Обычная готовка",
   peopleQ: "Для кого вы готовите?", kidFriendly: "Блюда для детей", kidFriendlyHint: "В обедах и ужинах сначала предлагаются блюда с отметкой «для детей».", adults: "Взрослые", children: "Дети", fewerOf: "Меньше: {who}", moreOf: "Больше: {who}",
   peoplePreview: "По умолчанию порций: {servings} — 1 на взрослого, ½ на ребёнка.", peopleRequired: "Добавьте хотя бы одного человека.",
@@ -78,6 +94,12 @@ const ru: Copy = {
   startCooking: "Начать готовить",
 };
 const he: Copy = {
+  personalizeIntro: "שינויים שנשמרו חלים על „לבשל עכשיו”, על השבוע ועל כל ההצעות.", favoriteCuisines: "מטבחים אהובים",
+  favoriteCuisinesHint: "מתכונים מהמטבחים האלה יופיעו קודם. גם מתכונים אחרים יופיעו.", cookingPrefs: "העדפות בישול (לא חובה)",
+  moreInSettings: "אהובים, לא אהובים, זמני בישול ושגרת ימי חול וסופי שבוע נמצאים בהגדרות.", personalizeShort: "התאמה",
+  sumOnly: "רק מתכונים: {list}.", sumNo: "בלי: {list}.", sumNone: "אין דרישות תזונה.", sumNotSet: "דרישות התזונה עוד לא נקבעו.",
+  sumCuisines: "קודם מטבחים: {list}.", sumKid: "קודם ארוחות צהריים וערב שילדים אוהבים.", sumWeeknight: "ב׳–ו׳: {list}.", sumMealUpTo: "{meal} עד {n} דק׳",
+  noLongerFits: "כבר לא מתאים להעדפות שלכם: {why}", timeLimit: "זמן לארוחה הזו", anyTime: "כל זמן", upToMinutes: "≤ {n} דק׳", noneInTime: "אין הצעה שמתאימה ל־{n} דק׳. ההעדפות השמורות לא השתנו.",
   stepOf: "שלב {n} מתוך {total}", back: "חזרה", next: "המשך", useEveryday: "בישול יומיומי",
   peopleQ: "בשביל מי אתם מבשלים?", kidFriendly: "ארוחות שילדים אוהבים", kidFriendlyHint: "בהצעות לצהריים ולערב יופיעו קודם מנות שמסומנות כמתאימות לילדים.", adults: "מבוגרים", children: "ילדים", fewerOf: "פחות: {who}", moreOf: "יותר: {who}",
   peoplePreview: "{servings} מנות כברירת מחדל: 1 למבוגר, ½ לילד.", peopleRequired: "הוסיפו לפחות אדם אחד.",
@@ -122,4 +144,22 @@ export function householdText(lang: string, key: HouseholdKey, values: Record<st
 export function useHouseholdCopy() {
   const { lang } = useI18n();
   return (key: HouseholdKey, values?: Record<string, string | number>) => householdText(lang, key, values);
+}
+
+/** Personalize my recipes: the household's preferences in plain words, e.g. "Only Vegetarian recipes. No Sesame. Asian dishes first." */
+export function preferenceSummary(s: BasicSettings, lang: string, mealName: (meal: string) => string): string {
+  const t = (key: HouseholdKey, values?: Record<string, string | number>) => householdText(lang, key, values);
+  const st = (key: string) => settingsText(lang, key);
+  const list = (items: string[]) => new Intl.ListFormat(lang, { type: "conjunction" }).format(items);
+  const d = s.dietary;
+  const avoid = [...d.allergies.map(a => st(`allergen_${a}`)), ...d.customAllergies];
+  const limits = mealSlots.filter(m => s.setup.weeknightMax[m] !== null).map(m => t("sumMealUpTo", { meal: mealName(m), n: s.setup.weeknightMax[m]! }));
+  return [
+    d.diets.length ? t("sumOnly", { list: list(d.diets.map(x => st(`diet_${x}`))) }) : "",
+    avoid.length ? t("sumNo", { list: list(avoid) }) : "",
+    !d.diets.length && !avoid.length ? t(s.setup.noRestrictions ? "sumNone" : "sumNotSet") : "",
+    d.preferredCuisines.length ? t("sumCuisines", { list: list(d.preferredCuisines.map(c => st(`cuisine_${c}`))) }) : "",
+    s.household.kidFriendly ? t("sumKid") : "",
+    limits.length ? t("sumWeeknight", { list: list(limits) }) : "",
+  ].filter(Boolean).join(" ");
 }

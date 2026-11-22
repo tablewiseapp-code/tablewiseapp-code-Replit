@@ -33,9 +33,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { householdServings, loadSettings } from "@/lib/basic-settings";
 import { useHouseholdCopy } from "@/lib/household-copy";
+import { personalizeURL } from "@/hooks/use-cook-now";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import { toPlannerRecipes } from "@/lib/planner-recipes";
 import { cookNowOptions } from "@/lib/week-suggestions";
+import { total } from "@/lib/preference-engine";
 
 const focus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const stripArrow = (text: string) => text.replace(/^[←→]\s*/, "");
@@ -101,17 +103,49 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
 
 /** Opened by Cook now or Home → Suggest a recipe (?suggest): "Show another" takes the place of the "More actions" menu and
  * opens the next recipe of the same list (cookNowOptions, the one eligibility rule), still without touching the Week. */
-function ShowAnother({ recipeId }: { recipeId: string }) {
+/** Cook now's list under a temporary time limit (?max=15|30, from the URL only: the household's saved settings never change). */
+const suggestMax = (search: string) => { const max = Number(new URLSearchParams(search).get("max")); return max === 15 || max === 30 ? max : null; };
+const suggestURL = (id: string, max: number | null) => `/recipe/${encodeURIComponent(id)}?suggest${max ? `&max=${max}` : ""}`;
+function useSuggestions(max: number | null) {
+  const catalog = useRecipeCatalog();
+  return useMemo(() => cookNowOptions(toPlannerRecipes(catalog.data ?? []), loadSettings(), new Date())
+    .filter(r => { const minutes = total(r); return max === null || (minutes !== null && minutes <= max); }), [catalog.data, max]);
+}
+function ShowAnother({ recipeId, max }: { recipeId: string; max: number | null }) {
   const t = useHouseholdCopy();
   const [, setLocation] = useLocation();
-  const catalog = useRecipeCatalog();
-  const options = useMemo(() => cookNowOptions(toPlannerRecipes(catalog.data ?? []), loadSettings(), new Date()), [catalog.data]);
-  const next = options.length > 1 ? options[(options.findIndex(r => r.id === recipeId) + 1) % options.length] : null;
+  const options = useSuggestions(max);
+  const at = options.findIndex(r => r.id === recipeId);
+  const next = options.length > (at < 0 ? 0 : 1) ? options[(at + 1) % options.length] : null;
   if (!next) return null;
   return (
-    <button type="button" className="btn btn-secondary gap-1.5" onClick={() => setLocation(`/recipe/${encodeURIComponent(next.id)}?suggest`)} data-testid="button-show-another">
+    <button type="button" className="btn btn-secondary gap-1.5" onClick={() => setLocation(suggestURL(next.id, max))} data-testid="button-show-another">
       <RefreshCw className="h-4 w-4" aria-hidden="true" />{t("showAnother")}
     </button>
+  );
+}
+
+/** "Any time / ≤ 15 min / ≤ 30 min" for this Cook now only; a recipe whose time is unknown never passes a limit. */
+function TimeLimit({ recipeId, max }: { recipeId: string; max: number | null }) {
+  const t = useHouseholdCopy();
+  const [, setLocation] = useLocation();
+  const [wanted, setWanted] = useState(max);
+  const options = useSuggestions(wanted);
+  const choose = (limit: number | null) => setWanted(limit);
+  useEffect(() => {
+    if (wanted === max) return;
+    // Keep this recipe when it fits the limit, else open the best one that does; with none, say so here.
+    const keep = options.some(r => r.id === recipeId) ? recipeId : options[0]?.id;
+    if (keep) setLocation(suggestURL(keep, wanted), { replace: true });
+  }, [wanted, options]);
+  return (
+    <span role="radiogroup" aria-label={t("timeLimit")} className="flex flex-wrap items-center gap-1.5" data-testid="suggest-time">
+      {[null, 15, 30].map(limit => (
+        <button key={limit ?? "any"} type="button" role="radio" aria-checked={wanted === limit} onClick={() => choose(limit)} data-testid={`suggest-time-${limit ?? "any"}`}
+          className={`chip ${wanted === limit ? "!border-primary !bg-accent font-semibold" : ""}`}>{limit === null ? t("anyTime") : t("upToMinutes", { n: limit })}</button>
+      ))}
+      {wanted !== max && !options.length && <span role="status" className="text-sm text-muted-foreground" data-testid="suggest-time-none">{t("noneInTime", { n: wanted ?? 0 })}</span>}
+    </span>
   );
 }
 
@@ -268,7 +302,7 @@ export default function RecipeDetail() {
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             {stripArrow(fromPlanner ? t("recipeDetail.backToPlanner") : view("back"))}
           </Link>
-          {suggesting ? <ShowAnother recipeId={recipe.id} /> : hasMenu && (
+          {suggesting ? <ShowAnother recipeId={recipe.id} max={suggestMax(search)} /> : hasMenu && (
             <DropdownMenu>
               <DropdownMenuTrigger aria-label={view("more")} data-testid="button-recipe-menu"
                 className={`inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5 ${focus}`}>
@@ -316,7 +350,11 @@ export default function RecipeDetail() {
           {recipe.metadataEstimated && <p className="mt-2 text-sm text-muted-foreground" data-testid="text-development-estimates">{timingCopy("developmentEstimates")}</p>}
         </header>
 
-        {suggesting && <p className="mt-4 inline-flex rounded-full bg-accent px-3 py-1 text-sm font-medium" data-testid="suggestion-bar">{household("suggested")}</p>}
+        {suggesting && <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="suggestion-bar">
+          <span className="inline-flex rounded-full bg-accent px-3 py-1 text-sm font-medium">{household("suggested")}</span>
+          <Link href={personalizeURL(`/recipe/${encodeURIComponent(recipe.id)}?suggest`)} className="btn btn-text" data-testid="link-personalize-cook">{household("personalizeShort")}</Link>
+          <TimeLimit recipeId={recipe.id} max={suggestMax(search)} />
+        </div>}
         <div className="mt-5 flex flex-wrap items-center gap-3" data-testid="recipe-actions">
           {base !== null && selectedServings !== null && (
             <div role="group" aria-label={view("servingsLabel")} className="inline-flex items-center rounded-full border border-input bg-card" data-testid="servings-control">
