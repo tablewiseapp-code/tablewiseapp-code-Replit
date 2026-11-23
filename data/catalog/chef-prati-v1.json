@@ -1,0 +1,815 @@
+[
+  {
+    "title": {
+      "he": "אג׳יקה מבושלת",
+      "en": "Cooked adjika",
+      "ru": "Варёная аджика"
+    },
+    "source_url": "https://chef-prati.com/%d7%90%d7%92%d7%99%d7%a7%d7%94-%d7%9e%d7%91%d7%95%d7%a9%d7%9c%d7%aa-%d7%94%d7%9e%d7%98%d7%91%d7%95%d7%97%d7%94-%d7%a9%d7%9c-%d7%94%d7%a7%d7%95%d7%95%d7%a7%d7%96%d7%99%d7%9d-%d7%9e%d7%aa%d7%9b%d7%95/",
+    "chef": "מארק אלדרוב",
+    "recipe_page_videos": [
+      "https://www.youtube.com/watch?v=gCgHZWk1LR8"
+    ],
+    "ingredients": [
+      {
+        "id": "i1",
+        "he": "1 ק״ג עגבניות בשלות",
+        "en": "1 kg ripe tomatoes",
+        "ru": "1 кг спелых помидоров"
+      },
+      {
+        "id": "i2",
+        "he": "3 פלפלים אדומים מתוקים",
+        "en": "3 red bell peppers",
+        "ru": "3 красных сладких перца"
+      },
+      {
+        "id": "i3",
+        "he": "10–15 פלפלים חריפים עם הגרעינים",
+        "en": "10–15 hot peppers, seeds included",
+        "ru": "10–15 острых перцев с семенами"
+      },
+      {
+        "id": "i4",
+        "he": "חצי כוס שום כתוש",
+        "en": "½ cup crushed garlic",
+        "ru": "½ стакана измельчённого чеснока"
+      },
+      {
+        "id": "i5",
+        "he": "חצי כוס שמן זית או חמניות",
+        "en": "½ cup olive or sunflower oil",
+        "ru": "½ стакана оливкового или подсолнечного масла"
+      },
+      {
+        "id": "i6",
+        "he": "3 כפות חומץ",
+        "en": "3 tbsp vinegar",
+        "ru": "3 ст. л. уксуса"
+      },
+      {
+        "id": "i7",
+        "he": "2 כפות סוכר",
+        "en": "2 tbsp sugar",
+        "ru": "2 ст. л. сахара"
+      },
+      {
+        "id": "i8",
+        "he": "2 כפיות מלח",
+        "en": "2 tsp salt",
+        "ru": "2 ч. л. соли"
+      },
+      {
+        "id": "i9",
+        "he": "2–3 כפות רסק עגבניות מרוכז, לפי הטעם",
+        "en": "2–3 tbsp concentrated tomato paste, optional",
+        "ru": "2–3 ст. л. концентрированной томатной пасты, по желанию"
+      },
+      {
+        "id": "i10",
+        "he": "5 גזרים מגוררים דק",
+        "en": "5 carrots, finely grated",
+        "ru": "5 морковок, натёртых на мелкой тёрке"
+      },
+      {
+        "id": "i11",
+        "he": "3 כפות ריבת בצל או בצל מקורמל",
+        "en": "3 tbsp onion jam or caramelized onion",
+        "ru": "3 ст. л. лукового конфитюра или карамелизированного лука"
+      }
+    ],
+    "steps": [
+      {
+        "instruction": {
+          "he": "מטגנים את הגזר בשמן עד להזהבה. מעבירים לצלחת ומשאירים את השמן בסיר.",
+          "en": "Fry the carrots in the oil until golden. Transfer to a plate, leaving the oil in the pan.",
+          "ru": "Обжарьте морковь в масле до золотистого цвета. Переложите на тарелку, оставив масло в посуде."
+        },
+        "ingredient_ids": [
+          "i5",
+          "i10"
+        ],
+        "prepared_items": [],
+        "products": [
+          {
+            "id": "i5",
+            "he": "חצי כוס שמן זית או חמניות",
+            "en": "½ cup olive or sunflower oil",
+            "ru": "½ стакана оливкового или подсолнечного масла"
+          },
+          {
+            "id": "i10",
+            "he": "5 גזרים מגוררים דק",
+            "en": "5 carrots, finely grated",
+            "ru": "5 морковок, натёртых на мелкой тёрке"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "טוחנים את העגבניות, שני סוגי הפלפלים וחלק מהשום. מסננים עודפי נוזלים.",
+          "en": "Blend the tomatoes, both kinds of pepper and some of the garlic. Drain off excess liquid.",
+          "ru": "Измельчите помидоры, оба вида перца и часть чеснока. Слейте лишнюю жидкость."
+        },
+        "ingredient_ids": [
+          "i1",
+          "i2",
+          "i3",
+          "i4"
+        ],
+        "prepared_items": [],
+        "products": [
+          {
+            "id": "i1",
+            "he": "1 ק״ג עגבניות בשלות",
+            "en": "1 kg ripe tomatoes",
+            "ru": "1 кг спелых помидоров"
+          },
+          {
+            "id": "i2",
+            "he": "3 פלפלים אדומים מתוקים",
+            "en": "3 red bell peppers",
+            "ru": "3 красных сладких перца"
+          },
+          {
+            "id": "i3",
+            "he": "10–15 פלפלים חריפים עם הגרעינים",
+            "en": "10–15 hot peppers, seeds included",
+            "ru": "10–15 острых перцев с семенами"
+          },
+          {
+            "id": "i4",
+            "he": "חלק מהשום",
+            "en": "Some of the garlic",
+            "ru": "Часть чеснока"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "מוסיפים את המחית לשמן שבסיר ומבשלים על אש בינונית־נמוכה עד להסמכה.",
+          "en": "Add the purée to the reserved oil. Cook over medium-low heat until it begins to thicken.",
+          "ru": "Добавьте пюре в оставшееся масло. Готовьте на умеренно слабом огне, пока оно не начнёт густеть."
+        },
+        "ingredient_ids": [],
+        "prepared_items": [
+          {
+            "from_step": 1,
+            "label": {
+              "he": "השמן שנותר במחבת",
+              "en": "Reserved frying oil",
+              "ru": "Масло после обжаривания"
+            }
+          },
+          {
+            "from_step": 2,
+            "label": {
+              "he": "מחית עגבניות ופלפלים",
+              "en": "Tomato and pepper purée",
+              "ru": "Пюре из помидоров и перца"
+            }
+          }
+        ],
+        "products": []
+      },
+      {
+        "instruction": {
+          "he": "מוסיפים את יתרת השום ומבשלים כ־5 דקות.",
+          "en": "Stir in the remaining garlic and cook for about 5 minutes.",
+          "ru": "Добавьте оставшийся чеснок и готовьте около 5 минут."
+        },
+        "ingredient_ids": [
+          "i4"
+        ],
+        "prepared_items": [
+          {
+            "from_step": 3,
+            "label": {
+              "he": "מחית מצומצמת",
+              "en": "Reduced purée",
+              "ru": "Уваренное пюре"
+            }
+          }
+        ],
+        "products": [
+          {
+            "id": "i4",
+            "he": "יתרת השום",
+            "en": "Remaining garlic",
+            "ru": "Оставшийся чеснок"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "מוסיפים חומץ, סוכר, מלח ורסק אם משתמשים. מערבבים ומבשלים עד שמתקבל ממרח.",
+          "en": "Add the vinegar, sugar, salt and optional tomato paste. Cook, stirring, until spreadable.",
+          "ru": "Добавьте уксус, сахар, соль и по желанию томатную пасту. Готовьте, помешивая, до консистенции густой пасты."
+        },
+        "ingredient_ids": [
+          "i6",
+          "i7",
+          "i8",
+          "i9"
+        ],
+        "prepared_items": [
+          {
+            "from_step": 4,
+            "label": {
+              "he": "בסיס האג׳יקה",
+              "en": "Adjika base",
+              "ru": "Основа аджики"
+            }
+          }
+        ],
+        "products": [
+          {
+            "id": "i6",
+            "he": "3 כפות חומץ",
+            "en": "3 tbsp vinegar",
+            "ru": "3 ст. л. уксуса"
+          },
+          {
+            "id": "i7",
+            "he": "2 כפות סוכר",
+            "en": "2 tbsp sugar",
+            "ru": "2 ст. л. сахара"
+          },
+          {
+            "id": "i8",
+            "he": "2 כפיות מלח",
+            "en": "2 tsp salt",
+            "ru": "2 ч. л. соли"
+          },
+          {
+            "id": "i9",
+            "he": "2–3 כפות רסק עגבניות מרוכז, לפי הטעם",
+            "en": "2–3 tbsp concentrated tomato paste, optional",
+            "ru": "2–3 ст. л. концентрированной томатной пасты, по желанию"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "מחזירים את הגזר המטוגן, מוסיפים ריבת בצל או בצל מקורמל ומבשלים עוד 5 דקות. טועמים ומתקנים תיבול.",
+          "en": "Return the fried carrots to the pan. Add the onion jam or caramelized onion and cook for 5 more minutes. Taste and adjust the seasoning.",
+          "ru": "Верните обжаренную морковь, добавьте луковый конфитюр или карамелизированный лук и готовьте ещё 5 минут. Попробуйте и приправьте по вкусу."
+        },
+        "ingredient_ids": [
+          "i11"
+        ],
+        "prepared_items": [
+          {
+            "from_step": 1,
+            "label": {
+              "he": "גזר מטוגן",
+              "en": "Fried carrots",
+              "ru": "Обжаренная морковь"
+            }
+          },
+          {
+            "from_step": 5,
+            "label": {
+              "he": "בסיס האג׳יקה",
+              "en": "Adjika base",
+              "ru": "Основа аджики"
+            }
+          }
+        ],
+        "products": [
+          {
+            "id": "i11",
+            "he": "3 כפות ריבת בצל או בצל מקורמל",
+            "en": "3 tbsp onion jam or caramelized onion",
+            "ru": "3 ст. л. лукового конфитюра или карамелизированного лука"
+          }
+        ]
+      }
+    ],
+    "review_note": "Source mentions blooming unspecified dry spices for 30 seconds. Clarify with chef before publication. Garlic is used twice without a specified split.",
+    "stepIngredients": {
+      "he": [
+        [
+          "חצי כוס שמן זית או חמניות",
+          "5 גזרים מגוררים דק"
+        ],
+        [
+          "1 ק״ג עגבניות בשלות",
+          "3 פלפלים אדומים מתוקים",
+          "10–15 פלפלים חריפים עם הגרעינים",
+          "חלק מהשום"
+        ],
+        [
+          "השמן שנותר במחבת",
+          "מחית עגבניות ופלפלים"
+        ],
+        [
+          "יתרת השום",
+          "מחית מצומצמת"
+        ],
+        [
+          "3 כפות חומץ",
+          "2 כפות סוכר",
+          "2 כפיות מלח",
+          "2–3 כפות רסק עגבניות מרוכז, לפי הטעם",
+          "בסיס האג׳יקה"
+        ],
+        [
+          "3 כפות ריבת בצל או בצל מקורמל",
+          "גזר מטוגן",
+          "בסיס האג׳יקה"
+        ]
+      ],
+      "en": [
+        [
+          "½ cup olive or sunflower oil",
+          "5 carrots, finely grated"
+        ],
+        [
+          "1 kg ripe tomatoes",
+          "3 red bell peppers",
+          "10–15 hot peppers, seeds included",
+          "Some of the garlic"
+        ],
+        [
+          "Reserved frying oil",
+          "Tomato and pepper purée"
+        ],
+        [
+          "Remaining garlic",
+          "Reduced purée"
+        ],
+        [
+          "3 tbsp vinegar",
+          "2 tbsp sugar",
+          "2 tsp salt",
+          "2–3 tbsp concentrated tomato paste, optional",
+          "Adjika base"
+        ],
+        [
+          "3 tbsp onion jam or caramelized onion",
+          "Fried carrots",
+          "Adjika base"
+        ]
+      ],
+      "ru": [
+        [
+          "½ стакана оливкового или подсолнечного масла",
+          "5 морковок, натёртых на мелкой тёрке"
+        ],
+        [
+          "1 кг спелых помидоров",
+          "3 красных сладких перца",
+          "10–15 острых перцев с семенами",
+          "Часть чеснока"
+        ],
+        [
+          "Масло после обжаривания",
+          "Пюре из помидоров и перца"
+        ],
+        [
+          "Оставшийся чеснок",
+          "Уваренное пюре"
+        ],
+        [
+          "3 ст. л. уксуса",
+          "2 ст. л. сахара",
+          "2 ч. л. соли",
+          "2–3 ст. л. концентрированной томатной пасты, по желанию",
+          "Основа аджики"
+        ],
+        [
+          "3 ст. л. лукового конфитюра или карамелизированного лука",
+          "Обжаренная морковь",
+          "Основа аджики"
+        ]
+      ]
+    }
+  },
+  {
+    "title": {
+      "he": "איולי עשבי תיבול",
+      "en": "Herb aioli",
+      "ru": "Айоли с зеленью"
+    },
+    "source_url": "https://chef-prati.com/%d7%90%d7%99%d7%95%d7%9c%d7%99-%d7%a2%d7%a9%d7%91%d7%99-%d7%aa%d7%99%d7%91%d7%95%d7%9c-%d7%9e%d7%aa%d7%9b%d7%95%d7%9f-%d7%a7%d7%9c-%d7%a2%d7%9d-%d7%a1%d7%a8%d7%98%d7%95%d7%9f/",
+    "chef": "מארק אלדרוב",
+    "recipe_page_videos": [
+      "https://www.youtube.com/watch?v=iPvw9DdEMRw"
+    ],
+    "ingredients": [
+      {
+        "id": "i1",
+        "he": "500 גרם מיונז",
+        "en": "500 g mayonnaise",
+        "ru": "500 г майонеза"
+      },
+      {
+        "id": "i2",
+        "he": "3–4 שיני שום",
+        "en": "3–4 garlic cloves",
+        "ru": "3–4 зубчика чеснока"
+      },
+      {
+        "id": "i3",
+        "he": "2 כפיות סילאן",
+        "en": "2 tsp date syrup",
+        "ru": "2 ч. л. финикового сиропа"
+      },
+      {
+        "id": "i4",
+        "he": "2 כפות שמן זית",
+        "en": "2 tbsp olive oil",
+        "ru": "2 ст. л. оливкового масла"
+      },
+      {
+        "id": "i5",
+        "he": "20 עלי נענע",
+        "en": "20 mint leaves",
+        "ru": "20 листочков мяты"
+      },
+      {
+        "id": "i6",
+        "he": "צרור בזיליקום",
+        "en": "1 bunch basil",
+        "ru": "1 пучок базилика"
+      },
+      {
+        "id": "i7",
+        "he": "בצל ירוק בנדיבות, החלק הירוק בלבד",
+        "en": "A generous handful of scallion greens",
+        "ru": "Зелёные перья лука, щедрая горсть"
+      },
+      {
+        "id": "i8",
+        "he": "שליש צרור פטרוזיליה",
+        "en": "⅓ bunch parsley",
+        "ru": "⅓ пучка петрушки"
+      },
+      {
+        "id": "i9",
+        "he": "שליש צרור שמיר",
+        "en": "⅓ bunch dill",
+        "ru": "⅓ пучка укропа"
+      },
+      {
+        "id": "i10",
+        "he": "קורט מלח",
+        "en": "Pinch of salt",
+        "ru": "Щепотка соли"
+      },
+      {
+        "id": "i11",
+        "he": "קורט פלפל שחור או לבן",
+        "en": "Pinch of black or white pepper",
+        "ru": "Щепотка чёрного или белого перца"
+      },
+      {
+        "id": "i12",
+        "he": "כף מיץ לימון",
+        "en": "1 tbsp lemon juice",
+        "ru": "1 ст. л. лимонного сока"
+      }
+    ],
+    "steps": [
+      {
+        "instruction": {
+          "he": "שמים בבלנדר את המיונז, השום, הסילאן, השמן, המלח, הפלפל ומיץ הלימון.",
+          "en": "Put the mayonnaise, garlic, date syrup, oil, salt, pepper and lemon juice in a blender.",
+          "ru": "Положите в блендер майонез, чеснок, финиковый сироп, масло, соль и перец. Влейте лимонный сок."
+        },
+        "ingredient_ids": [
+          "i1",
+          "i2",
+          "i3",
+          "i4",
+          "i10",
+          "i11",
+          "i12"
+        ],
+        "prepared_items": [],
+        "products": [
+          {
+            "id": "i1",
+            "he": "500 גרם מיונז",
+            "en": "500 g mayonnaise",
+            "ru": "500 г майонеза"
+          },
+          {
+            "id": "i2",
+            "he": "3–4 שיני שום",
+            "en": "3–4 garlic cloves",
+            "ru": "3–4 зубчика чеснока"
+          },
+          {
+            "id": "i3",
+            "he": "2 כפיות סילאן",
+            "en": "2 tsp date syrup",
+            "ru": "2 ч. л. финикового сиропа"
+          },
+          {
+            "id": "i4",
+            "he": "2 כפות שמן זית",
+            "en": "2 tbsp olive oil",
+            "ru": "2 ст. л. оливкового масла"
+          },
+          {
+            "id": "i10",
+            "he": "קורט מלח",
+            "en": "Pinch of salt",
+            "ru": "Щепотка соли"
+          },
+          {
+            "id": "i11",
+            "he": "קורט פלפל שחור או לבן",
+            "en": "Pinch of black or white pepper",
+            "ru": "Щепотка чёрного или белого перца"
+          },
+          {
+            "id": "i12",
+            "he": "כף מיץ לימון",
+            "en": "1 tbsp lemon juice",
+            "ru": "1 ст. л. лимонного сока"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "מוסיפים נענע, בזיליקום, בצל ירוק, פטרוזיליה ושמיר. טוחנים עד שמתקבל רוטב ירוק וחלק.",
+          "en": "Add the mint, basil, scallion greens, parsley and dill. Blend until smooth and uniformly green.",
+          "ru": "Добавьте мяту, базилик, зелёный лук, петрушку и укроп. Измельчите до получения однородного зелёного соуса."
+        },
+        "ingredient_ids": [
+          "i5",
+          "i6",
+          "i7",
+          "i8",
+          "i9"
+        ],
+        "prepared_items": [
+          {
+            "from_step": 1,
+            "label": {
+              "he": "בסיס האיולי שבבלנדר",
+              "en": "Aioli base in the blender",
+              "ru": "Основа айоли в блендере"
+            }
+          }
+        ],
+        "products": [
+          {
+            "id": "i5",
+            "he": "20 עלי נענע",
+            "en": "20 mint leaves",
+            "ru": "20 листочков мяты"
+          },
+          {
+            "id": "i6",
+            "he": "צרור בזיליקום",
+            "en": "1 bunch basil",
+            "ru": "1 пучок базилика"
+          },
+          {
+            "id": "i7",
+            "he": "בצל ירוק בנדיבות, החלק הירוק בלבד",
+            "en": "A generous handful of scallion greens",
+            "ru": "Зелёные перья лука, щедрая горсть"
+          },
+          {
+            "id": "i8",
+            "he": "שליש צרור פטרוזיליה",
+            "en": "⅓ bunch parsley",
+            "ru": "⅓ пучка петрушки"
+          },
+          {
+            "id": "i9",
+            "he": "שליש צרור שמיר",
+            "en": "⅓ bunch dill",
+            "ru": "⅓ пучка укропа"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "טועמים ומאזנים את התיבול, החמיצות והמתיקות לפי הטעם.",
+          "en": "Taste and adjust the seasoning, acidity and sweetness as needed.",
+          "ru": "Попробуйте и при необходимости отрегулируйте вкус, кислоту и сладость."
+        },
+        "ingredient_ids": [],
+        "prepared_items": [
+          {
+            "from_step": 2,
+            "label": {
+              "he": "איולי עשבי תיבול",
+              "en": "Blended herb aioli",
+              "ru": "Готовый айоли с зеленью"
+            }
+          }
+        ],
+        "products": []
+      }
+    ],
+    "review_note": "",
+    "stepIngredients": {
+      "he": [
+        [
+          "500 גרם מיונז",
+          "3–4 שיני שום",
+          "2 כפיות סילאן",
+          "2 כפות שמן זית",
+          "קורט מלח",
+          "קורט פלפל שחור או לבן",
+          "כף מיץ לימון"
+        ],
+        [
+          "20 עלי נענע",
+          "צרור בזיליקום",
+          "בצל ירוק בנדיבות, החלק הירוק בלבד",
+          "שליש צרור פטרוזיליה",
+          "שליש צרור שמיר",
+          "בסיס האיולי שבבלנדר"
+        ],
+        [
+          "איולי עשבי תיבול"
+        ]
+      ],
+      "en": [
+        [
+          "500 g mayonnaise",
+          "3–4 garlic cloves",
+          "2 tsp date syrup",
+          "2 tbsp olive oil",
+          "Pinch of salt",
+          "Pinch of black or white pepper",
+          "1 tbsp lemon juice"
+        ],
+        [
+          "20 mint leaves",
+          "1 bunch basil",
+          "A generous handful of scallion greens",
+          "⅓ bunch parsley",
+          "⅓ bunch dill",
+          "Aioli base in the blender"
+        ],
+        [
+          "Blended herb aioli"
+        ]
+      ],
+      "ru": [
+        [
+          "500 г майонеза",
+          "3–4 зубчика чеснока",
+          "2 ч. л. финикового сиропа",
+          "2 ст. л. оливкового масла",
+          "Щепотка соли",
+          "Щепотка чёрного или белого перца",
+          "1 ст. л. лимонного сока"
+        ],
+        [
+          "20 листочков мяты",
+          "1 пучок базилика",
+          "Зелёные перья лука, щедрая горсть",
+          "⅓ пучка петрушки",
+          "⅓ пучка укропа",
+          "Основа айоли в блендере"
+        ],
+        [
+          "Готовый айоли с зеленью"
+        ]
+      ]
+    }
+  },
+  {
+    "title": {
+      "he": "איולי שום",
+      "en": "Garlic aioli",
+      "ru": "Чесночный айоли"
+    },
+    "source_url": "https://chef-prati.com/%d7%90%d7%99%d7%95%d7%9c%d7%99-%d7%a9%d7%95%d7%9d-%d7%9e%d7%aa%d7%9b%d7%95%d7%9f-%d7%a4%d7%a9%d7%95%d7%98-%d7%a9%d7%9c-%d7%a9%d7%a3-%d7%a4%d7%a8%d7%98%d7%99/",
+    "chef": "מארק אלדרוב",
+    "recipe_page_videos": [],
+    "ingredients": [
+      {
+        "id": "i1",
+        "he": "500 גרם מיונז ביתי או קנוי",
+        "en": "500 g homemade or store-bought mayonnaise",
+        "ru": "500 г домашнего или покупного майонеза"
+      },
+      {
+        "id": "i2",
+        "he": "3 שיני שום",
+        "en": "3 garlic cloves",
+        "ru": "3 зубчика чеснока"
+      },
+      {
+        "id": "i3",
+        "he": "כף סילאן",
+        "en": "1 tbsp date syrup",
+        "ru": "1 ст. л. финикового сиропа"
+      },
+      {
+        "id": "i4",
+        "he": "כף שמן זית",
+        "en": "1 tbsp olive oil",
+        "ru": "1 ст. л. оливкового масла"
+      }
+    ],
+    "steps": [
+      {
+        "instruction": {
+          "he": "שמים בקערה את המיונז, השום, הסילאן ושמן הזית.",
+          "en": "Put the mayonnaise, garlic, date syrup and olive oil in a bowl.",
+          "ru": "Положите в миску майонез, чеснок и финиковый сироп, влейте оливковое масло."
+        },
+        "ingredient_ids": [
+          "i1",
+          "i2",
+          "i3",
+          "i4"
+        ],
+        "prepared_items": [],
+        "products": [
+          {
+            "id": "i1",
+            "he": "500 גרם מיונז ביתי או קנוי",
+            "en": "500 g homemade or store-bought mayonnaise",
+            "ru": "500 г домашнего или покупного майонеза"
+          },
+          {
+            "id": "i2",
+            "he": "3 שיני שום",
+            "en": "3 garlic cloves",
+            "ru": "3 зубчика чеснока"
+          },
+          {
+            "id": "i3",
+            "he": "כף סילאן",
+            "en": "1 tbsp date syrup",
+            "ru": "1 ст. л. финикового сиропа"
+          },
+          {
+            "id": "i4",
+            "he": "כף שמן זית",
+            "en": "1 tbsp olive oil",
+            "ru": "1 ст. л. оливкового масла"
+          }
+        ]
+      },
+      {
+        "instruction": {
+          "he": "טוחנים בבלנדר מוט עד לאיחוד. טועמים ומתקנים תיבול.",
+          "en": "Blend with an immersion blender until combined. Taste and adjust the seasoning.",
+          "ru": "Взбейте погружным блендером до однородности. Попробуйте и при необходимости приправьте."
+        },
+        "ingredient_ids": [],
+        "prepared_items": [
+          {
+            "from_step": 1,
+            "label": {
+              "he": "תערובת האיולי שבקערה",
+              "en": "Aioli mixture in the bowl",
+              "ru": "Смесь для айоли в миске"
+            }
+          }
+        ],
+        "products": []
+      }
+    ],
+    "review_note": "",
+    "stepIngredients": {
+      "he": [
+        [
+          "500 גרם מיונז ביתי או קנוי",
+          "3 שיני שום",
+          "כף סילאן",
+          "כף שמן זית"
+        ],
+        [
+          "תערובת האיולי שבקערה"
+        ]
+      ],
+      "en": [
+        [
+          "500 g homemade or store-bought mayonnaise",
+          "3 garlic cloves",
+          "1 tbsp date syrup",
+          "1 tbsp olive oil"
+        ],
+        [
+          "Aioli mixture in the bowl"
+        ]
+      ],
+      "ru": [
+        [
+          "500 г домашнего или покупного майонеза",
+          "3 зубчика чеснока",
+          "1 ст. л. финикового сиропа",
+          "1 ст. л. оливкового масла"
+        ],
+        [
+          "Смесь для айоли в миске"
+        ]
+      ]
+    }
+  }
+]
