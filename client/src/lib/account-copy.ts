@@ -13,7 +13,7 @@ const copy = {
     account: "Account", signedInAs: "Signed in as {email}", guestNote: "You are using TableWise as a guest.",
     signOut: "Sign out", signOutFailed: "Couldn’t sign out. Try again.",
     name: "Your name", save: "Save", saved: "Saved", addPhoto: "Add photo", changePhoto: "Change photo", removePhoto: "Remove photo",
-    profileFailed: "Couldn’t save. Try again.", photoFailed: "Use a JPEG, PNG or WebP picture under 10 MB.",
+    profileFailed: "Couldn’t save. Try again.", photoFailed: "Use a JPEG, PNG or WebP picture under 10 MB.", blocked: "This browser is blocking cookies and site data for TableWise, so you can’t stay signed in and your answers aren’t saved. Allow cookies for this site in the browser’s settings, then reload the page.",
   },
   ru: {
     title: "Вход", intro: "Ваша неделя, дела по дому и история готовки на любом устройстве.",
@@ -25,7 +25,7 @@ const copy = {
     account: "Аккаунт", signedInAs: "Вы вошли как {email}", guestNote: "Вы пользуетесь TableWise как гость.",
     signOut: "Выйти", signOutFailed: "Не удалось выйти. Попробуйте ещё раз.",
     name: "Ваше имя", save: "Сохранить", saved: "Сохранено", addPhoto: "Добавить фото", changePhoto: "Сменить фото", removePhoto: "Удалить фото",
-    profileFailed: "Не удалось сохранить. Попробуйте ещё раз.", photoFailed: "Выберите JPEG, PNG или WebP до 10 МБ.",
+    profileFailed: "Не удалось сохранить. Попробуйте ещё раз.", photoFailed: "Выберите JPEG, PNG или WebP до 10 МБ.", blocked: "Этот браузер блокирует файлы cookie и данные сайта TableWise, поэтому вход не сохраняется и ответы не сохраняются. Разрешите файлы cookie для этого сайта в настройках браузера и обновите страницу.",
   },
   he: {
     title: "כניסה", intro: "השבוע, משימות הבית והיסטוריית הבישול שלכם בכל מכשיר.",
@@ -37,7 +37,7 @@ const copy = {
     account: "חשבון", signedInAs: "מחוברים בתור {email}", guestNote: "אתם משתמשים ב־TableWise כאורחים.",
     signOut: "יציאה", signOutFailed: "לא ניתן לצאת. נסו שוב.",
     name: "השם שלכם", save: "שמירה", saved: "נשמר", addPhoto: "הוספת תמונה", changePhoto: "החלפת תמונה", removePhoto: "הסרת תמונה",
-    profileFailed: "לא ניתן לשמור. נסו שוב.", photoFailed: "בחרו תמונת JPEG, PNG או WebP עד 10MB.",
+    profileFailed: "לא ניתן לשמור. נסו שוב.", photoFailed: "בחרו תמונת JPEG, PNG או WebP עד 10MB.", blocked: "הדפדפן הזה חוסם עוגיות ונתוני אתר עבור TableWise, ולכן אי אפשר להישאר מחוברים והתשובות לא נשמרות. אפשרו עוגיות לאתר הזה בהגדרות הדפדפן וטענו את הדף מחדש.",
   },
 };
 export type AccountCopyKey = keyof typeof copy.en;
@@ -50,6 +50,10 @@ export function useAccountCopy() {
 /** "Continue as guest" is remembered per browser so the sign-in screen shows once. A UI choice, not user data. */
 const guestKey = "tablewise_guest_v1";
 export const choseGuest = () => { try { return localStorage.getItem(guestKey) === "1"; } catch { return false; } };
+/** True when the browser refuses cookies or site storage (a browser setting): nothing can be remembered or kept signed in. */
+export const storageBlocked = () => {
+  try { localStorage.setItem("tablewise_probe", "1"); localStorage.removeItem("tablewise_probe"); return !navigator.cookieEnabled; } catch { return true; }
+};
 export const setGuestChoice = (on: boolean) => { try { on ? localStorage.setItem(guestKey, "1") : localStorage.removeItem(guestKey); } catch {} };
 
 /** Who is signed in; email is null for a guest. */

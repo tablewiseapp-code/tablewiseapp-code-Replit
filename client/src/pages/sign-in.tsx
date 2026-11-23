@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
-import { setGuestChoice, switchPerson, useAccountCopy, type AccountCopyKey } from "@/lib/account-copy";
+import { setGuestChoice, storageBlocked, switchPerson, useAccountCopy, type AccountCopyKey } from "@/lib/account-copy";
 
 const field = "mt-2 block min-h-11 w-full rounded-full border border-input bg-card px-4 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const errors: Record<number, AccountCopyKey> = { 400: "invalid", 401: "wrongPassword", 429: "tooMany" };
@@ -30,6 +30,7 @@ export default function SignIn({ onGuest }: { onGuest: () => void }) {
       <PageContainer size="md" className="max-w-md py-8 sm:py-10">
         <h1 className="page-title" data-testid="text-page-title">{t("title")}</h1>
         <p className="page-subtitle">{t("intro")}</p>
+        {storageBlocked() && <p role="alert" className="mt-4 text-sm font-medium text-destructive" data-testid="storage-blocked">{t("blocked")}</p>}
         <form onSubmit={submit} className="card mt-5 p-4">
           <label className="block text-base font-medium text-foreground">{t("email")}
             <input name="email" type="email" required maxLength={254} autoComplete="email" className={field} data-testid="input-email" />

@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Chip, Counter, CookNowEmpty, KidFriendlySwitch, RequirementsEditor, toggle } from "@/components/household-controls";
 import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy, type HouseholdKey } from "@/lib/household-copy";
+import { storageBlocked, useAccountCopy } from "@/lib/account-copy";
 import { settingsText } from "@/lib/settings-copy";
 import { personalizeURL, useCookNow } from "@/hooks/use-cook-now";
 import { CookNowProteins } from "@/components/on-hand-picker";
@@ -32,6 +33,7 @@ const half = (n: number) => `${Math.floor(n)}${n % 1 ? "½" : ""}`.replace(/^0½
 export default function Household() {
   const { lang, dir } = useI18n();
   const t = useHouseholdCopy();
+  const accountT = useAccountCopy();
   const s = (key: string) => settingsText(lang, key);
   const [, setLocation] = useLocation();
   const query = new URLSearchParams(useSearch());
@@ -58,9 +60,11 @@ export default function Household() {
     if (!asked.length && settings.setup.status === "new" && settings.setup.step !== index + 1 && (index > 0 || settings.setup.step > 0)) save(x => ({ ...x, setup: { ...x.setup, step: index + 1 } }));
   }, [index]);
 
-  /** Saved at once; a refused write keeps the screen as it was and says so. */
-  const save = (change: (current: BasicSettings) => BasicSettings) => {
-    try { setSettings(updateSettings(change)); setError(null); return true; } catch { setError("save"); return false; }
+  /** Saved at once; a refused write keeps the screen as it was and says so. Try again repeats what failed. */
+  const retry = useRef<() => void>(() => {});
+  const save = (change: (current: BasicSettings) => BasicSettings, then?: () => void) => {
+    try { setSettings(updateSettings(change)); setError(null); then?.(); return true; }
+    catch { retry.current = () => save(change, then); setError("save"); return false; }
   };
   const go = (to: number) => setIndex(Math.max(0, Math.min(screens.length - 1, to)));
 
@@ -87,9 +91,9 @@ export default function Household() {
   const finish = async () => {
     setBusy(true); setError(null);
     const done = missingAnswers(loadSettings()).length === 0;
-    if (!save(x => ({ ...x, setup: { ...x.setup, status: done ? "done" : x.setup.status, step: asked.length ? x.setup.step : 5 } }))) { setBusy(false); return; }
+    if (!save(x => ({ ...x, setup: { ...x.setup, status: done ? "done" : x.setup.status, step: asked.length ? x.setup.step : 5 } }))) { retry.current = () => void finish(); setBusy(false); return; }
     // Setup counts as finished only once the server has it; the answers stay on screen if it fails.
-    if (!(await pushSettings())) { setError("save"); setBusy(false); return; }
+    if (!(await pushSettings())) { retry.current = () => void finish(); setError("save"); setBusy(false); return; }
     setBusy(false);
     if (!asked.length) return go(index + 1);
     if (then === "cook") cookNow.start();
@@ -108,7 +112,7 @@ export default function Household() {
       <div role="radiogroup" aria-labelledby="step-title" className="grid gap-2">
         {cookingStyles.map(style => (
           <button key={style} type="button" role="radio" aria-checked={settings.setup.style === style} data-testid={`style-${style}`}
-            onClick={() => save(x => ({ ...x, setup: { ...x.setup, style } })) && go(index + 1)}
+            onClick={() => save(x => ({ ...x, setup: { ...x.setup, style } }), () => go(index + 1))}
             className={`min-h-11 rounded-lg border p-3 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${settings.setup.style === style ? "border-primary bg-accent" : "border-border bg-card"}`}>
             <span className="block text-sm font-semibold">{settings.setup.style === style ? "✓ " : ""}{t(`style_${style}`)}</span>
             <span className="block text-sm text-muted-foreground">{t(`style_${style}Hint`)}</span>
@@ -116,7 +120,7 @@ export default function Household() {
         ))}
       </div>
       <button type="button" className="btn btn-text -ms-2 mt-2" data-testid="style-default"
-        onClick={() => save(x => ({ ...x, setup: { ...x.setup, style: "everyday" } })) && go(index + 1)}>{t("useEveryday")}</button>
+        onClick={() => save(x => ({ ...x, setup: { ...x.setup, style: "everyday" } }), () => go(index + 1))}>{t("useEveryday")}</button>
     </>,
     people: () => <>
       <Counter label={t("adults")} value={counts.adults} canLess={counts.adults > 0 && (removable("adult") || !settings.household.members.length)} canMore={people < MAX_PEOPLE}
@@ -184,8 +188,8 @@ export default function Household() {
         <section aria-labelledby="step-title" data-testid={`step-${screen}`}>{body[screen]()}</section>
         {/* Asked before Cook now: an empty result is shown here, where the person is. */}
         {screen !== "done" && cookNow.empty && <CookNowEmpty from="/" />}
-        {error === "save" && <p role="alert" className="mt-4 text-sm text-destructive" data-testid="household-error">{t("saveFailed")}{" "}
-          <button type="button" className="btn btn-text" onClick={() => void finish()} data-testid="button-retry-save">{t("retry")}</button></p>}
+        {error === "save" && <p role="alert" className="mt-4 text-sm text-destructive" data-testid="household-error">{storageBlocked() ? accountT("blocked") : t("saveFailed")}{" "}
+          <button type="button" className="btn btn-text" onClick={() => retry.current()} data-testid="button-retry-save">{t("retry")}</button></p>}
         {/* Style advances on choice; every other question confirms with Continue. */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
           {index > 0 && <button type="button" onClick={() => go(index - 1)} className="btn btn-secondary" data-testid="button-back">{t("back")}</button>}
