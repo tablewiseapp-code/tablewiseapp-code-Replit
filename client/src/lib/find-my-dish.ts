@@ -5,6 +5,7 @@ import { ingredientGroup } from "./ingredient-groups";
 import { optional } from "./grocery-meal-removal";
 import { selectableDevices } from "./device-requirements";
 import { cookNowOptions } from "./week-suggestions";
+import { ingredientType } from "./on-hand";
 import type { BasicSettings } from "./basic-settings";
 import type { EngineRecipe } from "./preference-engine";
 
@@ -67,8 +68,8 @@ export function usesAsMain(r: Pick<EngineRecipe, "ingredients">, protein: Protei
 }
 
 /** A main dish: a lunch or dinner (and a breakfast when the protein is eggs). The catalog marks no main or side. */
-const mainDish = (r: EngineRecipe, protein: Protein) =>
-  r.mealType === "Lunch" || r.mealType === "Dinner" || (r.mealType === "Breakfast" && "key" in protein && protein.key === "eggs");
+const mainDish = (r: EngineRecipe, protein?: Protein) =>
+  r.mealType === "Lunch" || r.mealType === "Dinner" || (r.mealType === "Breakfast" && !!protein && "key" in protein && protein.key === "eggs");
 
 /** Leave out: a known ingredient (its Settings id, such as "mushrooms") or the person's own words; any line counts. */
 const leavesOut = (r: EngineRecipe, term: string) => {
@@ -85,19 +86,32 @@ export function searchSettings(settings: BasicSettings, extra: { diets: DietPatt
     dietary: { ...d, diets: [...new Set([...d.diets, ...extra.diets])], allergies: [...new Set([...d.allergies, ...extra.allergies])] } };
 }
 
-export type DishSearch = { protein: Protein; leaveOut: string[]; diets: DietPattern[]; allergies: Allergen[] };
+/** No protein: any eligible main dish (opening the sheet shows one at once). */
+export type DishSearch = { protein?: Protein; leaveOut: string[]; diets: DietPattern[]; allergies: Allergen[] };
 /** Eligible main dishes using the protein as their main ingredient and none of the Leave out ingredients, best first
  * (Cook now's order). Empty: "No matching dish yet". */
 export function findMyDish<T extends EngineRecipe>(catalog: readonly T[], settings: BasicSettings, search: DishSearch, now = new Date()): T[] {
   return cookNowOptions(catalog, searchSettings(settings, search), now)
-    .filter(r => mainDish(r, search.protein) && usesAsMain(r, search.protein) && !search.leaveOut.some(term => leavesOut(r, term)));
+    .filter(r => mainDish(r, search.protein) && (!search.protein || usesAsMain(r, search.protein)) && !search.leaveOut.some(term => leavesOut(r, term)));
 }
 
-/** The other ingredients the dish needs (indices into its lines): everything needed except the protein on hand. */
-export const otherIngredients = (r: Pick<EngineRecipe, "ingredients">) => {
-  const main = mainProteinLine(r);
+/** The other ingredients the dish needs (indices into its lines): everything needed except the protein searched for. */
+export const otherIngredients = (r: Pick<EngineRecipe, "ingredients">, withProtein = true) => {
+  const main = withProtein ? mainProteinLine(r) : -1;
   return r.ingredients.map((_, i) => i).filter(i => i !== main && !optional.test(r.ingredients[i]));
 };
+
+/** The next dish for Try another: among results not yet shown, the most distinct ingredients the person tapped as had
+ * (by ingredientType, so "1 onion" and "2 onions" are one), then the fewest other ingredients, then the incoming order. */
+export function nextDish<T extends EngineRecipe>(list: readonly T[], seen: ReadonlySet<string>, have: ReadonlySet<string>, withProtein = true): T | undefined {
+  const score = (r: T) => {
+    const types = new Set(otherIngredients(r, withProtein).map(i => ingredientType(r.ingredients[i])));
+    const hits = [...types].filter(t => have.has(t)).length;
+    return { hits, extra: types.size - hits };
+  };
+  return list.filter(r => !seen.has(r.id)).map((r, i) => ({ r, i, ...score(r) }))
+    .sort((a, b) => b.hits - a.hits || a.extra - b.extra || a.i - b.i)[0]?.r;
+}
 
 const plant = /\b(lentils?|chickpeas?|garbanzos?|(?<!green )beans?|tofu|tempeh|seitan|edamame|split peas?)\b/;
 /** Home's examples when nothing is planned today: an eligible beef, chicken and plant-based main dish with a photo

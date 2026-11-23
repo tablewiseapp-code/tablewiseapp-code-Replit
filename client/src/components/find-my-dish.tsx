@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Camera, ChevronDown, X } from "lucide-react";
+import { Camera, Check, ChevronDown, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RecipeCard } from "@/components/recipe-card";
 import { Chip, offeredDiets, toggle } from "@/components/household-controls";
@@ -11,7 +11,10 @@ import { loadSettings } from "@/lib/basic-settings";
 import { toPlannerRecipes } from "@/lib/planner-recipes";
 import { recipeText, useRecipeTranslations } from "@/lib/recipe-translation";
 import { askURL } from "@/hooks/use-cook-now";
-import { findMyDish, otherIngredients, proteinChoices, specificProteins, type DishSearch, type Protein, type ProteinKey } from "@/lib/find-my-dish";
+import { ingredientType } from "@/lib/on-hand";
+import { checkedLast } from "@/lib/checked-last";
+import { groceryMeasure } from "@/lib/grocery-meal-removal";
+import { findMyDish, nextDish, otherIngredients, proteinChoices, specificProteins, type DishSearch, type Protein, type ProteinKey } from "@/lib/find-my-dish";
 import { allergens, ingredientPrefIds, type Allergen, type DietPattern } from "@shared/food-rules";
 import type { PlannerRecipe } from "@/lib/planner-recipes";
 import type { Recipe } from "@/lib/storage";
@@ -72,8 +75,9 @@ function Combo({ id, label, value, onValue, options, onAccept, placeholder, type
 /** A bottom sheet on a phone, a dialog on wider screens (as Cook with what I have). */
 const sheet = "bottom-0 top-auto max-h-[92dvh] w-full max-w-none translate-y-0 gap-4 overflow-y-auto rounded-b-none rounded-t-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-auto sm:top-[50%] sm:max-w-md sm:translate-y-[-50%] sm:rounded-2xl";
 
-/** Home → Find my dish: one protein (and optional Leave out ingredients and dietary needs) → one eligible main dish,
- * Try another, Start cooking. Never asks for setup and writes nothing; its state lives only while the sheet is open. */
+/** Home → Find my dish: opens on an eligible main dish at once; a protein (and optional Leave out ingredients and
+ * dietary needs) narrows it; tapping ingredients as had steers Try another. Never asks for setup and writes nothing;
+ * its state lives only while the sheet is open. */
 export function FindMyDish({ open, onClose, catalog }: { open: boolean; onClose: () => void; catalog: Recipe[] }) {
   const { lang } = useI18n();
   return (
@@ -114,20 +118,35 @@ function Search({ catalog }: { catalog: Recipe[] }) {
   const [leaveOut, setLeaveOut] = useState<{ key: string | null; label: string }[]>([]);
   const [diets, setDiets] = useState<DietPattern[]>([]);
   const [allergies, setAllergies] = useState<Allergen[]>([]);
-  const [results, setResults] = useState<{ list: PlannerRecipe[]; at: number; last: boolean; protein: string } | null>(null);
-  const [none, setNone] = useState(false);
+  // Opening the sheet shows a dish at once, with no selection.
+  const [results, setResults] = useState<{ list: PlannerRecipe[]; id: string; seen: Set<string>; last: boolean; protein: string } | null>(() => {
+    const list = findMyDish(planner, settings, { leaveOut: [], diets: [], allergies: [] });
+    return list.length ? { list, id: list[0].id, seen: new Set([list[0].id]), last: false, protein: "" } : null;
+  });
+  const [none, setNone] = useState(!results);
+  /** Ingredients tapped as had in this sheet (ingredientType → label without quantity), in tap order. Not a quantity. */
+  const [have, setHave] = useState<Map<string, string>>(new Map());
+  const [focusKey, setFocusKey] = useState<number | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    if (focusKey !== null) listRef.current?.querySelector<HTMLElement>(`[data-line="${focusKey}"]`)?.focus({ preventScroll: true });
+  }, [focusKey, have]);
 
   /** A label in the reader's language picks that choice; anything else is the person's own words. */
   const toProtein = (text: string): Protein => {
     const hit = proteinOptions.find(o => o.label.toLocaleLowerCase(lang) === text.trim().toLocaleLowerCase(lang));
     return hit ? { key: hit.key as ProteinKey } : { text: text.trim() };
   };
+  const haveKeys = new Set(have.keys());
   const find = () => {
-    const search: DishSearch = { protein: toProtein(protein), leaveOut: leaveOut.map(x => x.key ?? x.label), diets, allergies };
+    const text = protein;
+    const search: DishSearch = { protein: text.trim() ? toProtein(text) : undefined, leaveOut: leaveOut.map(x => x.key ?? x.label), diets, allergies };
     const list = findMyDish(planner, settings, search);
-    setNone(!list.length);
-    setResults(list.length ? { list, at: 0, last: false, protein: protein.trim() } : null);
+    const first = nextDish(list, new Set(), haveKeys, !!text.trim());
+    setNone(!first);
+    setResults(first ? { list, id: first.id, seen: new Set([first.id]), last: false, protein: text.trim() } : null);
   };
+
   const addLeaveOut = (label: string, key: string | null) => {
     if (label.trim() && !leaveOut.some(x => x.label.toLocaleLowerCase(lang) === label.trim().toLocaleLowerCase(lang))) setLeaveOut([...leaveOut, { key, label: label.trim() }]);
     setTerm("");
@@ -135,33 +154,61 @@ function Search({ catalog }: { catalog: Recipe[] }) {
   const held = { diets: settings.dietary.diets, allergies: settings.dietary.allergies };
 
   if (results) {
-    const pick = results.list[results.at], recipe = byId.get(pick.id)!;
+    const recipe = byId.get(results.id)!;
     const lines = recipeText(recipe, translations.get(recipe.id), lang as never).ingredients;
+    const rows = otherIngredients(recipe, !!results.protein).map(i => ({ i, type: ingredientType(recipe.ingredients[i]) }));
+    const shown = checkedLast(rows, r => have.has(r.type));
+    const toggleHave = (i: number, type: string) => {
+      const next = new Map(have);
+      if (next.has(type)) next.delete(type); else next.set(type, groceryMeasure(lines[i]).name.split(/[,(]/)[0].trim() || type);
+      setHave(next); setFocusKey(i);
+    };
+    const names = [...new Set([results.protein, ...have.values()].filter(Boolean))];
+    const allHad = rows.length > 0 && rows.every(r => have.has(r.type));
     return <div className="grid gap-4" data-testid="find-my-dish-result">
       <RecipeCard recipe={recipe} href={`/recipe/${encodeURIComponent(recipe.id)}`} row testId={`find-my-dish-recipe-${recipe.id}`} />
-      <p className="text-sm" data-testid="find-my-dish-have">{c("youHave", { name: results.protein })}</p>
+      {names.length > 0 && <p className="text-sm" aria-live="polite" data-testid="find-my-dish-have">{c("youHave", { name: names.join(", ") })}</p>}
       <div>
-        <h3 className="text-sm font-semibold">{c("alsoNeed")}</h3>
-        <ul className="mt-1 list-disc ps-5 text-sm" data-testid="find-my-dish-ingredients">
-          {otherIngredients(recipe).map(i => <li key={i}>{lines[i]}</li>)}
+        <h3 className="text-sm font-semibold" data-testid="find-my-dish-need-title">{c(allHad ? "haveAll" : "alsoNeed")}</h3>
+        <p className="text-sm text-muted-foreground">{c("tapHave")}</p>
+        <ul ref={listRef} className="mt-1 grid text-sm" data-testid="find-my-dish-ingredients">
+          {shown.map(({ i, type }) => {
+            const on = have.has(type);
+            return <li key={i}><button type="button" aria-pressed={on} data-line={i} data-testid="find-my-dish-ingredient" onClick={() => toggleHave(i, type)}
+              className="flex min-h-11 w-full items-center gap-2 rounded text-start hover:bg-accent">
+              {on ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />}
+              <span className={on ? "line-through text-muted-foreground" : ""}>{lines[i]}</span>
+            </button></li>;
+          })}
         </ul>
       </div>
       {results.last && <p role="status" className="text-sm" data-testid="find-my-dish-no-other">{c("noOther")}</p>}
       <div className="flex flex-wrap gap-2">
         <button type="button" className="btn btn-primary" onClick={() => setLocation(`/recipe/${encodeURIComponent(recipe.id)}?cook`)} data-testid="find-my-dish-start">{c("startCooking")}</button>
-        <button type="button" className="btn btn-secondary" data-testid="find-my-dish-another" onClick={() =>
-          setResults(r => r && (r.at + 1 < r.list.length ? { ...r, at: r.at + 1, last: false } : { ...r, last: true }))}>{c("tryAnother")}</button>
-        <button type="button" className="btn btn-text" onClick={() => setResults(null)} data-testid="find-my-dish-edit">{c("editSearch")}</button>
+        <button type="button" className="btn btn-secondary" data-testid="find-my-dish-another" onClick={() => {
+          const next = nextDish(results.list, results.seen, haveKeys, !!results.protein);
+          setFocusKey(null);
+          setResults(next ? { ...results, id: next.id, seen: new Set([...results.seen, next.id]), last: false } : { ...results, last: true });
+        }}>{c("tryAnother")}</button>
+        <button type="button" className="btn btn-text" onClick={() => { setResults(null); setFocusKey(null); }} data-testid="find-my-dish-edit">{c("editSearch")}</button>
       </div>
     </div>;
   }
 
-  return <form className="grid gap-4" onSubmit={e => { e.preventDefault(); if (protein.trim()) find(); }}>
+  return <form className="grid gap-4" onSubmit={e => { e.preventDefault(); find(); }}>
     <div className="grid gap-1">
       <label htmlFor="find-protein" className="text-sm font-medium">{c("homeTitle")}</label>
       <Combo id="find-protein" label={c("showProteins")} value={protein} onValue={v => { setProtein(v); setNone(false); }} options={proteinOptions}
         onAccept={text => { setProtein(text); setNone(false); }} placeholder={c("proteinPlaceholder")} typed={name => c("useTyped", { name })} testid="find-protein" />
     </div>
+
+    {have.size > 0 && <div className="grid gap-1">
+      <p className="text-sm font-medium">{c("haveLabel")}</p>
+      <ul className="flex flex-wrap gap-2" data-testid="find-have-list">{[...have].map(([type, label]) => (
+        <li key={type}><button type="button" className="chip" aria-label={c("remove", { name: label })} data-testid="find-have-remove"
+          onClick={() => { const next = new Map(have); next.delete(type); setHave(next); }}>{label} <X className="h-3.5 w-3.5" aria-hidden="true" /></button></li>
+      ))}</ul>
+    </div>}
 
     {!leaving ? <button type="button" className="btn btn-text -ms-2 justify-self-start" onClick={() => setLeaving(true)} data-testid="find-leave-out-open">{c("leaveOutOpen")}</button>
       : <div className="grid gap-1">
@@ -193,6 +240,6 @@ function Search({ catalog }: { catalog: Recipe[] }) {
 
     {none && <p role="status" className="text-sm" data-testid="find-my-dish-none">{c("noDish")}{" "}
       {settings.kitchen.devices !== null && <Link href={askURL(["kitchen"], "/")} className="font-medium text-primary underline underline-offset-4" data-testid="find-edit-kitchen">{c("editKitchen")}</Link>}</p>}
-    <button type="submit" className="btn btn-primary" disabled={!protein.trim()} data-testid="find-my-dish-submit">{c("findDish")}</button>
+    <button type="submit" className="btn btn-primary" data-testid="find-my-dish-submit">{c("findDish")}</button>
   </form>;
 }

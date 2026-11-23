@@ -17,6 +17,7 @@ import { FindMyDish } from "@/components/find-my-dish";
 import { exampleDishes } from "@/lib/find-my-dish";
 import { toPlannerRecipes } from "@/lib/planner-recipes";
 import { onHandText } from "@/lib/on-hand-copy";
+import { householdText } from "@/lib/household-copy";
 import { loadSettings, missingAnswers } from "@/lib/basic-settings";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
@@ -215,8 +216,8 @@ export default function Home() {
                 })}
               </div>
             )}
-            {/* Find my dish, with or without meals today: one protein → one dish. Never changes the Week or groceries. */}
-            <button type="button" onClick={() => setFinding(true)} disabled={!catalog.data} className="btn btn-secondary mt-3" data-testid="home-find-my-dish">{onHandText(lang, "findDish")}</button>
+            {/* Opens Find my dish on a dish at once, with or without meals today. Never changes the Week or groceries. */}
+            <button type="button" onClick={() => setFinding(true)} disabled={!catalog.data} className="btn btn-secondary mt-3" data-testid="home-find-my-dish">{householdText(lang, "suggestRecipe")}</button>
           </section>
 
           <details className="card p-3 sm:p-5" data-testid="home-task-preview">

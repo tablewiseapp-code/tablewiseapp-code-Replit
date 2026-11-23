@@ -49,9 +49,21 @@ try {
   ok(await ev(`Boolean(${q("home-task-preview")})`), "Tasks stay on Home");
   const before = [await stored(), await api("GET", `/api/week-plan?week=${thisWeek}`), await api("GET", "/api/household-settings")];
   await click("home-find-my-dish");
-  await until(`Boolean(${q("find-protein")})`, "the sheet");
+  await until(`Boolean(${q("find-my-dish-result")})`, "one click shows a dish");
+  // Tap an ingredient as had: ✓, struck through, moved below the others; tap again restores its place.
+  const rows = () => ev(`${qa("find-my-dish-ingredient")}.map(b => b.getAttribute('aria-pressed') + ':' + b.textContent)`);
+  const start = await rows();
+  ok(start.length >= 2 && start.every(r => r.startsWith("false:")), "every row starts unchecked");
+  await ev(`${qa("find-my-dish-ingredient")}[0].click()`);
+  const tapped = await rows();
+  eq(tapped.at(-1), start[0].replace("false:", "true:"), "the tapped row moves to the bottom, checked");
+  ok(await ev(`document.activeElement?.textContent === ${JSON.stringify(start[0].slice(6))}`), "focus stays on the tapped row");
+  ok(await ev(`${q("find-my-dish-ingredients")}.querySelector('[aria-pressed=true] .line-through') !== null && /You have/.test(${q("find-my-dish-have")}.textContent)`), "struck through; You have updated");
+  await ev(`${qa("find-my-dish-ingredient")}.at(-1).click()`);
+  eq(await rows(), start, "a second tap restores the recipe order");
+  await click("find-my-dish-edit");
+  await until(`Boolean(${q("find-protein")})`, "the search controls");
   ok(await ev(`${q("find-protein")}.getAttribute('aria-expanded') === 'false' && ${q("find-protein")}.placeholder === 'Select or type a protein…'`), "closed at first, gray placeholder");
-  ok(await ev(`${q("find-my-dish-submit")}.disabled`), "no protein: Find my dish is off");
   ok(await ev(`${q("find-fridge")}.disabled && /Upload your fridge/.test(${q("find-fridge")}.textContent) && /Coming soon/.test(${q("find-fridge")}.textContent) && !document.querySelector('[data-testid="find-my-dish"] input[type=file]')`), "camera disabled, no file chooser");
   await key(q("find-protein"), "ArrowDown");
   await until(`Boolean(${q("find-protein-options")})`, "opened by keyboard");
@@ -83,7 +95,9 @@ try {
   await key("document.activeElement || document.body", "Escape");
   await until(`!${q("find-my-dish")}`, "closed");
   await click("home-find-my-dish");
-  await until(`${q("find-protein")}?.value === "" && !${q("find-leave-out")}`, "reopened blank");
+  await until(`Boolean(${q("find-my-dish-result")}) && !${q("find-my-dish-have")}`, "reopened blank, on a dish");
+  await click("find-my-dish-edit");
+  await until(`${q("find-protein")}?.value === "" && !${q("find-leave-out")}`, "blank search");
   eq([await stored(), await api("GET", `/api/week-plan?week=${thisWeek}`), await api("GET", "/api/household-settings")], before, "the search writes nothing");
   // Start cooking: Zen mode at the first step.
   await type(q("find-protein"), "Fish");

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { baseServings, formatQuantity, scaleIngredient, servingFactor } from "../client/src/lib/ingredient-scale";
+import { baseServings, formatQuantity, scaleIngredient, servingFactor, shownStepIngredients } from "../client/src/lib/ingredient-scale";
 import { cleanStep, stepDuration } from "../client/src/lib/recipe-steps";
 import { addBatch, emptyPlan, maxDishes, setServes, type PlanState } from "../client/src/lib/meal-plan";
 import { batchFactor } from "../shared/cooking-plan";
@@ -117,10 +117,10 @@ assert.equal(cooking.hasCookingProgress("r1"), true); assert.equal(cooking.readC
 session.set(cooking.cookingStepKey("r1"), "junk"); assert.equal(cooking.readCookingStep("r1", 4), 0);
 cooking.saveCookingStep("r1", 3); cooking.clearCookingStep("r1");
 assert.equal(cooking.readCookingStep("r1", 4), 0, "finishing clears progress"); assert.equal(cooking.readCookingStep("r2", 4), 1, "other recipes untouched");
-assert.equal(cooking.readCookingZen(), false); cooking.saveCookingZen(true); assert.equal(cooking.readCookingZen(), true); cooking.saveCookingZen(false); assert.equal(cooking.readCookingZen(), false);
+assert.equal(cooking.readCookingZen(), true, "Zen mode is the default"); cooking.saveCookingZen(true); assert.equal(cooking.readCookingZen(), true); cooking.saveCookingZen(false); assert.equal(cooking.readCookingZen(), false);
 const blocked = () => { throw new Error("blocked"); };
 (globalThis as any).sessionStorage = { getItem: blocked, setItem: blocked, removeItem: blocked }; (globalThis as any).localStorage = { getItem: blocked, setItem: blocked };
-assert.equal(cooking.readCookingStep("r1", 4), 0); cooking.saveCookingStep("r1", 2); cooking.clearCookingStep("r1"); assert.equal(cooking.readCookingZen(), false); cooking.saveCookingZen(true);
+assert.equal(cooking.readCookingStep("r1", 4), 0); cooking.saveCookingStep("r1", 2); cooking.clearCookingStep("r1"); assert.equal(cooking.readCookingZen(), true); cooking.saveCookingZen(true);
 
 // Step timer: set to the minimum of the stated range, user-started, pausable, never invented.
 assert.equal(timer.timerSeconds({ min: 25, unit: "minutes" }), 1500); assert.equal(timer.timerSeconds({ min: 30, unit: "seconds" }), 30);
@@ -146,3 +146,13 @@ assert.deepEqual(timer.readTimers("r1"), { 3: { remaining: 5, endsAt: null } }, 
 timer.clearTimers("r1"); assert.deepEqual(timer.readTimers("r1"), {});
 
 console.log("PASS recipe view: ingredient scaling (halve/double/fractions/decimals/ranges/unparseable, no mutation), step numbering and stated durations, mock nutrition hidden, planner add/duplicate/replace/full/span/servings, grocery servings factor, ingredient view order/category/ids/preference, cooking session boundaries/progress/clear/zen preference, step timer model/persistence.");
+
+// Step ingredients follow the translation: whole lines by match, parts scaled from the translated line, unknown lines as written.
+{
+  const en = ["1 onion", "3 tbsp oil", "1 tsp salt"], he = ["1 בצל", "3 כפות שמן", "1 כפית מלח"];
+  const steps = [["1 onion", "½ tsp salt"], ["2 tbsp oil", "a pinch of sugar"], []];
+  assert.deepEqual(shownStepIngredients(en, he, steps), [["1 בצל", "1/2 כפית מלח"], ["2 כפות שמן", "a pinch of sugar"], []]);
+  assert.equal(shownStepIngredients(en, en, steps), steps);
+  assert.equal(shownStepIngredients(en, he, null), null);
+}
+console.log("step ingredient translation ok");

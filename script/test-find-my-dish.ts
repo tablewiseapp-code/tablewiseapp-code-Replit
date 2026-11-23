@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { defaultSettings, type BasicSettings } from "../client/src/lib/basic-settings";
 import { toPlannerRecipes } from "../client/src/lib/planner-recipes";
-import { exampleDishes, findMyDish, otherIngredients, searchSettings, type DishSearch } from "../client/src/lib/find-my-dish";
+import { exampleDishes, findMyDish, nextDish, otherIngredients, searchSettings, type DishSearch } from "../client/src/lib/find-my-dish";
 
 let n = 0;
 const recipe = (title: string, ingredients: string[], tags: string[] = ["Dinner"], image: string | null = "x.jpg", steps = ["Cook in a pan on the stovetop."]) =>
@@ -52,6 +52,22 @@ assert.ok(ids(findMyDish(catalog, fresh, search({ key: "chicken" }), at)).includ
 // The other ingredients: everything but the protein on hand.
 const lemon = catalog.find(r => r.title === "Lemon chicken")!;
 assert.deepEqual(otherIngredients(lemon).map(i => lemon.ingredients[i]), ["1 lemon", "1 tbsp olive oil"]);
+
+// No protein: the sheet opens on any eligible main dish (lunch or dinner, not breakfast).
+const open = ids(findMyDish(catalog, fresh, { leaveOut: [], diets: [], allergies: [] }, at));
+assert.ok(open.length > 0 && !open.includes("Shakshuka"));
+assert.ok(otherIngredients(lemon, false).includes(lemon.ingredients.indexOf("4 chicken breasts")), "no protein searched: every line is tappable");
+
+// Try another: most ingredients tapped as had, then fewest others, then the incoming order; unseen only.
+const beef = toPlannerRecipes([
+  recipe("Beef stew", ["600 g beef", "2 carrots", "1 onion"]),
+  recipe("Beef burgers", ["500 g minced beef", "2 eggs", "4 buns"]),
+  recipe("Beef stir-fry", ["400 g steak", "1 pepper"]),
+]);
+const seen = new Set([beef[0].id]);
+assert.equal(nextDish(beef, seen, new Set(["egg"]))?.title, "Beef burgers", "1 egg and 2 eggs are one ingredient");
+assert.equal(nextDish(beef, seen, new Set())?.title, "Beef stir-fry", "tie: fewest other ingredients");
+assert.equal(nextDish(beef, new Set(beef.map(r => r.id)), new Set(["egg"])), undefined, "none left");
 
 // Home examples: beef, chicken, plant-based, with a photo; a slot ruled out is filled by another dish.
 assert.deepEqual(ids(exampleDishes(catalog, fresh, at)), ["Beef meatballs", "Chicken and mushroom pie", "Lentil soup"]);

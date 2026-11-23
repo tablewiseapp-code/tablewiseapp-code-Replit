@@ -1,6 +1,6 @@
 // Deterministic ingredient scaling. Only a leading quantity is scaled; anything
 // ambiguous (other numbers in the line, unknown format) keeps the original text.
-import { parseQuantity, vulgar } from "@shared/ingredient-parse";
+import { parseIngredientLine, parseQuantity, vulgar } from "@shared/ingredient-parse";
 
 const quantity = String.raw`(?:\d+\s*[${Object.keys(vulgar).join("")}]|[${Object.keys(vulgar).join("")}]|\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)`;
 const leading = new RegExp(String.raw`^(\s*)(${quantity})(?:\s*(?:-|–|—|to)\s*(${quantity}))?(?=\s|[a-zA-Zа-яА-Я]|$)`);
@@ -42,4 +42,22 @@ export const servingFactor = (selected: number, base: number | null) => base ? s
 export function scaledStepIngredients(steps: string[], stepIngredients: string[][] | null | undefined, factor: number): string[][] | null {
   if (!stepIngredients || stepIngredients.length !== steps.length) return null;
   return stepIngredients.map(lines => lines.map(text => scaleIngredient(text, factor)));
+}
+
+/** Step ingredients in the reader's language. Step lines are written in the recipe's language: a line equal to an ingredient
+ *  takes its shown (translated) line; a part of one ("½ onion" of "1 onion") takes the shown line scaled to that part.
+ *  Anything else, or a shown line that cannot be scaled, stays as written. */
+export function shownStepIngredients(original: string[], shown: string[], stepIngredients: string[][] | null | undefined): string[][] | null {
+  if (!stepIngredients) return null;
+  if (shown === original || shown.length !== original.length) return stepIngredients;
+  const key = (line: string) => { const p = parseIngredientLine(line); return p.quantity === null ? null : `${p.unit ?? ""}|${p.ingredient.toLowerCase()}`; };
+  return stepIngredients.map(lines => lines.map(line => {
+    const exact = original.indexOf(line);
+    if (exact >= 0) return shown[exact];
+    const k = key(line), i = k ? original.findIndex(o => key(o) === k) : -1;
+    if (i < 0) return line;
+    const factor = parseIngredientLine(line).quantity! / parseIngredientLine(original[i]).quantity!;
+    const scaled = scaleIngredient(shown[i], factor);
+    return scaled === shown[i] && factor !== 1 ? line : scaled;
+  }));
 }

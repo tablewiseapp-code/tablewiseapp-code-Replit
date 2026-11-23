@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isWeek, recipePlannerURL } from "@/lib/week-plan";
 import { isDevelopmentFixture } from "@shared/development-fixture-provenance";
 import { recipeToolKeys } from "@/lib/recipe-tools";
-import { baseServings, scaleIngredient, scaledStepIngredients, servingFactor, servingLimits } from "@/lib/ingredient-scale";
+import { baseServings, scaleIngredient, scaledStepIngredients, servingFactor, shownStepIngredients, servingLimits } from "@/lib/ingredient-scale";
 import { cleanStep, stepDuration } from "@/lib/recipe-steps";
 import { ingredientRows, ingredientSections, ingredientViews, readIngredientView, saveIngredientView, type IngredientRow, type IngredientView } from "@/lib/ingredient-view";
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
@@ -48,6 +48,8 @@ function sourceHost(url?: string | null) {
   } catch { return null; }
 }
 
+import { checkedLast, keepFocus } from "@/lib/checked-last";
+
 function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: string[] }) {
   const { t } = useI18n();
   const { t: view } = useRecipeViewCopy();
@@ -62,11 +64,11 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
       <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2">
         <input type="checkbox" checked={checked.has(row.id)} className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
           data-testid={`ingredient-check-${rows.indexOf(row)}`}
-          onChange={event => setChecked(prev => {
+          onChange={event => { keepFocus(event.currentTarget); setChecked(prev => {
             const next = new Set(prev);
             if (event.target.checked) next.add(row.id); else next.delete(row.id);
             return next;
-          })} />
+          }); }} />
         <span data-testid={`text-ingredient-${rows.indexOf(row)}`}
           className={`min-w-0 break-words text-base ${checked.has(row.id) ? "text-muted-foreground line-through" : "text-foreground"}`}>{row.text}</span>
       </label>
@@ -85,10 +87,10 @@ function IngredientChecklist({ recipe, scaled }: { recipe: Recipe; scaled: strin
       </div>
       <div className="space-y-3" data-testid={`ingredients-view-${mode}`}>
         {sections.map(section => section.category === null
-          ? <ul key="all">{section.rows.map(item)}</ul>
+          ? <ul key="all">{checkedLast(section.rows, r => checked.has(r.id)).map(item)}</ul>
           : <section key={section.category} data-testid={`ingredient-group-${section.category}`}>
               <h3 className="text-xs font-medium text-muted-foreground">{t(`ingredients.group.${section.category}`)}</h3>
-              <ul>{section.rows.map(item)}</ul>
+              <ul>{checkedLast(section.rows, r => checked.has(r.id)).map(item)}</ul>
             </section>)}
       </div>
       <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-live="polite">
@@ -435,7 +437,7 @@ export default function RecipeDetail() {
 
       {cooking && recipe.steps.length > 0 && <CookingMode key={recipe.id} recipeId={recipe.id} title={text.title} steps={text.steps} analysis={analysis}
         servings={selectedServings} scaledIngredients={scaledIngredients}
-        stepIngredients={scaledStepIngredients(recipe.steps, recipe.stepIngredients, factor)} onExit={() => setCooking(false)} onFinish={() => {
+        stepIngredients={scaledStepIngredients(recipe.steps, shownStepIngredients(recipe.ingredients, text.ingredients, recipe.stepIngredients), factor)} onExit={() => setCooking(false)} onFinish={() => {
           setCooking(false);
           // After the last step, Ingredients and Instructions fold and "Made it?" is centred on the screen, ready to tap.
           setIngredientsOpen(false);

@@ -156,16 +156,21 @@ try {
   assert.equal(await label(), `Step 1 of ${total}`);
   assert.equal(await ev(`${el("cooking-mode")}.dataset.zen`), "true");
   assert.deepEqual(await stepItems(), stepData[0], "step 1: its own ingredients and quantities (1 of 2 tbsp oil)");
-  assert.ok(await ev(`Boolean(${el("cooking-step-ingredients")}.compareDocumentPosition(${el("cooking-current-text")}) & Node.DOCUMENT_POSITION_FOLLOWING)`), "ingredients above the instruction");
+  assert.ok(await ev(`Boolean(${el("cooking-current-text")}.compareDocumentPosition(${el("cooking-step-ingredients")}) & Node.DOCUMENT_POSITION_FOLLOWING)`), "ingredients below the instruction");
   assert.equal(await ev(`Boolean(${el("cooking-view-recipe-ingredients")})`), false, "no full-list link when step data exists");
   await click("cooking-next");
   assert.equal(await ev(`Boolean(${el("cooking-step-ingredients")}) || Boolean(${el("cooking-view-recipe-ingredients")})`), false, "step 2 uses none: section hidden");
   await click("cooking-next"); assert.deepEqual(await stepItems(), ["4 tbsp curry paste"], "step 3 updates with Next");
   await click("cooking-prev"); await click("cooking-prev");
   assert.deepEqual(await stepItems(), stepData[0], "Back restores step 1 ingredients");
+  await click("cooking-step-ingredient-0");
+  assert.equal(await ev(`${el("cooking-step-ingredient-0")}.getAttribute("aria-pressed")`), "true", "a step ingredient ticks off");
+  assert.ok(await ev(`Boolean(${el("cooking-step-ingredient-0")}.querySelector(".line-through"))`), "ticked: struck through");
+  assert.deepEqual(await stepItems(), [...stepData[0].slice(1), stepData[0][0]], "ticked: moves below the others");
+  await click("cooking-step-ingredient-0"); assert.deepEqual(await stepItems(), stepData[0], "a second tap restores it");
   await click("cooking-exit"); await call("Fetch.disable"); onPaused = null;
 
-  console.log("PASS cooking mode browser: Zen by default at step 1, step ingredients follow Next/Back (with data, empty, none), start/exit, standard/zen with step kept, prev/next/click boundaries, progress + Zen preference preserved across exit and reload, restart confirm, finish clears, servings/title/scaled ingredients, no 'Time unspecified', no horizontal scroll at 390px.");
+  console.log("PASS cooking mode browser: Zen by default at step 1, step ingredients follow Next/Back (with data, empty, none) and tick off, start/exit, standard/zen with step kept, prev/next/click boundaries, progress + Zen preference preserved across exit and reload, restart confirm, finish clears, servings/title/scaled ingredients, no 'Time unspecified', no horizontal scroll at 390px.");
 } finally {
   chrome.kill(); await sleep(300); rmSync(profile, { recursive: true, force: true });
 }

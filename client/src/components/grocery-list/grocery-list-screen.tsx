@@ -563,7 +563,7 @@ export default function GroceryListScreen() {
               <ul>{purchasedRows.map(row => (
                 <li className="grocery-item" key={row.key}>
                   <label className="flex min-h-11 items-center gap-3">
-                    <input type="checkbox" checked onChange={() => uncheck(row)} /> {row.ingredient}
+                    <input type="checkbox" checked onChange={() => uncheck(row)} /> <span className="text-muted-foreground line-through">{row.ingredient}</span>
                   </label>
                 </li>
               ))}</ul>

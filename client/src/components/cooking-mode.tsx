@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { checkedLast, keepFocus } from "@/lib/checked-last";
 import { useI18n } from "@/lib/i18n";
 import { useRecipeViewCopy } from "@/lib/recipe-view-copy";
 import { cleanStep, stepDuration } from "@/lib/recipe-steps";
@@ -26,6 +27,9 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
   const [confirmRestart, setConfirmRestart] = useState(false);
   const [done, setDone] = useState<Set<number>>(() => new Set()); // ingredients ticked off while cooking; kept across steps
   const toggleDone = (i: number) => setDone(prev => { const next = new Set(prev); if (!next.delete(i)) next.add(i); return next; });
+  // Step ingredients ticked off, by "step:line"; separate from the full list because a step may use part of an ingredient.
+  const [stepDone, setStepDone] = useState<Set<string>>(() => new Set());
+  const toggleStepDone = (key: string) => setStepDone(prev => { const next = new Set(prev); if (!next.delete(key)) next.add(key); return next; });
   const [timers, setTimers] = useState<TimerMap>(() => readTimers(recipeId));
   const [now, setNow] = useState(() => Date.now());
   const rootRef = useRef<HTMLDivElement>(null);
@@ -95,17 +99,21 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
   if (total === 0) return null;
   const currentText = cleanStep(steps[step]);
   const duration = stepDuration(steps[step], analysis?.steps[step]);
+  // ＋ to tick off, ✓ and struck through once ticked; ticked rows sit below the others (recipe order kept in both).
+  const tickRow = (text: string, ticked: boolean, toggle: () => void, testId: string, key: number) => (
+    <li key={key}>
+      <button type="button" aria-pressed={ticked} onClick={e => { keepFocus(e.currentTarget); toggle(); }} data-testid={testId}
+        className={`flex min-h-11 w-full items-center gap-2 rounded-md px-1 text-start break-words ${focus}`}>
+        {ticked ? <Check className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />}
+        <span className={ticked ? "text-muted-foreground line-through" : ""}>{text}</span>
+      </button>
+    </li>
+  );
   const allIngredients = (testId: string, summary: string, open = false) => (
     <details className="rounded-lg border hairline bg-white p-3" data-testid={testId} open={open}>
       <summary className={`min-h-11 cursor-pointer py-2 text-base font-medium ${focus}`}>{summary}</summary>
-      <ul className="pb-2 text-base">{scaledIngredients.map((text, i) => (
-        <li key={i}>
-          <button type="button" aria-pressed={done.has(i)} onClick={() => toggleDone(i)} data-testid={`cooking-ingredient-${i}`}
-            className={`flex min-h-11 w-full items-center rounded-md px-1 text-start break-words ${focus} ${done.has(i) ? "text-muted-foreground line-through" : ""}`}>
-            {text}
-          </button>
-        </li>
-      ))}</ul>
+      <ul className="pb-2 text-base">{checkedLast(scaledIngredients.map((text, i) => ({ text, i })), r => done.has(r.i)).map(({ text, i }) =>
+        tickRow(text, done.has(i), () => toggleDone(i), `cooking-ingredient-${i}`, i))}</ul>
     </details>
   );
   // Step-level data only; without it, the full list (never a guessed subset). An empty list means the step uses none.
@@ -146,14 +154,16 @@ export function CookingMode({ recipeId, title, steps, analysis, servings, scaled
         <div className="mx-auto max-w-3xl">
           {zen ? (
             <div className="space-y-6 py-4" data-testid="cooking-zen-step">
-              {stepList ? stepList.length > 0 && (
-                <section aria-label={t("stepIngredients")} data-testid="cooking-step-ingredients">
-                  <ul className="space-y-1 text-lg">{stepList.map((text, i) => <li key={i} className="break-words">{text}</li>)}</ul>
-                </section>
-              ) : scaledIngredients.length > 0 && allIngredients("cooking-view-recipe-ingredients", t("viewRecipeIngredients"), true)}
+              {/* The step first, its ingredients below (product owner, 2026-11-23). */}
               <p className="break-words text-2xl leading-relaxed sm:text-3xl" data-testid="cooking-current-text">{currentText}</p>
               <StepTiming duration={duration ?? undefined} />
               {timerControl(step, steps[step], true)}
+              {stepList ? stepList.length > 0 && (
+                <section aria-label={t("stepIngredients")} data-testid="cooking-step-ingredients">
+                  <ul className="text-lg">{checkedLast(stepList.map((text, i) => ({ text, i })), r => stepDone.has(`${step}:${r.i}`)).map(({ text, i }) =>
+                    tickRow(text, stepDone.has(`${step}:${i}`), () => toggleStepDone(`${step}:${i}`), `cooking-step-ingredient-${i}`, i))}</ul>
+                </section>
+              ) : scaledIngredients.length > 0 && allIngredients("cooking-view-recipe-ingredients", t("viewRecipeIngredients"), true)}
             </div>
           ) : (
             <>

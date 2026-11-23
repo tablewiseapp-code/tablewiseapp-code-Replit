@@ -127,7 +127,9 @@ try {
   // ---- Cook now opens the Find my dish sheet (2026-11-22): one protein → one dish; Start cooking opens Zen; the Week is untouched.
   await until(`!${q("button-cook-now")}.disabled`, "catalog loaded");
   await click("button-cook-now");
-  await until(`Boolean(${q("find-protein")})`, "Find my dish sheet");
+  await until(`Boolean(${q("find-my-dish-result")}) || Boolean(${q("find-protein")})`, "Find my dish sheet");
+  await ev(`${q("find-my-dish-edit")}?.click()`);
+  await until(`Boolean(${q("find-protein")})`, "the search controls");
   await ev(`(() => { const i = ${q("find-protein")}; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(i, "Chicken"); i.dispatchEvent(new Event("input", { bubbles: true })); })()`);
   await click("find-my-dish-submit");
   await until(`Boolean(${q("find-my-dish-result")})`, "a dish");
@@ -242,7 +244,9 @@ try {
   // Microwave only: the local catalog has no microwave or reviewed no-cook recipe, so Find my dish says so, offers Edit kitchen and relaxes nothing.
   await go("/household?step=5", `${step("done")} && !${q("button-cook-now")}.disabled`);
   await click("button-cook-now");
-  await until(`Boolean(${q("find-protein")})`, "Find my dish sheet");
+  await until(`Boolean(${q("find-my-dish-result")}) || Boolean(${q("find-protein")})`, "Find my dish sheet");
+  await ev(`${q("find-my-dish-edit")}?.click()`);
+  await until(`Boolean(${q("find-protein")})`, "the search controls");
   await ev(`(() => { const i = ${q("find-protein")}; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(i, "Chicken"); i.dispatchEvent(new Event("input", { bubbles: true })); })()`);
   await click("find-my-dish-submit");
   await until(`Boolean(${q("find-my-dish-none")}) && Boolean(${q("find-edit-kitchen")})`, "no match, Edit kitchen");
