@@ -1,4 +1,4 @@
-// Cook with what I have in a real browser: Home sheet, the Week's protein step, and Groceries' "Do you have enough?".
+// Find my dish (Home) and Cook with what I have in a real browser: the Week's protein step, and Groceries' "Do you have enough?".
 // Throwaway Chrome profile = new owner. Usage: node script/test-on-hand-browser.mjs   (BASE_URL, CHROME_PATH optional; Node 22+)
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -42,35 +42,55 @@ try {
   const api = (method, path, body) => ev(`fetch(${JSON.stringify(path)}, { method: ${JSON.stringify(method)}, headers: { 'Content-Type': 'application/json' }${body ? `, body: ${JSON.stringify(JSON.stringify(body))}` : ""} }).then(r => r.status === 204 ? null : r.json())`);
   await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 
-  // ---- Home: the compact action opens the sheet; last week's chicken is suggested unticked. ----
-  await go("/", `Boolean(${q("home-cook-with-what-i-have")}) && !${q("home-cook-with-what-i-have")}.disabled`);
+  // ---- Home → Find my dish (2026-11-22): one protein, optional Leave out; one main dish; writes nothing. ----
+  const key = (sel, k) => ev(`${sel}.dispatchEvent(new KeyboardEvent('keydown', { key: ${JSON.stringify(k)}, bubbles: true }))`);
+  const stored = () => ev(`JSON.stringify([localStorage.getItem('tablewise_basic_settings'), localStorage.getItem('weeklyMealsState'), localStorage.getItem('tablewise:grocery-list:v1')])`);
+  await go("/", `Boolean(${q("home-find-my-dish")}) && !${q("home-find-my-dish")}.disabled`);
   ok(await ev(`Boolean(${q("home-task-preview")})`), "Tasks stay on Home");
-  await click("home-cook-with-what-i-have");
-  await until(`${qa("on-hand-name")}.length > 0`, "suggestions");
-  eq(await ev(`${qa("on-hand-name")}.map(i => i.value)`), ["minced chicken"], "only the bought protein is suggested");
-  eq(await ev(`${qa("on-hand-select")}.map(i => i.checked)`), [false], "suggestions start unchecked");
-  ok(await ev(`${q("on-hand-find")}.disabled`), "nothing ticked: Find recipes is off");
-  ok(await ev(`${q("on-hand-camera")}.disabled && /Coming later/.test(${q("on-hand-camera")}.textContent)`), "camera placeholder is disabled and labelled");
-  ok(await ev(`${q("on-hand-minimize")}.getAttribute('aria-checked') === 'false'`), "Minimize groceries starts off");
-  await click("on-hand-select");
-  await until(`!${q("on-hand-find")}.disabled`, "find enabled");
-  await click("on-hand-find");
-  await until(`Boolean(${q("on-hand-results")} || ${q("on-hand-none")})`, "results");
-  const found = await ev(`${qa("on-hand-results")}.length ? Array.from(${q("on-hand-results")}.querySelectorAll('a[href^="/recipe/"]')).map(a => decodeURIComponent(a.getAttribute('href'))) : []`);
-  ok(found.some(href => href.includes(CHICKEN)), `a chicken recipe is found without an amount: ${found}`);
-  const plan = await api("GET", `/api/week-plan?week=${thisWeek}`);
-  ok(plan === null || plan.batches.length === 0, "Home suggestions change nothing in the Week");
-  // Must include a protein no recipe uses: the requirement stays, with Edit search.
-  await click("on-hand-edit");
-  await until(`Boolean(${q("on-hand-input")})`, "back to the form");
-  await type(q("on-hand-input"), "venison");
-  await click("on-hand-add");
-  await until(`${qa("on-hand-required")}.length === 2`, "typed entry");
-  await ev(`${qa("on-hand-required")}[1].click()`);
-  await click("on-hand-find");
-  await until(`Boolean(${q("on-hand-none")})`, "no match");
-  ok(/Must include/.test(await ev(`${q("on-hand-none")}.textContent`)), "a required protein with no match says so");
-  ok(await ev(`Boolean(${q("on-hand-edit")})`), "Edit search is offered");
+  const before = [await stored(), await api("GET", `/api/week-plan?week=${thisWeek}`), await api("GET", "/api/household-settings")];
+  await click("home-find-my-dish");
+  await until(`Boolean(${q("find-protein")})`, "the sheet");
+  ok(await ev(`${q("find-protein")}.getAttribute('aria-expanded') === 'false' && ${q("find-protein")}.placeholder === 'Select or type a protein…'`), "closed at first, gray placeholder");
+  ok(await ev(`${q("find-my-dish-submit")}.disabled`), "no protein: Find my dish is off");
+  ok(await ev(`${q("find-fridge")}.disabled && /Upload your fridge/.test(${q("find-fridge")}.textContent) && /Coming soon/.test(${q("find-fridge")}.textContent) && !document.querySelector('[data-testid="find-my-dish"] input[type=file]')`), "camera disabled, no file chooser");
+  await key(q("find-protein"), "ArrowDown");
+  await until(`Boolean(${q("find-protein-options")})`, "opened by keyboard");
+  eq(await ev(`${qa("find-protein-option")}.slice(0, 2).map(o => o.textContent)`), ["Beef", "Chicken"], "Beef first, Chicken second");
+  await type(q("find-protein"), "salm");
+  eq(await ev(`${qa("find-protein-option")}.map(o => o.textContent)`), ["Salmon", "Use “salm”"], "typing narrows to specific kinds; own text offered");
+  await type(q("find-protein"), "chick");
+  await ev(`${qa("find-protein-option")}.find(o => o.textContent === 'Chicken').click()`);
+  eq(await ev(`${q("find-protein")}.value`), "Chicken", "a suggestion picked by touch");
+  await click("find-leave-out-open");
+  await type(q("find-leave-out"), "Mushrooms");
+  await key(q("find-leave-out"), "Enter");
+  await until(`${qa("find-leave-out-remove")}.length === 1`, "Leave out added with Enter");
+  await click("find-my-dish-submit");
+  await until(`Boolean(${q("find-my-dish-result")})`, "a dish");
+  const first = await ev(`${q("find-my-dish-result")}.querySelector('a[href^="/recipe/"]').getAttribute('href')`);
+  ok(!/mushroom/i.test(await ev(`${q("find-my-dish-ingredients")}.textContent`)), "no mushrooms");
+  ok(/chicken/i.test(await ev(`${q("find-my-dish-result")}.textContent`)), `a chicken dish: ${first}`);
+  await click("find-my-dish-another");
+  await until(`${q("find-my-dish-result")}.querySelector('a[href^="/recipe/"]').getAttribute('href') !== ${JSON.stringify(first)} || Boolean(${q("find-my-dish-no-other")})`, "Try another");
+  await click("find-my-dish-edit");
+  await until(`${q("find-protein")}?.value === "Chicken" && ${qa("find-leave-out-remove")}.length === 1`, "Edit search keeps the choices");
+  // Own text with no match: the message, inputs kept.
+  await type(q("find-protein"), "kangaroo");
+  await click("find-my-dish-submit");
+  await until(`Boolean(${q("find-my-dish-none")})`, "no match");
+  ok(/No matching dish yet/.test(await ev(`${q("find-my-dish-none")}.textContent`)) && (await ev(`${q("find-protein")}.value`)) === "kangaroo", "no match keeps the inputs");
+  // Close and reopen: a blank search.
+  await key("document.activeElement || document.body", "Escape");
+  await until(`!${q("find-my-dish")}`, "closed");
+  await click("home-find-my-dish");
+  await until(`${q("find-protein")}?.value === "" && !${q("find-leave-out")}`, "reopened blank");
+  eq([await stored(), await api("GET", `/api/week-plan?week=${thisWeek}`), await api("GET", "/api/household-settings")], before, "the search writes nothing");
+  // Start cooking: Zen mode at the first step.
+  await type(q("find-protein"), "Fish");
+  await click("find-my-dish-submit");
+  await until(`Boolean(${q("find-my-dish-start")})`, "a fish dish");
+  await click("find-my-dish-start");
+  await until(`location.pathname.startsWith("/recipe/") && Boolean(${q("cooking-mode")})`, "Zen mode");
 
   // ---- The Week: next week asks first; Use selected proteins drafts with chicken and stores it. ----
   await go(`/meals?week=${nextWeek}`, `Boolean(${q("on-hand-step")})`);

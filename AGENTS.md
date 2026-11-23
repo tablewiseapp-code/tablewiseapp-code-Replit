@@ -13,6 +13,10 @@ Then follow these rules:
 - Follow "Rules for changes" in ARCHITECTURE.md.
 - If your change makes either file wrong, update that file in the same change.
 - If a request conflicts with either file, say so before you build.
+- Tests run in two stages (inside the app container, `docker compose exec app …`):
+  1. **During development:** keep it fast. Run `npm run check` and only the unit `test:*` script for the area you changed. Add or update a test if none covers the change. Do not run `validate`, browser (`-browser`) or database (`-db`) tests at this stage.
+  2. **After merging to local `main`:** run the full suite once: `npm run validate`, then every `-browser` and `-db` script in `package.json` (`validate` runs none of them).
+  Report every command you ran and its result. If a test fails, or you could not run one, say which and why. Do not call `main` ready while a test you could run fails.
 - `README.md` and `replit.md` are older and less accurate. Where they disagree with the two files above, the two files win.
 
 ## Repository access

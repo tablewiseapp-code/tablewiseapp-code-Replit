@@ -6,7 +6,7 @@ import { addBatch, approvePlan, cookedOn, draftMeal, emptyPlan, moveToMeal, move
 import { checkEligibility, total } from "../client/src/lib/preference-engine";
 import { buildRecipeGroceryRows } from "../client/src/lib/grocery-meal-removal";
 import { toPlannerRecipes, type PlannerRecipe } from "../client/src/lib/planner-recipes";
-import { cookingEvenings, dishOptions, needsHouseholdSetup, proposeCookingPlan } from "../client/src/lib/week-suggestions";
+import { cookingEvenings, dishOptions, proposeCookingPlan } from "../client/src/lib/week-suggestions";
 import { weekDeals, type FoodDeal } from "../client/src/lib/food-deals";
 import { batchFactor, batchTotal, fromLegacy, mealOf, planStatus, serveAmount, weekdayOf } from "../shared/cooking-plan";
 import { weekPlanInput } from "../server/request-schemas";
@@ -163,18 +163,6 @@ assert.deepEqual(legacy, [
 ]);
 assert.equal(planStatus(legacy, JSON.parse(JSON.stringify(legacy))), "approved");
 
-// First visit only for people with nothing yet.
-assert.equal(needsHouseholdSetup(defaultSettings(), empty()), true);
-assert.equal(needsHouseholdSetup({ ...defaultSettings(), rev: 3 }, empty()), false);
-assert.equal(needsHouseholdSetup(defaultSettings(), placed), false);
-// Guided setup (2026-11-21): a household that started the four questions returns to them; skipped, finished and partly
-// configured (settings saved outside the setup) households go Home.
-const at = (status: "new" | "skipped" | "done", step: number, rev = 4) => ({ ...defaultSettings(), rev, setup: { ...defaultSettings().setup, status, step } });
-assert.equal(needsHouseholdSetup(at("new", 2), empty()), true, "started, not finished: back to the setup");
-assert.equal(needsHouseholdSetup(at("new", 0), empty()), false, "partly configured in Basic Settings: Home");
-assert.equal(needsHouseholdSetup(at("skipped", 0), empty()), false, "skipped (before 2026-11-21): Home");
-assert.equal(needsHouseholdSetup(at("done", 5), empty()), false, "finished: Home");
-assert.equal(needsHouseholdSetup(at("new", 2), placed), false, "a Week with dishes: Home");
 // Three cooking days with Wednesday and Sunday fixed: both and one more (the farthest from them).
 assert.deepEqual(cookingEvenings(settingsWith(s => { s.setup.evenings = 3; s.setup.fixedDays = [0, 3]; })), [3, 5, 0]);
 

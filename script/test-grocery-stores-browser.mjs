@@ -110,7 +110,7 @@ try {
   // ---- 4. A new person: the guided setup asks no store question; nothing is saved for stores.
   await call("Network.enable"); await call("Network.clearBrowserCookies");
   await ev(`localStorage.clear(); localStorage.setItem("tablewise_guest_v1", "1"); sessionStorage.setItem("fresh", "1")`);
-  await go("/", `location.pathname === "/household" && Boolean(${q("step-style")})`);
+  await go("/household", `Boolean(${q("step-style")})`);
   ok(await ev(`!${q("store-picker")}`), "no store picker in the setup");
   eq(await ev(`JSON.parse(localStorage.getItem("tablewise_basic_settings") ?? "null")?.shopping?.stores ?? []`), [], "no stores saved");
 

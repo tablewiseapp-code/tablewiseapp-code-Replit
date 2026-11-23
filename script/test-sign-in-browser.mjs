@@ -51,12 +51,11 @@ try {
   // ---- Continue as guest is remembered.
   await go("/", onSignIn);
   await ev(`${q("button-guest")}.click()`);
-  await until(`${onApp} && location.pathname === "/household"`, "first visit: Your household");
-  await ev(`document.querySelector('[data-testid="app-nav-header"] a[href="/"]').click()`);
-  await until(`location.pathname === "/" && ${onApp}`, "Home stays reachable from the setup");
+  // Launch goes Home, a new household too (2026-11-22); the setup is opened from there.
+  await until(`${onApp} && location.pathname === "/"`, "first visit: Home");
   await go("/", onApp);
-  // No "Skip for now" since 2026-11-21: a guest who hasn't answered the setup returns to it; the guest choice is remembered.
-  await until(`${onApp} && location.pathname === "/household"`, "guest choice remembered; the setup again");
+  await until(`${onApp} && location.pathname === "/"`, "guest choice remembered; Home again");
+  await go("/household", `${onApp} && Boolean(${q("step-style")})`);
   // Finish the four questions; the account created below keeps these answers.
   for (const id of ["style-default", "count-adults-increase", "button-next", "restriction-none", "button-next", "device-Stovetop", "button-next"]) {
     await until(`Boolean(${q(id)})`, id); await ev(`${q(id)}.click()`);

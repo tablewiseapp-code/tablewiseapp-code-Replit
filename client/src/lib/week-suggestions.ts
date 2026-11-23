@@ -112,11 +112,6 @@ export function proposeCookingPlan<T extends EngineRecipe>(plan: PlanState, cata
   return { plan: { ...next, proposed: true }, suggested, days };
 }
 
-/** Launch lands on the guided setup: a fresh household (nothing saved) or one that started it and hasn't finished, with an
- * empty Week. Returning, skipped and partly configured households (settings saved outside the setup) go Home. */
-export const needsHouseholdSetup = (settings: BasicSettings, plan: PlanState) =>
-  settings.setup.status === "new" && (settings.rev === 0 || settings.setup.step > 0) && plan.selectedIds.length === 0 && plan.batches.length === 0;
-
 /** Cook now / Suggest a recipe / Show another: eligible recipes for now, best first: this time of day's meal, then dinners,
  * lunches, breakfasts (one rule, checkEligibility, with today's weekday limit; then the household's ranking). The Week
  * filters are not applied. Changes nothing. */

@@ -1,8 +1,7 @@
 import { Component, useEffect, useState, type ReactNode } from "react";
-import { Switch, Route, Redirect, useLocation, useSearch } from "wouter";
-import { readPlan, syncWeekPlan } from "@/lib/meal-plan";
-import { loadSettings, syncSettings } from "@/lib/basic-settings";
-import { needsHouseholdSetup } from "@/lib/week-suggestions";
+import { Switch, Route, Redirect, useSearch } from "wouter";
+import { syncWeekPlan } from "@/lib/meal-plan";
+import { syncSettings } from "@/lib/basic-settings";
 import Household from "@/pages/household";
 import Personalize from "@/pages/personalize";
 import { queryClient } from "./lib/queryClient";
@@ -35,15 +34,6 @@ function GroceryEntry() {
 
 function PlanRedirect() {
   return <Redirect to="/meals" />;
-}
-
-/** First visit after entry: "Your household", unless this person already has settings or a Week. Share links open directly. */
-function FirstVisit() {
-  const [location, setLocation] = useLocation();
-  useEffect(() => {
-    if (!location.startsWith("/shared/") && location !== "/household" && needsHouseholdSetup(loadSettings(), readPlan())) setLocation("/household", { replace: true });
-  }, []);
-  return null;
 }
 
 function Router() {
@@ -102,7 +92,6 @@ function App() {
           <Toaster />
           <CrashGuard>
           {ready && (askSignIn ? <SignIn onGuest={() => setAskSignIn(false)} /> : <>
-            <FirstVisit />
             <AppNav />
             <Router />
           </>)}

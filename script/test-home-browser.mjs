@@ -38,16 +38,17 @@ try {
   await call("Runtime.enable");
   const text = sel => ev(`${q(sel)}?.innerText ?? null`);
 
-  // ---- First visit: everything empty, each meal slot offers "+ Add".
+  // ---- First visit: nothing today, so three example dishes (beef, chicken, plant-based) with "+ Add" below (2026-11-22).
   await size(1280, false);
   await go("/");
   await ev("localStorage.clear(); localStorage.setItem('tablewise_language','en')");
-  await go("/", `Boolean(${q("home-meals")})`);
+  await go("/", `Boolean(${q("home-examples")})`);
   eq(await text("text-page-title"), "Home", "title");
   eq(await text("text-home-date"), await ev(`new Date().toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" })`), "local date");
-  eq(await ev(`[...${q("home-today")}.querySelectorAll("summary")].map(h => h.textContent)`), ["Breakfast", "Lunch", "Dinner"], "Today separates Breakfast, Lunch and Dinner");
-  eq(await text("home-add-dinner"), "", "an empty meal is collapsed to its name");
-  await ev(`${q("home-slot-dinner")}.querySelector("summary").click()`);
+  const exampleCount = `document.querySelectorAll('[data-testid^="home-example-"]').length`;
+  eq(await ev(exampleCount), 3, "three examples");
+  ok(await ev(`[...document.querySelectorAll('[data-testid^="home-example-"]')].every(c => c.querySelector("img") && /Example/.test(c.innerText))`), "each with a photo, labelled Example");
+  ok(await ev(`Boolean(${q("home-find-my-dish")}) && !${q("home-today")}`), "Find my dish; no empty meals");
   eq(await ev(`${q("home-add-dinner")}.tagName`), "BUTTON", "+ Add dinner opens the generator, not the Week");
   eq(await text("home-add-dinner"), "+ Add dinner", "add copy");
   eq(await current('[data-testid="app-nav-header"]'), "/", "Home active");
@@ -63,6 +64,20 @@ try {
     await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
     ok((await text(`home-meal-meta-${recipe.id}`)).includes("Make 2.5 servings"), "cooked today: how much to make");
     ok(Boolean(await text("home-add-dinner")), "+ Add dinner stays");
+    ok(await ev(`!${q("home-examples")} && Boolean(${q("home-find-my-dish")})`), "a dish today replaces every example; Find my dish stays");
+    // A dish cooked yesterday and eaten today counts too (not on a Monday: Home reads only this week's plan).
+    if (todayDate !== thisWeek) {
+      const yesterday = await ev(`(d => (d.setDate(d.getDate() - 1), \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, "0")}-\${String(d.getDate()).padStart(2, "0")}\`))(new Date())`);
+      const eaten = { id: "h0", recipeId: recipe.id, cookDate: yesterday, serves: [{ date: yesterday, adults: 1, kids: 0 }, { date: todayDate, adults: 1, kids: 0 }] };
+      await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify(${JSON.stringify({ weekStart: thisWeek, selectedIds: [], approved: null, batches: [eaten] })}))`);
+      await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
+      ok(await ev(`!${q("home-examples")}`), "eaten today from yesterday: no examples");
+    }
+    await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify(${JSON.stringify({ weekStart: thisWeek, selectedIds: [], approved: null, batches: [] })}))`);
+    await go("/", `Boolean(${q("home-examples")})`);
+    eq(await ev(exampleCount), 3, "no dish today: all three examples return");
+    await ev(`localStorage.setItem("weeklyMealsState", JSON.stringify(${JSON.stringify({ weekStart: thisWeek, selectedIds: [], approved: null, batches: [dish("h1", recipe.id, todayDate)] })}))`);
+    await go("/", `Boolean(${q(`home-meal-${recipe.id}`)})`);
     await ev(`${q(`home-meal-${recipe.id}`)}.querySelector("a").click()`);
     await until(`location.pathname === "/recipe/${encodeURIComponent(recipe.id)}" && Boolean(${q("text-recipe-title")})`, "meal opens recipe");
 

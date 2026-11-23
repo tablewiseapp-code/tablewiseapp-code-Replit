@@ -120,10 +120,10 @@ try {
   const fit = await ev(`({ wide: document.scrollingElement.scrollWidth })`);
   // Today's meals are full recipe cards on a phone (2026-11-20): Home may scroll down, never sideways.
   ok(fit.wide <= 390, "no sideways scroll");
-  await click("home-suggest-recipe");
-  await until(`Boolean(${q("meal-suggestion-cook")})`, "suggestion");
-  const cook = await ev(`(() => { const b = ${q("meal-suggestion-cook")}.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; })()`);
-  ok(cook, "Start cooking is on screen");
+  await click("home-find-my-dish");
+  await until(`Boolean(${q("find-my-dish-submit")})`, "Find my dish");
+  const find = await ev(`(() => { const b = ${q("find-my-dish-submit")}.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; })()`);
+  ok(find, "Find my dish is on screen");
 
   eq(errors, [], "no page errors");
   console.log(`PASS recipe view browser: ${checks} checks`);

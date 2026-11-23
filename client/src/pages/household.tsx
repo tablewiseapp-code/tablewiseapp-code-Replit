@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
-import { Chip, Counter, CookNowEmpty, KidFriendlySwitch, RequirementsEditor, toggle } from "@/components/household-controls";
+import { Chip, Counter, KidFriendlySwitch, RequirementsEditor, toggle } from "@/components/household-controls";
 import { useI18n } from "@/lib/i18n";
 import { useHouseholdCopy, type HouseholdKey } from "@/lib/household-copy";
 import { storageBlocked, useAccountCopy } from "@/lib/account-copy";
 import { settingsText } from "@/lib/settings-copy";
-import { personalizeURL, useCookNow } from "@/hooks/use-cook-now";
-import { CookNowProteins } from "@/components/on-hand-picker";
+import { personalizeURL } from "@/hooks/use-cook-now";
+import { FindMyDish } from "@/components/find-my-dish";
+import { useRecipeCatalog } from "@/hooks/use-week-workspace";
 import type { DeviceId } from "@/lib/device-requirements";
 import { cookingStyles, emptyMember, hasRequirements, householdCounts, loadSettings, missingAnswers, pushSettings, setupSteps, updateSettings,
   type BasicSettings, type Member, type SetupStep } from "@/lib/basic-settings";
@@ -16,7 +17,7 @@ import { serveAmount } from "@shared/cooking-plan";
 // Your household (/household): four questions, one at a time, then "What would you like to do?" (2026-11-21).
 // Every answer is saved as it is chosen (Basic Settings, Postgres per owner), so Back and refresh keep it and setup.step
 // resumes where the person left. ?ask=kitchen,…&then=… asks only those questions, then resumes the action that needed them.
-const kitchenDevices: DeviceId[] = ["Stovetop", "Oven", "Microwave", "Air fryer"];
+const kitchenDevices: DeviceId[] = ["Microwave", "Air fryer", "Stovetop", "Oven"];
 const MAX_PEOPLE = 12; // basic-settings.ts keeps at most 12 members
 type Screen = SetupStep | "done";
 
@@ -49,7 +50,9 @@ export default function Household() {
   const screen = screens[index];
   const [error, setError] = useState<"required" | "save" | null>(null);
   const [busy, setBusy] = useState(false);
-  const cookNow = useCookNow();
+  // Cook now opens the same sheet as Home's Find my dish (product owner, 2026-11-22).
+  const catalog = useRecipeCatalog();
+  const [finding, setFinding] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const first = useRef(true);
   useEffect(() => {
@@ -86,7 +89,11 @@ export default function Household() {
     return { ...x, household: { ...x.household, members, servingsMode: "auto" } };
   });
   const answered = settings.setup.noRestrictions || hasRequirements(settings);
-  const devices = settings.kitchen.devices;
+  // A new setup shows Microwave selected; Continue saves it. Only shown, never saved before Continue, so an unconfigured
+  // household has confirmed nothing. Any tap replaces it, and a saved answer is never replaced (product owner, 2026-11-22).
+  const [microwaveDefault, setMicrowaveDefault] = useState(() => !asked.length && settings.setup.status === "new" && settings.kitchen.devices === null);
+  const devices = microwaveDefault && settings.kitchen.devices === null ? ["Microwave" as DeviceId] : settings.kitchen.devices;
+  const pickDevices = (change: (x: BasicSettings) => BasicSettings) => { const base = devices; setMicrowaveDefault(false); save(x => change({ ...x, kitchen: { devices: x.kitchen.devices ?? base } })); };
 
   const finish = async () => {
     setBusy(true); setError(null);
@@ -96,10 +103,11 @@ export default function Household() {
     if (!(await pushSettings())) { retry.current = () => void finish(); setError("save"); setBusy(false); return; }
     setBusy(false);
     if (!asked.length) return go(index + 1);
-    if (then === "cook") cookNow.start();
+    if (then === "cook") setFinding(true);
     else setLocation(then && then.startsWith("/") && !then.startsWith("//") ? then : "/");
   };
   const next = () => {
+    if (screen === "kitchen" && microwaveDefault && settings.kitchen.devices === null) { setMicrowaveDefault(false); if (!save(x => ({ ...x, kitchen: { devices: ["Microwave"] } }))) return; }
     const ok = screen === "people" ? people > 0 : screen === "restrictions" ? answered : screen === "kitchen" ? devices !== null : true;
     if (!ok) { setError("required"); return; }
     if (screen === screens[screens.length - (asked.length ? 1 : 2)]) void finish(); else go(index + 1);
@@ -151,16 +159,16 @@ export default function Household() {
         {kitchenDevices.map(d => (
           // Unselecting the last appliance means "not answered", never "no appliances": that has its own choice.
           <Chip key={d} on={!!devices?.includes(d)} testid={`device-${d}`}
-            onClick={() => save(x => { const list = toggle(x.kitchen.devices ?? [], d); return { ...x, kitchen: { devices: list.length ? list : null } }; })}>{s(`device_${d}`)}</Chip>
+            onClick={() => pickDevices(x => { const list = toggle(x.kitchen.devices ?? [], d); return { ...x, kitchen: { devices: list.length ? list : null } }; })}>{s(`device_${d}`)}</Chip>
         ))}
-        <Chip on={devices?.length === 0} onClick={() => save(x => ({ ...x, kitchen: { devices: [] } }))} testid="device-none">{t("noAppliances")}</Chip>
+        <Chip on={devices?.length === 0} onClick={() => pickDevices(x => ({ ...x, kitchen: { devices: [] } }))} testid="device-none">{t("noAppliances")}</Chip>
       </div>
       {devices?.length === 0 && <p className="mt-3 text-sm text-muted-foreground" data-testid="no-appliances-hint">{t("noAppliancesHint")}</p>}
       {required("kitchenRequired")}
     </>,
     done: () => <>
       <div className="grid gap-3 sm:grid-cols-2">
-        <button type="button" onClick={cookNow.start} disabled={!cookNow.ready} className="card min-h-11 p-4 text-start disabled:opacity-60" data-testid="button-cook-now">
+        <button type="button" onClick={() => setFinding(true)} disabled={!catalog.data} className="card min-h-11 p-4 text-start disabled:opacity-60" data-testid="button-cook-now">
           <span className="block text-base font-semibold">{t("cookNow")}</span>
           <span className="block text-sm text-muted-foreground">{t("cookNowHint")}</span>
         </button>
@@ -169,7 +177,6 @@ export default function Household() {
           <span className="block text-sm text-muted-foreground">{t("planWeekHint")}</span>
         </button>
       </div>
-      {cookNow.empty && <CookNowEmpty from="/household?step=5" />}
       <Link href={personalizeURL("/household?step=5")} className="btn btn-text -ms-2 mt-4" data-testid="link-personalize">{t("personalize")}</Link>
     </>,
   };
@@ -186,17 +193,15 @@ export default function Household() {
           <h1 id="step-title" ref={heading} tabIndex={-1} className="page-title focus:outline-none" data-testid="text-page-title" data-step={screen}>{titles[screen]}</h1>
         </header>
         <section aria-labelledby="step-title" data-testid={`step-${screen}`}>{body[screen]()}</section>
-        {/* Asked before Cook now: an empty result is shown here, where the person is. */}
-        {screen !== "done" && cookNow.empty && <CookNowEmpty from="/" />}
         {error === "save" && <p role="alert" className="mt-4 text-sm text-destructive" data-testid="household-error">{storageBlocked() ? accountT("blocked") : t("saveFailed")}{" "}
           <button type="button" className="btn btn-text" onClick={() => retry.current()} data-testid="button-retry-save">{t("retry")}</button></p>}
         {/* Style advances on choice; every other question confirms with Continue. */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
           {index > 0 && <button type="button" onClick={() => go(index - 1)} className="btn btn-secondary" data-testid="button-back">{t("back")}</button>}
-          {screen !== "style" && screen !== "done" && <button type="button" onClick={next} disabled={busy || (then === "cook" && !cookNow.ready)} className="btn btn-primary" data-testid="button-next">{busy ? t("saving") : t("next")}</button>}
+          {screen !== "style" && screen !== "done" && <button type="button" onClick={next} disabled={busy || (then === "cook" && !catalog.data)} className="btn btn-primary" data-testid="button-next">{busy ? t("saving") : t("next")}</button>}
         </div>
       </PageContainer>
-      <CookNowProteins cookNow={cookNow} />
+      <FindMyDish open={finding && !!catalog.data} onClose={() => setFinding(false)} catalog={catalog.data ?? []} />
     </div>
   );
 }

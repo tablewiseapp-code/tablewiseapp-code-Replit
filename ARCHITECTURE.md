@@ -48,19 +48,19 @@ docs/                  product definition and per-feature notes
 | Route | Page | Purpose |
 |---|---|---|
 | (first visit) | `pages/sign-in.tsx` | shown in place of any page until the person signs in or picks "Continue as guest" (remembered in `localStorage` `tablewise_guest_v1`); never on `/shared/:token` |
-| `/` | `pages/home.tsx` | Home: today's meals and collapsed Home Tasks |
+| `/` | `pages/home.tsx` | Home: today's meals (or example dishes, `exampleDishes` in `lib/find-my-dish.ts`), Find my dish (`components/find-my-dish.tsx`) and collapsed Home Tasks |
 | `/plan` | redirect | → `/meals` |
 | `/home-tasks` | `pages/home-tasks.tsx` | Home Tasks |
 | `/meals` | `pages/weekly-meals.tsx` | the Week as a cooking plan ([docs/cooking-plan.md](docs/cooking-plan.md); `?week=Monday` for another week; the nav links to `?plan`, which is ignored); `?browse` is the recipe browser with filters and Food deals |
 | `/recipes` | `pages/recipe-list.tsx` | catalog grid |
 | `/personalize` | `pages/personalize.tsx` | Personalize my recipes: requirements, favorite cuisines, cooking preferences on a draft; `?from=` is where Save and Cancel return |
-| `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history; `?suggest` (Cook now) adds "Show another", "Personalize", a temporary `&max=15|30` and the proteins asked for (`&have=`, `&must=` for Must include; `readCookNow` in `hooks/use-cook-now.ts`), `?cook` opens Zen mode |
+| `/recipe/:id` | `pages/recipe-detail.tsx` | recipe, cooking mode, cooking history; `?suggest` (the old Cook now; no button opens it since 2026-11-22, when Cook now became Find my dish) adds "Show another", "Personalize", a temporary `&max=15|30` and the proteins asked for (`&have=`, `&must=` for Must include; `readCookNow` in `hooks/use-cook-now.ts`), `?cook` opens Zen mode |
 | `/import` | `pages/import-recipe.tsx` | typed or dictated recipe (signed-in accounts; guests see it with saving disabled) |
 | `/my-ideas` | `pages/my-ideas.tsx` | AI recipe ideas |
 | `/grocery-list` | `components/grocery-list/grocery-list-screen.tsx` | grocery list; `?add` opens the add-item form; `?week=Monday` builds it from that week's plan (read and saved on the server); `?stores` opens My stores |
 | `/shared/:token` | `pages/shared-grocery.tsx` | a grocery list opened from a share link |
 | `/settings` | `pages/basic-settings.tsx` | Basic Settings |
-| `/household` | `pages/household.tsx` | Your household, the guided setup (four questions, then screen 5, `?step=5`); launch lands here (`FirstVisit` in `App.tsx`, `needsHouseholdSetup`) for a new or unfinished setup with an empty Week; `?ask=people,restrictions,kitchen&then=<path or cook>` asks only missing answers (`missingAnswers` in `basic-settings.ts`, `askURL` in `hooks/use-cook-now.ts`) and resumes |
+| `/household` | `pages/household.tsx` | Your household, the guided setup (four questions, then screen 5, `?step=5`); launch always goes Home (2026-11-22); `?ask=people,restrictions,kitchen&then=<path or cook>` asks only missing answers (`missingAnswers` in `basic-settings.ts`, `askURL` in `hooks/use-cook-now.ts`) and resumes |
 | `/operator` | server-rendered in `server/security.ts` | operator sign-in |
 
 ## Data
@@ -144,7 +144,7 @@ Spend is capped in `server/security.ts` (a global budget per minute, hour and da
 
 - **Local:** `docker compose up`. `node_modules` exist only inside the app container, so run commands with `docker compose exec app …`.
 - **Type check:** `npm run check`.
-- **Full validation:** `npm run validate` (type checks plus the main test suites).
+- **Validation:** `npm run validate` (type checks plus the main unit suites). It runs no browser (`*-browser`) or database (`*-db`) test; those run once after merging to local `main` (see AGENTS.md).
 - **Tests:** `script/test-*` files using `node:assert`; browser tests drive headless Chrome. Each has an `npm run test:<name>` script. There is no CI, so run `validate` before merging.
 - **Warning:** the app container runs `drizzle-kit push --force` on start. A schema that is out of step with the database can drop columns.
 

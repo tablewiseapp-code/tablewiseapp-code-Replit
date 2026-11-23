@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { PageContainer } from "@/components/layout/page-container";
 import { useI18n } from "@/lib/i18n";
@@ -12,14 +12,14 @@ import { MealGenerator, type MealAdded, type MealTarget } from "@/components/mea
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useRecipeCatalog } from "@/hooks/use-week-workspace";
-import { askURL, useCookNow } from "@/hooks/use-cook-now";
-import { CookNowEmpty } from "@/components/household-controls";
-import { CookNowProteins, CookWithWhatIHave } from "@/components/on-hand-picker";
+import { askURL } from "@/hooks/use-cook-now";
+import { FindMyDish } from "@/components/find-my-dish";
+import { exampleDishes } from "@/lib/find-my-dish";
+import { toPlannerRecipes } from "@/lib/planner-recipes";
 import { onHandText } from "@/lib/on-hand-copy";
 import { loadSettings, missingAnswers } from "@/lib/basic-settings";
 import { TaskDialog, TaskRow, useHomeTaskText, useHomeTasks } from "@/components/home-tasks";
 import { homePreview, localDate, type HomeTask } from "@shared/home-tasks";
-import { householdText } from "@/lib/household-copy";
 import { RecipeCard } from "@/components/recipe-card";
 import { useRecipeDisplay } from "@/components/recipe-display";
 import { useRecipeTranslations } from "@/lib/recipe-translation";
@@ -47,15 +47,10 @@ export default function Home() {
     const meal = mealSlots.find(m => m.toLowerCase() === new URLSearchParams(window.location.search).get("add"));
     return meal ? { meal, day: new Date().getDay(), date: calendarDate(new Date()) } : null;
   });
-  // ?have: Cook with what I have, resumed after its missing household answers were asked.
-  const [having, setHaving] = useState(() => new URLSearchParams(window.location.search).has("have"));
+  // Find my dish: never asks for setup; its search lives only while the sheet is open.
+  const [finding, setFinding] = useState(false);
   const [, setLocation] = useLocation();
-  useEffect(() => { if (generating || having) setLocation("/", { replace: true }); }, []); // a reload must not reopen it
-  const openHaving = () => {
-    const missing = missingAnswers(loadSettings());
-    if (missing.length) setLocation(askURL(missing, "/?have")); else setHaving(true);
-  };
-  const cookNow = useCookNow();
+  useEffect(() => { if (generating) setLocation("/", { replace: true }); }, []); // a reload must not reopen it
   const openGenerator = (target: MealTarget) => {
     const missing = missingAnswers(loadSettings());
     if (missing.length) setLocation(askURL(missing, `/?add=${target.meal.toLowerCase()}`)); else setGenerating(target);
@@ -108,6 +103,9 @@ export default function Home() {
         : text("cookedOn", { date: weekday.format(new Date(`${batch.cookDate}T12:00:00Z`)) })].filter(Boolean).join(" · ");
   };
   const todays = [...cooking.map(b => [b, true] as const), ...eating.map(b => [b, false] as const)];
+  // Nothing for today: up to three example dishes (beef, chicken, plant-based) within the household's requirements.
+  const planner = useMemo(() => toPlannerRecipes(catalog.data ?? []), [catalog.data]);
+  const examples = todays.length ? [] : exampleDishes(planner, loadSettings(), now).map(r => recipes.get(r.id)!);
 
   const tx = useHomeTaskText();
   const tasks = useHomeTasks();
@@ -132,6 +130,22 @@ export default function Home() {
             </div>
             {plan.batches.some(b => b.cookDate === today || b.serves.some(x => x.date === today)) && (catalog.isPending || catalog.isError) ? (
               <SectionState error={catalog.isError} retry={() => catalog.refetch()} text={text} />
+            ) : examples.length ? (
+              <div data-testid="home-examples">
+                <p className="text-sm text-muted-foreground">{onHandText(lang, "examples")}</p>
+                <ul className="mt-2 grid gap-3">{examples.map(recipe => (
+                  <li key={recipe.id}>
+                    <RecipeCard recipe={recipe} meta={<RecipeMeta recipe={{ ...recipe, servings: null }} />} href={`/recipe/${encodeURIComponent(recipe.id)}`} compact
+                      testId={`home-example-${recipe.id}`}>
+                      <span className="block text-xs text-muted-foreground">{onHandText(lang, "example")}</span>
+                    </RecipeCard>
+                  </li>))}
+                </ul>
+                <div className="mt-2 flex flex-wrap gap-x-4">{mealSlots.map(meal => (
+                  <button key={meal} type="button" onClick={() => openGenerator({ meal, day: now.getDay(), date: today })} disabled={!catalog.data}
+                    data-testid={`home-add-${meal.toLowerCase()}`} className="btn btn-text -ms-2">{text(`add${meal}`)}</button>))}
+                </div>
+              </div>
             ) : (
               // Breakfast, Lunch and Dinner, as in the Week (2026-11-20); each meal has its own + Add.
               <div data-testid="home-today" className="grid grid-cols-[minmax(0,1fr)] gap-2">
@@ -201,12 +215,8 @@ export default function Home() {
                 })}
               </div>
             )}
-            {/* Available even when today is empty; the same action as Cook now: opens one eligible recipe, never changes the Week or groceries. */}
-            <div className="flex flex-wrap gap-x-4">
-              <button type="button" onClick={cookNow.start} disabled={!cookNow.ready} className="btn btn-text -ms-2" data-testid="home-suggest-recipe">{householdText(lang, "suggestRecipe")}</button>
-              <button type="button" onClick={openHaving} disabled={!catalog.data} className="btn btn-text -ms-2" data-testid="home-cook-with-what-i-have">{onHandText(lang, "homeAction")}</button>
-            </div>
-            {cookNow.empty && <CookNowEmpty from="/" />}
+            {/* Find my dish, with or without meals today: one protein → one dish. Never changes the Week or groceries. */}
+            <button type="button" onClick={() => setFinding(true)} disabled={!catalog.data} className="btn btn-secondary mt-3" data-testid="home-find-my-dish">{onHandText(lang, "findDish")}</button>
           </section>
 
           <details className="card p-3 sm:p-5" data-testid="home-task-preview">
@@ -222,8 +232,7 @@ export default function Home() {
         </div>
       </PageContainer>
       <MealGenerator target={generating} catalog={catalog.data ?? []} onClose={meal => { setGenerating(null); focusAdd(meal); }} onAdded={added} />
-      <CookNowProteins cookNow={cookNow} />
-      <CookWithWhatIHave open={having && !!catalog.data} onClose={() => setHaving(false)} catalog={catalog.data ?? []} />
+      <FindMyDish open={finding && !!catalog.data} onClose={() => setFinding(false)} catalog={catalog.data ?? []} />
       <TaskDialog task={editing} onClose={() => setEditing(null)} />
     </div>
   );
