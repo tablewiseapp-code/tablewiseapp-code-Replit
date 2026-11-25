@@ -14,11 +14,11 @@ import { RecipeCard } from "@/components/recipe-card";
 const pill = "inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 const choice = (active: boolean) => `relative min-h-11 rounded-lg border px-1 text-xs ${active ? "border-primary bg-primary text-white" : "border-border bg-white text-foreground"}`;
 
-/** The dishes already cooked on the chosen date, as the Week's compact cards (only Dietary tags among the details, as there). */
+/** The dishes already cooked on the chosen date, as the Week's compact cards (Recipe View without the cooking tool, as there). */
 function DayDishes({ recipeIds }: { recipeIds: string[] }) {
   const { data } = useRecipeCatalog();
   const { recipeView } = useRecipeDisplay();
-  const view = { ...recipeView, details: recipeView.details.filter(d => d === "dietaryTags") };
+  const view = { ...recipeView, details: recipeView.details.filter(d => d !== "mainTool") };
   const recipes = recipeIds.map(id => data?.find(r => r.id === id)).filter(r => !!r);
   if (!recipes.length) return null;
   return <div className="space-y-2" data-testid="add-to-plan-day-dishes">

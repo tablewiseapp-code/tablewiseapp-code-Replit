@@ -9,7 +9,7 @@ import type { RecipeCredit } from "@shared/recipe-credit";
 import type { RecipeToolKey } from "@/lib/recipe-tools";
 import type { NutritionFields } from "@shared/recipe-nutrition";
 import { RecipeFactLayout, type RecipeFactBlock } from "./recipe-fact-layout";
-import { NutritionDetailsToggle } from "./recipe-display";
+import { NutritionDetailsToggle, useRecipeDisplay } from "./recipe-display";
 
 const TimeContext = createContext<{
   mode: RecipeTimeMode;
@@ -66,6 +66,8 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
 }) {
   const { mode } = useRecipeTime();
   const { t } = useMvpCopy();
+  // Tools and preparation follow Settings → Recipe View (Main cooking tool, Prep time), as on the card.
+  const { details } = useRecipeDisplay().recipeView;
   const minutes = recipeStageMinutes(recipe, mode);
   const portions = recipe.servings?.trim();
   // Unknown values are omitted rather than shown as "not specified".
@@ -77,10 +79,10 @@ export function MealRecipeFacts({ recipe, context, compact = false, interactive,
     ...(minutes !== null ? [{ id: "time" as const, label: t(mode), content: <div className="flex items-start gap-1">
       <Clock3 className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
       <div>{`${t(mode)}: ${minutes} ${t("minutesShort")}`}</div></div> }] : []),
-    ...(recipe.equipment?.length ? [{ id: "tools" as const, label: t("toolsUsed"), content: <div className="flex items-start gap-1">
+    ...(details.includes("mainTool") && recipe.equipment?.length ? [{ id: "tools" as const, label: t("toolsUsed"), content: <div className="flex items-start gap-1">
       <Wrench className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
       <div data-testid={`meals-${context}-tools-${recipe.id}`}>{t("toolsUsed")}: {recipe.equipment.map(tool => t(tool)).join(", ")}</div></div> }] : []),
-    ...(mode === "total" && recipe.prepTime != null ? [{ id: "preparation" as const, label: t("preparation"), content:
+    ...(details.includes("prepTime") && mode === "total" && recipe.prepTime != null ? [{ id: "preparation" as const, label: t("preparation"), content:
       <div>{t("preparation")}: {recipe.prepTime} {t("minutesShort")}</div> }] : []),
     // catalog cards keep credit off the card face
     ...(context === "catalog" || !hasCredit ? [] : [{ id: "credit" as const, label: t("creditChef"), content: <RecipeCreditLine recipe={recipe} /> }]),

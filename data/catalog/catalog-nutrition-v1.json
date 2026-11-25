@@ -1,0 +1,98 @@
+{
+  "note": "Whole-recipe nutrition estimates for the 23 catalog recipes (20 book + 3 Chef Prati), worked out ingredient by ingredient from USDA FoodData Central typical values by an AI model (Claude), 2026-11-24. The app divides totals by the recipe's servings and labels them \"Est. per serving\". Sodium is not part of the schema. Loaded by catalog-nutrition-v1.sql (script/catalog-nutrition.ts).",
+  "model": "claude-opus-5-5",
+  "recipes": {
+    "tablewise:catalog:chef-prati:cooked-adjika": {
+      "totals": { "caloriesKcal": 1797, "proteinG": 24.7, "carbsG": 186.8, "fatG": 113.1, "fiberG": 34, "sugarG": 117.7 },
+      "assumptions": ["Bell peppers about 150 g each, hot peppers about 15 g each (12), carrots about 60 g each.", "The optional tomato paste is not counted.", "All the oil is counted, including what stays in the pan."]
+    },
+    "tablewise:catalog:chef-prati:garlic-aioli": {
+      "totals": { "caloriesKcal": 3592, "proteinG": 5.6, "carbsG": 21, "fatG": 388.5, "fiberG": 0.2, "sugarG": 15.5 },
+      "assumptions": ["Regular full-fat mayonnaise, about 680 kcal per 100 g.", "Date syrup about 20 g per tablespoon."]
+    },
+    "tablewise:catalog:chef-prati:herb-aioli": {
+      "totals": { "caloriesKcal": 3728, "proteinG": 8.2, "carbsG": 22.8, "fatG": 402.5, "fiberG": 2.6, "sugarG": 12.1 },
+      "assumptions": ["Regular full-fat mayonnaise, about 680 kcal per 100 g.", "A bunch of basil about 30 g, a handful of scallion greens about 30 g; parsley and dill as a third of a bunch."]
+    },
+    "tablewise:catalog:gf-basic:10-1": {
+      "totals": { "caloriesKcal": 1170, "proteinG": 151.6, "carbsG": 33.6, "fatG": 48.1, "fiberG": 9.2, "sugarG": 17.2 },
+      "assumptions": ["Lean white fish such as cod or hake.", "Tomatoes about 120 g each."]
+    },
+    "tablewise:catalog:gf-basic:10-3": {
+      "totals": { "caloriesKcal": 1512, "proteinG": 123, "carbsG": 6.4, "fatG": 107.5, "fiberG": 0.8, "sugarG": 1.2 },
+      "assumptions": ["Four 150 g fillets of farmed Atlantic salmon.", "All the oil and lemon juice is eaten."]
+    },
+    "tablewise:catalog:gf-basic:11-10": {
+      "totals": { "caloriesKcal": 1389, "proteinG": 53.6, "carbsG": 135.8, "fatG": 71.4, "fiberG": 18.4, "sugarG": 11.8 },
+      "assumptions": ["Medium potatoes about 170 g each, large eggs.", "All 3 tbsp of oil is counted."]
+    },
+    "tablewise:catalog:gf-basic:11-18": {
+      "totals": { "caloriesKcal": 936, "proteinG": 20.5, "carbsG": 121.2, "fatG": 40.8, "fiberG": 3.5, "sugarG": 10 },
+      "assumptions": ["A rice-based gluten-free flour blend, about 140 g per cup.", "Whole milk.", "The optional cheese, spring onion and herbs are not counted."]
+    },
+    "tablewise:catalog:gf-basic:11-8": {
+      "totals": { "caloriesKcal": 1298, "proteinG": 108, "carbsG": 119.9, "fatG": 39.8, "fiberG": 8.7, "sugarG": 14.2 },
+      "assumptions": ["Cooked white rice about 158 g per cup.", "Tamari as the gluten-free soy sauce."]
+    },
+    "tablewise:catalog:gf-basic:2-1": {
+      "totals": { "caloriesKcal": 1863, "proteinG": 146, "carbsG": 68.5, "fatG": 109.9, "fiberG": 15.3, "sugarG": 23.2 },
+      "assumptions": ["Bone-in chicken pieces with skin, about 180 g of meat and skin each.", "No fat skimmed off.", "The optional rice noodles are not counted."]
+    },
+    "tablewise:catalog:gf-basic:2-2": {
+      "totals": { "caloriesKcal": 461, "proteinG": 13.1, "carbsG": 73.2, "fatG": 16.3, "fiberG": 16.7, "sugarG": 26.4 },
+      "assumptions": ["Courgettes about 200 g each, a medium potato about 170 g."]
+    },
+    "tablewise:catalog:gf-basic:2-3": {
+      "totals": { "caloriesKcal": 1054, "proteinG": 52.4, "carbsG": 176.8, "fatG": 18.9, "fiberG": 30.8, "sugarG": 15.8 },
+      "assumptions": ["A cup of dry red lentils about 192 g.", "The optional lemon is not counted."]
+    },
+    "tablewise:catalog:gf-basic:4-1": {
+      "totals": { "caloriesKcal": 1752, "proteinG": 107.7, "carbsG": 51.4, "fatG": 123.9, "fiberG": 9.6, "sugarG": 22.4 },
+      "assumptions": ["Minced beef 85% lean.", "Tomatoes about 120 g each."]
+    },
+    "tablewise:catalog:gf-basic:4-8": {
+      "totals": { "caloriesKcal": 904, "proteinG": 32.2, "carbsG": 114.9, "fatG": 37.3, "fiberG": 27, "sugarG": 19.8 },
+      "assumptions": ["About half of the frying oil is absorbed by the patties.", "Cooked chickpeas about 164 g per cup."]
+    },
+    "tablewise:catalog:gf-basic:5-1": {
+      "totals": { "caloriesKcal": 3529, "proteinG": 220.3, "carbsG": 161.8, "fatG": 219.6, "fiberG": 22.2, "sugarG": 11.8 },
+      "assumptions": ["Bone-in chicken pieces with skin, about 180 g of meat and skin each.", "Potatoes about 170 g each.", "Fat that renders into the dish is counted."]
+    },
+    "tablewise:catalog:gf-basic:5-15": {
+      "totals": { "caloriesKcal": 2643, "proteinG": 203.3, "carbsG": 20.6, "fatG": 189.3, "fiberG": 2.4, "sugarG": 7.1 },
+      "assumptions": ["Bone-in chicken pieces with skin, about 180 g of meat and skin each.", "Two lemons give about 90 ml of juice."]
+    },
+    "tablewise:catalog:gf-basic:5-4": {
+      "totals": { "caloriesKcal": 4103, "proteinG": 227.5, "carbsG": 310.1, "fatG": 206.5, "fiberG": 9.1, "sugarG": 8.1 },
+      "assumptions": ["Bone-in chicken pieces with skin, about 180 g of meat and skin each.", "White rice, about 185 g dry per cup."]
+    },
+    "tablewise:catalog:gf-basic:5-6": {
+      "totals": { "caloriesKcal": 3431, "proteinG": 211.5, "carbsG": 27, "fatG": 275, "fiberG": 5.2, "sugarG": 13 },
+      "assumptions": ["Bone-in chicken pieces with skin, about 180 g of meat and skin each.", "Full-fat canned coconut milk."]
+    },
+    "tablewise:catalog:gf-basic:6-1": {
+      "totals": { "caloriesKcal": 2668, "proteinG": 214.4, "carbsG": 112.1, "fatG": 155.2, "fiberG": 23, "sugarG": 23.2 },
+      "assumptions": ["Beef chuck for stewing.", "Large onions about 150 g each, potatoes about 170 g each."]
+    },
+    "tablewise:catalog:gf-basic:7-1": {
+      "totals": { "caloriesKcal": 2549, "proteinG": 122.7, "carbsG": 246, "fatG": 122.6, "fiberG": 34.1, "sugarG": 66.8 },
+      "assumptions": ["Large peppers about 180 g each without the seeds.", "Minced beef 85% lean, white rice about 185 g dry per cup."]
+    },
+    "tablewise:catalog:gf-basic:8-4": {
+      "totals": { "caloriesKcal": 2167, "proteinG": 68.8, "carbsG": 368.6, "fatG": 46.1, "fiberG": 29.2, "sugarG": 16.8 },
+      "assumptions": ["A cup of dry green lentils about 192 g, white rice about 185 g dry per cup.", "Large onions about 150 g each."]
+    },
+    "tablewise:catalog:gf-basic:9-1": {
+      "totals": { "caloriesKcal": 740, "proteinG": 34, "carbsG": 47.7, "fatG": 48.2, "fiberG": 12.8, "sugarG": 27.3 },
+      "assumptions": ["Large eggs, tomatoes about 120 g each."]
+    },
+    "tablewise:catalog:gf-basic:9-5": {
+      "totals": { "caloriesKcal": 1295, "proteinG": 36.9, "carbsG": 70.6, "fatG": 107.6, "fiberG": 28.4, "sugarG": 17.3 },
+      "assumptions": ["A large cauliflower about 840 g of florets.", "Raw tahini about 120 g per half cup."]
+    },
+    "tablewise:catalog:gf-basic:9-6": {
+      "totals": { "caloriesKcal": 696, "proteinG": 21, "carbsG": 68.4, "fatG": 39, "fiberG": 9.7, "sugarG": 12.6 },
+      "assumptions": ["About half of the frying oil is absorbed by the fritters.", "A courgette about 200 g, a potato about 170 g."]
+    }
+  }
+}
