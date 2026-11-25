@@ -55,6 +55,7 @@ import { useMvpCopy } from "@/lib/mvp-copy";
 import { usePlannerCopy } from "@/lib/planner-copy";
 import { approvePlan, fetchWeek, mealSlots, pushWeekPlan, saveWeek, statusOf, type Batch, type MealSlot, type PlanState } from "@/lib/meal-plan";
 import { useToast } from "@/hooks/use-toast";
+import { askToSignIn, useAccountCopy, useGuest } from "@/lib/account-copy";
 import { ToastAction } from "@/components/ui/toast";
 
 type Recipe = PlannerRecipe;
@@ -739,6 +740,9 @@ function WeekCalendar() {
   const household = useHouseholdCopy();
   const { toast } = useToast();
   const settings = useSavedSettings();
+  // Guests see the Week but must sign in to plan it (product owner, 2026-11-24): no draft, no edits.
+  const guest = useGuest();
+  const accountT = useAccountCopy();
   const requested = new URLSearchParams(useSearch()).get("week");
   const week = requested && isWeek(requested) ? requested : currentWeek();
   usePilotPage("planner_opened", week);
@@ -776,14 +780,15 @@ function WeekCalendar() {
     return shown;
   };
   useEffect(() => {
-    if (!recipes) return;
+    if (!recipes || guest === undefined) return;
     let active = true;
     setLoaded(null);
     setOnHandStep(null);
     fetchWeek(week).then(plan => {
       if (!active) return;
       let shown = plan;
-      if (!plan.proposed && plan.approved === null) {
+      if (guest) { /* shown as saved */ }
+      else if (!plan.proposed && plan.approved === null) {
         // Never asked for cooking days and nothing planned: ask first, draft on Plan my week. A saved schedule is reused.
         if (!loadSettings().setup.scheduled && !plan.batches.length) { setSchedule(loadSettings().setup); setFirstSchedule(true); }
         else if (!plan.batches.length) askOnHand();
@@ -795,7 +800,7 @@ function WeekCalendar() {
       setLoaded({ week, plan: shown });
     }).catch(() => active && setFailed(true));
     return () => { active = false; };
-  }, [week, recipes, fits, fallback]);
+  }, [week, recipes, fits, fallback, guest]);
 
   const byId = useMemo(() => new Map((recipes ?? []).map(r => [r.id, r])), [recipes]);
   // Edits apply to the latest plan, also from a toast's Undo rendered before later changes.
@@ -804,6 +809,7 @@ function WeekCalendar() {
   const save = (plan: PlanState) => {
     const current = latest.current;
     if (!current) return false;
+    if (guest) { toast({ title: accountT("signInToPlan") }); return false; }
     try { saveWeek(week, plan); } catch { toast({ title: t("saveFailed"), variant: "destructive" }); return false; }
     latest.current = { ...current, plan };
     setLoaded(latest.current);
@@ -825,7 +831,7 @@ function WeekCalendar() {
   // ponytail: one key for all weeks; a later week planned with the new settings also clears the question for this one.
   const [asked, setAsked] = useState<string | null>(null);
   const key = planKey(settings, planFilters());
-  const prefsChanged = !!ready && !schedule && week >= currentWeek() && ready.plan.batches.length > 0 && !!recipes
+  const prefsChanged = !guest && !!ready && !schedule && week >= currentWeek() && ready.plan.batches.length > 0 && !!recipes
     && settings.setup.plannedWith !== null && settings.setup.plannedWith !== key && asked !== key;
   const acknowledge = (suggested?: string[]) => {
     setAsked(key);
@@ -853,7 +859,7 @@ function WeekCalendar() {
     setSchedule(null); setFirstSchedule(false);
     // An empty week asks for proteins on hand, then is drafted; a week with dishes asks "Your preferences have been changed" (prefsChanged).
     const current = latest.current;
-    if (current && !current.plan.batches.length) askOnHand();
+    if (current && !current.plan.batches.length && !guest) askOnHand();
   };
   /** Use selected proteins (stored on the Week; Groceries subtract them) or Skip: the ordinary draft. */
   const finishOnHand = (use: boolean) => {
@@ -882,12 +888,15 @@ function WeekCalendar() {
                 <button type="button" onClick={() => go(7)} aria-label={t("nextWeek")} data-testid="button-next-week"
                   className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-foreground/5"><ChevronRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" /></button>
               </div>
-              {status && <p role="status" data-testid="week-status" data-state={status}
+              {status && !guest && <p role="status" data-testid="week-status" data-state={status}
                 className={`rounded-full px-3 py-1 text-sm font-medium ${status === "approved" ? "bg-primary text-white" : status === "changed" ? "bg-amber-50 text-amber-900" : "bg-accent text-primary"}`}>
                 {status === "approved" ? t("statusApproved") : status === "changed" ? t("statusChanged") : t("statusDraft")}</p>}
             </div>
           </div>
-          {ready && <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end" data-testid="week-actions">
+          {ready && guest ? <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end" data-testid="week-sign-in">
+            <button type="button" onClick={askToSignIn} className="btn btn-primary" data-testid="button-sign-in-to-plan">{accountT("submit")}</button>
+            <p className="text-xs text-muted-foreground">{accountT("signInToPlan")}</p>
+          </div> : ready && <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end" data-testid="week-actions">
             {status === "approved" ? (
               <button type="button" onClick={() => setLocation(week === currentWeek() ? "/grocery-list" : `/grocery-list?week=${week}`)} data-testid="button-view-groceries"
                 className="btn btn-primary">{t("groceries")}</button>

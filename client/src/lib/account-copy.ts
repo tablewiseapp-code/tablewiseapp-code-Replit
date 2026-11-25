@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { lockStorageKey, planStorageKey } from "@/lib/meal-plan";
 import { settingsKey } from "@/lib/basic-settings";
@@ -13,7 +14,7 @@ const copy = {
     account: "Account", signedInAs: "Signed in as {email}", guestNote: "You are using TableWise as a guest.",
     signOut: "Sign out", signOutFailed: "Couldn’t sign out. Try again.",
     name: "Your name", save: "Save", saved: "Saved", addPhoto: "Add photo", changePhoto: "Change photo", removePhoto: "Remove photo",
-    profileFailed: "Couldn’t save. Try again.", photoFailed: "Use a JPEG, PNG or WebP picture under 10 MB.", blocked: "This browser is blocking cookies and site data for TableWise, so you can’t stay signed in and your answers aren’t saved. Allow cookies for this site in the browser’s settings, then reload the page.",
+    signInToPlan: "To plan your week, sign in.", profileFailed: "Couldn’t save. Try again.", photoFailed: "Use a JPEG, PNG or WebP picture under 10 MB.", blocked: "This browser is blocking cookies and site data for TableWise, so you can’t stay signed in and your answers aren’t saved. Allow cookies for this site in the browser’s settings, then reload the page.",
   },
   ru: {
     title: "Вход", intro: "Ваша неделя, дела по дому и история готовки на любом устройстве.",
@@ -25,7 +26,7 @@ const copy = {
     account: "Аккаунт", signedInAs: "Вы вошли как {email}", guestNote: "Вы пользуетесь TableWise как гость.",
     signOut: "Выйти", signOutFailed: "Не удалось выйти. Попробуйте ещё раз.",
     name: "Ваше имя", save: "Сохранить", saved: "Сохранено", addPhoto: "Добавить фото", changePhoto: "Сменить фото", removePhoto: "Удалить фото",
-    profileFailed: "Не удалось сохранить. Попробуйте ещё раз.", photoFailed: "Выберите JPEG, PNG или WebP до 10 МБ.", blocked: "Этот браузер блокирует файлы cookie и данные сайта TableWise, поэтому вход не сохраняется и ответы не сохраняются. Разрешите файлы cookie для этого сайта в настройках браузера и обновите страницу.",
+    signInToPlan: "Чтобы спланировать неделю, войдите.", profileFailed: "Не удалось сохранить. Попробуйте ещё раз.", photoFailed: "Выберите JPEG, PNG или WebP до 10 МБ.", blocked: "Этот браузер блокирует файлы cookie и данные сайта TableWise, поэтому вход не сохраняется и ответы не сохраняются. Разрешите файлы cookie для этого сайта в настройках браузера и обновите страницу.",
   },
   he: {
     title: "כניסה", intro: "השבוע, משימות הבית והיסטוריית הבישול שלכם בכל מכשיר.",
@@ -37,7 +38,7 @@ const copy = {
     account: "חשבון", signedInAs: "מחוברים בתור {email}", guestNote: "אתם משתמשים ב־TableWise כאורחים.",
     signOut: "יציאה", signOutFailed: "לא ניתן לצאת. נסו שוב.",
     name: "השם שלכם", save: "שמירה", saved: "נשמר", addPhoto: "הוספת תמונה", changePhoto: "החלפת תמונה", removePhoto: "הסרת תמונה",
-    profileFailed: "לא ניתן לשמור. נסו שוב.", photoFailed: "בחרו תמונת JPEG, PNG או WebP עד 10MB.", blocked: "הדפדפן הזה חוסם עוגיות ונתוני אתר עבור TableWise, ולכן אי אפשר להישאר מחוברים והתשובות לא נשמרות. אפשרו עוגיות לאתר הזה בהגדרות הדפדפן וטענו את הדף מחדש.",
+    signInToPlan: "כדי לתכנן את השבוע, יש להיכנס.", profileFailed: "לא ניתן לשמור. נסו שוב.", photoFailed: "בחרו תמונת JPEG, PNG או WebP עד 10MB.", blocked: "הדפדפן הזה חוסם עוגיות ונתוני אתר עבור TableWise, ולכן אי אפשר להישאר מחוברים והתשובות לא נשמרות. אפשרו עוגיות לאתר הזה בהגדרות הדפדפן וטענו את הדף מחדש.",
   },
 };
 export type AccountCopyKey = keyof typeof copy.en;
@@ -55,6 +56,17 @@ export const storageBlocked = () => {
   try { localStorage.setItem("tablewise_probe", "1"); localStorage.removeItem("tablewise_probe"); return !navigator.cookieEnabled; } catch { return true; }
 };
 export const setGuestChoice = (on: boolean) => { try { on ? localStorage.setItem(guestKey, "1") : localStorage.removeItem(guestKey); } catch {} };
+
+/** True for a guest (not signed in, not the operator), undefined while loading. Guests see Import and the Week
+ *  but must sign in to save (product owner, 2026-11-24). */
+export function useGuest(): boolean | undefined {
+  const me = useQuery<Me>({ queryKey: ["/api/auth/me"] });
+  const operator = useQuery<{ operator?: boolean }>({ queryKey: ["/api/operator/session"] });
+  if (!me.isFetched || !operator.isFetched) return undefined;
+  return me.data?.email === null && operator.data?.operator !== true;
+}
+/** Reopens the sign-in screen. */
+export const askToSignIn = () => { setGuestChoice(false); window.location.assign("/"); };
 
 /** Who is signed in; email is null for a guest. */
 export type Me = { email: string | null; name?: string | null; photo?: string | null };
